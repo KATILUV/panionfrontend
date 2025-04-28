@@ -77,8 +77,54 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
         <div className="crystal-highlight"></div>
         <div className="crystal-highlight-small"></div>
         
-        {/* Inner crystal content - looks like whispy clouds */}
-        <div className="crystal-clouds" style={innerCloudStyle}></div>
+        {/* Fluid animation inside the crystal ball */}
+        <div className="crystal-fluid">
+          <div className="fluid-layer-1"></div>
+          <div className="fluid-layer-2"></div>
+          <div className="fluid-layer-3"></div>
+          <div className="fluid-layer-4"></div>
+          
+          {/* Add floating bubbles */}
+          <div className="bubble w-3 h-3" style={{ 
+            left: '30%', 
+            bottom: '10%',
+            '--duration': '7s', 
+            '--opacity': '0.6',
+            '--move-x': '10px'
+          } as React.CSSProperties}></div>
+          
+          <div className="bubble w-2 h-2" style={{ 
+            left: '60%', 
+            bottom: '5%',
+            '--duration': '10s', 
+            '--opacity': '0.7',
+            '--move-x': '-15px'
+          } as React.CSSProperties}></div>
+          
+          <div className="bubble w-1.5 h-1.5" style={{ 
+            left: '45%', 
+            bottom: '0%',
+            '--duration': '6s', 
+            '--opacity': '0.5',
+            '--move-x': '5px'
+          } as React.CSSProperties}></div>
+          
+          <div className="bubble w-2 h-2" style={{ 
+            left: '20%', 
+            bottom: '15%',
+            '--duration': '8s', 
+            '--opacity': '0.6',
+            '--move-x': '-5px'
+          } as React.CSSProperties}></div>
+          
+          <div className="bubble w-1 h-1" style={{ 
+            left: '80%', 
+            bottom: '8%',
+            '--duration': '5s', 
+            '--opacity': '0.4',
+            '--move-x': '3px'
+          } as React.CSSProperties}></div>
+        </div>
         
         {/* Subtle sparkling effects inside the crystal */}
         <div className="absolute w-full h-full rounded-full flex items-center justify-center">
@@ -87,9 +133,25 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-white rounded-full opacity-90"></div>
           <div className="absolute bottom-1/4 right-1/4 w-1 h-1 bg-white rounded-full opacity-70"></div>
           
-          {/* Very subtle glow when processing */}
+          {/* More active fluid effect when processing */}
           {isProcessing && (
-            <div className="absolute inset-0 w-full h-full rounded-full bg-pink-100 blur-md opacity-30 animate-pulse"></div>
+            <>
+              <div className="absolute inset-0 w-full h-full rounded-full bg-pink-100 blur-md opacity-40 animate-pulse"></div>
+              <div className="bubble w-2 h-2 animate-bounce" style={{ 
+                left: '25%', 
+                bottom: '15%',
+                '--duration': '3s', 
+                '--opacity': '0.8',
+                '--move-x': '8px'
+              } as React.CSSProperties}></div>
+              <div className="bubble w-2.5 h-2.5 animate-bounce" style={{ 
+                left: '70%', 
+                bottom: '20%',
+                '--duration': '4s', 
+                '--opacity': '0.7',
+                '--move-x': '-12px'
+              } as React.CSSProperties}></div>
+            </>
           )}
         </div>
       </div>

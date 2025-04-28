@@ -178,11 +178,17 @@
 }
 
 @keyframes crystal-glow {
-  0%, 100% { 
+  0% { 
     box-shadow: 
       0 0 15px rgba(255, 156, 205, 0.4),
       0 0 30px rgba(255, 156, 205, 0.2),
       inset 0 0 15px rgba(255, 255, 255, 0.4); 
+  }
+  25% { 
+    box-shadow: 
+      0 0 20px rgba(173, 216, 230, 0.5),
+      0 0 35px rgba(173, 216, 230, 0.25),
+      inset 0 0 18px rgba(255, 255, 255, 0.5); 
   }
   50% { 
     box-shadow: 
@@ -190,23 +196,92 @@
       0 0 40px rgba(255, 156, 205, 0.3),
       inset 0 0 20px rgba(255, 255, 255, 0.6); 
   }
+  75% { 
+    box-shadow: 
+      0 0 22px rgba(173, 216, 230, 0.5),
+      0 0 37px rgba(173, 216, 230, 0.25),
+      inset 0 0 17px rgba(255, 255, 255, 0.5); 
+  }
+  100% { 
+    box-shadow: 
+      0 0 15px rgba(255, 156, 205, 0.4),
+      0 0 30px rgba(255, 156, 205, 0.2),
+      inset 0 0 15px rgba(255, 255, 255, 0.4); 
+  }
 }
 
-.crystal-clouds {
+.crystal-fluid {
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: 
-    radial-gradient(circle at 70% 40%, rgba(255, 192, 203, 0.5) 0%, transparent 60%),
-    radial-gradient(circle at 30% 60%, rgba(173, 216, 230, 0.5) 0%, transparent 60%),
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-  opacity: 0.7;
+  overflow: hidden;
+  opacity: 0.6;
   mix-blend-mode: soft-light;
-  animation: cloud-move 15s infinite linear;
 }
 
-@keyframes cloud-move {
+/* Multiple layers for the fluid effect */
+.fluid-layer-1, .fluid-layer-2, .fluid-layer-3, .fluid-layer-4 {
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  top: -100%;
+  left: -100%;
+  border-radius: 42%;
+  opacity: 0.4;
+  transition: all 0.5s ease;
+}
+
+/* Pink fluid */
+.fluid-layer-1 {
+  background: linear-gradient(45deg, transparent 40%, rgba(255, 192, 203, 0.7) 70%);
+  animation: fluid-rotate 16s infinite linear;
+}
+
+/* Blue fluid */
+.fluid-layer-2 {
+  background: linear-gradient(135deg, transparent 40%, rgba(173, 216, 230, 0.7) 70%);
+  animation: fluid-rotate 24s infinite linear reverse;
+}
+
+/* Light purple fluid */
+.fluid-layer-3 {
+  background: linear-gradient(225deg, transparent 40%, rgba(216, 191, 216, 0.5) 70%);
+  animation: fluid-rotate 20s infinite linear;
+  border-radius: 45%;
+}
+
+/* White swirls */
+.fluid-layer-4 {
+  background: radial-gradient(
+    ellipse at center, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    transparent 40%, 
+    rgba(255, 255, 255, 0.1) 65%, 
+    transparent 80%
+  );
+  animation: fluid-rotate 18s infinite linear reverse;
+  opacity: 0.3;
+  border-radius: 47%;
+}
+
+/* Bubbles floating in the fluid */
+.bubble {
+  position: absolute;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.1) 100%);
+  border-radius: 50%;
+  animation: float-up var(--duration, 8s) infinite ease-in-out;
+  opacity: var(--opacity, 0.5);
+}
+
+@keyframes float-up {
+  0% { transform: translateY(100%) translateX(0); opacity: 0; }
+  10% { opacity: var(--opacity, 0.5); }
+  90% { opacity: var(--opacity, 0.5); }
+  100% { transform: translateY(-100%) translateX(var(--move-x, 0)); opacity: 0; }
+}
+
+@keyframes fluid-rotate {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
