@@ -129,12 +129,15 @@
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2));
   box-shadow: 
     0 5px 25px rgba(0, 0, 0, 0.15),
-    0 0 30px rgba(255, 225, 255, 0.5),
-    inset 0 0 30px rgba(255, 255, 255, 0.15),
-    inset 0 0 10px rgba(255, 156, 205, 0.25);
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+    0 0 15px rgba(255, 255, 255, 0.6),
+    inset 0 0 30px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   overflow: hidden;
+  /* Clean glass look */
+  background-color: rgba(250, 250, 255, 0.2);
+  backdrop-filter: blur(5px);
+  /* Hard cut edge for the crystal */
+  mask-image: radial-gradient(circle, black 100%, transparent 100%);
 }
 
 /* We don't need crystal-inner anymore since we simplified the design */
@@ -212,12 +215,18 @@
 
 .crystal-fluid {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  width: 90%;
+  height: 90%;
+  top: 5%;
+  left: 5%;
   border-radius: 50%;
   overflow: hidden;
-  opacity: 0.6;
-  mix-blend-mode: soft-light;
+  opacity: 0.85;
+  mix-blend-mode: screen;
+  /* Make it look like liquid filling the orb */
+  box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.1);
+  /* Give the feeling of liquid surface tension */
+  transform-style: preserve-3d;
 }
 
 /* Multiple layers for the fluid effect */
@@ -228,26 +237,39 @@
   top: -100%;
   left: -100%;
   border-radius: 42%;
-  opacity: 0.4;
+  opacity: 0.5;
   transition: all 0.5s ease;
+  /* Distorted circle shapes like real fluid */
+  filter: blur(1px);
 }
 
 /* Base iridescent layer - shifting colors */
 .iridescent-layer {
   background: linear-gradient(
     135deg,
-    rgba(255, 0, 128, 0.4) 0%,
-    rgba(255, 153, 0, 0.4) 15%,
-    rgba(247, 255, 0, 0.4) 30%,
-    rgba(0, 255, 170, 0.4) 45%, 
-    rgba(0, 140, 255, 0.4) 60%,
-    rgba(138, 43, 226, 0.4) 75%, 
-    rgba(255, 0, 128, 0.4) 100%
+    rgba(255, 0, 128, 0.7) 0%,
+    rgba(255, 153, 0, 0.7) 15%,
+    rgba(247, 255, 0, 0.7) 30%,
+    rgba(0, 255, 170, 0.7) 45%, 
+    rgba(0, 140, 255, 0.7) 60%,
+    rgba(138, 43, 226, 0.7) 75%, 
+    rgba(255, 0, 128, 0.7) 100%
   );
   background-size: 400% 400%;
-  mix-blend-mode: screen;
-  opacity: 0.6;
-  animation: gradient-shift 12s ease infinite, fluid-rotate 30s linear infinite;
+  mix-blend-mode: soft-light;
+  opacity: 0.75;
+  filter: saturate(1.5);
+  animation: gradient-shift 12s ease infinite, fluid-rotate-slow 30s linear infinite;
+  /* Add a subtle wobble to mimic liquid movement */
+  transform-origin: center;
+}
+
+@keyframes fluid-rotate-slow {
+  0% { transform: rotate(0deg) scale(1.02); }
+  25% { transform: rotate(90deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.02); }
+  75% { transform: rotate(270deg) scale(1); }
+  100% { transform: rotate(360deg) scale(1.02); }
 }
 
 /* Pink aura fluid */
