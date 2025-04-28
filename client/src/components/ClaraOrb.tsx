@@ -72,9 +72,9 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
             className={`w-16 h-16 rounded-full bg-white bg-opacity-50 flex items-center justify-center transition-all duration-300 ${pulseState === 1 ? 'scale-105' : 'scale-100'}`}
           >
             <div 
-              className={`w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center text-primary font-semibold text-xl transition-all duration-300 ${pulseState === 2 ? 'scale-105' : 'scale-100'} ${isProcessing ? 'animate-bounce' : ''}`}
+              className={`w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center transition-all duration-300 ${pulseState === 2 ? 'scale-105' : 'scale-100'} ${isProcessing ? 'animate-bounce' : ''}`}
             >
-              C
+              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-primary via-pink-400 to-secondary animate-pulse shadow-inner"></div>
             </div>
           </div>
         </div>
