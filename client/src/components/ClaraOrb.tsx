@@ -80,20 +80,17 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
         {/* Inner crystal content - looks like whispy clouds */}
         <div className="crystal-clouds" style={innerCloudStyle}></div>
         
-        {/* Center orb container with glass effect */}
-        <div className="absolute w-24 h-24 rounded-full crystal-inner flex items-center justify-center">
+        {/* Subtle sparkling effects inside the crystal */}
+        <div className="absolute w-full h-full rounded-full flex items-center justify-center">
+          {/* Just add small sparkles throughout */}
+          <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-white rounded-full opacity-80"></div>
+          <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-white rounded-full opacity-90"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-1 h-1 bg-white rounded-full opacity-70"></div>
           
-          {/* Center glowing core that pulses when processing */}
-          <div className={`w-10 h-10 rounded-full bg-gradient-radial from-white via-pink-200 to-pink-400 relative ${isProcessing ? 'animate-pulse' : ''}`}>
-            {/* Sparkles */}
-            <div className="absolute top-1 left-1 w-1.5 h-1.5 bg-white rounded-full opacity-90"></div>
-            <div className="absolute bottom-2 right-2 w-1 h-1 bg-white rounded-full opacity-80"></div>
-            
-            {/* Subtle pink glow from center */}
-            {isProcessing && (
-              <div className="absolute inset-0 w-full h-full rounded-full bg-pink-400 blur-md opacity-50 animate-pulse"></div>
-            )}
-          </div>
+          {/* Very subtle glow when processing */}
+          {isProcessing && (
+            <div className="absolute inset-0 w-full h-full rounded-full bg-pink-100 blur-md opacity-30 animate-pulse"></div>
+          )}
         </div>
       </div>
     </div>
