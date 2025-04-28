@@ -79,14 +79,14 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
         
         {/* Fluid animation inside the crystal ball */}
         <div className="crystal-fluid">
-          {/* New iridescent base layer */}
+          {/* Iridescent shimmer overlay */}
           <div className="iridescent-layer"></div>
           
-          {/* Original fluid layers with updated colors */}
-          <div className="fluid-layer-1"></div>
-          <div className="fluid-layer-2"></div>
-          <div className="fluid-layer-3"></div>
-          <div className="fluid-layer-4"></div>
+          {/* Lava lamp blobs */}
+          <div className="lava-blob lava-blob-1"></div>
+          <div className="lava-blob lava-blob-2"></div>
+          <div className="lava-blob lava-blob-3"></div>
+          <div className="lava-blob lava-blob-4"></div>
           
           {/* Add iridescent floating bubbles */}
           <div className="bubble bubble-iridescent w-3 h-3" style={{ 
@@ -113,20 +113,20 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
             '--move-x': '5px'
           } as React.CSSProperties}></div>
           
-          <div className="bubble bubble-iridescent w-2 h-2" style={{ 
-            left: '20%', 
-            bottom: '15%',
-            '--duration': '8s', 
-            '--opacity': '0.7',
-            '--move-x': '-5px'
+          <div className="bubble bubble-iridescent w-1 h-1" style={{ 
+            left: '30%', 
+            bottom: '8%',
+            '--duration': '4.5s', 
+            '--opacity': '0.4',
+            '--move-x': '7px'
           } as React.CSSProperties}></div>
           
-          <div className="bubble bubble-iridescent w-1 h-1" style={{ 
-            left: '80%', 
-            bottom: '8%',
-            '--duration': '5s', 
-            '--opacity': '0.5',
-            '--move-x': '3px'
+          <div className="bubble bubble-iridescent w-1.5 h-1.5" style={{ 
+            left: '70%', 
+            bottom: '12%',
+            '--duration': '7.5s', 
+            '--opacity': '0.6',
+            '--move-x': '-8px'
           } as React.CSSProperties}></div>
         </div>
         
@@ -140,7 +140,20 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           {/* More active fluid effect when processing */}
           {isProcessing && (
             <>
-              <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-radial from-pink-200 via-transparent to-transparent blur-md opacity-40 animate-pulse"></div>
+              {/* Energetic lava glow */}
+              <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-radial from-pink-200 via-transparent to-transparent blur-md opacity-50 animate-pulse"></div>
+              
+              {/* Extra lava blobs that appear when processing */}
+              <div className="lava-blob lava-blob-active" style={{
+                width: '30%',
+                height: '30%',
+                background: 'radial-gradient(circle at 40% 40%, rgb(255, 102, 196) 0%, rgba(255, 0, 128, 0.7) 50%, rgba(255, 0, 128, 0) 100%)',
+                left: '35%',
+                bottom: '35%',
+                animation: 'blob-float 4s ease-in-out infinite, pulse 2s infinite'
+              }}></div>
+              
+              {/* Active bubbles */}
               <div className="bubble bubble-iridescent w-2 h-2 animate-bounce" style={{ 
                 left: '25%', 
                 bottom: '15%',
