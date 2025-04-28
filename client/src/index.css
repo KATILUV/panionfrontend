@@ -122,36 +122,102 @@
   animation: spin 20s linear infinite;
 }
 
-/* 3D effects */
-.orb-3d {
+/* Crystal Ball effects */
+.crystal-ball {
   transform-style: preserve-3d;
   perspective: 800px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
   box-shadow: 
-    0 0 15px rgba(255, 156, 205, 0.7),
-    inset 0 0 8px rgba(255, 255, 255, 0.8),
-    inset 5px -5px 15px rgba(0, 0, 0, 0.1);
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 70%),
-    linear-gradient(140deg, var(--primary-color, #ffbad2), var(--secondary-color, #e8c1ff));
-  --primary-color: #ffbad2;
-  --secondary-color: #e8c1ff;
+    0 5px 25px rgba(0, 0, 0, 0.15),
+    0 0 20px rgba(255, 255, 255, 0.6),
+    inset 0 0 20px rgba(255, 255, 255, 0.1),
+    inset 0 0 8px rgba(255, 156, 205, 0.3);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.orb-inner-shadow {
+.crystal-inner {
+  background: radial-gradient(circle at 30% 30%, 
+    rgba(255, 255, 255, 0.7) 0%, 
+    rgba(255, 255, 255, 0.4) 20%, 
+    rgba(255, 213, 233, 0.1) 60%, 
+    rgba(255, 213, 233, 0.05) 100%);
   box-shadow: 
-    inset 2px 2px 8px rgba(0, 0, 0, 0.2),
-    inset -2px -2px 8px rgba(255, 255, 255, 0.8);
+    inset 0 0 40px rgba(255, 255, 255, 0.5),
+    inset 5px 5px 15px rgba(255, 156, 205, 0.2),
+    inset -5px -5px 15px rgba(255, 156, 205, 0.2);
+  backdrop-filter: blur(3px);
 }
 
-.orb-highlight {
+.crystal-highlight {
   position: absolute;
-  width: 30%;
-  height: 30%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+  width: 35%;
+  height: 35%;
+  background: radial-gradient(
+    ellipse at center, 
+    rgba(255, 255, 255, 0.9) 0%, 
+    rgba(255, 255, 255, 0.5) 40%, 
+    rgba(255, 255, 255, 0) 70%
+  );
   border-radius: 50%;
-  top: 20%;
-  left: 20%;
-  opacity: 0.8;
-  filter: blur(2px);
+  top: 15%;
+  left: 15%;
+  opacity: 0.9;
+  filter: blur(1px);
+  transform: translateZ(1px);
+}
+
+.crystal-highlight-small {
+  position: absolute;
+  width: 15%;
+  height: 15%;
+  background: radial-gradient(
+    circle, 
+    rgba(255, 255, 255, 1) 0%, 
+    rgba(255, 255, 255, 0) 80%
+  );
+  border-radius: 50%;
+  bottom: 25%;
+  right: 25%;
+  opacity: 0.9;
+  filter: blur(0.5px);
+}
+
+.crystal-glow {
+  animation: crystal-glow 4s infinite alternate ease-in-out;
+}
+
+@keyframes crystal-glow {
+  0%, 100% { 
+    box-shadow: 
+      0 0 15px rgba(255, 156, 205, 0.4),
+      0 0 30px rgba(255, 156, 205, 0.2),
+      inset 0 0 15px rgba(255, 255, 255, 0.4); 
+  }
+  50% { 
+    box-shadow: 
+      0 0 25px rgba(255, 156, 205, 0.6),
+      0 0 40px rgba(255, 156, 205, 0.3),
+      inset 0 0 20px rgba(255, 255, 255, 0.6); 
+  }
+}
+
+.crystal-clouds {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: 
+    radial-gradient(circle at 70% 40%, rgba(255, 192, 203, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 30% 60%, rgba(173, 216, 230, 0.3) 0%, transparent 50%);
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  animation: cloud-move 15s infinite linear;
+}
+
+@keyframes cloud-move {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @keyframes rotate3d {
