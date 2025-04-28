@@ -22,12 +22,13 @@ const Chat: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto px-4 md:px-6">
-      <ClaraOrb />
+    <div className="flex flex-col h-screen max-w-4xl mx-auto px-4 md:px-6 py-4">
+      {/* Pass isProcessing to the orb so it animates while Clara is thinking */}
+      <ClaraOrb isProcessing={isLoading} />
 
       <div className="text-center mb-4">
-        <h1 className="text-2xl font-semibold text-dark-gray">Clara</h1>
-        <p className="text-sm text-gray-500">Your AI Companion</p>
+        <h1 className="text-2xl font-semibold text-dark-gray transition-all duration-300 hover:text-primary">Clara</h1>
+        <p className="text-sm text-gray-500">{isLoading ? 'Thinking...' : 'Your AI Companion'}</p>
       </div>
 
       <ChatContainer 
@@ -41,6 +42,11 @@ const Chat: React.FC = () => {
         handleSubmit={handleSubmit}
         isLoading={isLoading}
       />
+
+      {/* Add a subtle footer */}
+      <div className="text-center text-xs text-gray-400 mt-2 mb-1">
+        <p>Clara remembers important information from your conversations</p>
+      </div>
     </div>
   );
 };
