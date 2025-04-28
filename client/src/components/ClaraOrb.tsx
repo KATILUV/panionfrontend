@@ -79,49 +79,53 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
         
         {/* Fluid animation inside the crystal ball */}
         <div className="crystal-fluid">
+          {/* New iridescent base layer */}
+          <div className="iridescent-layer"></div>
+          
+          {/* Original fluid layers with updated colors */}
           <div className="fluid-layer-1"></div>
           <div className="fluid-layer-2"></div>
           <div className="fluid-layer-3"></div>
           <div className="fluid-layer-4"></div>
           
-          {/* Add floating bubbles */}
-          <div className="bubble w-3 h-3" style={{ 
+          {/* Add iridescent floating bubbles */}
+          <div className="bubble bubble-iridescent w-3 h-3" style={{ 
             left: '30%', 
             bottom: '10%',
             '--duration': '7s', 
-            '--opacity': '0.6',
+            '--opacity': '0.7',
             '--move-x': '10px'
           } as React.CSSProperties}></div>
           
-          <div className="bubble w-2 h-2" style={{ 
+          <div className="bubble bubble-iridescent w-2 h-2" style={{ 
             left: '60%', 
             bottom: '5%',
             '--duration': '10s', 
-            '--opacity': '0.7',
+            '--opacity': '0.8',
             '--move-x': '-15px'
           } as React.CSSProperties}></div>
           
-          <div className="bubble w-1.5 h-1.5" style={{ 
+          <div className="bubble bubble-iridescent w-1.5 h-1.5" style={{ 
             left: '45%', 
             bottom: '0%',
             '--duration': '6s', 
-            '--opacity': '0.5',
+            '--opacity': '0.6',
             '--move-x': '5px'
           } as React.CSSProperties}></div>
           
-          <div className="bubble w-2 h-2" style={{ 
+          <div className="bubble bubble-iridescent w-2 h-2" style={{ 
             left: '20%', 
             bottom: '15%',
             '--duration': '8s', 
-            '--opacity': '0.6',
+            '--opacity': '0.7',
             '--move-x': '-5px'
           } as React.CSSProperties}></div>
           
-          <div className="bubble w-1 h-1" style={{ 
+          <div className="bubble bubble-iridescent w-1 h-1" style={{ 
             left: '80%', 
             bottom: '8%',
             '--duration': '5s', 
-            '--opacity': '0.4',
+            '--opacity': '0.5',
             '--move-x': '3px'
           } as React.CSSProperties}></div>
         </div>
@@ -136,20 +140,27 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           {/* More active fluid effect when processing */}
           {isProcessing && (
             <>
-              <div className="absolute inset-0 w-full h-full rounded-full bg-pink-100 blur-md opacity-40 animate-pulse"></div>
-              <div className="bubble w-2 h-2 animate-bounce" style={{ 
+              <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-radial from-pink-200 via-transparent to-transparent blur-md opacity-40 animate-pulse"></div>
+              <div className="bubble bubble-iridescent w-2 h-2 animate-bounce" style={{ 
                 left: '25%', 
                 bottom: '15%',
                 '--duration': '3s', 
-                '--opacity': '0.8',
+                '--opacity': '0.9',
                 '--move-x': '8px'
               } as React.CSSProperties}></div>
-              <div className="bubble w-2.5 h-2.5 animate-bounce" style={{ 
+              <div className="bubble bubble-iridescent w-2.5 h-2.5 animate-bounce" style={{ 
                 left: '70%', 
                 bottom: '20%',
                 '--duration': '4s', 
-                '--opacity': '0.7',
+                '--opacity': '0.9',
                 '--move-x': '-12px'
+              } as React.CSSProperties}></div>
+              <div className="bubble bubble-iridescent w-1.5 h-1.5" style={{ 
+                left: '40%', 
+                bottom: '30%',
+                '--duration': '2.5s', 
+                '--opacity': '0.8',
+                '--move-x': '5px'
               } as React.CSSProperties}></div>
             </>
           )}
