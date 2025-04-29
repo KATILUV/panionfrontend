@@ -94,16 +94,18 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         </div>
       )}
       
-      <form onSubmit={handleFormSubmit} className="flex items-center bg-white/10 backdrop-blur-xl border border-white/25 rounded-full shadow-lg p-1.5 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-25 bg-gradient-to-r from-[#6a3093]/20 to-[#a044ff]/20 pointer-events-none"></div>
+      <form onSubmit={handleFormSubmit} className="flex items-center bg-white/5 backdrop-blur-2xl border border-white/20 rounded-full shadow-xl p-1.5 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#7928CA]/5 to-[#FF0080]/5 pointer-events-none"></div>
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-200 via-purple-400 to-purple-800 blur-xl"></div>
+        
         <input
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="flex-1 py-3 px-5 bg-transparent focus:outline-none text-white placeholder:text-gray-300 rounded-l-full"
+          className="flex-1 py-3 px-5 bg-transparent focus:outline-none text-white placeholder:text-gray-300/80 rounded-l-full"
           placeholder="Message Clara..."
           disabled={isLoading}
-          style={{ fontFamily: "'Inter', sans-serif", letterSpacing: "0.01em" }}
+          style={{ fontFamily: "'Inter', sans-serif", letterSpacing: "0.01em", fontWeight: 400 }}
         />
         
         <input 
@@ -117,14 +119,14 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         
         <label 
           htmlFor="image-upload" 
-          className="cursor-pointer mx-1 p-2 rounded-full hover:bg-white/15 transition-colors"
+          className="cursor-pointer mx-1 p-2 rounded-full hover:bg-white/10 transition-all duration-200 ease-in-out"
         >
-          <Image className="h-5 w-5 text-white opacity-80 hover:opacity-100 transition-opacity" />
+          <Image className="h-5 w-5 text-white opacity-70 hover:opacity-100 transition-opacity" />
         </label>
         
         <Button
           type="submit"
-          className="bg-gradient-to-r from-[#6a3093] to-[#a044ff] hover:from-[#5a2583] hover:to-[#9035ef] text-white rounded-full p-3 ml-2 flex items-center justify-center transition-all duration-300 h-11 w-11 shadow-lg hover:shadow-xl hover:scale-105"
+          className="bg-gradient-to-r from-[#7928CA] to-[#FF0080] hover:from-[#6b20b7] hover:to-[#e60073] text-white rounded-full p-3 ml-2 flex items-center justify-center transition-all duration-300 h-11 w-11 shadow-lg hover:shadow-xl hover:scale-105"
           disabled={isLoading || (!inputValue.trim() && !selectedImage)}
         >
           <Plane className="h-5 w-5" />
