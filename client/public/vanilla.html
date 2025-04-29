@@ -1255,6 +1255,11 @@
         
         // Focus input on page load
         messageInput.focus();
+        
+        // Display a welcome message
+        setTimeout(() => {
+          addMessage("Hello! I'm Clara, your AI companion. How can I help you today?", false);
+        }, 800);
         // Memory panel functionality
         let currentCategory = 'all';
         
