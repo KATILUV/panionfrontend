@@ -11,8 +11,7 @@ import {
   saveConversation, 
   getMemoriesByCategory, 
   getMemoryStats,
-  MEMORY_CATEGORIES,
-  EMOTION_TAGS
+  MEMORY_CATEGORIES 
 } from "./memory";
 
 // Configure multer for handling file uploads
@@ -43,22 +42,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(uploadsDir));
   
   // Serve vanilla HTML for testing
-  app.get('/api/vanilla', (req, res) => {
+  app.get('/vanilla', (req, res) => {
     const vanillaPath = path.resolve('client', 'public', 'vanilla.html');
     if (fs.existsSync(vanillaPath)) {
       res.sendFile(vanillaPath);
     } else {
       res.status(404).send('Vanilla HTML file not found');
-    }
-  });
-  
-  // Serve simple HTML version for testing
-  app.get('/api/simple', (req, res) => {
-    const simplePath = path.resolve('client', 'public', 'simple.html');
-    if (fs.existsSync(simplePath)) {
-      res.sendFile(simplePath);
-    } else {
-      res.status(404).send('Simple HTML file not found');
     }
   });
 
@@ -306,20 +295,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error getting memory stats:', error);
       res.status(500).json({ 
         message: 'Error retrieving memory statistics' 
-      });
-    }
-  });
-
-  // Get available emotion tags
-  app.get('/api/emotion-tags', async (req, res) => {
-    try {
-      res.json({ 
-        emotions: EMOTION_TAGS
-      });
-    } catch (error) {
-      console.error('Error getting emotion tags:', error);
-      res.status(500).json({ 
-        message: 'Error retrieving emotion tags' 
       });
     }
   });

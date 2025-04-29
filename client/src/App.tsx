@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Chat from "@/pages/chat";
 import Basic from "@/pages/basic";
-import Simple from "@/pages/simple";
 
 function Router() {
   return (
@@ -15,8 +14,6 @@ function Router() {
       <Route path="/" component={Chat} />
       {/* Basic test page with simplified input */}
       <Route path="/basic" component={Basic} />
-      {/* Ultra simple chat page */}
-      <Route path="/simple" component={Simple} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
@@ -32,7 +29,7 @@ function App() {
         
         {/* Dev navigation */}
         <div className="fixed bottom-4 right-4 bg-black/50 backdrop-blur-md p-2 rounded-xl text-xs text-white">
-          <Link href="/">Main</Link> | <Link href="/basic">Basic</Link> | <Link href="/simple">Simple</Link>
+          <Link href="/">Main</Link> | <Link href="/basic">Basic</Link>
         </div>
       </TooltipProvider>
     </QueryClientProvider>

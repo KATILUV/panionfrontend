@@ -19,7 +19,6 @@ interface Memory {
   important?: boolean; // Whether this is an important memory
   date?: string;      // Date in YYYY-MM-DD format (for long-term storage)
   category?: string;  // Category of the memory (personal, preference, fact, etc.)
-  emotions?: string[];  // Emotions associated with the memory (joy, sadness, surprise, etc.)
 }
 
 // Valid memory categories
@@ -32,27 +31,6 @@ export const MEMORY_CATEGORIES: string[] = [
   "experience",   // User experiences and stories
   "contact",      // Contact information or people mentioned
   "other"         // Default category for miscellaneous memories
-];
-
-// Valid emotion tags
-export const EMOTION_TAGS: string[] = [
-  "joy",           // Happiness, delight, contentment
-  "sadness",       // Grief, sorrow, disappointment
-  "anger",         // Frustration, annoyance, rage
-  "fear",          // Anxiety, worry, dread
-  "surprise",      // Amazement, astonishment, shock
-  "disgust",       // Revulsion, distaste, aversion
-  "trust",         // Confidence, belief, faith
-  "anticipation",  // Excitement, expectation, hope
-  "curiosity",     // Inquisitiveness, wonder, interest
-  "gratitude",     // Thankfulness, appreciation
-  "love",          // Affection, care, attachment
-  "pride",         // Self-respect, dignity, satisfaction
-  "amusement",     // Entertainment, humor, fun
-  "nostalgia",     // Longing for the past, reminiscence
-  "inspiration",   // Motivation, encouragement
-  "confusion",     // Puzzlement, perplexity, uncertainty
-  "neutral"        // No strong emotion detected
 ];
 
 // Memory store interface
@@ -143,7 +121,7 @@ export async function saveConversation(sessionId: string): Promise<void> {
 }
 
 // Check if a memory is important enough to save long-term
-// and categorize it if it's important, while also detecting emotions
+// and categorize it if it's important
 async function isMemoryImportant(memory: Memory): Promise<boolean> {
   // Don't process system messages or empty content
   if (!memory.content.trim()) {
@@ -156,22 +134,17 @@ async function isMemoryImportant(memory: Memory): Promise<boolean> {
       messages: [
         {
           role: "system",
-          content: `Analyze the following message and determine:
-          1. If it contains important personal information, preferences, facts, or context that would be valuable to remember
-          2. Which category it falls into
-          3. What emotions are associated with the message (both expressed by the user and implied by the content)
-          
+          content: `Analyze the following message and determine if it contains important personal information, preferences, 
+          facts, or context that would be valuable to remember for future conversations with this user. 
           Important information includes personal details, preferences, interests, facts about their life,
           significant events, or any context that would help personalize future interactions.
           
           Valid categories are: ${MEMORY_CATEGORIES.join(", ")}
-          Valid emotions are: ${EMOTION_TAGS.join(", ")}
           
           Respond with JSON in the format: {
             "important": true/false, 
             "reason": "brief explanation",
-            "category": "one of the valid categories that best fits this memory",
-            "emotions": ["emotion1", "emotion2", ...] (list of 1-3 most relevant emotions from the valid emotions list)
+            "category": "one of the valid categories that best fits this memory"
           }`
         },
         {
@@ -182,30 +155,14 @@ async function isMemoryImportant(memory: Memory): Promise<boolean> {
       response_format: { type: "json_object" }
     });
     
-    const result = JSON.parse(response.choices[0].message.content || '{"important": false, "category": "other", "emotions": ["neutral"]}');
+    const result = JSON.parse(response.choices[0].message.content || '{"important": false, "category": "other"}');
     
-    // Process if the memory is important
+    // Set the category if the memory is important
     if (result.important === true) {
-      // Set category
       memory.category = result.category || "other";
       // Default to "other" if an invalid category is returned
       if (memory.category && !MEMORY_CATEGORIES.includes(memory.category)) {
         memory.category = "other";
-      }
-      
-      // Set emotions
-      if (result.emotions && Array.isArray(result.emotions) && result.emotions.length > 0) {
-        // Filter only valid emotions
-        memory.emotions = result.emotions.filter((emotion: string) => 
-          typeof emotion === 'string' && EMOTION_TAGS.includes(emotion)
-        );
-        
-        // If no valid emotions were found, default to neutral
-        if (!memory.emotions || memory.emotions.length === 0) {
-          memory.emotions = ["neutral"];
-        }
-      } else {
-        memory.emotions = ["neutral"];
       }
     }
     
