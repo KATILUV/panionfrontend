@@ -122,7 +122,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         
         <Button
           type="submit"
-          className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-full p-3 ml-2 flex items-center justify-center transition-all duration-300 h-11 w-11 shadow-md hover:shadow-lg hover:scale-105"
+          className="bg-gradient-to-r from-[#6a3093] to-[#a044ff] hover:from-[#5a2583] hover:to-[#9035ef] text-white rounded-full p-3 ml-2 flex items-center justify-center transition-all duration-300 h-11 w-11 shadow-md hover:shadow-lg hover:scale-105"
           disabled={isLoading || (!inputValue.trim() && !selectedImage)}
         >
           <Plane className="h-5 w-5" />

@@ -80,7 +80,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     <div className={`flex mb-4 ${isVisible ? 'message-in' : 'opacity-0'}`}>
       <div className="chat-bubble chat-bubble-ai max-w-[70%] p-3">
         {imageUrl && renderImage()}
-        <p className="text-gray-800 text-sm">{renderContentWithLinks(content)}</p>
+        <p className="text-purple-900 text-sm">{renderContentWithLinks(content)}</p>
       </div>
     </div>
   );
