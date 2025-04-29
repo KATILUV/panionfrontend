@@ -5,7 +5,7 @@ import { Message, ChatResponse } from '@/types/chat';
 
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState<string>('');
   const selectedImageRef = useRef<string | null>(null);
 
   const { mutate, isPending: isLoading } = useMutation({

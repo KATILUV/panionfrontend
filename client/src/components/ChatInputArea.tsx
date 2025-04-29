@@ -100,7 +100,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         
         <input
           type="text"
-          value={inputValue}
+          value={inputValue || ""}
           onChange={(e) => setInputValue(e.target.value)}
           className="flex-1 py-3 px-5 bg-transparent focus:outline-none text-white placeholder:text-gray-300/80 rounded-l-full"
           placeholder="Message Clara..."
