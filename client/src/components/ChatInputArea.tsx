@@ -99,9 +99,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="flex-1 py-3 px-5 bg-transparent focus:outline-none text-white placeholder:text-gray-300 rounded-l-full"
+          className="flex-1 py-3 px-5 bg-transparent focus:outline-none text-white placeholder:text-gray-300 rounded-l-full font-['Inter',sans-serif]"
           placeholder="Message Clara..."
           disabled={isLoading}
+          style={{ fontFamily: "'Inter', sans-serif" }}
         />
         
         <input 

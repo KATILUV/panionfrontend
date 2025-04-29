@@ -119,6 +119,7 @@
 .chat-bubble {
   position: relative;
   transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
 }
 
 .chat-bubble-user {
