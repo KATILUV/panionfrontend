@@ -43,12 +43,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(uploadsDir));
   
   // Serve vanilla HTML for testing
-  app.get('/vanilla', (req, res) => {
+  app.get('/api/vanilla', (req, res) => {
     const vanillaPath = path.resolve('client', 'public', 'vanilla.html');
     if (fs.existsSync(vanillaPath)) {
       res.sendFile(vanillaPath);
     } else {
       res.status(404).send('Vanilla HTML file not found');
+    }
+  });
+  
+  // Serve simple HTML version for testing
+  app.get('/api/simple', (req, res) => {
+    const simplePath = path.resolve('client', 'public', 'simple.html');
+    if (fs.existsSync(simplePath)) {
+      res.sendFile(simplePath);
+    } else {
+      res.status(404).send('Simple HTML file not found');
     }
   });
 
