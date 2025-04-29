@@ -715,6 +715,41 @@
         background-color: rgba(160, 160, 160, 0.3);
       }
       
+      /* Emotion tags */
+      .memory-emotions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 5px;
+      }
+      
+      .memory-emotion-tag {
+        display: inline-block;
+        font-size: 10px;
+        padding: 1px 5px;
+        border-radius: 3px;
+        color: white;
+        background-color: rgba(130, 130, 130, 0.3);
+      }
+      
+      .memory-emotion-tag.emotion-joy { background-color: rgba(255, 193, 7, 0.3); }
+      .memory-emotion-tag.emotion-sadness { background-color: rgba(0, 123, 255, 0.3); }
+      .memory-emotion-tag.emotion-anger { background-color: rgba(220, 53, 69, 0.3); }
+      .memory-emotion-tag.emotion-fear { background-color: rgba(108, 117, 125, 0.3); }
+      .memory-emotion-tag.emotion-surprise { background-color: rgba(255, 193, 7, 0.3); }
+      .memory-emotion-tag.emotion-disgust { background-color: rgba(40, 167, 69, 0.3); }
+      .memory-emotion-tag.emotion-trust { background-color: rgba(23, 162, 184, 0.3); }
+      .memory-emotion-tag.emotion-anticipation { background-color: rgba(255, 145, 0, 0.3); }
+      .memory-emotion-tag.emotion-curiosity { background-color: rgba(111, 66, 193, 0.3); }
+      .memory-emotion-tag.emotion-gratitude { background-color: rgba(102, 16, 242, 0.3); }
+      .memory-emotion-tag.emotion-love { background-color: rgba(232, 62, 140, 0.3); }
+      .memory-emotion-tag.emotion-pride { background-color: rgba(0, 123, 255, 0.3); }
+      .memory-emotion-tag.emotion-amusement { background-color: rgba(40, 167, 69, 0.3); }
+      .memory-emotion-tag.emotion-nostalgia { background-color: rgba(23, 162, 184, 0.3); }
+      .memory-emotion-tag.emotion-inspiration { background-color: rgba(255, 193, 7, 0.3); }
+      .memory-emotion-tag.emotion-confusion { background-color: rgba(108, 117, 125, 0.3); }
+      .memory-emotion-tag.emotion-neutral { background-color: rgba(130, 130, 130, 0.3); }
+      
       .memory-content {
         color: rgba(255, 255, 255, 0.9);
         font-size: 14px;
@@ -1330,8 +1365,19 @@
                 const categoryText = memory.category ? 
                   `<span class="memory-category-tag category-${memory.category}">${memory.category}</span>` : '';
                 
+                // Generate emotion tags html if they exist
+                let emotionsHtml = '';
+                if (memory.emotions && memory.emotions.length > 0) {
+                  emotionsHtml = '<div class="memory-emotions">' + 
+                    memory.emotions.map(emotion => 
+                      `<span class="memory-emotion-tag emotion-${emotion}">${emotion}</span>`
+                    ).join('') + 
+                    '</div>';
+                }
+                
                 memoryItem.innerHTML = `
                   <div class="memory-date">${date} ${categoryText}</div>
+                  ${emotionsHtml}
                   <div class="memory-content">${memory.content}</div>
                 `;
                 
