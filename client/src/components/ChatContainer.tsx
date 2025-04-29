@@ -17,7 +17,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ messages, isLoading }) =>
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto mb-4 px-4 py-5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
+    <div className="flex-1 overflow-y-auto mb-4 px-4 py-5">
       {messages.map((message, index) => (
         <ChatMessage key={index} message={message} />
       ))}
