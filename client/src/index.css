@@ -58,8 +58,21 @@
   body {
     @apply font-sans antialiased text-foreground;
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, hsl(220, 70%, 30%) 0%, hsl(260, 70%, 40%) 100%);
+    background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
     min-height: 100vh;
+    position: relative;
+  }
+  
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 30% 30%, rgba(138, 43, 226, 0.08), transparent 60%),
+                radial-gradient(circle at 70% 70%, rgba(25, 118, 210, 0.08), transparent 60%);
+    z-index: -1;
   }
 }
 
@@ -125,34 +138,39 @@
 .chat-bubble-user {
   background: linear-gradient(135deg, #6a3093 0%, #a044ff 100%);
   color: white;
-  border-radius: 18px 18px 4px 18px;
+  border-radius: 22px 22px 4px 22px;
   box-shadow: 0 8px 25px rgba(160, 68, 255, 0.3);
   animation: floating-bubble 6s ease-in-out infinite;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+  letter-spacing: 0.01em;
+  transform: perspective(1000px) translateZ(0);
 }
 
 .chat-bubble-user:hover {
   box-shadow: 0 12px 30px rgba(160, 68, 255, 0.4);
-  transform: translateY(-3px);
+  transform: perspective(1000px) translateZ(10px) translateY(-2px);
 }
 
 .chat-bubble-ai {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(230, 230, 250, 0.9) 100%);
-  backdrop-filter: blur(8px);
-  border-radius: 18px 18px 18px 4px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-radius: 22px 22px 22px 4px;
   box-shadow: 0 8px 25px rgba(138, 43, 226, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
   animation: floating-bubble 8s ease-in-out infinite 1s;
+  transform: perspective(1000px) translateZ(0);
+  letter-spacing: 0.01em;
 }
 
 .chat-bubble-ai:hover {
   box-shadow: 0 12px 30px rgba(138, 43, 226, 0.25);
-  transform: translateY(-3px);
+  transform: perspective(1000px) translateZ(10px) translateY(-2px);
 }
 
 @keyframes floating-bubble {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  0%, 100% { transform: perspective(1000px) translateY(0) translateZ(0); }
+  50% { transform: perspective(1000px) translateY(-5px) translateZ(5px); }
 }
 
 .chat-time {
@@ -177,19 +195,28 @@
 /* Crystal Ball effects */
 .crystal-ball {
   transform-style: preserve-3d;
-  perspective: 800px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2));
+  perspective: 1200px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2));
   box-shadow: 
-    0 5px 25px rgba(0, 0, 0, 0.15),
-    0 0 15px rgba(255, 255, 255, 0.6),
-    inset 0 0 30px rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+    0 10px 30px rgba(0, 0, 0, 0.2),
+    0 0 20px rgba(138, 43, 226, 0.2),
+    inset 0 0 40px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   overflow: hidden;
   /* Clean glass look */
   background-color: rgba(250, 250, 255, 0.2);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
   /* Hard cut edge for the crystal */
   mask-image: radial-gradient(circle, black 100%, transparent 100%);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.crystal-ball:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.25),
+    0 0 25px rgba(138, 43, 226, 0.3),
+    inset 0 0 40px rgba(255, 255, 255, 0.2);
 }
 
 /* We don't need crystal-inner anymore since we simplified the design */
