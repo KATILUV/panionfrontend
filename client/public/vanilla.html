@@ -1438,6 +1438,129 @@
           memoryPanel.classList.remove('active');
         });
         
+        // Toggle file manager
+        fileManagerToggle.addEventListener('click', function() {
+          fileManager.classList.toggle('active');
+          
+          // Load files when file manager opens
+          if (fileManager.classList.contains('active')) {
+            loadFiles();
+          }
+        });
+        
+        // Load uploaded files
+        function loadFiles() {
+          // Clear file list
+          fileList.innerHTML = '<div class="file-status">Loading files...</div>';
+          
+          fetch('/api/files', {
+            method: 'GET',
+            credentials: 'include'
+          })
+          .then(response => response.json())
+          .then(data => {
+            // Update file count
+            fileCount.textContent = `${data.count} files (${data.totalSize})`;
+            
+            // Clear loading message
+            fileList.innerHTML = '';
+            
+            if (data.files.length === 0) {
+              fileList.innerHTML = '<div class="file-status">No files uploaded yet</div>';
+              return;
+            }
+            
+            // Add files to the list
+            data.files.forEach(file => {
+              const fileElement = document.createElement('div');
+              fileElement.className = 'file-item';
+              
+              // Determine if it's an image
+              const isImage = file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+              
+              fileElement.innerHTML = `
+                <div class="file-preview" style="${isImage ? `background-image: url('${file.url}')` : ''}"></div>
+                <div class="file-info">
+                  <div class="file-name">${file.name}</div>
+                  <div class="file-meta">
+                    <span class="file-size">${file.size}</span>
+                    <span class="file-date">${new Date(file.createdAt).toLocaleString()}</span>
+                  </div>
+                </div>
+                <button class="file-actions-btn" data-filename="${file.name}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              `;
+              
+              fileList.appendChild(fileElement);
+              
+              // Add delete button event
+              const deleteBtn = fileElement.querySelector('.file-actions-btn');
+              deleteBtn.addEventListener('click', function() {
+                const filename = this.dataset.filename;
+                if (confirm(`Are you sure you want to delete "${filename}"?`)) {
+                  deleteFile(filename);
+                }
+              });
+            });
+          })
+          .catch(error => {
+            console.error('Error loading files:', error);
+            fileList.innerHTML = '<div class="file-status">Error loading files</div>';
+          });
+        }
+        
+        // Delete a file
+        function deleteFile(filename) {
+          fetch(`/api/files/${encodeURIComponent(filename)}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          })
+          .then(response => response.json())
+          .then(data => {
+            // Reload files list
+            loadFiles();
+          })
+          .catch(error => {
+            console.error('Error deleting file:', error);
+            alert('Error deleting file');
+          });
+        }
+        
+        // Clean up old files
+        cleanupButton.addEventListener('click', function() {
+          const keepCount = prompt('How many recent files would you like to keep?', '20');
+          
+          if (keepCount === null) return; // User canceled
+          
+          const keepCountNum = parseInt(keepCount);
+          if (isNaN(keepCountNum) || keepCountNum < 0) {
+            alert('Please enter a valid positive number');
+            return;
+          }
+          
+          fetch('/api/files/cleanup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ keepCount: keepCountNum })
+          })
+          .then(response => response.json())
+          .then(data => {
+            alert(`${data.deletedCount} files deleted. Kept ${keepCountNum} most recent files.`);
+            loadFiles();
+          })
+          .catch(error => {
+            console.error('Error cleaning up files:', error);
+            alert('Error cleaning up files');
+          });
+        });
+        
         // Load available memory categories
         function loadMemoryCategories() {
           fetch('/api/memory-categories', { 
