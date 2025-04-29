@@ -6,6 +6,16 @@ import fs from "fs";
 import { handleChatRequest } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve vanilla HTML for testing
+  app.get('/vanilla', (req, res) => {
+    const vanillaPath = path.resolve('client', 'public', 'vanilla.html');
+    if (fs.existsSync(vanillaPath)) {
+      res.sendFile(vanillaPath);
+    } else {
+      res.status(404).send('Vanilla HTML file not found');
+    }
+  });
+
   // Chat endpoint to communicate with OpenAI
   app.post('/api/chat', async (req, res) => {
     try {
