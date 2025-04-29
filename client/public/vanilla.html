@@ -1092,6 +1092,12 @@
           reader.readAsDataURL(file);
         });
         
+        // Enable message input typing
+        messageInput.addEventListener('input', function(e) {
+          // This ensures the input field properly updates
+          messageInput.value = e.target.value;
+        });
+        
         // Form submission handler
         messageForm.addEventListener('submit', function(e) {
           e.preventDefault();
