@@ -39,6 +39,7 @@ const Chat: React.FC = () => {
         setInputValue={setInputValue}
         handleSubmit={handleSubmit}
         isLoading={isLoading}
+        onImageSelect={handleImageChange}
       />
 
       {/* Add a subtle footer */}

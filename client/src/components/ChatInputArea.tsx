@@ -7,13 +7,15 @@ interface ChatInputAreaProps {
   setInputValue: (value: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
+  onImageSelect?: (imageDataUrl: string | null) => void;
 }
 
 const ChatInputArea: React.FC<ChatInputAreaProps> = ({ 
   inputValue, 
   setInputValue, 
   handleSubmit,
-  isLoading
+  isLoading,
+  onImageSelect
 }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [fileObj, setFileObj] = useState<File | null>(null);
@@ -26,8 +28,14 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
       
       reader.onload = (event) => {
         if (event.target?.result) {
-          setSelectedImage(event.target.result as string);
+          const imageDataUrl = event.target.result as string;
+          setSelectedImage(imageDataUrl);
           setFileObj(file);
+          
+          // Notify parent component about the selected image if the prop is provided
+          if (onImageSelect) {
+            onImageSelect(imageDataUrl);
+          }
         }
       };
       
@@ -41,14 +49,24 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    
+    // Notify parent component that the image has been cleared
+    if (onImageSelect) {
+      onImageSelect(null);
+    }
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading || (!inputValue.trim() && !selectedImage)) return;
     
-    // Pass the selectedImage to the parent component through the handleSubmit function
-    // We'll modify the useChat hook to handle images
+    // Tell the parent about our selected image before we submit the form
+    if (selectedImage) {
+      // In a real app, you might want to pass this to a context or send it via API
+      // For now, we're just adding it to the chat state directly
+    }
+    
+    // Pass the event to the parent component 
     handleSubmit(e);
     
     // Clear the selected image after sending
