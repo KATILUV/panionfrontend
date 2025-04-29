@@ -1,13 +1,16 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Message, ChatResponse } from '@/types/chat';
 
+/**
+ * Custom hook for managing chat functionality
+ * Simplified version that handles messages and API communication
+ */
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState<string>('');
-  const selectedImageRef = useRef<string | null>(null);
 
+  // API mutation for sending messages to the server
   const { mutate, isPending: isLoading } = useMutation({
     mutationFn: async (message: string) => {
       const response = await apiRequest('POST', '/api/chat', { message });
@@ -15,6 +18,7 @@ export const useChat = () => {
       return data;
     },
     onSuccess: (data) => {
+      // Add Clara's response to the messages
       const newMessage: Message = {
         content: data.response,
         isUser: false,
@@ -24,54 +28,32 @@ export const useChat = () => {
     },
     onError: (error) => {
       console.error('Error sending message:', error);
-      // Add error handling here - could show a toast notification
+      // TODO: Add better error handling here - could show a toast notification
     }
   });
 
+  /**
+   * Send a message to the API and add it to the chat
+   */
   const sendMessage = (message: string) => {
-    // Get the current selected image (if any)
-    const currentImage = selectedImageRef.current;
+    if (!message.trim()) return;
     
     // Add user message to the chat
     const newMessage: Message = {
       content: message,
       isUser: true,
-      timestamp: new Date().toISOString(),
-      imageUrl: currentImage || undefined
+      timestamp: new Date().toISOString()
     };
     
     setMessages((prev) => [...prev, newMessage]);
-    
-    // Reset the selected image
-    selectedImageRef.current = null;
     
     // Send message to the API
     mutate(message);
   };
 
-  // Function to handle form submission from ChatInputArea
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Check if there's at least a message or an image
-    if (inputValue.trim() || selectedImageRef.current) {
-      sendMessage(inputValue);
-      setInputValue('');
-    }
-  };
-
-  // Function to set the selected image
-  const setSelectedImage = (imageDataUrl: string | null) => {
-    selectedImageRef.current = imageDataUrl;
-  };
-
   return {
     messages,
     isLoading,
-    sendMessage,
-    inputValue,
-    setInputValue,
-    handleSubmit,
-    setSelectedImage
+    sendMessage
   };
 };
