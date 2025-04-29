@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import multer from "multer";
 import { handleChatRequest, analyzeImage } from "./openai";
+import { searchMemories, smartMemorySearch, saveConversation } from "./memory";
 
 // Configure multer for handling file uploads
 const upload = multer({
@@ -121,6 +122,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error processing image upload:', error);
       res.status(500).json({
         message: 'Error processing your image'
+      });
+    }
+  });
+  
+  // Search Clara's memories
+  app.post('/api/search-memory', async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ 
+          message: 'Query is required and must be a string' 
+        });
+      }
+      
+      // Get session ID from cookies or create a new one
+      const sessionId = req.cookies?.sessionId || Date.now().toString();
+      
+      // Simple search
+      const memories = await searchMemories(query);
+      
+      res.json({ 
+        count: memories.length,
+        memories: memories 
+      });
+    } catch (error) {
+      console.error('Error searching memories:', error);
+      res.status(500).json({ 
+        message: 'Error searching memories' 
+      });
+    }
+  });
+  
+  // Smart search using AI
+  app.post('/api/smart-memory-search', async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ 
+          message: 'Query is required and must be a string' 
+        });
+      }
+      
+      // Get session ID from cookies or create a new one
+      const sessionId = req.cookies?.sessionId || Date.now().toString();
+      
+      // AI-powered search
+      const result = await smartMemorySearch(query);
+      
+      res.json({ result });
+    } catch (error) {
+      console.error('Error in smart memory search:', error);
+      res.status(500).json({ 
+        message: 'Error searching memories' 
+      });
+    }
+  });
+  
+  // Save current conversation
+  app.post('/api/save-conversation', async (req, res) => {
+    try {
+      // Get session ID from cookies
+      const sessionId = req.cookies?.sessionId;
+      
+      if (!sessionId) {
+        return res.status(400).json({ 
+          message: 'No active conversation to save' 
+        });
+      }
+      
+      // Save conversation
+      await saveConversation(sessionId);
+      
+      res.json({ 
+        message: 'Conversation saved successfully' 
+      });
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+      res.status(500).json({ 
+        message: 'Error saving conversation' 
       });
     }
   });
