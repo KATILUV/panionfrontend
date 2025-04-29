@@ -13,6 +13,12 @@ import {
   getMemoryStats,
   MEMORY_CATEGORIES 
 } from "./memory";
+import {
+  getFileStats,
+  deleteFile,
+  cleanupOldFiles,
+  formatFileSize
+} from "./utils/fileCleanup";
 
 // Configure multer for handling file uploads
 const upload = multer({
@@ -296,6 +302,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         message: 'Error retrieving memory statistics' 
       });
+    }
+  });
+
+  // Get uploaded files list
+  app.get('/api/files', (req, res) => {
+    try {
+      // Get all files in uploads directory
+      const files = getFileStats(uploadsDir);
+      
+      // Sort by creation date (newest first)
+      files.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      
+      // Format response
+      const formattedFiles = files.map(file => ({
+        name: file.name,
+        url: `/uploads/${file.name}`,
+        size: formatFileSize(file.size),
+        createdAt: file.createdAt.toISOString()
+      }));
+      
+      res.json({
+        count: files.length,
+        totalSize: formatFileSize(files.reduce((total, file) => total + file.size, 0)),
+        files: formattedFiles
+      });
+    } catch (error) {
+      console.error('Error getting files list:', error);
+      res.status(500).json({ message: 'Error retrieving files' });
+    }
+  });
+  
+  // Delete a specific file
+  app.delete('/api/files/:filename', (req, res) => {
+    try {
+      const { filename } = req.params;
+      
+      // Prevent directory traversal attacks
+      const sanitizedFilename = path.basename(filename);
+      const filePath = path.join(uploadsDir, sanitizedFilename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'File not found' });
+      }
+      
+      // Delete the file
+      const success = deleteFile(filePath);
+      
+      if (success) {
+        res.json({ message: 'File deleted successfully' });
+      } else {
+        res.status(500).json({ message: 'Error deleting file' });
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      res.status(500).json({ message: 'Error deleting file' });
+    }
+  });
+  
+  // Clean up old files (keep only a specified number of recent files)
+  app.post('/api/files/cleanup', (req, res) => {
+    try {
+      const { keepCount = 20 } = req.body;
+      
+      // Validate parameters
+      const keepCountNum = parseInt(keepCount.toString(), 10);
+      if (isNaN(keepCountNum) || keepCountNum < 0) {
+        return res.status(400).json({ message: 'Keep count must be a positive number' });
+      }
+      
+      // Clean up old files
+      const deletedCount = cleanupOldFiles(uploadsDir, keepCountNum);
+      
+      res.json({
+        message: `Cleaned up old files. Kept ${keepCountNum} most recent files.`,
+        deletedCount
+      });
+    } catch (error) {
+      console.error('Error cleaning up files:', error);
+      res.status(500).json({ message: 'Error cleaning up files' });
     }
   });
 

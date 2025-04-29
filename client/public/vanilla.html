@@ -741,6 +741,141 @@
         margin-bottom: 3px;
       }
       
+      /* File Manager Styles */
+      .file-manager-toggle {
+        margin-top: 20px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .file-manager-toggle:hover {
+        background: rgba(0, 0, 0, 0.3);
+      }
+      
+      .file-manager {
+        margin-top: 10px;
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        padding: 12px;
+        display: none;
+      }
+      
+      .file-manager.active {
+        display: block;
+      }
+      
+      .file-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      
+      .cleanup-button {
+        background: linear-gradient(135deg, rgba(138, 43, 226, 0.8), rgba(255, 0, 128, 0.8));
+        border: none;
+        border-radius: 4px;
+        color: white;
+        padding: 6px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .cleanup-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+      
+      .file-list {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      
+      .file-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        font-size: 12px;
+      }
+      
+      .file-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      .file-info {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+      
+      .file-name {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+      }
+      
+      .file-meta {
+        display: flex;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        margin-top: 2px;
+      }
+      
+      .file-size {
+        margin-right: 10px;
+      }
+      
+      .file-date {
+        white-space: nowrap;
+      }
+      
+      .file-preview {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        margin-right: 10px;
+        background-size: cover;
+        background-position: center;
+        background-color: rgba(0, 0, 0, 0.2);
+        flex-shrink: 0;
+      }
+      
+      .file-actions-btn {
+        margin-left: 10px;
+        color: rgba(255, 255, 255, 0.6);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+      }
+      
+      .file-actions-btn:hover {
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      .file-status {
+        text-align: center;
+        padding: 20px;
+        color: rgba(255, 255, 255, 0.7);
+        font-style: italic;
+      }
+      
       @media (max-width: 600px) {
         .memory-panel {
           width: 100%;
@@ -912,6 +1047,29 @@
         <div class="memory-stats" id="memoryStats">
           <!-- Memory statistics will appear here -->
         </div>
+        
+        <!-- File Manager section -->
+        <div class="file-manager-toggle" id="fileManagerToggle">
+          <span>Manage Uploaded Files</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"></path>
+          </svg>
+        </div>
+        
+        <div class="file-manager" id="fileManager">
+          <div class="file-actions">
+            <div class="file-info-summary">
+              <span id="fileCount">Loading files...</span>
+            </div>
+            <button class="cleanup-button" id="cleanupButton">
+              Clean Old Files
+            </button>
+          </div>
+          
+          <div class="file-list" id="fileList">
+            <!-- Files will be listed here -->
+          </div>
+        </div>
       </div>
       
       <!-- Image preview container will be added here when an image is selected -->
@@ -939,6 +1097,11 @@
         const memorySearchBtn = document.getElementById('memorySearchBtn');
         const memoryResults = document.getElementById('memoryResults');
         const memoryStats = document.getElementById('memoryStats');
+        const fileManagerToggle = document.getElementById('fileManagerToggle');
+        const fileManager = document.getElementById('fileManager');
+        const fileList = document.getElementById('fileList');
+        const fileCount = document.getElementById('fileCount');
+        const cleanupButton = document.getElementById('cleanupButton');
         
         // Variables to track current image
         let currentImagePreview = null;
