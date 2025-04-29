@@ -8,14 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <title>Clara AI Companion - Vanilla Version</title>
     <style>
-      /* Base Styles - Inspired by Clara Window */
+      /* Base Styles */
       body {
         font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #fff0f5 0%, #e6e6fa 100%);
+        background: linear-gradient(135deg, #1a1c41 0%, #3a1078 100%);
         min-height: 100vh;
         margin: 0;
         padding: 0;
-        color: #5D3A58;
+        color: white;
         position: relative;
       }
       
@@ -27,9 +27,9 @@
         width: 100%;
         height: 100%;
         background: 
-          radial-gradient(circle at 20% 20%, rgba(219, 112, 219, 0.15), transparent 40%),
-          radial-gradient(circle at 80% 80%, rgba(176, 196, 222, 0.15), transparent 40%),
-          radial-gradient(circle at 50% 50%, rgba(255, 182, 193, 0.1), transparent 70%);
+          radial-gradient(circle at 20% 20%, rgba(138, 43, 226, 0.15), transparent 40%),
+          radial-gradient(circle at 80% 80%, rgba(25, 118, 210, 0.15), transparent 40%),
+          radial-gradient(circle at 50% 50%, rgba(72, 52, 212, 0.05), transparent 70%);
         z-index: -1;
       }
       
@@ -97,16 +97,52 @@
         height: 120px;
         border-radius: 50%;
         position: relative;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(8px);
         box-shadow: 
-          0 10px 30px rgba(0, 0, 0, 0.2),
-          0 0 20px rgba(138, 43, 226, 0.2),
-          inset 0 0 40px rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+          0 20px 40px rgba(0, 0, 0, 0.4),
+          0 0 30px rgba(138, 43, 226, 0.3),
+          inset 0 0 60px rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.6);
         overflow: hidden;
         animation: float 6s ease-in-out infinite;
         transform-style: preserve-3d;
+        perspective: 800px;
+      }
+      
+      .crystal-ball::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(255, 255, 255, 0.05) 0%,
+          rgba(255, 255, 255, 0.2) 50%,
+          rgba(138, 43, 226, 0.1) 100%
+        );
+        filter: blur(5px);
+        z-index: -1;
+        transform: translateZ(-10px);
+      }
+      
+      .crystal-ball::after {
+        content: '';
+        position: absolute;
+        width: 105%;
+        height: 105%;
+        left: -2.5%;
+        top: -2.5%;
+        border-radius: 50%;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.4) 0%,
+          rgba(255, 255, 255, 0.05) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        z-index: 3;
+        pointer-events: none;
       }
       
       .crystal-highlight {
@@ -115,15 +151,32 @@
         height: 35%;
         background: radial-gradient(
           ellipse at center, 
-          rgba(255, 255, 255, 0.9) 0%, 
-          rgba(255, 255, 255, 0.5) 40%, 
+          rgba(255, 255, 255, 0.95) 0%, 
+          rgba(255, 255, 255, 0.6) 30%, 
           rgba(255, 255, 255, 0) 70%
         );
         border-radius: 50%;
-        top: 15%;
-        left: 15%;
+        top: 12%;
+        left: 12%;
         opacity: 0.9;
         filter: blur(1px);
+        z-index: 2;
+      }
+      
+      .crystal-highlight::after {
+        content: '';
+        position: absolute;
+        width: 60%;
+        height: 60%;
+        background: radial-gradient(
+          ellipse at center, 
+          rgba(255, 255, 255, 0.7) 0%, 
+          rgba(255, 255, 255, 0.3) 40%, 
+          rgba(255, 255, 255, 0) 70%
+        );
+        border-radius: 50%;
+        bottom: -40%;
+        right: -30%;
       }
       
       .crystal-fluid {
@@ -134,16 +187,36 @@
         left: 5%;
         border-radius: 50%;
         overflow: hidden;
-        opacity: 0.85;
+        opacity: 0.9;
         mix-blend-mode: screen;
+        z-index: 1;
+        transform-style: preserve-3d;
+        perspective: 500px;
+      }
+      
+      .crystal-fluid::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, 
+          transparent 30%, 
+          rgba(72, 52, 212, 0.05) 60%,
+          rgba(138, 43, 226, 0.1) 90%
+        );
+        border-radius: 50%;
+        z-index: 2;
       }
       
       .lava-blob {
         position: absolute;
         border-radius: 50%;
-        filter: blur(4px);
-        opacity: 0.8;
+        filter: blur(5px);
+        opacity: 0.85;
         mix-blend-mode: screen;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
       }
       
       .lava-blob-1 {
@@ -151,12 +224,15 @@
         height: 55%;
         background: radial-gradient(circle at 40% 40%, 
           rgb(255, 102, 196) 0%, 
-          rgba(255, 0, 128, 0.7) 50%,
+          rgba(255, 0, 128, 0.8) 50%,
           rgba(255, 0, 128, 0) 100%
         );
         left: 25%;
         bottom: 10%;
-        animation: blob-float 12s ease-in-out infinite;
+        animation: 
+          blob-float 12s ease-in-out infinite, 
+          blob-glow 8s ease-in-out infinite alternate;
+        transform: translateZ(5px);
       }
       
       .lava-blob-2 {
@@ -164,12 +240,15 @@
         height: 40%;
         background: radial-gradient(circle at 40% 40%, 
           rgb(102, 204, 255) 0%, 
-          rgba(0, 128, 255, 0.7) 50%,
+          rgba(0, 128, 255, 0.8) 50%,
           rgba(0, 128, 255, 0) 100%
         );
         right: 20%;
         bottom: 10%;
-        animation: blob-float 15s ease-in-out infinite 2s;
+        animation: 
+          blob-float 15s ease-in-out infinite 2s,
+          blob-glow 7s ease-in-out infinite alternate-reverse;
+        transform: translateZ(8px);
       }
       
       .lava-blob-3 {
@@ -177,12 +256,42 @@
         height: 35%;
         background: radial-gradient(circle at 40% 40%, 
           rgb(198, 102, 255) 0%, 
-          rgba(128, 0, 255, 0.7) 50%,
+          rgba(128, 0, 255, 0.8) 50%,
           rgba(128, 0, 255, 0) 100%
         );
         left: 30%;
         top: 20%;
-        animation: blob-float 18s ease-in-out infinite 1s;
+        animation: 
+          blob-float 18s ease-in-out infinite 1s,
+          blob-glow 9s ease-in-out infinite alternate;
+        transform: translateZ(3px);
+      }
+      
+      .lava-blob-4 {
+        width: 20%;
+        height: 20%;
+        background: radial-gradient(circle at 40% 40%, 
+          rgb(255, 215, 0) 0%, 
+          rgba(255, 165, 0, 0.8) 50%,
+          rgba(255, 165, 0, 0) 100%
+        );
+        right: 35%;
+        top: 40%;
+        animation: 
+          blob-float 14s ease-in-out infinite 3s,
+          blob-glow 6s ease-in-out infinite alternate-reverse;
+        transform: translateZ(10px);
+      }
+      
+      @keyframes blob-glow {
+        0% { 
+          opacity: 0.7; 
+          filter: blur(5px) brightness(1);
+        }
+        100% { 
+          opacity: 0.9; 
+          filter: blur(5px) brightness(1.3);
+        }
       }
       
       /* Input form */
@@ -201,7 +310,7 @@
         flex: 1;
         background: transparent;
         border: none;
-        color: #5D3A58;
+        color: white;
         padding: 12px 16px;
         font-size: 16px;
         outline: none;
@@ -209,7 +318,7 @@
       }
       
       .input-field::placeholder {
-        color: rgba(93, 58, 88, 0.6);
+        color: rgba(255, 255, 255, 0.6);
       }
       
       .form-actions {
@@ -309,7 +418,7 @@
       .footer {
         text-align: center;
         font-size: 12px;
-        color: #5D3A58;
+        color: rgba(255, 255, 255, 0.7);
       }
       
       /* Animations */
@@ -380,6 +489,7 @@
             <div class="lava-blob lava-blob-1"></div>
             <div class="lava-blob lava-blob-2"></div>
             <div class="lava-blob lava-blob-3"></div>
+            <div class="lava-blob lava-blob-4"></div>
           </div>
         </div>
       </div>
@@ -441,14 +551,61 @@
         let currentImagePreview = null;
         let selectedImage = null;
         
+        // Define @keyframes for pulse animation in the head
+        const styleEl = document.createElement('style');
+        styleEl.innerHTML = `
+          @keyframes pulse {
+            0%, 100% { 
+              box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(138, 43, 226, 0.3),
+                0 0 50px rgba(255, 0, 128, 0.3),
+                inset 0 0 60px rgba(255, 255, 255, 0.2);
+            }
+            50% { 
+              box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 50px rgba(138, 43, 226, 0.5),
+                0 0 70px rgba(255, 0, 128, 0.4),
+                inset 0 0 80px rgba(255, 255, 255, 0.3);
+            }
+          }
+        `;
+        document.head.appendChild(styleEl);
+        
         // Add animated glow to crystal ball when thinking
         function setOrbThinking(isThinking) {
           if (isThinking) {
-            crystalBall.style.boxShadow = '0 0 30px rgba(255, 0, 128, 0.6), 0 0 50px rgba(138, 43, 226, 0.4)';
+            crystalBall.style.boxShadow = '0 0 40px rgba(255, 0, 128, 0.5), 0 0 60px rgba(138, 43, 226, 0.4), inset 0 0 70px rgba(255, 255, 255, 0.25)';
             crystalBall.style.animation = 'float 3s ease-in-out infinite, pulse 2s infinite';
+            
+            // Make blobs pulse faster
+            document.querySelectorAll('.lava-blob').forEach(blob => {
+              // Store original animation
+              if (!blob.dataset.originalAnimation) {
+                blob.dataset.originalAnimation = blob.style.animation;
+              }
+              // Speed up animations
+              if (blob.classList.contains('lava-blob-1')) {
+                blob.style.animation = 'blob-float 8s ease-in-out infinite, blob-glow 3s ease-in-out infinite alternate';
+              } else if (blob.classList.contains('lava-blob-2')) {
+                blob.style.animation = 'blob-float 9s ease-in-out infinite, blob-glow 4s ease-in-out infinite alternate-reverse';
+              } else if (blob.classList.contains('lava-blob-3')) {
+                blob.style.animation = 'blob-float 7s ease-in-out infinite, blob-glow 3.5s ease-in-out infinite alternate';
+              } else if (blob.classList.contains('lava-blob-4')) {
+                blob.style.animation = 'blob-float 6s ease-in-out infinite, blob-glow 2.5s ease-in-out infinite alternate-reverse';
+              }
+            });
           } else {
             crystalBall.style.boxShadow = '';
             crystalBall.style.animation = 'float 6s ease-in-out infinite';
+            
+            // Restore original blob animations
+            document.querySelectorAll('.lava-blob').forEach(blob => {
+              if (blob.dataset.originalAnimation) {
+                blob.style.animation = blob.dataset.originalAnimation;
+              }
+            });
           }
         }
         
