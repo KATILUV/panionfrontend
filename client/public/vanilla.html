@@ -874,13 +874,14 @@
         <!-- Messages will appear here -->
       </div>
       
-      <form class="input-form" id="messageForm">
+      <div class="input-form" id="messageForm">
         <input 
           type="text" 
           class="input-field" 
           id="messageInput" 
           placeholder="Message Clara..." 
           autocomplete="off"
+          spellcheck="false"
         >
         <div class="form-actions">
           <button type="button" class="image-button" id="imageButton">
@@ -891,14 +892,14 @@
             </svg>
           </button>
           <input type="file" class="image-input" id="imageInput" accept="image/*">
-          <button type="submit" class="send-button" id="sendButton">
+          <button type="button" class="send-button" id="sendButton">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
             </svg>
           </button>
         </div>
-      </form>
+      </div>
       
       <!-- Memory panel toggle -->
       <div class="memory-toggle" id="memoryToggle">
@@ -1098,10 +1099,21 @@
           messageInput.value = e.target.value;
         });
         
-        // Form submission handler
-        messageForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          
+        // Key press handler for input field
+        messageInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+        
+        // Click handler for send button
+        sendButton.addEventListener('click', function() {
+          sendMessage();
+        });
+        
+        // Unified send message function
+        function sendMessage() {
           const message = messageInput.value.trim();
           
           // Check if we have an image to send
@@ -1115,7 +1127,7 @@
           
           // Handle text message
           sendTextMessage(message);
-        });
+        }
         
         // Handle text message submission
         function sendTextMessage(message) {
