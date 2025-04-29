@@ -10,16 +10,25 @@ interface ChatInputAreaProps {
   onImageSelect?: (imageDataUrl: string | null) => void;
 }
 
-const ChatInputArea: React.FC<ChatInputAreaProps> = ({ 
-  inputValue, 
-  setInputValue, 
-  handleSubmit,
-  isLoading,
-  onImageSelect
-}) => {
+const ChatInputArea: React.FC<ChatInputAreaProps> = (props) => {
+  const { isLoading, handleSubmit, onImageSelect } = props;
+  
+  // Local state
+  const [input, setInput] = useState<string>(props.inputValue || '');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [fileObj, setFileObj] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update local input when props change
+  React.useEffect(() => {
+    setInput(props.inputValue || '');
+  }, [props.inputValue]);
+
+  // Handle local input changes and propagate them to parent
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInput(newValue);
+    props.setInputValue(newValue);
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -30,9 +39,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         if (event.target?.result) {
           const imageDataUrl = event.target.result as string;
           setSelectedImage(imageDataUrl);
-          setFileObj(file);
           
-          // Notify parent component about the selected image if the prop is provided
+          // Notify parent component
           if (onImageSelect) {
             onImageSelect(imageDataUrl);
           }
@@ -45,12 +53,11 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
 
   const clearSelectedImage = () => {
     setSelectedImage(null);
-    setFileObj(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
     
-    // Notify parent component that the image has been cleared
+    // Notify parent component
     if (onImageSelect) {
       onImageSelect(null);
     }
@@ -58,13 +65,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading || (!inputValue.trim() && !selectedImage)) return;
-    
-    // Tell the parent about our selected image before we submit the form
-    if (selectedImage) {
-      // In a real app, you might want to pass this to a context or send it via API
-      // For now, we're just adding it to the chat state directly
-    }
+    if (isLoading || (!input.trim() && !selectedImage)) return;
     
     // Pass the event to the parent component 
     handleSubmit(e);
@@ -100,8 +101,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         
         <input
           type="text"
-          value={inputValue || ""}
-          onChange={(e) => setInputValue(e.target.value)}
+          value={input}
+          onChange={handleInputChange}
           className="flex-1 py-3 px-5 bg-transparent focus:outline-none text-white placeholder:text-gray-300/80 rounded-l-full"
           placeholder="Message Clara..."
           disabled={isLoading}
@@ -127,7 +128,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         <Button
           type="submit"
           className="bg-gradient-to-r from-[#7928CA] to-[#FF0080] hover:from-[#6b20b7] hover:to-[#e60073] text-white rounded-full p-3 ml-2 flex items-center justify-center transition-all duration-300 h-11 w-11 shadow-lg hover:shadow-xl hover:scale-105"
-          disabled={isLoading || (!inputValue.trim() && !selectedImage)}
+          disabled={isLoading || (!input.trim() && !selectedImage)}
         >
           <Plane className="h-5 w-5" />
         </Button>
