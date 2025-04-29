@@ -1096,6 +1096,7 @@
             headers: {
               'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({ message })
           })
           .then(response => response.json())
@@ -1157,6 +1158,7 @@
           // Send image to API
           fetch('/api/upload-image', {
             method: 'POST',
+            credentials: 'include',
             body: formData
           })
           .then(response => response.json())
@@ -1270,7 +1272,9 @@
         
         // Load available memory categories
         function loadMemoryCategories() {
-          fetch('/api/memory-categories')
+          fetch('/api/memory-categories', { 
+            credentials: 'include'
+          })
             .then(response => response.json())
             .then(data => {
               // Clear existing categories
@@ -1311,7 +1315,9 @@
         function loadMemoriesByCategory(category) {
           memoryResults.innerHTML = '<div class="memory-loading">Loading memories...</div>';
           
-          fetch(`/api/memories/${category}`)
+          fetch(`/api/memories/${category}`, {
+            credentials: 'include'
+          })
             .then(response => response.json())
             .then(data => {
               if (data.count === 0) {
@@ -1368,6 +1374,7 @@
             headers: {
               'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({ 
               query: query,
               category: currentCategory
@@ -1390,7 +1397,9 @@
         
         // Load memory statistics
         function loadMemoryStats() {
-          fetch('/api/memory-stats')
+          fetch('/api/memory-stats', {
+            credentials: 'include'
+          })
             .then(response => response.json())
             .then(data => {
               let statsHtml = '<div class="memory-stats-header">Memory Statistics</div>';
