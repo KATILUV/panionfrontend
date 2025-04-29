@@ -1,22 +1,19 @@
 import React from 'react';
 import ClaraOrb from '@/components/ClaraOrb';
 import ChatContainer from '@/components/ChatContainer';
-import ChatInputArea from '@/components/ChatInputArea';
+import SimpleInput from '@/components/SimpleInput';
 import { useChat } from '@/hooks/useChat';
 
 const Chat: React.FC = () => {
   const { 
     messages, 
     isLoading, 
-    handleSubmit, 
-    inputValue, 
-    setInputValue,
-    setSelectedImage
+    sendMessage
   } = useChat();
 
-  // Handler for the image selection from ChatInputArea
-  const handleImageChange = (imageDataUrl: string | null) => {
-    setSelectedImage(imageDataUrl);
+  // Simplified message sending - using our simple component
+  const handleSendMessage = (message: string) => {
+    sendMessage(message);
   };
 
   return (
@@ -34,12 +31,9 @@ const Chat: React.FC = () => {
         isLoading={isLoading} 
       />
   
-      <ChatInputArea 
-        inputValue={inputValue}
-        setInputValue={setInputValue}
-        handleSubmit={handleSubmit}
+      <SimpleInput 
+        onSubmit={handleSendMessage}
         isLoading={isLoading}
-        onImageSelect={handleImageChange}
       />
 
       {/* Add a subtle footer */}
