@@ -13,11 +13,13 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
   // Effect for inner content rotation - slower and smoother
   useEffect(() => {
     const rotateInterval = setInterval(() => {
-      setInnerRotation((prev) => (prev + 0.2) % 360);
+      // Rotate faster when processing
+      const rotateSpeed = isProcessing ? 0.5 : 0.2;
+      setInnerRotation((prev) => (prev + rotateSpeed) % 360);
     }, 50);
     
     return () => clearInterval(rotateInterval);
-  }, []);
+  }, [isProcessing]);
 
   // Track mouse for 3D tilt effect
   useEffect(() => {
@@ -68,8 +70,11 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
       {/* Crystal Ball */}
       <div 
         ref={orbRef}
-        className={`floating-orb w-28 h-28 rounded-full relative flex items-center justify-center transition-all duration-300 crystal-ball crystal-glow ${isProcessing ? 'animate-pulse' : ''}`}
-        style={orbStyle}
+        className={`floating-orb w-28 h-28 rounded-full relative flex items-center justify-center transition-all duration-300 crystal-ball crystal-glow ${isProcessing ? 'animate-pulse shadow-lg shadow-pink-600/30' : ''}`}
+        style={{
+          ...orbStyle,
+          boxShadow: isProcessing ? '0 0 25px rgba(255, 0, 128, 0.35), 0 0 40px rgba(138, 43, 226, 0.25), inset 0 0 50px rgba(255, 255, 255, 0.2)' : ''
+        }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

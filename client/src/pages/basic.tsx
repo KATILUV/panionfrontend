@@ -85,14 +85,14 @@ const Basic: React.FC = () => {
       </div>
 
       {/* Chat messages */}
-      <div className="flex-1 overflow-y-auto flex flex-col chat-container p-4 space-y-4 bg-gray-900/50 rounded-lg">
+      <div className="flex-1 overflow-y-auto flex flex-col chat-container p-4 space-y-4 bg-gray-900/50 rounded-lg backdrop-blur-sm border border-white/10">
         {messages.map((message, index) => (
           <div 
             key={index}
-            className={`p-3 rounded-lg max-w-[80%] ${
+            className={`p-4 rounded-2xl max-w-[80%] shadow-lg ${
               message.isUser 
-                ? 'bg-purple-600 text-white self-end' 
-                : 'bg-gray-800 text-white self-start'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white self-end border-b-2 border-purple-700/50' 
+                : 'bg-gray-800/60 backdrop-blur-sm text-white self-start border border-white/10'
             }`}
           >
             {message.content}
