@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plane } from 'lucide-react';
+import { Plane, Image, X } from 'lucide-react';
 
 interface ChatInputAreaProps {
   inputValue: string;
@@ -15,9 +15,68 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   handleSubmit,
   isLoading
 }) => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [fileObj, setFileObj] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setSelectedImage(event.target.result as string);
+          setFileObj(file);
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearSelectedImage = () => {
+    setSelectedImage(null);
+    setFileObj(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoading || (!inputValue.trim() && !selectedImage)) return;
+    
+    // Pass the selectedImage to the parent component through the handleSubmit function
+    // We'll modify the useChat hook to handle images
+    handleSubmit(e);
+    
+    // Clear the selected image after sending
+    clearSelectedImage();
+  };
+
   return (
     <div className="mb-6 relative">
-      <form onSubmit={handleSubmit} className="flex items-center bg-white/15 backdrop-blur-md border border-white/20 rounded-full shadow-lg p-1.5">
+      {selectedImage && (
+        <div className="mb-2 relative">
+          <div className="rounded-lg overflow-hidden border border-white/20 w-32 h-32 relative">
+            <img 
+              src={selectedImage} 
+              alt="Selected" 
+              className="w-full h-full object-cover"
+            />
+            <button 
+              onClick={clearSelectedImage}
+              className="absolute top-1 right-1 bg-black/50 rounded-full p-1 text-white hover:bg-black/70 transition-colors"
+              type="button"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <form onSubmit={handleFormSubmit} className="flex items-center bg-white/15 backdrop-blur-md border border-white/20 rounded-full shadow-lg p-1.5">
         <input
           type="text"
           value={inputValue}
@@ -26,10 +85,27 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
           placeholder="Message Clara..."
           disabled={isLoading}
         />
+        
+        <input 
+          type="file" 
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageSelect}
+          ref={fileInputRef}
+          id="image-upload"
+        />
+        
+        <label 
+          htmlFor="image-upload" 
+          className="cursor-pointer mx-1 p-2 rounded-full hover:bg-white/10 transition-colors"
+        >
+          <Image className="h-5 w-5 text-gray-300" />
+        </label>
+        
         <Button
           type="submit"
           className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-full p-3 ml-2 flex items-center justify-center transition-all duration-300 h-11 w-11 shadow-md hover:shadow-lg hover:scale-105"
-          disabled={isLoading || !inputValue.trim()}
+          disabled={isLoading || (!inputValue.trim() && !selectedImage)}
         >
           <Plane className="h-5 w-5" />
         </Button>

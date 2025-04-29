@@ -8,17 +8,15 @@ const Chat: React.FC = () => {
   const { 
     messages, 
     isLoading, 
-    sendMessage, 
+    handleSubmit, 
     inputValue, 
-    setInputValue 
+    setInputValue,
+    setSelectedImage
   } = useChat();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (inputValue.trim() && !isLoading) {
-      sendMessage(inputValue);
-      setInputValue('');
-    }
+  // Handler for the image selection from ChatInputArea
+  const handleImageChange = (imageDataUrl: string | null) => {
+    setSelectedImage(imageDataUrl);
   };
 
   return (

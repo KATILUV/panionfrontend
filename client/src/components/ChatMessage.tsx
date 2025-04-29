@@ -6,8 +6,9 @@ interface ChatMessageProps {
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const { content, isUser, timestamp } = message;
+  const { content, isUser, timestamp, imageUrl } = message;
   const [isVisible, setIsVisible] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // Format time as hours and minutes
   const time = new Date(timestamp).toLocaleTimeString([], { 
@@ -49,12 +50,27 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     });
   };
 
+  const renderImage = () => {
+    if (!imageUrl) return null;
+    
+    return (
+      <div className="mt-2 mb-1 overflow-hidden rounded-lg">
+        <img 
+          src={imageUrl} 
+          alt="Shared image" 
+          className={`w-full h-auto object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
+          onLoad={() => setImageLoaded(true)}
+        />
+      </div>
+    );
+  };
+
   if (isUser) {
     return (
       <div className={`flex justify-end mb-4 ${isVisible ? 'message-in' : 'opacity-0'}`}>
         <div className="chat-bubble chat-bubble-user max-w-[70%] p-3">
+          {imageUrl && renderImage()}
           <p className="text-white text-sm">{renderContentWithLinks(content)}</p>
-          <span className="chat-time text-white/80 block text-right mt-1">{time}</span>
         </div>
       </div>
     );
@@ -63,8 +79,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   return (
     <div className={`flex mb-4 ${isVisible ? 'message-in' : 'opacity-0'}`}>
       <div className="chat-bubble chat-bubble-ai max-w-[70%] p-3">
+        {imageUrl && renderImage()}
         <p className="text-gray-800 text-sm">{renderContentWithLinks(content)}</p>
-        <span className="chat-time text-gray-500 block mt-1">{time}</span>
       </div>
     </div>
   );
