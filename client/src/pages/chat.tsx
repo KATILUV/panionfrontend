@@ -26,9 +26,9 @@ const Chat: React.FC = () => {
       {/* Pass isProcessing to the orb so it animates while Clara is thinking */}
       <ClaraOrb isProcessing={isLoading} />
 
-      <div className="text-center mb-4">
-        <h1 className="text-2xl font-semibold text-dark-gray transition-all duration-300 hover:text-primary">Clara</h1>
-        <p className="text-sm text-gray-500">{isLoading ? 'Thinking...' : 'Your AI Companion'}</p>
+      <div className="text-center mb-5">
+        <h1 className="text-3xl font-semibold text-white transition-all duration-300 hover:text-primary">Clara</h1>
+        <p className="text-sm text-gray-300">{isLoading ? 'Thinking...' : 'Your AI Companion'}</p>
       </div>
 
       <ChatContainer 
@@ -44,8 +44,8 @@ const Chat: React.FC = () => {
       />
 
       {/* Add a subtle footer */}
-      <div className="text-center text-xs text-gray-400 mt-2 mb-1">
-        <p>Clara remembers important information from your conversations</p>
+      <div className="text-center text-xs text-gray-300 mt-2 mb-1">
+        <p>✨ Clara remembers important information from your conversations ✨</p>
       </div>
     </div>
   );
