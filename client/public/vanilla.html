@@ -210,6 +210,41 @@
         color: rgba(255, 255, 255, 0.6);
       }
       
+      .form-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .image-button {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+      }
+      
+      .image-button:hover {
+        transform: scale(1.05);
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+      }
+      
+      .image-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      .image-input {
+        display: none;
+      }
+      
       .send-button {
         background: linear-gradient(135deg, #7928CA 0%, #FF0080 100%);
         color: white;
@@ -232,6 +267,41 @@
       .send-button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+      }
+      
+      /* Image preview */
+      .image-preview {
+        position: relative;
+        max-width: 180px;
+        margin: 10px 0;
+        align-self: flex-end;
+      }
+      
+      .image-preview img {
+        max-width: 100%;
+        max-height: 180px;
+        border-radius: 12px;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+      
+      .image-preview-remove {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
       }
       
       .footer {
@@ -329,13 +399,25 @@
           placeholder="Message Clara..." 
           autocomplete="off"
         >
-        <button type="submit" class="send-button" id="sendButton">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
-        </button>
+        <div class="form-actions">
+          <button type="button" class="image-button" id="imageButton">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </button>
+          <input type="file" class="image-input" id="imageInput" accept="image/*">
+          <button type="submit" class="send-button" id="sendButton">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
       </form>
+      
+      <!-- Image preview container will be added here when an image is selected -->
       
       <div class="footer">
         <p>✨ Clara remembers important information from your conversations ✨</p>

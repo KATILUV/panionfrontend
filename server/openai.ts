@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { ChatCompletionMessageParam } from "openai/resources";
 import { saveToMemory, getConversationHistory, getRelevantMemories } from "./memory";
 
 // Initialize OpenAI client
@@ -19,6 +20,9 @@ You should respond as if you're having a casual conversation with a friend.
 Never mention that you're an AI unless directly asked.
 `;
 
+/**
+ * Process a text message from the user
+ */
 export async function handleChatRequest(
   message: string, 
   sessionId: string
@@ -31,7 +35,7 @@ export async function handleChatRequest(
     const relevantMemories = await getRelevantMemories(message);
     
     // Build messages array for OpenAI API
-    const messages = [
+    const messages: ChatCompletionMessageParam[] = [
       { role: "system", content: SYSTEM_PROMPT },
     ];
     
@@ -86,5 +90,90 @@ export async function handleChatRequest(
   } catch (error) {
     console.error("Error in handleChatRequest:", error);
     throw new Error("Failed to process your request with OpenAI");
+  }
+}
+
+/**
+ * Analyze an image and provide a description
+ */
+export async function analyzeImage(
+  base64Image: string,
+  sessionId: string
+): Promise<string> {
+  try {
+    // Get conversation history for context
+    const conversationHistory = await getConversationHistory(sessionId);
+    
+    // Build messages array for OpenAI API with the image
+    const messages: ChatCompletionMessageParam[] = [
+      { 
+        role: "system", 
+        content: `${SYSTEM_PROMPT}
+        
+When describing an image:
+- Be concise and natural in your description
+- Mention key details in a conversational way
+- If there's text in the image, include it when relevant
+- Respond as if you're chatting with a friend who shared a photo
+- Keep your description friendly, warm, and engaging
+`
+      },
+    ];
+    
+    // Add some recent conversation history for context (last 3 messages)
+    const recentHistory = conversationHistory.slice(-3);
+    recentHistory.forEach(item => {
+      messages.push({ 
+        role: item.isUser ? "user" : "assistant", 
+        content: item.content 
+      });
+    });
+    
+    // Add the image message
+    messages.push({ 
+      role: "user", 
+      content: [
+        {
+          type: "text",
+          text: "I'm sharing this image with you. Can you describe what you see?"
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${base64Image}`
+          }
+        }
+      ] as any // Type assertion needed for multimodal content
+    });
+    
+    // Call OpenAI API with the multimodal model
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 300,
+    });
+    
+    const imageDescription = response.choices[0].message.content || "Sorry, I couldn't analyze the image.";
+    
+    // Save the image description to memory
+    await saveToMemory({
+      content: "Shared an image",
+      isUser: true,
+      timestamp: new Date().toISOString(),
+      sessionId
+    });
+    
+    await saveToMemory({
+      content: imageDescription,
+      isUser: false,
+      timestamp: new Date().toISOString(),
+      sessionId
+    });
+    
+    return imageDescription;
+  } catch (error) {
+    console.error("Error in analyzeImage:", error);
+    throw new Error("Failed to analyze the image with OpenAI");
   }
 }
