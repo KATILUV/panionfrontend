@@ -54,7 +54,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     if (!imageUrl) return null;
     
     return (
-      <div className="mt-2 mb-1 overflow-hidden rounded-lg">
+      <div className="mt-2 mb-1 overflow-hidden rounded-lg max-w-[180px] max-h-[180px]">
         <img 
           src={imageUrl} 
           alt="Shared image" 

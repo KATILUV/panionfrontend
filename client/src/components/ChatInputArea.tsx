@@ -77,7 +77,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     <div className="mb-6 relative">
       {selectedImage && (
         <div className="mb-2 relative">
-          <div className="rounded-lg overflow-hidden border border-white/20 w-32 h-32 relative">
+          <div className="rounded-lg overflow-hidden border border-white/20 w-20 h-20 relative">
             <img 
               src={selectedImage} 
               alt="Selected" 
@@ -88,7 +88,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
               className="absolute top-1 right-1 bg-black/50 rounded-full p-1 text-white hover:bg-black/70 transition-colors"
               type="button"
             >
-              <X size={16} />
+              <X size={12} />
             </button>
           </div>
         </div>
