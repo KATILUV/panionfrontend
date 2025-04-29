@@ -5,7 +5,14 @@ import path from "path";
 import fs from "fs";
 import multer from "multer";
 import { handleChatRequest, analyzeImage } from "./openai";
-import { searchMemories, smartMemorySearch, saveConversation } from "./memory";
+import { 
+  searchMemories, 
+  smartMemorySearch, 
+  saveConversation, 
+  getMemoriesByCategory, 
+  getMemoryStats,
+  MEMORY_CATEGORIES 
+} from "./memory";
 
 // Configure multer for handling file uploads
 const upload = multer({
@@ -203,6 +210,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error saving conversation:', error);
       res.status(500).json({ 
         message: 'Error saving conversation' 
+      });
+    }
+  });
+
+  // Get available memory categories
+  app.get('/api/memory-categories', async (req, res) => {
+    try {
+      res.json({ 
+        categories: ['all', ...MEMORY_CATEGORIES]
+      });
+    } catch (error) {
+      console.error('Error getting memory categories:', error);
+      res.status(500).json({ 
+        message: 'Error retrieving memory categories' 
+      });
+    }
+  });
+
+  // Get memories by category
+  app.get('/api/memories/:category', async (req, res) => {
+    try {
+      const { category } = req.params;
+      
+      // Validate category
+      if (category !== 'all' && !MEMORY_CATEGORIES.includes(category)) {
+        return res.status(400).json({ 
+          message: `Invalid category. Valid options are: all, ${MEMORY_CATEGORIES.join(', ')}` 
+        });
+      }
+      
+      // Get memories by category
+      const memories = await getMemoriesByCategory(category);
+      
+      res.json({ 
+        category,
+        count: memories.length,
+        memories
+      });
+    } catch (error) {
+      console.error('Error getting memories by category:', error);
+      res.status(500).json({ 
+        message: 'Error retrieving memories' 
+      });
+    }
+  });
+
+  // Smart search with category filter
+  app.post('/api/smart-memory-search-by-category', async (req, res) => {
+    try {
+      const { query, category } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ 
+          message: 'Query is required and must be a string' 
+        });
+      }
+      
+      // Validate category if provided
+      if (category && category !== 'all' && !MEMORY_CATEGORIES.includes(category)) {
+        return res.status(400).json({ 
+          message: `Invalid category. Valid options are: all, ${MEMORY_CATEGORIES.join(', ')}` 
+        });
+      }
+      
+      // AI-powered search with category filter
+      const result = await smartMemorySearch(query, category);
+      
+      res.json({ result });
+    } catch (error) {
+      console.error('Error in smart memory search by category:', error);
+      res.status(500).json({ 
+        message: 'Error searching memories' 
+      });
+    }
+  });
+
+  // Get memory statistics
+  app.get('/api/memory-stats', async (req, res) => {
+    try {
+      const stats = await getMemoryStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error getting memory stats:', error);
+      res.status(500).json({ 
+        message: 'Error retrieving memory statistics' 
       });
     }
   });

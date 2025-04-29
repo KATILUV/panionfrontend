@@ -18,8 +18,22 @@ interface Memory {
   timestamp: string;  // When the memory was created
   important?: boolean; // Whether this is an important memory
   date?: string;      // Date in YYYY-MM-DD format (for long-term storage)
+  category?: string;  // Category of the memory (personal, preference, fact, etc.)
 }
 
+// Valid memory categories
+export const MEMORY_CATEGORIES: string[] = [
+  "personal",     // Personal information about the user
+  "preference",   // User preferences and likes/dislikes
+  "fact",         // Factual information shared by the user
+  "interest",     // User interests and hobbies
+  "goal",         // User goals and aspirations
+  "experience",   // User experiences and stories
+  "contact",      // Contact information or people mentioned
+  "other"         // Default category for miscellaneous memories
+];
+
+// Memory store interface
 interface MemoryStore {
   memories: Memory[];
 }
@@ -107,6 +121,7 @@ export async function saveConversation(sessionId: string): Promise<void> {
 }
 
 // Check if a memory is important enough to save long-term
+// and categorize it if it's important
 async function isMemoryImportant(memory: Memory): Promise<boolean> {
   // Don't process system messages or empty content
   if (!memory.content.trim()) {
@@ -123,7 +138,14 @@ async function isMemoryImportant(memory: Memory): Promise<boolean> {
           facts, or context that would be valuable to remember for future conversations with this user. 
           Important information includes personal details, preferences, interests, facts about their life,
           significant events, or any context that would help personalize future interactions.
-          Respond with JSON in the format: {"important": true/false, "reason": "brief explanation"}`
+          
+          Valid categories are: ${MEMORY_CATEGORIES.join(", ")}
+          
+          Respond with JSON in the format: {
+            "important": true/false, 
+            "reason": "brief explanation",
+            "category": "one of the valid categories that best fits this memory"
+          }`
         },
         {
           role: "user",
@@ -133,12 +155,33 @@ async function isMemoryImportant(memory: Memory): Promise<boolean> {
       response_format: { type: "json_object" }
     });
     
-    const result = JSON.parse(response.choices[0].message.content || '{"important": false}');
+    const result = JSON.parse(response.choices[0].message.content || '{"important": false, "category": "other"}');
+    
+    // Set the category if the memory is important
+    if (result.important === true) {
+      memory.category = result.category || "other";
+      // Default to "other" if an invalid category is returned
+      if (memory.category && !MEMORY_CATEGORIES.includes(memory.category)) {
+        memory.category = "other";
+      }
+    }
+    
     return result.important === true;
   } catch (error) {
     console.error('Error determining memory importance:', error);
     return false;
   }
+}
+
+// Get memories by category
+export async function getMemoriesByCategory(category: string): Promise<Memory[]> {
+  const memories = await loadLongTermMemories();
+  
+  if (category === "all") {
+    return memories;
+  }
+  
+  return memories.filter(memory => memory.category === category);
 }
 
 // Save a memory (to both short-term and potentially long-term)
@@ -231,18 +274,28 @@ export async function getRelevantMemories(message: string): Promise<Memory[]> {
 }
 
 // Enhanced memory search that uses AI to find semantic matches
-export async function smartMemorySearch(query: string): Promise<string> {
-  const memories = await loadLongTermMemories();
+export async function smartMemorySearch(query: string, category?: string): Promise<string> {
+  let memories = await loadLongTermMemories();
   
   if (memories.length === 0) {
     return "🧠 Clara has no memories yet.";
+  }
+  
+  // Filter by category if provided
+  if (category && category !== "all") {
+    memories = memories.filter(memory => memory.category === category);
+    
+    if (memories.length === 0) {
+      return `🧠 Clara has no memories in the "${category}" category yet.`;
+    }
   }
   
   try {
     // Format memories for the prompt
     const memoriesText = memories.map(m => {
       const date = m.date || m.timestamp.split('T')[0];
-      return `${date}: ${m.content}`;
+      const categoryInfo = m.category ? ` [${m.category}]` : '';
+      return `${date}${categoryInfo}: ${m.content}`;
     }).join('\n');
     
     // Create a prompt for the AI to find relevant memories
@@ -250,7 +303,7 @@ export async function smartMemorySearch(query: string): Promise<string> {
       {
         role: "system",
         content: `You are Clara's intelligent memory search agent.
-        Here are all her past memories:
+        Here are all her past memories${category && category !== "all" ? ` in the "${category}" category` : ''}:
         
         ${memoriesText}
         
@@ -258,7 +311,8 @@ export async function smartMemorySearch(query: string): Promise<string> {
         
         Find the 3 most relevant memories based on meaning, not just keywords.
         Summarize why they are relevant.
-        Format the output as a readable bullet list with emoji indicators.`
+        Format the output as a readable bullet list with emoji indicators.
+        Include the memory category in your response (if available).`
       }
     ];
     
@@ -274,4 +328,47 @@ export async function smartMemorySearch(query: string): Promise<string> {
     console.error('Error in smart memory search:', error);
     return "Sorry, I had trouble searching through my memories.";
   }
+}
+
+// Get summary statistics about memories by category
+export async function getMemoryStats(): Promise<{ 
+  totalMemories: number, 
+  categoryCounts: Record<string, number>,
+  oldestMemoryDate: string | null,
+  newestMemoryDate: string | null
+}> {
+  const memories = await loadLongTermMemories();
+  
+  if (memories.length === 0) {
+    return {
+      totalMemories: 0,
+      categoryCounts: {},
+      oldestMemoryDate: null,
+      newestMemoryDate: null
+    };
+  }
+  
+  // Initialize category counts with all categories at 0
+  const categoryCounts: Record<string, number> = {};
+  MEMORY_CATEGORIES.forEach(category => {
+    categoryCounts[category] = 0;
+  });
+  
+  // Count memories in each category
+  memories.forEach(memory => {
+    const category = memory.category || "other";
+    categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+  });
+  
+  // Find oldest and newest memory dates
+  const dates = memories
+    .map(m => m.date || m.timestamp.split('T')[0])
+    .sort();
+  
+  return {
+    totalMemories: memories.length,
+    categoryCounts,
+    oldestMemoryDate: dates[0] || null,
+    newestMemoryDate: dates[dates.length - 1] || null
+  };
 }
