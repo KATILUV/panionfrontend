@@ -52,8 +52,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   if (isUser) {
     return (
       <div className={`flex justify-end mb-4 ${isVisible ? 'message-in' : 'opacity-0'}`}>
-        <div className="chat-bubble chat-bubble-user max-w-[80%] p-4">
-          <p className="text-white">{renderContentWithLinks(content)}</p>
+        <div className="chat-bubble chat-bubble-user max-w-[70%] p-3">
+          <p className="text-white text-sm">{renderContentWithLinks(content)}</p>
           <span className="chat-time text-white/80 block text-right mt-1">{time}</span>
         </div>
       </div>
@@ -62,8 +62,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
   return (
     <div className={`flex mb-4 ${isVisible ? 'message-in' : 'opacity-0'}`}>
-      <div className="chat-bubble chat-bubble-ai max-w-[80%] p-4">
-        <p className="text-gray-800">{renderContentWithLinks(content)}</p>
+      <div className="chat-bubble chat-bubble-ai max-w-[70%] p-3">
+        <p className="text-gray-800 text-sm">{renderContentWithLinks(content)}</p>
         <span className="chat-time text-gray-500 block mt-1">{time}</span>
       </div>
     </div>
