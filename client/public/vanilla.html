@@ -421,6 +421,342 @@
         color: rgba(255, 255, 255, 0.7);
       }
       
+      /* Memory panel styles */
+      .memory-toggle {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        background: linear-gradient(135deg, rgba(138, 43, 226, 0.8), rgba(255, 0, 128, 0.8));
+        color: white;
+        border-radius: 50px;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        z-index: 100;
+      }
+      
+      .memory-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+      }
+      
+      .memory-toggle svg {
+        stroke-width: 2px;
+      }
+      
+      .memory-panel {
+        position: fixed;
+        right: 0;
+        top: 0;
+        height: 100vh;
+        width: 400px;
+        background: rgba(25, 25, 40, 0.95);
+        backdrop-filter: blur(10px);
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        padding: 20px;
+        overflow-y: auto;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .memory-panel.active {
+        transform: translateX(0);
+      }
+      
+      .memory-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 10px;
+      }
+      
+      .memory-panel-header h3 {
+        font-size: 20px;
+        color: white;
+        margin: 0;
+      }
+      
+      .memory-close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 5px;
+      }
+      
+      .memory-close-btn:hover {
+        color: rgba(255, 0, 128, 0.8);
+      }
+      
+      .memory-categories {
+        margin-bottom: 20px;
+      }
+      
+      .memory-categories h4 {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0 0 10px 0;
+      }
+      
+      .category-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .category-pill {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 5px 12px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .category-pill:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .category-pill.active {
+        background: linear-gradient(135deg, rgba(138, 43, 226, 0.5), rgba(255, 0, 128, 0.5));
+        border-color: rgba(255, 255, 255, 0.4);
+        color: white;
+      }
+      
+      .memory-search {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      
+      .memory-search-input {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: white;
+        padding: 10px 15px;
+        font-size: 16px;
+      }
+      
+      .memory-search-input:focus {
+        outline: none;
+        border-color: rgba(138, 43, 226, 0.5);
+        box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+      }
+      
+      .memory-search-btn {
+        background: linear-gradient(135deg, rgba(138, 43, 226, 0.8), rgba(255, 0, 128, 0.8));
+        border: none;
+        border-radius: 8px;
+        color: white;
+        width: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+      
+      .memory-search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+      
+      .memory-results {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 20px;
+      }
+      
+      .memory-placeholder {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 50px;
+        padding: 20px;
+        font-style: italic;
+      }
+      
+      .memory-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+      }
+      
+      .memory-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(2px);
+      }
+      
+      .memory-item.category-personal {
+        border-left-color: #ff5c8d; /* Pink */
+      }
+      
+      .memory-item.category-preference {
+        border-left-color: #7a5af8; /* Purple */
+      }
+      
+      .memory-item.category-fact {
+        border-left-color: #4d9de0; /* Blue */
+      }
+      
+      .memory-item.category-interest {
+        border-left-color: #56c271; /* Green */
+      }
+      
+      .memory-item.category-goal {
+        border-left-color: #e9c46a; /* Yellow */
+      }
+      
+      .memory-item.category-experience {
+        border-left-color: #f15946; /* Red */
+      }
+      
+      .memory-item.category-contact {
+        border-left-color: #2a9d8f; /* Teal */
+      }
+      
+      .memory-item.category-other {
+        border-left-color: #a0a0a0; /* Grey */
+      }
+      
+      .memory-loading {
+        text-align: center;
+        padding: 20px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      .error {
+        color: #ff5c8d;
+        text-align: center;
+        padding: 15px;
+      }
+      
+      .memory-search-results {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 15px;
+      }
+      
+      .memory-search-query {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 10px;
+        font-style: italic;
+      }
+      
+      .memory-search-result-content {
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.5;
+        font-size: 14px;
+        white-space: pre-line;
+      }
+      
+      .memory-date {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 5px;
+      }
+      
+      .memory-category-tag {
+        display: inline-block;
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 5px;
+        color: white;
+      }
+      
+      .memory-category-tag.category-personal {
+        background-color: rgba(255, 92, 141, 0.3);
+      }
+      
+      .memory-category-tag.category-preference {
+        background-color: rgba(122, 90, 248, 0.3);
+      }
+      
+      .memory-category-tag.category-fact {
+        background-color: rgba(77, 157, 224, 0.3);
+      }
+      
+      .memory-category-tag.category-interest {
+        background-color: rgba(86, 194, 113, 0.3);
+      }
+      
+      .memory-category-tag.category-goal {
+        background-color: rgba(233, 196, 106, 0.3);
+      }
+      
+      .memory-category-tag.category-experience {
+        background-color: rgba(241, 89, 70, 0.3);
+      }
+      
+      .memory-category-tag.category-contact {
+        background-color: rgba(42, 157, 143, 0.3);
+      }
+      
+      .memory-category-tag.category-other {
+        background-color: rgba(160, 160, 160, 0.3);
+      }
+      
+      .memory-content {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      
+      .memory-stats {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 15px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      .memory-stats-header {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .memory-stats-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 3px;
+      }
+      
+      @media (max-width: 600px) {
+        .memory-panel {
+          width: 100%;
+        }
+        
+        .memory-toggle {
+          right: 10px;
+          bottom: 70px;
+          padding: 8px 12px;
+        }
+        
+        .memory-toggle span {
+          display: none;
+        }
+      }
+      
       /* Animations */
       @keyframes messageIn {
         from { opacity: 0; transform: translateY(20px); }
@@ -529,6 +865,55 @@
         </div>
       </form>
       
+      <!-- Memory panel toggle -->
+      <div class="memory-toggle" id="memoryToggle">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+        </svg>
+        <span>Memories</span>
+      </div>
+      
+      <!-- Memory panel -->
+      <div class="memory-panel" id="memoryPanel">
+        <div class="memory-panel-header">
+          <h3>Clara's Memories</h3>
+          <button class="memory-close-btn" id="memoryCloseBtn">×</button>
+        </div>
+        
+        <div class="memory-categories">
+          <h4>Categories</h4>
+          <div class="category-pills" id="categoryPills">
+            <!-- Categories will be populated here -->
+          </div>
+        </div>
+        
+        <div class="memory-search">
+          <input 
+            type="text" 
+            class="memory-search-input" 
+            id="memorySearchInput"
+            placeholder="Search memories..." 
+          >
+          <button class="memory-search-btn" id="memorySearchBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="memory-results" id="memoryResults">
+          <!-- Memory search results will appear here -->
+          <div class="memory-placeholder">
+            Search Clara's memories or select a category
+          </div>
+        </div>
+        
+        <div class="memory-stats" id="memoryStats">
+          <!-- Memory statistics will appear here -->
+        </div>
+      </div>
+      
       <!-- Image preview container will be added here when an image is selected -->
       
       <div class="footer">
@@ -546,6 +931,14 @@
         const imageButton = document.getElementById('imageButton');
         const imageInput = document.getElementById('imageInput');
         const container = document.querySelector('.container');
+        const memoryToggle = document.getElementById('memoryToggle');
+        const memoryPanel = document.getElementById('memoryPanel');
+        const memoryCloseBtn = document.getElementById('memoryCloseBtn');
+        const categoryPills = document.getElementById('categoryPills');
+        const memorySearchInput = document.getElementById('memorySearchInput');
+        const memorySearchBtn = document.getElementById('memorySearchBtn');
+        const memoryResults = document.getElementById('memoryResults');
+        const memoryStats = document.getElementById('memoryStats');
         
         // Variables to track current image
         let currentImagePreview = null;
@@ -860,6 +1253,184 @@
         
         // Focus input on page load
         messageInput.focus();
+        // Memory panel functionality
+        let currentCategory = 'all';
+        
+        // Toggle memory panel visibility
+        memoryToggle.addEventListener('click', function() {
+          memoryPanel.classList.add('active');
+          loadMemoryCategories();
+          loadMemoryStats();
+        });
+        
+        // Close memory panel
+        memoryCloseBtn.addEventListener('click', function() {
+          memoryPanel.classList.remove('active');
+        });
+        
+        // Load available memory categories
+        function loadMemoryCategories() {
+          fetch('/api/memory-categories')
+            .then(response => response.json())
+            .then(data => {
+              // Clear existing categories
+              categoryPills.innerHTML = '';
+              
+              // Add all categories
+              data.categories.forEach(category => {
+                const pill = document.createElement('div');
+                pill.className = 'category-pill' + (category === currentCategory ? ' active' : '');
+                pill.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                pill.dataset.category = category;
+                
+                pill.addEventListener('click', function() {
+                  // Update active class
+                  document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+                  pill.classList.add('active');
+                  
+                  // Set current category
+                  currentCategory = category;
+                  
+                  // Load memories for this category
+                  loadMemoriesByCategory(category);
+                });
+                
+                categoryPills.appendChild(pill);
+              });
+              
+              // Load memories for current category
+              loadMemoriesByCategory(currentCategory);
+            })
+            .catch(error => {
+              console.error('Error loading memory categories:', error);
+              categoryPills.innerHTML = '<div class="error">Error loading categories</div>';
+            });
+        }
+        
+        // Load memories by category
+        function loadMemoriesByCategory(category) {
+          memoryResults.innerHTML = '<div class="memory-loading">Loading memories...</div>';
+          
+          fetch(`/api/memories/${category}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.count === 0) {
+                memoryResults.innerHTML = `<div class="memory-placeholder">No memories found in the "${category}" category</div>`;
+                return;
+              }
+              
+              // Clear and display memories
+              memoryResults.innerHTML = '';
+              
+              data.memories.forEach(memory => {
+                const memoryItem = document.createElement('div');
+                memoryItem.className = `memory-item ${memory.category ? 'category-' + memory.category : ''}`;
+                
+                const date = memory.date || memory.timestamp.split('T')[0];
+                const categoryText = memory.category ? 
+                  `<span class="memory-category-tag category-${memory.category}">${memory.category}</span>` : '';
+                
+                memoryItem.innerHTML = `
+                  <div class="memory-date">${date} ${categoryText}</div>
+                  <div class="memory-content">${memory.content}</div>
+                `;
+                
+                memoryResults.appendChild(memoryItem);
+              });
+            })
+            .catch(error => {
+              console.error('Error loading memories:', error);
+              memoryResults.innerHTML = '<div class="error">Error loading memories</div>';
+            });
+        }
+        
+        // Smart memory search
+        memorySearchBtn.addEventListener('click', function() {
+          performSmartMemorySearch();
+        });
+        
+        // Enable Enter key to search
+        memorySearchInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            performSmartMemorySearch();
+          }
+        });
+        
+        // Perform smart memory search
+        function performSmartMemorySearch() {
+          const query = memorySearchInput.value.trim();
+          if (!query) return;
+          
+          memoryResults.innerHTML = '<div class="memory-loading">Searching memories...</div>';
+          
+          fetch('/api/smart-memory-search-by-category', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+              query: query,
+              category: currentCategory
+            })
+          })
+            .then(response => response.json())
+            .then(data => {
+              memoryResults.innerHTML = `
+                <div class="memory-search-results">
+                  <div class="memory-search-query">Results for: "${query}"</div>
+                  <div class="memory-search-result-content">${data.result}</div>
+                </div>
+              `;
+            })
+            .catch(error => {
+              console.error('Error in smart memory search:', error);
+              memoryResults.innerHTML = '<div class="error">Error searching memories</div>';
+            });
+        }
+        
+        // Load memory statistics
+        function loadMemoryStats() {
+          fetch('/api/memory-stats')
+            .then(response => response.json())
+            .then(data => {
+              let statsHtml = '<div class="memory-stats-header">Memory Statistics</div>';
+              
+              if (data.totalMemories === 0) {
+                statsHtml += '<div>Clara has no memories yet</div>';
+              } else {
+                statsHtml += `<div class="memory-stats-item"><span>Total memories:</span> <span>${data.totalMemories}</span></div>`;
+                
+                if (data.oldestMemoryDate) {
+                  statsHtml += `<div class="memory-stats-item"><span>Oldest memory:</span> <span>${data.oldestMemoryDate}</span></div>`;
+                }
+                
+                if (data.newestMemoryDate) {
+                  statsHtml += `<div class="memory-stats-item"><span>Newest memory:</span> <span>${data.newestMemoryDate}</span></div>`;
+                }
+                
+                statsHtml += '<div class="memory-stats-header">Categories</div>';
+                
+                Object.keys(data.categoryCounts).sort().forEach(category => {
+                  const count = data.categoryCounts[category];
+                  if (count > 0) {
+                    const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+                    statsHtml += `
+                      <div class="memory-stats-item">
+                        <span>${categoryName}:</span>
+                        <span>${count}</span>
+                      </div>
+                    `;
+                  }
+                });
+              }
+              
+              memoryStats.innerHTML = statsHtml;
+            })
+            .catch(error => {
+              console.error('Error loading memory stats:', error);
+              memoryStats.innerHTML = '<div class="error">Error loading memory statistics</div>';
+            });
+        }
       });
     </script>
   </body>
