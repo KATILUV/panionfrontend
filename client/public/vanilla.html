@@ -1015,6 +1015,29 @@
           <button class="memory-close-btn" id="memoryCloseBtn">×</button>
         </div>
         
+        <!-- File Manager toggle moved to top of panel -->
+        <div class="file-manager-toggle" id="fileManagerToggle">
+          <span>Manage Uploaded Files</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"></path>
+          </svg>
+        </div>
+        
+        <div class="file-manager" id="fileManager">
+          <div class="file-actions">
+            <div class="file-info-summary">
+              <span id="fileCount">Loading files...</span>
+            </div>
+            <button class="cleanup-button" id="cleanupButton">
+              Clean Old Files
+            </button>
+          </div>
+          
+          <div class="file-list" id="fileList">
+            <!-- Files will be listed here -->
+          </div>
+        </div>
+        
         <div class="memory-categories">
           <h4>Categories</h4>
           <div class="category-pills" id="categoryPills">
@@ -1046,29 +1069,6 @@
         
         <div class="memory-stats" id="memoryStats">
           <!-- Memory statistics will appear here -->
-        </div>
-        
-        <!-- File Manager section -->
-        <div class="file-manager-toggle" id="fileManagerToggle">
-          <span>Manage Uploaded Files</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 9l6 6 6-6"></path>
-          </svg>
-        </div>
-        
-        <div class="file-manager" id="fileManager">
-          <div class="file-actions">
-            <div class="file-info-summary">
-              <span id="fileCount">Loading files...</span>
-            </div>
-            <button class="cleanup-button" id="cleanupButton">
-              Clean Old Files
-            </button>
-          </div>
-          
-          <div class="file-list" id="fileList">
-            <!-- Files will be listed here -->
-          </div>
         </div>
       </div>
       

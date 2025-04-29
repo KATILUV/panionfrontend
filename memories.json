@@ -1,9 +1,12 @@
-[
-  {
-    "content": "I love you",
-    "isUser": true,
-    "timestamp": "2025-04-29T00:52:45.922Z",
-    "sessionId": "1745887965297",
-    "important": true
-  }
-]
+{
+  "memories": [
+    {
+      "content": "I love you",
+      "isUser": true,
+      "timestamp": "2025-04-29T00:52:45.922Z",
+      "sessionId": "1745887965297",
+      "important": true,
+      "category": "personal"
+    }
+  ]
+}
