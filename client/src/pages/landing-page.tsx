@@ -97,12 +97,12 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-xl md:text-2xl text-gray-600 mb-8 h-12" // Increased height for multi-line taglines
+              className="text-xl md:text-2xl text-gray-600 mb-8 min-h-16" // More height for multi-line taglines
             >
               <RotatingTagline 
                 phrases={taglinePhrases} 
-                interval={4000}
-                className="text-xl md:text-2xl text-gray-600 font-medium"
+                interval={5000}
+                className="text-xl md:text-2xl text-gray-600 font-medium leading-normal"
               />
             </motion.div>
             

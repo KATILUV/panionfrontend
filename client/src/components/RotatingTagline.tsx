@@ -82,8 +82,8 @@ const RotatingTagline: React.FC<RotatingTaglineProps> = ({
   };
 
   return (
-    <div className="h-6 overflow-hidden"> {/* Fixed height container to prevent layout shifts */}
-      <p className={`${getAnimationClasses()} ${getStateClasses()} ${className}`}>
+    <div className="h-auto min-h-10 flex items-center justify-center"> {/* Flexible height container with centering */}
+      <p className={`${getAnimationClasses()} ${getStateClasses()} ${className} text-center max-w-full px-4`}>
         {currentPhrase}
       </p>
     </div>
