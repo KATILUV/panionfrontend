@@ -1,11 +1,13 @@
 import { useEffect } from "react";
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import Desktop from "./components/Desktop";
+import DesktopPage from "./pages/desktop-page";
+import LandingPage from "./pages/landing-page";
+import AuthPage from "./pages/auth-page";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import { useAgentStore } from "./state/agentStore";
@@ -14,8 +16,20 @@ import ThemeProvider from "./components/common/ThemeProvider";
 function Router() {
   return (
     <Switch>
-      {/* Main desktop environment */}
-      <Route path="/" component={Desktop} />
+      {/* Landing page */}
+      <Route path="/" component={LandingPage} />
+      
+      {/* Auth page */}
+      <Route path="/auth" component={AuthPage} />
+      
+      {/* Desktop environment */}
+      <Route path="/desktop" component={DesktopPage} />
+      
+      {/* Redirect old root path to landing page */}
+      <Route path="/desktop/old">
+        <Redirect to="/desktop" />
+      </Route>
+      
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
