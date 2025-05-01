@@ -25,8 +25,10 @@ interface AgentState {
   windows: Record<AgentId, AgentWindow>;
   focusedAgentId: AgentId | null;
   highestZIndex: number;
+  layouts: WindowLayout[];
+  activeLayoutId: string | null;
 
-  // Actions
+  // Window Actions
   registerAgent: (agent: Agent) => void;
   openAgent: (id: AgentId) => void;
   closeAgent: (id: AgentId) => void;
@@ -35,6 +37,23 @@ interface AgentState {
   focusAgent: (id: AgentId) => void;
   updateAgentPosition: (id: AgentId, position: { x: number, y: number }) => void;
   updateAgentSize: (id: AgentId, size: { width: number, height: number }) => void;
+  
+  // Layout Actions
+  saveLayout: (name: string) => void;
+  loadLayout: (id: string) => void;
+  deleteLayout: (id: string) => void;
+}
+
+// Window layout profiles for quick switching
+export interface WindowLayout {
+  id: string;
+  name: string;
+  windowStates: Record<AgentId, {
+    position: { x: number, y: number };
+    size: { width: number, height: number };
+    isOpen: boolean;
+    isMinimized: boolean;
+  }>;
 }
 
 export const useAgentStore = create<AgentState>()(
@@ -44,6 +63,8 @@ export const useAgentStore = create<AgentState>()(
       windows: {},
       focusedAgentId: null,
       highestZIndex: 0,
+      layouts: [], // Stored window layouts
+      activeLayoutId: null, // Currently active layout
 
       registerAgent: (agent) => set((state) => {
         // Only register if not already in registry
@@ -190,6 +211,76 @@ export const useAgentStore = create<AgentState>()(
               size
             }
           }
+        };
+      }),
+      
+      // Save the current window layout with a given name
+      saveLayout: (name) => set((state) => {
+        // Create a snapshot of current window states
+        const windowStates: Record<AgentId, {
+          position: { x: number, y: number };
+          size: { width: number, height: number };
+          isOpen: boolean;
+          isMinimized: boolean;
+        }> = {};
+        
+        // Capture current state of all windows
+        Object.entries(state.windows).forEach(([id, window]) => {
+          windowStates[id as AgentId] = {
+            position: window.position,
+            size: window.size,
+            isOpen: window.isOpen,
+            isMinimized: window.isMinimized
+          };
+        });
+        
+        // Create a new layout object with unique ID
+        const newLayout: WindowLayout = {
+          id: Date.now().toString(), // Simple unique ID
+          name,
+          windowStates
+        };
+        
+        // Add to layouts collection
+        return {
+          layouts: [...state.layouts, newLayout],
+          activeLayoutId: newLayout.id
+        };
+      }),
+      
+      // Load a saved layout by ID
+      loadLayout: (id) => set((state) => {
+        const layout = state.layouts.find(l => l.id === id);
+        if (!layout) return state;
+        
+        // Create a new windows state by merging the saved layout with current window data
+        const newWindows = { ...state.windows };
+        
+        // Apply saved positions, sizes, and states to current windows
+        Object.entries(layout.windowStates).forEach(([agentId, windowState]) => {
+          const id = agentId as AgentId;
+          if (newWindows[id]) {
+            newWindows[id] = {
+              ...newWindows[id],
+              position: windowState.position,
+              size: windowState.size,
+              isOpen: windowState.isOpen,
+              isMinimized: windowState.isMinimized
+            };
+          }
+        });
+        
+        return {
+          windows: newWindows,
+          activeLayoutId: id
+        };
+      }),
+      
+      // Delete a layout by ID
+      deleteLayout: (id) => set((state) => {
+        return {
+          layouts: state.layouts.filter(layout => layout.id !== id),
+          activeLayoutId: state.activeLayoutId === id ? null : state.activeLayoutId
         };
       })
     }),

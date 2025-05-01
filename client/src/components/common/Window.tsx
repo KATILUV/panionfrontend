@@ -3,6 +3,7 @@ import { Rnd } from 'react-rnd';
 import { useAgentStore, AgentId } from '../../state/agentStore';
 import { Minimize2, X, Maximize2 } from 'lucide-react';
 import { useWindowSize } from 'react-use';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Snap threshold in pixels
 const SNAP_THRESHOLD = 20;
@@ -263,44 +264,87 @@ const Window: React.FC<WindowProps> = ({
       minHeight={200}
       className={getSnapIndicatorClass()}
     >
-      <div 
-        className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border border-white/20 ${
+      <motion.div 
+        className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border ${
+          isActive ? 'border-purple-500/40' : 'border-white/20'
+        } ${
           isActive ? 'bg-white/10' : 'bg-white/5'
         } overflow-hidden`}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ 
+          opacity: 1, 
+          scale: 1,
+          transition: { 
+            duration: 0.2,
+            ease: "easeOut"
+          }
+        }}
+        layout
+        transition={{
+          type: "spring",
+          damping: 20,
+          stiffness: 300,
+          duration: 0.3
+        }}
       >
+        {/* Snap Overlay Indicators */}
+        <AnimatePresence>
+          {isDragging && currentSnapPosition !== 'none' && (
+            <motion.div
+              className="absolute inset-0 z-10 pointer-events-none rounded-lg"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className={`absolute inset-0 rounded-lg border-2 border-purple-500 bg-purple-500/20`} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
         <div 
-          className="window-drag-handle flex items-center justify-between px-4 h-10 cursor-move bg-black/20"
+          className="window-drag-handle flex items-center justify-between px-4 h-10 cursor-move bg-black/30"
           onDoubleClick={toggleMaximize}
         >
           <div className="font-medium text-white truncate">{title}</div>
-          <div className="flex items-center space-x-2">
-            <button 
+          <motion.div className="flex items-center space-x-2">
+            <motion.button 
               onClick={onMinimize}
               className="p-1 text-white/70 hover:text-white hover:bg-white/20 rounded"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Minimize2 size={16} />
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
               onClick={toggleMaximize}
               className="p-1 text-white/70 hover:text-white hover:bg-white/20 rounded"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Maximize2 size={16} />
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
               onClick={onClose}
               className="p-1 text-white/70 hover:text-white hover:bg-red-500/50 rounded"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
               <X size={16} />
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </div>
-        <div 
+        <motion.div 
           className="flex-1 overflow-auto"
           style={{ height: contentHeight }}
+          animate={{ opacity: 1 }}
+          initial={{ opacity: 0 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
         >
           {children}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </Rnd>
   );
 };

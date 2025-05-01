@@ -1,5 +1,13 @@
 import React from 'react';
 import { useAgentStore, AgentId } from '../../state/agentStore';
+import LayoutManager from './LayoutManager';
+import { Button } from '@/components/ui/button';
+import { 
+  Layout, 
+  Settings, 
+  Monitor, 
+  SplitSquareVertical 
+} from 'lucide-react';
 
 interface TaskbarProps {
   className?: string;
@@ -11,6 +19,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const openAgent = useAgentStore(state => state.openAgent);
   const focusAgent = useAgentStore(state => state.focusAgent);
   const restoreAgent = useAgentStore(state => state.restoreAgent);
+  const activeLayoutId = useAgentStore(state => state.activeLayoutId);
+  const layouts = useAgentStore(state => state.layouts);
   
   const handleIconClick = (id: AgentId) => {
     const window = windows[id];
@@ -27,6 +37,13 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     else {
       focusAgent(id);
     }
+  };
+  
+  // Get the active layout name if one is active
+  const getActiveLayoutName = () => {
+    if (!activeLayoutId) return null;
+    const activeLayout = layouts.find(layout => layout.id === activeLayoutId);
+    return activeLayout ? activeLayout.name : null;
   };
   
   return (
@@ -55,8 +72,27 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         })}
       </div>
       
-      <div className="text-white/50 text-sm">
-        Panion OS v0.1
+      <div className="flex items-center space-x-3">
+        {/* Layout Manager Button */}
+        <LayoutManager>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="h-10 px-3 text-white/70 hover:text-white hover:bg-white/10 flex items-center space-x-2"
+          >
+            <Layout size={18} />
+            <span className="hidden sm:inline">
+              {getActiveLayoutName() ? 
+                `Layout: ${getActiveLayoutName()}` : 
+                'Layouts'
+              }
+            </span>
+          </Button>
+        </LayoutManager>
+        
+        <div className="text-white/50 text-sm">
+          Panion OS v0.1
+        </div>
       </div>
     </div>
   );
