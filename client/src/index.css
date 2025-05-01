@@ -107,13 +107,13 @@
 /* Custom animations */
 @keyframes float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-1px) rotate(0.2deg); }
-  50% { transform: translateY(-1.5px) rotate(0deg); }
-  75% { transform: translateY(-1px) rotate(-0.2deg); }
+  25% { transform: translateY(-0.3px) rotate(0.1deg); }
+  50% { transform: translateY(-0.5px) rotate(0deg); }
+  75% { transform: translateY(-0.3px) rotate(-0.1deg); }
 }
 
 .floating-orb {
-  animation: float 15s ease-in-out infinite;
+  animation: float 30s ease-in-out infinite;
   transition: all 0.3s ease;
 }
 
@@ -132,9 +132,19 @@
   to { transform: rotate(360deg); }
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+@keyframes typing-glow {
+  0%, 100% { 
+    box-shadow: 
+      0 0 15px rgba(255, 156, 205, 0.4),
+      0 0 30px rgba(255, 156, 205, 0.2),
+      inset 0 0 15px rgba(255, 255, 255, 0.4); 
+  }
+  50% { 
+    box-shadow: 
+      0 0 25px rgba(255, 156, 205, 0.6),
+      0 0 40px rgba(255, 156, 205, 0.3),
+      inset 0 0 20px rgba(255, 255, 255, 0.6); 
+  }
 }
 
 @keyframes typingDot {
@@ -248,7 +258,7 @@
 
 @keyframes floating-bubble {
   0%, 100% { transform: perspective(1000px) translateY(0) translateZ(0); }
-  50% { transform: perspective(1000px) translateY(-1px) translateZ(1px); }
+  50% { transform: perspective(1000px) translateY(-0.3px) translateZ(0.3px); }
 }
 
 .chat-time {
