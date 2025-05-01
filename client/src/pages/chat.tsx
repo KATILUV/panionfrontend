@@ -3,6 +3,7 @@ import ClaraOrb from '../components/ClaraOrb';
 import ChatBubble from '../components/ChatBubble';
 import ChatInput from '../components/ChatInput';
 import TypingIndicator from '../components/TypingIndicator';
+import RotatingTagline from '../components/RotatingTagline';
 import { useChat } from '../hooks/useChat';
 import { Message } from '../types/chat';
 
@@ -27,7 +28,19 @@ const ChatPage: React.FC = () => {
         {/* Header */}
         <div className="text-center pt-6 mb-2">
           <h1 className="text-2xl font-semibold text-white mb-1">Clara</h1>
-          <p className="text-white/70 text-sm">The future isn't artificial — it's intentional.</p>
+          <RotatingTagline 
+            phrases={[
+              "The future isn't artificial — it's intentional.",
+              "Dream deeper. Build smarter. Evolve together.",
+              "You architect. She amplifies.",
+              "Co-building the future of you.",
+              "Your thought partner in progress.",
+              "Part interface, part intelligence, all intention.",
+              "Dream bigger. Build together."
+            ]}
+            interval={7000}
+            className="text-white/80 text-sm font-light"
+          />
         </div>
 
         {/* Orb */}
