@@ -1,0 +1,72 @@
+Prompt for Replit AI: Build Out Panion’s UI System
+I’ve transformed a chatbot into an AI-native OS called Panion, where modular agents live in draggable, resizable windows (like Clara, Notes, Memory Map). Now I want to fully build out the user interface to feel like a polished, transparent operating system — emotionally intelligent like Clara, but modular and visual like Manul. Please help me:
+
+✅ Refine and polish the window system:
+
+Add framer-motion animations when windows open/close/focus
+
+Make z-index focus smoother and more intuitive
+
+Style the window header to include icon, title, and a close/minimize button
+
+🖥️ Add a fixed or toggleable side panel called “Clara’s Computer”:
+
+This shows live logs of Clara’s internal thoughts, memory accesses, and decisions
+
+Create a ClaraSystemLog.tsx component that uses Zustand to display logs like:
+
+🧠 “Thinking about user prompt”
+
+📂 “Accessed memory: user’s morning routine”
+
+⚙️ “Action: Opening GoalPlannerAgent”
+
+🌈 Add a ThemeContext with Tailwind support:
+
+Light, Dark, and Dream modes
+
+Clara can change the theme by command
+
+Save user theme to localStorage
+
+🧠 Add a transparent Context Panel for Clara:
+
+Show what memory she’s referencing, current goal, and tone (emoji: 🤔/❤️)
+
+Display this info live under the orb or in a floating window
+
+🧰 Expand the Taskbar:
+
+Show icons for all agents (Clara, Notes, Memory Map, etc.)
+
+Let user right-click to minimize, pin, or close agents
+
+Optional: add “+” button to launch new agents from a registry
+
+🧩 Add a Command Palette (Cmd + K):
+
+User can type “Open Notes” or “Start Dream Mode”
+
+Clara’s suggested actions show up here too
+
+📄 Create a /landing route as a marketing page:
+
+Soft gradient hero section with Clara’s orb glowing
+
+Feature list (Clara, Modular Agents, Dream Mode, Memory)
+
+Call to action: “Launch Panion”, “Join waitlist”, or “Sign in”
+
+💾 Persist layout:
+
+Save open agents, window positions, and theme on reload using Zustand middleware or localStorage
+
+Please structure everything with folders:
+
+components/ for UI (Orb, SystemLog, Window, Taskbar)
+
+agents/ for apps like ClaraAgent.tsx and NotesAgent.tsx
+
+state/ for Zustand stores
+
+contexts/ for ThemeContext and others

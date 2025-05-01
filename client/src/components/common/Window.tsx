@@ -315,28 +315,28 @@ const Window: React.FC<WindowProps> = ({
           <motion.div className="flex items-center space-x-2">
             <motion.button 
               onClick={onMinimize}
-              className="p-1 text-white/70 hover:text-white hover:bg-white/20 rounded"
+              className="p-1 text-white/90 hover:text-white hover:bg-white/30 rounded"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Minimize2 size={16} />
+              <Minimize2 size={16} className="drop-shadow-sm" />
             </motion.button>
             <motion.button 
               onClick={toggleMaximize}
-              className="p-1 text-white/70 hover:text-white hover:bg-white/20 rounded"
+              className="p-1 text-white/90 hover:text-white hover:bg-white/30 rounded"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Maximize2 size={16} />
+              <Maximize2 size={16} className="drop-shadow-sm" />
             </motion.button>
             <motion.button 
               onClick={onClose}
-              className="p-1 text-white/70 hover:text-white hover:bg-red-500/50 rounded"
+              className="p-1 text-white/90 hover:text-white hover:bg-red-600 rounded"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
-              <X size={16} />
+              <X size={16} className="drop-shadow-sm" />
             </motion.button>
           </motion.div>
         </div>

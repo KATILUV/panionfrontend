@@ -69,9 +69,22 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-[#1a1538]/90 backdrop-blur-xl border-purple-500/30 text-white">
+      <DialogContent 
+        className="sm:max-w-[425px] bg-[#1a1538]/90 backdrop-blur-xl border-purple-500/30 text-white"
+        style={{ 
+          position: 'fixed', 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)',
+          zIndex: 9999 
+        }}
+        aria-describedby="theme-settings-description"
+      >
         <DialogHeader>
           <DialogTitle className="text-xl">Appearance Settings</DialogTitle>
+          <p className="text-white/80 mt-2">
+            Customize the look and feel of your Panion desktop environment.
+          </p>
         </DialogHeader>
         
         {/* Theme mode selector */}
