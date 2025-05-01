@@ -1,43 +1,39 @@
-# Clara Desktop Export
+# Clara AI Assistant
 
-This export script will create a complete package for converting your Clara vanilla.html implementation into a desktop application using Electron.
+Clara is an advanced AI companion built with React, TypeScript, and OpenAI integration. It features a visually stunning interface centered around an animated orb that provides visual feedback during interactions.
 
-## How to Use
+## Features
 
-1. **Install required dependency**:
-```bash
-npm install archiver
-```
+- **Beautiful Interface**: Visually striking design with animated Clara orb
+- **AI Chat**: Natural language conversations powered by OpenAI's GPT-4o
+- **Image Analysis**: Upload and analyze images with AI-powered descriptions
+- **Memory System**: Clara remembers conversations and important details
+- **Real-time Visual Feedback**: The Clara orb animates during processing to show activity
 
-2. **Run the export script**:
-```bash
-node export-clara-desktop.js
-```
+## Technology Stack
 
-3. **Get the exported package**:
-The script will create a `clara-desktop-export.zip` file containing all the necessary files to build the desktop app.
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **Backend**: Express.js, Node.js
+- **AI Integration**: OpenAI API (GPT-4o)
+- **State Management**: React hooks and context
+- **Styling**: Tailwind CSS, shadcn/ui components
 
-4. **Extract and build**:
-Extract the ZIP file, follow the instructions in the included README.md, and you'll have Clara running as a desktop app!
+## Getting Started
 
-## What's Included in the Export
+1. Set up your OpenAI API key in the environment variables
+2. Install dependencies with `npm install`
+3. Start the application with `npm run dev`
+4. Interact with Clara through the web interface
 
-- Electron main process (main.js)
-- Preload script for secure context bridging (preload.js)
-- Package.json with build configuration
-- Your vanilla Clara HTML, CSS, and JavaScript
-- Server files for the backend
-- Placeholder icons and instructions for customization
-- Detailed README with build instructions
+## Project Structure
 
-## Features of the Desktop App
+- `/client`: Frontend React application
+- `/server`: Backend Express.js server
+- `/shared`: Shared types and utilities
+- `/uploads`: Storage for uploaded images
+- `/clara_memory`: Clara's memory system storage
 
-- Global hotkey (Alt+Space) to show/hide Clara
-- System tray icon for quick access
-- Window controls (minimize, close)
-- "Always on top" mode
-- Start with system option
-- Local file system integration
-- Native notifications
+## Requirements
 
-The desktop app maintains all the functionality of your web version while adding desktop-specific features and convenience.
+- Node.js 18+ and npm
+- OpenAI API key with access to GPT-4o
