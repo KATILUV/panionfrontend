@@ -70,9 +70,22 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px] bg-[#1a1538]/90 backdrop-blur-xl border-purple-500/30 text-white">
+      <DialogContent 
+        className="sm:max-w-[550px] bg-[#1a1538]/90 backdrop-blur-xl border-purple-500/30 text-white"
+        style={{ 
+          position: 'fixed', 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)',
+          zIndex: 9999 
+        }}
+        aria-describedby="layout-manager-description"
+      >
         <DialogHeader>
           <DialogTitle className="text-xl">Window Layouts</DialogTitle>
+          <p className="text-white/80 mt-2" id="layout-manager-description">
+            Save and manage your window arrangements.
+          </p>
         </DialogHeader>
         
         {/* Layout creation */}

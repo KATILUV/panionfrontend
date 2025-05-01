@@ -82,7 +82,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
       >
         <DialogHeader>
           <DialogTitle className="text-xl">Appearance Settings</DialogTitle>
-          <p className="text-white/80 mt-2">
+          <p className="text-white/80 mt-2" id="theme-settings-description">
             Customize the look and feel of your Panion desktop environment.
           </p>
         </DialogHeader>
