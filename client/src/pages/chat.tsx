@@ -22,12 +22,12 @@ const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center py-8 px-4">
-      <div className="w-full max-w-2xl flex flex-col h-[85vh]">
+    <div className="h-screen flex flex-col items-center">
+      <div className="w-full max-w-2xl flex flex-col h-full">
         {/* Header */}
-        <div className="text-center mb-2">
+        <div className="text-center pt-6 mb-2">
           <h1 className="text-2xl font-semibold text-white mb-1">Clara</h1>
-          <p className="text-white/70 text-sm">Your AI companion</p>
+          <p className="text-white/70 text-sm">The future isn't artificial — it's intentional.</p>
         </div>
 
         {/* Orb */}
@@ -36,7 +36,7 @@ const ChatPage: React.FC = () => {
         {/* Chat Messages Container */}
         <div 
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto mb-6 pr-2 space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+          className="flex-1 overflow-y-auto pr-2 space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
         >
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-white/50 space-y-4">
@@ -61,18 +61,14 @@ const ChatPage: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Empty space before input */}
-        <div className="h-6"></div>
         
-        {/* Chat Input */}
-        <ChatInput 
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-        />
-        
-        {/* Empty footer to maintain spacing */}
-        <div className="h-4"></div>
+        {/* Chat Input - Fixed at bottom */}
+        <div className="sticky bottom-0 pb-6 pt-2 bg-gradient-to-t from-[#050014] to-transparent">
+          <ChatInput 
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
     </div>
   );

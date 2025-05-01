@@ -115,6 +115,7 @@ export default {
         "typing-dot-1": "typing-dot 1.5s ease-in-out infinite",
         "typing-dot-2": "typing-dot 1.5s ease-in-out 0.2s infinite",
         "typing-dot-3": "typing-dot 1.5s ease-in-out 0.4s infinite",
+        "typing-glow": "typing-glow 3s ease-in-out infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
