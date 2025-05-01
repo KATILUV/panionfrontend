@@ -280,6 +280,24 @@
   animation: spin 20s linear infinite;
 }
 
+.floating-orb {
+  animation: orb-pulse 7s infinite ease-in-out, orb-float 15s infinite ease-in-out;
+}
+
+.animate-reflection {
+  animation: animate-reflection 20s linear infinite;
+}
+
+@keyframes orb-pulse {
+  0%, 100% { box-shadow: 0 20px 70px rgba(0,0,0,0.6), 0 0 30px rgba(138,43,226,0.4), 0 0 50px rgba(255,0,128,0.3), inset 0 0 70px rgba(255,255,255,0.2); }
+  50% { box-shadow: 0 20px 70px rgba(0,0,0,0.6), 0 0 40px rgba(138,43,226,0.5), 0 0 60px rgba(255,0,128,0.4), inset 0 0 80px rgba(255,255,255,0.25); }
+}
+
+@keyframes orb-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
 /* Crystal Ball effects */
 .crystal-ball {
   transform-style: preserve-3d;
@@ -547,7 +565,8 @@
   );
   box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(1px);
-  animation: float-up var(--duration, 8s) infinite ease-in-out, bubble-color-shift 6s infinite alternate;
+  animation: float-up var(--duration, 8s) infinite ease-in-out var(--delay, 0s), 
+             bubble-color-shift 6s infinite alternate;
 }
 
 @keyframes bubble-color-shift {
@@ -585,6 +604,12 @@
   5% { opacity: var(--opacity, 0.5); }
   95% { opacity: var(--opacity, 0.5); }
   100% { transform: translateY(-100%) translateX(var(--move-x, 0)); opacity: 0; }
+}
+
+@keyframes animate-reflection {
+  0% { opacity: 0.08; transform: rotate(0deg); }
+  50% { opacity: 0.12; transform: rotate(180deg); }
+  100% { opacity: 0.08; transform: rotate(360deg); }
 }
 
 @keyframes fluid-rotate {
