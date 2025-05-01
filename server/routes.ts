@@ -1,6 +1,5 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -47,15 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from uploads directory
   app.use('/uploads', express.static(uploadsDir));
   
-  // Serve vanilla HTML for testing
-  app.get('/vanilla', (req, res) => {
-    const vanillaPath = path.resolve('client', 'public', 'vanilla.html');
-    if (fs.existsSync(vanillaPath)) {
-      res.sendFile(vanillaPath);
-    } else {
-      res.status(404).send('Vanilla HTML file not found');
-    }
-  });
+  // API routes are defined below
 
   // Chat endpoint to communicate with OpenAI (text only)
   app.post('/api/chat', async (req, res) => {
