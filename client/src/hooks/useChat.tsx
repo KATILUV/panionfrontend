@@ -40,7 +40,8 @@ export const useChat = () => {
         }),
       };
       
-      // If we have an image, use FormData instead of JSON
+      // If we have an image, use the image upload endpoint
+      let response;
       if (imageFile) {
         const formData = new FormData();
         formData.append('message', content);
@@ -49,14 +50,15 @@ export const useChat = () => {
         }
         formData.append('image', imageFile);
         
-        requestOptions = {
+        // Use the image upload endpoint
+        response = await fetch('/api/upload-image', {
           method: 'POST',
           body: formData,
-        };
+        });
+      } else {
+        // Send text-only message to regular chat endpoint
+        response = await fetch('/api/chat', requestOptions);
       }
-      
-      // Send request to API
-      const response = await fetch('/api/chat', requestOptions);
       
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
@@ -74,6 +76,7 @@ export const useChat = () => {
         content: data.response,
         isUser: false,
         timestamp: new Date().toISOString(),
+        imageUrl: data.imageUrl, // Include image URL if provided by the API
       };
       
       setMessages(prev => [...prev, aiMessage]);

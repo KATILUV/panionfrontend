@@ -10,4 +10,5 @@ export interface Message {
 export interface ChatResponse {
   response: string;
   conversationId?: string;
+  imageUrl?: string;
 }
