@@ -6,133 +6,11 @@ import {
   Cpu, Users, Layout, Sparkles, MessageSquare, Fingerprint, LucideProps, Brain,
   LayoutGrid, Search, Terminal, Check, X
 } from 'lucide-react';
-import { useThemeStore } from '@/state/themeStore';
 
-// Feature icon with customizable color
-const FeatureIcon: React.FC<{ icon: React.ElementType<LucideProps>, className?: string }> = ({ 
-  icon: Icon, 
-  className = "" 
-}) => {
-  return (
-    <div className={`rounded-full p-2 bg-primary/10 ${className}`}>
-      <Icon className="w-6 h-6 text-primary" />
-    </div>
-  );
-};
 
-// Feature card component
-const FeatureCard: React.FC<{ 
-  title: string; 
-  description: string; 
-  icon: React.ElementType<LucideProps>;
-  delay?: number;
-}> = ({ title, description, icon, delay = 0 }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-      className="bg-card border border-border rounded-xl p-6 flex flex-col"
-    >
-      <FeatureIcon icon={icon} />
-      <h3 className="text-xl font-bold mt-4">{title}</h3>
-      <p className="text-muted-foreground mt-2">{description}</p>
-    </motion.div>
-  );
-};
-
-// Testimonial card component
-const TestimonialCard: React.FC<{
-  quote: string;
-  author: string;
-  role: string;
-  delay?: number;
-}> = ({ quote, author, role, delay = 0 }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay }}
-      className="bg-card border border-border rounded-xl p-6"
-    >
-      <div className="flex flex-col">
-        <p className="text-muted-foreground italic">{quote}</p>
-        <div className="mt-4">
-          <p className="font-semibold">{author}</p>
-          <p className="text-sm text-muted-foreground">{role}</p>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 const LandingPage: React.FC = () => {
   const [_, setLocation] = useLocation();
-  const currentTheme = useThemeStore(state => state.getCurrentTheme());
-  const accent = useThemeStore(state => state.accent);
-  
-  // Generate gradient classes based on current theme and accent color
-  const getHeroGradient = () => {
-    const isDark = currentTheme === 'dark';
-    
-    switch (accent) {
-      case 'purple':
-        return isDark 
-          ? 'from-purple-950 via-background to-background' 
-          : 'from-purple-100 via-purple-50 to-background';
-      case 'blue':
-        return isDark 
-          ? 'from-blue-950 via-background to-background' 
-          : 'from-blue-100 via-blue-50 to-background';
-      case 'green':
-        return isDark 
-          ? 'from-green-950 via-background to-background' 
-          : 'from-green-100 via-green-50 to-background';
-      case 'orange':
-        return isDark 
-          ? 'from-orange-950 via-background to-background' 
-          : 'from-orange-100 via-orange-50 to-background';
-      case 'pink':
-        return isDark 
-          ? 'from-pink-950 via-background to-background' 
-          : 'from-pink-100 via-pink-50 to-background';
-      default:
-        return isDark 
-          ? 'from-purple-950 via-background to-background' 
-          : 'from-purple-100 via-purple-50 to-background';
-    }
-  };
-  
-  const getSecondaryGradient = () => {
-    const isDark = currentTheme === 'dark';
-    
-    switch (accent) {
-      case 'purple':
-        return isDark 
-          ? 'from-background via-background to-purple-950' 
-          : 'from-background via-purple-50 to-purple-100';
-      case 'blue':
-        return isDark 
-          ? 'from-background via-background to-blue-950' 
-          : 'from-background via-blue-50 to-blue-100';
-      case 'green':
-        return isDark 
-          ? 'from-background via-background to-green-950' 
-          : 'from-background via-green-50 to-green-100';
-      case 'orange':
-        return isDark 
-          ? 'from-background via-background to-orange-950' 
-          : 'from-background via-orange-50 to-orange-100';
-      case 'pink':
-        return isDark 
-          ? 'from-background via-background to-pink-950' 
-          : 'from-background via-pink-50 to-pink-100';
-      default:
-        return isDark 
-          ? 'from-background via-background to-purple-950' 
-          : 'from-background via-purple-50 to-purple-100';
-    }
-  };
   
   // Features data
   const features = [
@@ -190,7 +68,7 @@ const LandingPage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
       {/* Hero Section */}
-      <section className={`relative py-20 md:py-32 bg-gradient-to-b ${getHeroGradient()}`}>
+      <section className="relative py-20 md:py-32 bg-gradient-to-b from-purple-100 via-purple-50 to-white text-gray-900">
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
             <motion.h1 
@@ -199,14 +77,14 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.5 }}
               className="text-4xl md:text-6xl font-bold mb-6"
             >
-              Welcome to <span className="text-primary">Panion</span>
+              Welcome to <span className="text-purple-600">Panion</span>
             </motion.h1>
             
             <motion.p 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-xl md:text-2xl text-muted-foreground mb-8"
+              className="text-xl md:text-2xl text-gray-600 mb-8"
             >
               Your AI desktop environment with multi-agent capabilities
             </motion.p>
@@ -220,7 +98,7 @@ const LandingPage: React.FC = () => {
               <Button 
                 size="lg" 
                 onClick={() => setLocation('/desktop')}
-                className="text-lg"
+                className="text-lg bg-purple-600 hover:bg-purple-700 text-white"
               >
                 Get Started
               </Button>
@@ -228,7 +106,7 @@ const LandingPage: React.FC = () => {
                 size="lg" 
                 variant="outline" 
                 onClick={() => setLocation('/auth')}
-                className="text-lg"
+                className="text-lg border-purple-600 text-purple-600 hover:bg-purple-100"
               >
                 Sign In
               </Button>
@@ -238,35 +116,41 @@ const LandingPage: React.FC = () => {
         
         {/* Decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-5 -left-5 w-24 h-24 lg:w-72 lg:h-72 rounded-full bg-primary/10 blur-3xl"></div>
-          <div className="absolute -top-5 -right-5 w-24 h-24 lg:w-72 lg:h-72 rounded-full bg-primary/10 blur-3xl"></div>
+          <div className="absolute -top-5 -left-5 w-24 h-24 lg:w-72 lg:h-72 rounded-full bg-purple-400/20 blur-3xl"></div>
+          <div className="absolute -top-5 -right-5 w-24 h-24 lg:w-72 lg:h-72 rounded-full bg-purple-400/20 blur-3xl"></div>
         </div>
       </section>
       
       {/* Features Section */}
-      <section className="py-20 md:py-32">
+      <section className="py-20 md:py-32 bg-white text-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Key Features</h2>
-            <p className="text-xl text-muted-foreground">Discover what makes Panion a revolutionary AI environment</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Key Features</h2>
+            <p className="text-xl text-gray-600">Discover what makes Panion a revolutionary AI environment</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <FeatureCard 
+              <motion.div
                 key={index}
-                title={feature.title}
-                description={feature.description}
-                icon={feature.icon}
-                delay={0.1 * index}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 * index }}
+                className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col shadow-sm"
+              >
+                <div className="rounded-full p-2 bg-purple-100 w-fit">
+                  <feature.icon className="w-6 h-6 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-bold mt-4 text-gray-900">{feature.title}</h3>
+                <p className="text-gray-600 mt-2">{feature.description}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
       
       {/* Screenshot/Demo Section */}
-      <section className={`py-20 md:py-32 bg-gradient-to-b ${getSecondaryGradient()}`}>
+      <section className="py-20 md:py-32 bg-gradient-to-b from-white to-purple-50 text-gray-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-12">
             <div className="flex-1">
@@ -275,11 +159,11 @@ const LandingPage: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <h2 className="text-3xl md:text-4xl font-bold mb-6">Experience Next-Gen AI Interaction</h2>
-                <p className="text-xl text-muted-foreground mb-8">
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900">Experience Next-Gen AI Interaction</h2>
+                <p className="text-xl text-gray-600 mb-8">
                   Panion transforms how you interact with AI by providing a flexible, intuitive workspace for multiple agents.
                 </p>
-                <ul className="space-y-4">
+                <ul className="space-y-4 text-gray-800">
                   {[
                     "Customizable window layouts to fit your workflow",
                     "Seamless theme switching for day and night work",
@@ -293,7 +177,7 @@ const LandingPage: React.FC = () => {
                       transition={{ duration: 0.3, delay: 0.1 * i }}
                       className="flex items-start"
                     >
-                      <span className="text-primary mr-2">✓</span> {item}
+                      <span className="text-purple-600 mr-2">✓</span> {item}
                     </motion.li>
                   ))}
                 </ul>
@@ -407,7 +291,7 @@ const LandingPage: React.FC = () => {
       </section>
       
       {/* Comparison Section */}
-      <section className="py-20 md:py-32 bg-muted/30">
+      <section className="py-20 md:py-32 bg-gray-50 text-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <motion.div
@@ -416,8 +300,8 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Panion?</h2>
-              <p className="text-xl text-muted-foreground">See how Panion compares to traditional AI assistants</p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Why Choose Panion?</h2>
+              <p className="text-xl text-gray-600">See how Panion compares to traditional AI assistants</p>
             </motion.div>
           </div>
           
@@ -431,17 +315,17 @@ const LandingPage: React.FC = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left p-4 border-b border-border"></th>
-                  <th className="p-4 border-b border-border">
-                    <div className="bg-primary/10 rounded-lg p-3 text-center">
-                      <h3 className="text-xl font-bold text-primary">Panion</h3>
-                      <p className="text-sm text-muted-foreground">AI Desktop Environment</p>
+                  <th className="text-left p-4 border-b border-gray-200"></th>
+                  <th className="p-4 border-b border-gray-200">
+                    <div className="bg-purple-100 rounded-lg p-3 text-center">
+                      <h3 className="text-xl font-bold text-purple-700">Panion</h3>
+                      <p className="text-sm text-gray-600">AI Desktop Environment</p>
                     </div>
                   </th>
-                  <th className="p-4 border-b border-border">
-                    <div className="bg-muted rounded-lg p-3 text-center">
-                      <h3 className="text-lg font-medium">Traditional Chatbots</h3>
-                      <p className="text-sm text-muted-foreground">Single-Agent AI</p>
+                  <th className="p-4 border-b border-gray-200">
+                    <div className="bg-gray-100 rounded-lg p-3 text-center">
+                      <h3 className="text-lg font-medium text-gray-700">Traditional Chatbots</h3>
+                      <p className="text-sm text-gray-600">Single-Agent AI</p>
                     </div>
                   </th>
                 </tr>
@@ -531,36 +415,44 @@ const LandingPage: React.FC = () => {
       </section>
       
       {/* Testimonials */}
-      <section className="py-20 md:py-32">
+      <section className="py-20 md:py-32 bg-white text-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What Users Say</h2>
-            <p className="text-xl text-muted-foreground">Join the community of Panion users</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">What Users Say</h2>
+            <p className="text-xl text-gray-600">Join the community of Panion users</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <TestimonialCard 
+              <motion.div
                 key={index}
-                quote={testimonial.quote}
-                author={testimonial.author}
-                role={testimonial.role}
-                delay={0.1 * index}
-              />
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 * index }}
+                className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm"
+              >
+                <div className="flex flex-col">
+                  <p className="text-gray-600 italic">{testimonial.quote}</p>
+                  <div className="mt-4">
+                    <p className="font-semibold text-gray-900">{testimonial.author}</p>
+                    <p className="text-sm text-gray-600">{testimonial.role}</p>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
       
       {/* CTA Section */}
-      <section className={`py-20 md:py-32 bg-gradient-to-t ${getHeroGradient()}`}>
+      <section className="py-20 md:py-32 bg-gradient-to-t from-purple-100 via-purple-50 to-white text-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <motion.h2 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-3xl md:text-4xl font-bold mb-6"
+              className="text-3xl md:text-4xl font-bold mb-6 text-gray-900"
             >
               Ready to Transform Your AI Experience?
             </motion.h2>
@@ -569,7 +461,7 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-xl text-muted-foreground mb-8"
+              className="text-xl text-gray-600 mb-8"
             >
               Get started with Panion today and discover a new way to interact with AI assistants.
             </motion.p>
@@ -582,7 +474,7 @@ const LandingPage: React.FC = () => {
               <Button 
                 size="lg" 
                 onClick={() => setLocation('/desktop')}
-                className="text-lg px-8"
+                className="text-lg px-8 bg-purple-600 hover:bg-purple-700 text-white"
               >
                 Try Panion Now
               </Button>
@@ -592,17 +484,17 @@ const LandingPage: React.FC = () => {
       </section>
       
       {/* Footer */}
-      <footer className="bg-muted py-12">
+      <footer className="bg-gray-100 py-12 text-gray-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
-              <h3 className="text-2xl font-bold">Panion</h3>
-              <p className="text-sm text-muted-foreground">© 2025 Panion. All rights reserved.</p>
+              <h3 className="text-2xl font-bold text-gray-900">Panion</h3>
+              <p className="text-sm text-gray-600">© 2025 Panion. All rights reserved.</p>
             </div>
             
             <div className="flex gap-6">
               {['About', 'Features', 'Contact', 'Terms', 'Privacy'].map((item, i) => (
-                <a key={i} href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <a key={i} href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
                   {item}
                 </a>
               ))}
