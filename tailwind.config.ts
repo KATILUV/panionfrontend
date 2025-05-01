@@ -79,10 +79,42 @@ export default {
             height: "0",
           },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        "blob-float": {
+          "0%": { transform: "translate(0px, 0px) scale(1)" },
+          "33%": { transform: "translate(10px, -10px) scale(1.05)" },
+          "66%": { transform: "translate(-5px, 5px) scale(0.95)" },
+          "100%": { transform: "translate(0px, 0px) scale(1)" },
+        },
+        pulse: {
+          "0%": { opacity: "0.7", filter: "blur(5px) brightness(1)" },
+          "100%": { opacity: "0.9", filter: "blur(5px) brightness(1.3)" },
+        },
+        "message-in": {
+          "0%": { transform: "translateY(20px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
+        "typing-dot": {
+          "0%, 20%": { transform: "translateY(0px)" },
+          "10%": { transform: "translateY(-5px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "float": "float 6s ease-in-out infinite",
+        "blob-float-1": "blob-float 12s ease-in-out infinite",
+        "blob-float-2": "blob-float 15s ease-in-out infinite 2s",
+        "blob-float-3": "blob-float 18s ease-in-out infinite 1s",
+        "blob-float-4": "blob-float 14s ease-in-out infinite 3s",
+        "pulse": "pulse 6s ease-in-out infinite alternate",
+        "message-in": "message-in 0.3s ease-out forwards",
+        "typing-dot-1": "typing-dot 1.5s ease-in-out infinite",
+        "typing-dot-2": "typing-dot 1.5s ease-in-out 0.2s infinite",
+        "typing-dot-3": "typing-dot 1.5s ease-in-out 0.4s infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

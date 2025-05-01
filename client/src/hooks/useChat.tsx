@@ -1,59 +1,93 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { Message, ChatResponse } from '@/types/chat';
+import { Message, ChatResponse } from '../types/chat';
 
 /**
- * Custom hook for managing chat functionality
- * Simplified version that handles messages and API communication
+ * Custom hook for managing chat functionality with Clara
  */
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-
-  // API mutation for sending messages to the server
-  const { mutate, isPending: isLoading } = useMutation({
-    mutationFn: async (message: string) => {
-      const response = await apiRequest('POST', '/api/chat', { message });
-      const data: ChatResponse = await response.json();
-      return data;
-    },
-    onSuccess: (data) => {
-      // Add Clara's response to the messages
-      const newMessage: Message = {
-        content: data.response,
-        isUser: false,
-        timestamp: new Date().toISOString()
-      };
-      setMessages((prev) => [...prev, newMessage]);
-    },
-    onError: (error) => {
-      console.error('Error sending message:', error);
-      // TODO: Add better error handling here - could show a toast notification
-    }
-  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
 
   /**
-   * Send a message to the API and add it to the chat
+   * Send a message to Clara and handle the response
    */
-  const sendMessage = (message: string) => {
-    if (!message.trim()) return;
-    
-    // Add user message to the chat
-    const newMessage: Message = {
-      content: message,
-      isUser: true,
-      timestamp: new Date().toISOString()
-    };
-    
-    setMessages((prev) => [...prev, newMessage]);
-    
-    // Send message to the API
-    mutate(message);
+  const sendMessage = async (content: string, imageFile?: File | null) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Add user message to state
+      const userMessage: Message = {
+        content,
+        isUser: true,
+        timestamp: new Date().toISOString(),
+        imageUrl: imageFile ? URL.createObjectURL(imageFile) : undefined
+      };
+      
+      setMessages(prev => [...prev, userMessage]);
+      
+      // Prepare form data for API request
+      const formData = new FormData();
+      formData.append('message', content);
+      
+      if (conversationId) {
+        formData.append('conversationId', conversationId);
+      }
+      
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+      
+      // Send request to API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+      
+      const data: ChatResponse = await response.json();
+      
+      // Update conversation ID if provided
+      if (data.conversationId) {
+        setConversationId(data.conversationId);
+      }
+      
+      // Add AI response to state
+      const aiMessage: Message = {
+        content: data.response,
+        isUser: false,
+        timestamp: new Date().toISOString(),
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
+      setIsLoading(false);
+    }
   };
-
+  
+  /**
+   * Clear all messages
+   */
+  const clearMessages = () => {
+    setMessages([]);
+    setConversationId(undefined);
+  };
+  
   return {
     messages,
     isLoading,
-    sendMessage
+    error,
+    sendMessage,
+    clearMessages,
   };
 };
+
+export default useChat;

@@ -58,7 +58,7 @@
   body {
     @apply font-sans antialiased text-foreground;
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #1a1c41 0%, #3a1078 100%);
+    background: linear-gradient(to bottom, #050014, #090824);
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
