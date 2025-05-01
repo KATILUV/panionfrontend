@@ -17,7 +17,7 @@ const Desktop: React.FC = () => {
   }, []);
   
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col relative bg-gradient-to-br from-indigo-950 via-purple-900 to-fuchsia-950">
+    <div className="h-screen w-screen overflow-hidden flex flex-col relative bg-gradient-to-br from-[#0F0326] via-[#231655] to-[#560A86]">
       {/* Desktop Area */}
       <div className="flex-1 relative">
         {/* Render Windows */}

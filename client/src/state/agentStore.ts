@@ -199,29 +199,5 @@ export const useAgentStore = create<AgentState>()(
   )
 );
 
-// Initialize with Clara as the default agent
-export const initializeAgentRegistry = () => {
-  const store = useAgentStore.getState();
-  
-  // Register Clara as the default agent
-  // Can't import ClaraAgent directly due to circular dependencies
-  // We'll do a dynamic import in App.tsx
-  const claraIcon = `
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-      <circle cx="12" cy="12" r="4" fill="currentColor" />
-    </svg>
-  `;
-  
-  store.registerAgent({
-    id: 'clara',
-    title: 'Clara',
-    icon: claraIcon,
-    component: () => null, // This will be replaced in App.tsx
-    defaultPosition: { x: 100, y: 100 },
-    defaultSize: { width: 640, height: 600 }
-  });
-  
-  // Auto-open Clara window by default
-  store.openAgent('clara');
-};
+// This is a no-op function now since we're registering agents in App.tsx
+export const initializeAgentRegistry = () => {};
