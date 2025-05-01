@@ -90,7 +90,7 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.5 }}
               className="text-4xl md:text-6xl font-bold mb-6"
             >
-              Welcome to <span className="text-purple-600">Panion</span>
+              This is <span className="text-purple-600">Panion</span>
             </motion.h1>
             
             <motion.div 
