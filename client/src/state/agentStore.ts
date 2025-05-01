@@ -7,7 +7,7 @@ export interface Agent {
   id: AgentId;
   title: string;
   icon: string;
-  component: React.ComponentType<any>;
+  component: () => React.ReactNode;
   defaultPosition?: { x: number, y: number };
   defaultSize?: { width: number, height: number };
 }

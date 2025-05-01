@@ -3,6 +3,20 @@ import Window from './common/Window';
 import Taskbar from './common/Taskbar';
 import { useAgentStore, AgentId } from '../state/agentStore';
 import { initializeAgentRegistry } from '../state/agentStore';
+import ClaraAgent from './agents/ClaraAgent';
+import NotesAgent from './agents/NotesAgent';
+
+// Component rendering helper
+const renderAgentContent = (agentId: string) => {
+  switch (agentId) {
+    case 'clara':
+      return <ClaraAgent />;
+    case 'notes':
+      return <NotesAgent />;
+    default:
+      return <div>Unknown agent type</div>;
+  }
+};
 
 const Desktop: React.FC = () => {
   const windows = useAgentStore(state => state.windows);
@@ -17,7 +31,7 @@ const Desktop: React.FC = () => {
   }, []);
   
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col relative bg-gradient-to-br from-[#0F0326] via-[#231655] to-[#560A86]">
+    <div className="panion-desktop">
       {/* Desktop Area */}
       <div className="flex-1 relative">
         {/* Render Windows */}
@@ -36,7 +50,7 @@ const Desktop: React.FC = () => {
               onMinimize={() => minimizeAgent(window.id)}
               onFocus={() => focusAgent(window.id)}
             >
-              <window.component />
+              {renderAgentContent(window.id)}
             </Window>
           ))}
       </div>

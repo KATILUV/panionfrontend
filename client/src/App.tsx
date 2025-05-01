@@ -38,7 +38,7 @@ function App() {
       id: 'clara',
       title: 'Clara AI',
       icon: claraIcon,
-      component: ClaraAgent,
+      component: () => <ClaraAgent />,
       defaultPosition: { x: 100, y: 100 },
       defaultSize: { width: 640, height: 600 }
     });
@@ -57,7 +57,7 @@ function App() {
       id: 'notes',
       title: 'Quick Notes',
       icon: notesIcon,
-      component: NotesAgent,
+      component: () => <NotesAgent />,
       defaultPosition: { x: 760, y: 100 },
       defaultSize: { width: 400, height: 500 }
     });
