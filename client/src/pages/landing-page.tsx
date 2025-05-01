@@ -185,7 +185,7 @@ const LandingPage: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen overflow-auto">
       {/* Hero Section */}
       <section className={`relative py-20 md:py-32 bg-gradient-to-b ${getHeroGradient()}`}>
         <div className="container mx-auto px-4 relative z-10">

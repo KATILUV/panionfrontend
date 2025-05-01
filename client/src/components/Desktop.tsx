@@ -70,7 +70,7 @@ const Desktop: React.FC = () => {
   const hasOpenWindows = Object.values(windows).some(window => window.isOpen && !window.isMinimized);
 
   return (
-    <div className="panion-desktop">
+    <div className="panion-desktop overflow-auto">
       {/* Desktop Area */}
       <div className="flex-1 relative">
         {/* Show empty state dashboard if no windows are open */}

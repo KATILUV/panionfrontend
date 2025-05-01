@@ -127,7 +127,7 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col md:flex-row bg-gradient-to-br ${getGradient()}`}>
+    <div className={`min-h-screen overflow-auto flex flex-col md:flex-row bg-gradient-to-br ${getGradient()}`}>
       {/* Left side: Auth forms */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-8">
         <motion.div 
