@@ -261,6 +261,9 @@ export const useAgentStore = create<AgentState>()(
           windowStates
         };
         
+        // Log the layout save action
+        log.action(`Saved window layout: "${name}"`);
+        
         // Add to layouts collection
         return {
           layouts: [...state.layouts, newLayout],
@@ -272,6 +275,9 @@ export const useAgentStore = create<AgentState>()(
       loadLayout: (id) => set((state) => {
         const layout = state.layouts.find(l => l.id === id);
         if (!layout) return state;
+        
+        // Log the layout loading action
+        log.action(`Applying window layout: "${layout.name}"`);
         
         // Create a new windows state by merging the saved layout with current window data
         const newWindows = { ...state.windows };
@@ -298,6 +304,12 @@ export const useAgentStore = create<AgentState>()(
       
       // Delete a layout by ID
       deleteLayout: (id) => set((state) => {
+        const layout = state.layouts.find(l => l.id === id);
+        if (layout) {
+          // Log the layout deletion action
+          log.action(`Deleted window layout: "${layout.name}"`);
+        }
+        
         return {
           layouts: state.layouts.filter(layout => layout.id !== id),
           activeLayoutId: state.activeLayoutId === id ? null : state.activeLayoutId

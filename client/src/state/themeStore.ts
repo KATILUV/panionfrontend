@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { log } from './systemLogStore';
 
 // Theme types
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -26,11 +27,20 @@ export const useThemeStore = create<ThemeState>()(
       accent: 'purple',
       systemPrefersDark: false,
       
-      setMode: (mode) => set({ mode }),
+      setMode: (mode) => {
+        log.info(`Theme mode changed to: ${mode}`);
+        set({ mode });
+      },
       
-      setAccent: (accent) => set({ accent }),
+      setAccent: (accent) => {
+        log.info(`Theme accent changed to: ${accent}`);
+        set({ accent });
+      },
       
-      setSystemPreference: (prefersDark) => set({ systemPrefersDark: prefersDark }),
+      setSystemPreference: (prefersDark) => {
+        log.info(`System theme preference detected: ${prefersDark ? 'dark' : 'light'}`);
+        set({ systemPrefersDark: prefersDark });
+      },
       
       getCurrentTheme: () => {
         const { mode, systemPrefersDark } = get();

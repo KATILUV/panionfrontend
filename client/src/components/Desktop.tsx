@@ -3,6 +3,7 @@ import Window from './common/Window';
 import Taskbar from './common/Taskbar';
 import { useAgentStore, AgentId, WindowLayout } from '../state/agentStore';
 import { useThemeStore } from '../state/themeStore';
+import { useSystemLogStore, log } from '../state/systemLogStore';
 import { initializeAgentRegistry } from '../state/agentStore';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
@@ -35,9 +36,19 @@ const Desktop: React.FC = () => {
   const [newLayoutName, setNewLayoutName] = useState('');
   const { toast } = useToast();
   
-  // Initialize agent registry when component mounts
+  // Initialize agent registry and system logs when component mounts
   useEffect(() => {
     initializeAgentRegistry();
+    
+    // Add initial system logs to demonstrate functionality
+    log.info('Panion OS initialized');
+    log.thinking('Loading user preferences and system settings');
+    log.memory('Retrieving saved window layouts and theme settings');
+    log.action('System ready for user interaction');
+    
+    // Show the system log by default on first run
+    const setVisibility = useSystemLogStore.getState().setVisibility;
+    setVisibility(true);
   }, []);
   
   // Load layout handler
