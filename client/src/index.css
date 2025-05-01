@@ -176,11 +176,11 @@
     @apply font-sans antialiased text-foreground;
     font-family: 'Inter', sans-serif;
     background: linear-gradient(to bottom, var(--theme-gradient-start), var(--theme-gradient-end));
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
     padding: 0;
     position: relative;
-    overflow: hidden;
+    overflow: auto;
     transition: background 0.5s ease;
   }
   
@@ -449,8 +449,8 @@
 /* Desktop styles */
 .panion-desktop {
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow: auto;
   background: linear-gradient(to bottom right, 
     var(--theme-gradient-start), 
     var(--theme-gradient-end), 
