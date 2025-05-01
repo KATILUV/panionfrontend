@@ -3,7 +3,8 @@ import ClaraOrb from '../components/ClaraOrb';
 import ChatBubble from '../components/ChatBubble';
 import ChatInput from '../components/ChatInput';
 import TypingIndicator from '../components/TypingIndicator';
-import useChat from '../hooks/useChat';
+import { useChat } from '../hooks/useChat';
+import { Message } from '../types/chat';
 
 const ChatPage: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
@@ -44,7 +45,7 @@ const ChatPage: React.FC = () => {
             </div>
           ) : (
             <>
-              {messages.map((message, index) => (
+              {messages.map((message: Message, index: number) => (
                 <ChatBubble 
                   key={index} 
                   message={message} 
@@ -67,10 +68,8 @@ const ChatPage: React.FC = () => {
           isLoading={isLoading}
         />
         
-        {/* Footer */}
-        <div className="text-center text-white/50 text-xs mt-2">
-          <p>Clara AI • Your magical companion</p>
-        </div>
+        {/* Empty footer to maintain spacing */}
+        <div className="h-2"></div>
       </div>
     </div>
   );

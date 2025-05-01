@@ -26,11 +26,6 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
-        
-        {/* Dev navigation */}
-        <div className="fixed bottom-4 right-4 bg-black/50 backdrop-blur-md p-2 rounded-xl text-xs text-white">
-          <Link href="/">Main</Link> | <Link href="/basic">Basic</Link>
-        </div>
       </TooltipProvider>
     </QueryClientProvider>
   );
