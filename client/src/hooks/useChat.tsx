@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Message, ChatResponse } from '../types/chat';
+import { log } from '../state/systemLogStore';
 
 /**
  * Custom hook for managing chat functionality with Clara
@@ -17,6 +18,12 @@ export const useChat = () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Log user message
+      log.action(`User sent message: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`);
+      if (imageFile) {
+        log.action(`User attached image: ${imageFile.name} (${Math.round(imageFile.size / 1024)} KB)`);
+      }
       
       // Add user message to state
       const userMessage: Message = {

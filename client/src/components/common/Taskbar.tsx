@@ -1,8 +1,10 @@
 import React from 'react';
 import { useAgentStore, AgentId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
+import { useSystemLogStore } from '../../state/systemLogStore';
 import LayoutManager from './LayoutManager';
 import ThemeSelector from './ThemeSelector';
+import ClaraSystemLog from '../system/ClaraSystemLog';
 import { Button } from '@/components/ui/button';
 import { 
   Layout, 
@@ -11,7 +13,8 @@ import {
   Paintbrush, 
   Settings, 
   Monitor, 
-  SplitSquareVertical 
+  SplitSquareVertical,
+  Terminal
 } from 'lucide-react';
 
 interface TaskbarProps {
@@ -55,6 +58,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const mode = useThemeStore(state => state.mode);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   
+  // Get system log information and actions
+  const isSystemLogVisible = useSystemLogStore(state => state.isVisible);
+  const toggleSystemLog = useSystemLogStore(state => state.toggleVisibility);
+  
   // Get the appropriate theme icon
   const getThemeIcon = () => {
     const currentTheme = getCurrentTheme();
@@ -89,6 +96,19 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       </div>
       
       <div className="flex items-center space-x-3">
+        {/* System Log Button */}
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={toggleSystemLog}
+          className={`h-10 px-3 hover:text-white hover:bg-white/10 flex items-center space-x-2 ${
+            isSystemLogVisible ? 'text-primary bg-white/10' : 'text-white/70'
+          }`}
+        >
+          <Terminal size={18} />
+          <span className="hidden sm:inline">Console</span>
+        </Button>
+
         {/* Theme Selector Button */}
         <ThemeSelector>
           <Button 
@@ -122,6 +142,9 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           Panion OS v0.1
         </div>
       </div>
+      
+      {/* System Log Component */}
+      <ClaraSystemLog />
     </div>
   );
 };
