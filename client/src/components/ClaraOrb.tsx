@@ -10,7 +10,7 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
       <div 
         className={`
           relative w-32 h-32 rounded-full 
-          animate-float
+          ${isProcessing ? '' : 'animate-float'}
           bg-opacity-15 backdrop-blur-lg
           bg-white/10
           shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_30px_rgba(138,43,226,0.4),0_0_50px_rgba(255,0,128,0.3),inset_0_0_70px_rgba(255,255,255,0.2)]

@@ -28,23 +28,35 @@ export const useChat = () => {
       
       setMessages(prev => [...prev, userMessage]);
       
-      // Prepare form data for API request
-      const formData = new FormData();
-      formData.append('message', content);
+      // Prepare form data or JSON for API request
+      let requestOptions: RequestInit = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: content,
+          conversationId: conversationId || null
+        }),
+      };
       
-      if (conversationId) {
-        formData.append('conversationId', conversationId);
-      }
-      
+      // If we have an image, use FormData instead of JSON
       if (imageFile) {
+        const formData = new FormData();
+        formData.append('message', content);
+        if (conversationId) {
+          formData.append('conversationId', conversationId);
+        }
         formData.append('image', imageFile);
+        
+        requestOptions = {
+          method: 'POST',
+          body: formData,
+        };
       }
       
       // Send request to API
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch('/api/chat', requestOptions);
       
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
