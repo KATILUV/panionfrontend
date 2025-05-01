@@ -81,7 +81,7 @@ const LandingPage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
       {/* Hero Section */}
-      <section className="relative py-28 md:py-40 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 text-white overflow-hidden">
+      <section className="relative py-28 md:py-40 bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-900 text-white overflow-hidden">
         {/* Particle effect background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           {Array.from({ length: 20 }).map((_, i) => (
@@ -107,9 +107,9 @@ const LandingPage: React.FC = () => {
               }}
             />
           ))}
-          <div className="absolute top-1/3 left-10 w-72 h-72 rounded-full bg-purple-500/20 blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-10 w-80 h-80 rounded-full bg-indigo-500/20 blur-3xl"></div>
-          <div className="absolute top-3/4 left-1/3 w-64 h-64 rounded-full bg-purple-400/20 blur-3xl"></div>
+          <div className="absolute top-1/3 left-10 w-72 h-72 rounded-full bg-blue-500/20 blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-10 w-80 h-80 rounded-full bg-cyan-500/20 blur-3xl"></div>
+          <div className="absolute top-3/4 left-1/3 w-64 h-64 rounded-full bg-sky-400/20 blur-3xl"></div>
         </div>
         
         {/* Floating window mockup in background */}
@@ -157,17 +157,17 @@ const LandingPage: React.FC = () => {
               className="relative"
             >
               <motion.div 
-                className="absolute -top-5 -left-10 w-20 h-20 bg-purple-500/40 rounded-full blur-2xl"
+                className="absolute -top-5 -left-10 w-20 h-20 bg-blue-500/40 rounded-full blur-2xl"
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               />
               <motion.div 
-                className="absolute -top-5 -right-10 w-20 h-20 bg-indigo-500/40 rounded-full blur-2xl"
+                className="absolute -top-5 -right-10 w-20 h-20 bg-cyan-500/40 rounded-full blur-2xl"
                 animate={{ scale: [1, 1.3, 1] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
               />
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm">
-                This is <span className="text-purple-300">Panion</span>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-200 drop-shadow-sm">
+                This is <span className="text-sky-300">Panion</span>
               </h1>
             </motion.div>
             
@@ -175,12 +175,12 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="text-xl md:text-2xl text-purple-200 mb-10 min-h-16 backdrop-blur-sm py-2 px-4 rounded-lg bg-white/5"
+              className="text-xl md:text-2xl text-blue-200 mb-10 min-h-16 backdrop-blur-sm py-2 px-4 rounded-lg bg-white/5"
             >
               <RotatingTagline 
                 phrases={taglinePhrases} 
                 interval={5000}
-                className="text-xl md:text-2xl text-purple-100 font-medium leading-normal"
+                className="text-xl md:text-2xl text-blue-100 font-medium leading-normal"
               />
             </motion.div>
             
@@ -193,7 +193,7 @@ const LandingPage: React.FC = () => {
               <Button 
                 size="lg" 
                 onClick={() => setLocation('/desktop')}
-                className="text-lg bg-purple-500 hover:bg-purple-400 text-white px-8 py-6 rounded-xl shadow-lg hover:shadow-purple-500/25 transition-all"
+                className="text-lg bg-blue-500 hover:bg-blue-400 text-white px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all"
               >
                 Get Started
               </Button>
@@ -201,7 +201,7 @@ const LandingPage: React.FC = () => {
                 size="lg" 
                 variant="outline" 
                 onClick={() => setLocation('/auth')}
-                className="text-lg border-2 border-purple-400 text-purple-200 hover:bg-purple-700/30 px-8 py-6 rounded-xl"
+                className="text-lg border-2 border-sky-400 text-blue-200 hover:bg-blue-700/30 px-8 py-6 rounded-xl"
               >
                 Sign In
               </Button>
@@ -230,8 +230,8 @@ const LandingPage: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.1 * index }}
                 className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col shadow-sm"
               >
-                <div className="rounded-full p-2 bg-purple-100 w-fit">
-                  <feature.icon className="w-6 h-6 text-purple-600" />
+                <div className="rounded-full p-2 bg-blue-100 w-fit">
+                  <feature.icon className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-bold mt-4 text-gray-900">{feature.title}</h3>
                 <p className="text-gray-600 mt-2">{feature.description}</p>
@@ -242,7 +242,7 @@ const LandingPage: React.FC = () => {
       </section>
       
       {/* Screenshot/Demo Section */}
-      <section className="py-20 md:py-32 bg-gradient-to-b from-white to-purple-50 text-gray-900">
+      <section className="py-20 md:py-32 bg-gradient-to-b from-white to-blue-50 text-gray-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-12">
             <div className="flex-1">
@@ -269,7 +269,7 @@ const LandingPage: React.FC = () => {
                       transition={{ duration: 0.3, delay: 0.1 * i }}
                       className="flex items-start"
                     >
-                      <span className="text-purple-600 mr-2">✓</span> {item}
+                      <span className="text-blue-600 mr-2">✓</span> {item}
                     </motion.li>
                   ))}
                 </ul>
@@ -363,7 +363,7 @@ const LandingPage: React.FC = () => {
                         <span>Open Notes</span>
                       </div>
                       <div className="p-2 hover:bg-white/5 rounded mb-1 flex items-center text-xs text-white/70">
-                        <MessageSquare className="w-3 h-3 mr-2 text-purple-400" />
+                        <MessageSquare className="w-3 h-3 mr-2 text-blue-400" />
                         <span>Chat with Clara</span>
                       </div>
                       <div className="p-2 hover:bg-white/5 rounded flex items-center text-xs text-white/70">
@@ -409,8 +409,8 @@ const LandingPage: React.FC = () => {
                 <tr>
                   <th className="text-left p-4 border-b border-gray-200"></th>
                   <th className="p-4 border-b border-gray-200">
-                    <div className="bg-purple-100 rounded-lg p-3 text-center">
-                      <h3 className="text-xl font-bold text-purple-700">Panion</h3>
+                    <div className="bg-blue-100 rounded-lg p-3 text-center">
+                      <h3 className="text-xl font-bold text-blue-700">Panion</h3>
                       <p className="text-sm text-gray-600">AI Desktop Environment</p>
                     </div>
                   </th>
@@ -537,7 +537,7 @@ const LandingPage: React.FC = () => {
       </section>
       
       {/* CTA Section */}
-      <section className="py-20 md:py-32 bg-gradient-to-t from-purple-100 via-purple-50 to-white text-gray-900">
+      <section className="py-20 md:py-32 bg-gradient-to-t from-blue-100 via-blue-50 to-white text-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <motion.h2 
@@ -566,7 +566,7 @@ const LandingPage: React.FC = () => {
               <Button 
                 size="lg" 
                 onClick={() => setLocation('/desktop')}
-                className="text-lg px-8 bg-purple-600 hover:bg-purple-700 text-white"
+                className="text-lg px-8 bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Try Panion Now
               </Button>
