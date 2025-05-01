@@ -346,7 +346,7 @@ const LandingPage: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">
-              Co-create with <span className="text-indigo-600">Panion</span>
+              Real systems. <span className="text-indigo-600">Real selves.</span>
             </h2>
             <p className="text-xl text-gray-600 mt-6">
               See how people are using Panion to transform their work and creative processes
