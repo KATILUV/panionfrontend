@@ -6,11 +6,24 @@ import {
   Cpu, Users, Layout, Sparkles, MessageSquare, Fingerprint, LucideProps, Brain,
   LayoutGrid, Search, Terminal, Check, X
 } from 'lucide-react';
+import RotatingTagline from '@/components/RotatingTagline';
 
 
 
 const LandingPage: React.FC = () => {
   const [_, setLocation] = useLocation();
+  
+  // Tagline phrases
+  const taglinePhrases = [
+    "The system that syncs with your system.",
+    "Not an app. Not a tool. A new kind of presence.",
+    "Your mind's favorite interface.",
+    "Co-create your next evolution.",
+    "The future isn't artificial — it's intentional.",
+    "Dream deeper. Build smarter. Evolve together.",
+    "Your AI desktop environment with multi-agent capabilities.",
+    "One OS. Infinite agents."
+  ];
   
   // Features data
   const features = [
@@ -80,14 +93,18 @@ const LandingPage: React.FC = () => {
               Welcome to <span className="text-purple-600">Panion</span>
             </motion.h1>
             
-            <motion.p 
+            <motion.div 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-xl md:text-2xl text-gray-600 mb-8"
+              className="text-xl md:text-2xl text-gray-600 mb-8 h-12" // Increased height for multi-line taglines
             >
-              Your AI desktop environment with multi-agent capabilities
-            </motion.p>
+              <RotatingTagline 
+                phrases={taglinePhrases} 
+                interval={4000}
+                className="text-xl md:text-2xl text-gray-600 font-medium"
+              />
+            </motion.div>
             
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
