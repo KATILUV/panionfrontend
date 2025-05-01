@@ -341,6 +341,53 @@ const LandingPage: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent opacity-90 z-10"></div>
       </section>
       
+      {/* Use Cases Section */}
+      <section className="py-20 md:py-32 bg-white text-gray-900">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">
+              Co-create with <span className="text-indigo-600">Panion</span>
+            </h2>
+            <p className="text-xl text-gray-600 mt-6">
+              See how people are using Panion to transform their work and creative processes
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {useCases.map((useCase, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 * index }}
+                className="bg-white border border-gray-100 rounded-xl p-7 flex flex-col shadow-md hover:shadow-xl transition-shadow duration-300 group"
+                whileHover={{ y: -5 }}
+              >
+                <div className={`rounded-full p-3 ${
+                  useCase.accent === 'violet' ? 'bg-violet-100' : 
+                  useCase.accent === 'indigo' ? 'bg-indigo-100' : 
+                  useCase.accent === 'purple' ? 'bg-purple-100' : 'bg-blue-100'
+                } w-fit mb-5 group-hover:shadow-md transition-all duration-300`}>
+                  <useCase.icon className={`w-7 h-7 ${
+                    useCase.accent === 'violet' ? 'text-violet-600' : 
+                    useCase.accent === 'indigo' ? 'text-indigo-600' : 
+                    useCase.accent === 'purple' ? 'text-purple-600' : 'text-blue-600'
+                  }`} />
+                </div>
+                <h3 className="text-xl font-bold mt-3 mb-3 text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">{useCase.title}</h3>
+                <div className={`w-12 h-1 ${
+                  useCase.accent === 'violet' ? 'bg-violet-500' : 
+                  useCase.accent === 'indigo' ? 'bg-indigo-500' : 
+                  useCase.accent === 'purple' ? 'bg-purple-500' : 'bg-blue-500'
+                } mb-4 rounded-full group-hover:w-16 transition-all duration-300`}></div>
+                <p className="text-gray-600 text-base leading-relaxed">{useCase.description}</p>
+                <span className="mt-auto pt-5 text-sm italic text-gray-500">{useCase.user}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
       {/* Features Carousel Section */}
       <section className="py-10 md:py-16 bg-white text-gray-900 border-b border-gray-100">
         <div className="container mx-auto px-4">
@@ -402,53 +449,6 @@ const LandingPage: React.FC = () => {
                 />
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Use Cases Section */}
-      <section className="py-20 md:py-32 bg-white text-gray-900">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">
-              What others have <span className="text-indigo-600">created</span> with Panion
-            </h2>
-            <p className="text-xl text-gray-600 mt-6">
-              See how people are using Panion to transform their work and creative processes
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {useCases.map((useCase, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 * index }}
-                className="bg-white border border-gray-100 rounded-xl p-7 flex flex-col shadow-md hover:shadow-xl transition-shadow duration-300 group"
-                whileHover={{ y: -5 }}
-              >
-                <div className={`rounded-full p-3 ${
-                  useCase.accent === 'violet' ? 'bg-violet-100' : 
-                  useCase.accent === 'indigo' ? 'bg-indigo-100' : 
-                  useCase.accent === 'purple' ? 'bg-purple-100' : 'bg-blue-100'
-                } w-fit mb-5 group-hover:shadow-md transition-all duration-300`}>
-                  <useCase.icon className={`w-7 h-7 ${
-                    useCase.accent === 'violet' ? 'text-violet-600' : 
-                    useCase.accent === 'indigo' ? 'text-indigo-600' : 
-                    useCase.accent === 'purple' ? 'text-purple-600' : 'text-blue-600'
-                  }`} />
-                </div>
-                <h3 className="text-xl font-bold mt-3 mb-3 text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">{useCase.title}</h3>
-                <div className={`w-12 h-1 ${
-                  useCase.accent === 'violet' ? 'bg-violet-500' : 
-                  useCase.accent === 'indigo' ? 'bg-indigo-500' : 
-                  useCase.accent === 'purple' ? 'bg-purple-500' : 'bg-blue-500'
-                } mb-4 rounded-full group-hover:w-16 transition-all duration-300`}></div>
-                <p className="text-gray-600 text-base leading-relaxed">{useCase.description}</p>
-                <span className="mt-auto pt-5 text-sm italic text-gray-500">{useCase.user}</span>
-              </motion.div>
-            ))}
           </div>
         </div>
       </section>
