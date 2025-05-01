@@ -81,41 +81,119 @@ const LandingPage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
       {/* Hero Section */}
-      <section className="relative py-20 md:py-32 bg-gradient-to-b from-purple-100 via-purple-50 to-white text-gray-900">
+      <section className="relative py-28 md:py-40 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 text-white overflow-hidden">
+        {/* Particle effect background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full bg-white/10"
+              initial={{
+                width: Math.random() * 10 + 2,
+                height: Math.random() * 10 + 2,
+                x: Math.random() * 100,
+                y: Math.random() * 100,
+                opacity: Math.random() * 0.5 + 0.1
+              }}
+              animate={{
+                x: `calc(${Math.random() * 100}% + ${(Math.random() - 0.5) * 100}px)`,
+                y: `calc(${Math.random() * 100}% + ${(Math.random() - 0.5) * 100}px)`,
+                opacity: [0.1, 0.3, 0.1]
+              }}
+              transition={{
+                duration: Math.random() * 20 + 15,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+          ))}
+          <div className="absolute top-1/3 left-10 w-72 h-72 rounded-full bg-purple-500/20 blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-10 w-80 h-80 rounded-full bg-indigo-500/20 blur-3xl"></div>
+          <div className="absolute top-3/4 left-1/3 w-64 h-64 rounded-full bg-purple-400/20 blur-3xl"></div>
+        </div>
+        
+        {/* Floating window mockup in background */}
+        <motion.div 
+          className="absolute hidden md:block right-10 lg:right-20 top-20 w-56 lg:w-72 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-0"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 0.6 }}
+          transition={{ duration: 1, delay: 0.8 }}
+        >
+          <div className="bg-black/40 h-6 border-b border-white/10 flex items-center px-3">
+            <div className="flex items-center space-x-1.5">
+              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            </div>
+            <div className="ml-3 text-xs text-white/70">Window</div>
+          </div>
+          <div className="h-32 bg-black/20"></div>
+        </motion.div>
+        
+        <motion.div 
+          className="absolute hidden md:block left-20 bottom-20 w-48 lg:w-64 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-0 rotate-3"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 0.6 }}
+          transition={{ duration: 1, delay: 1.2 }}
+        >
+          <div className="bg-black/40 h-6 border-b border-white/10 flex items-center px-3">
+            <div className="flex items-center space-x-1.5">
+              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            </div>
+            <div className="ml-3 text-xs text-white/70">Agent</div>
+          </div>
+          <div className="h-28 bg-black/20"></div>
+        </motion.div>
+        
+        {/* Main content */}
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-            <motion.h1 
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-4xl md:text-6xl font-bold mb-6"
+              transition={{ duration: 0.7 }}
+              className="relative"
             >
-              This is <span className="text-purple-600">Panion</span>
-            </motion.h1>
+              <motion.div 
+                className="absolute -top-5 -left-10 w-20 h-20 bg-purple-500/40 rounded-full blur-2xl"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div 
+                className="absolute -top-5 -right-10 w-20 h-20 bg-indigo-500/40 rounded-full blur-2xl"
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              />
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm">
+                This is <span className="text-purple-300">Panion</span>
+              </h1>
+            </motion.div>
             
             <motion.div 
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-xl md:text-2xl text-gray-600 mb-8 min-h-16" // More height for multi-line taglines
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="text-xl md:text-2xl text-purple-200 mb-10 min-h-16 backdrop-blur-sm py-2 px-4 rounded-lg bg-white/5"
             >
               <RotatingTagline 
                 phrases={taglinePhrases} 
                 interval={5000}
-                className="text-xl md:text-2xl text-gray-600 font-medium leading-normal"
+                className="text-xl md:text-2xl text-purple-100 font-medium leading-normal"
               />
             </motion.div>
             
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="flex flex-col sm:flex-row gap-4"
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-6"
             >
               <Button 
                 size="lg" 
                 onClick={() => setLocation('/desktop')}
-                className="text-lg bg-purple-600 hover:bg-purple-700 text-white"
+                className="text-lg bg-purple-500 hover:bg-purple-400 text-white px-8 py-6 rounded-xl shadow-lg hover:shadow-purple-500/25 transition-all"
               >
                 Get Started
               </Button>
@@ -123,7 +201,7 @@ const LandingPage: React.FC = () => {
                 size="lg" 
                 variant="outline" 
                 onClick={() => setLocation('/auth')}
-                className="text-lg border-purple-600 text-purple-600 hover:bg-purple-100"
+                className="text-lg border-2 border-purple-400 text-purple-200 hover:bg-purple-700/30 px-8 py-6 rounded-xl"
               >
                 Sign In
               </Button>
@@ -131,11 +209,8 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
         
-        {/* Decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-5 -left-5 w-24 h-24 lg:w-72 lg:h-72 rounded-full bg-purple-400/20 blur-3xl"></div>
-          <div className="absolute -top-5 -right-5 w-24 h-24 lg:w-72 lg:h-72 rounded-full bg-purple-400/20 blur-3xl"></div>
-        </div>
+        {/* Bottom gradient overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent opacity-90 z-10"></div>
       </section>
       
       {/* Features Section */}
