@@ -337,6 +337,106 @@
   flex-direction: column;
 }
 
+/* Window snap indicators */
+.window-snap-left::after,
+.window-snap-right::after,
+.window-snap-top::after,
+.window-snap-bottom::after,
+.window-snap-top-left::after,
+.window-snap-top-right::after,
+.window-snap-bottom-left::after,
+.window-snap-bottom-right::after,
+.window-snap-center::after {
+  content: '';
+  position: fixed;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+}
+
+.window-snap-left::after {
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+}
+
+.window-snap-right::after {
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+}
+
+.window-snap-top::after {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+}
+
+.window-snap-bottom::after {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+}
+
+.window-snap-top-left::after {
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 50%;
+}
+
+.window-snap-top-right::after {
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 50%;
+}
+
+.window-snap-bottom-left::after {
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  height: 50%;
+}
+
+.window-snap-bottom-right::after {
+  bottom: 0;
+  right: 0;
+  width: 50%;
+  height: 50%;
+}
+
+.window-snap-center::after {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.2;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.3;
+  }
+}
+
 /* We don't need crystal-inner anymore since we simplified the design */
 
 .crystal-highlight {

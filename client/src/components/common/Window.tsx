@@ -1,7 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Rnd } from 'react-rnd';
 import { useAgentStore, AgentId } from '../../state/agentStore';
 import { Minimize2, X, Maximize2 } from 'lucide-react';
+import { useWindowSize } from 'react-use';
+
+// Snap threshold in pixels
+const SNAP_THRESHOLD = 20;
+
+// Edge positions
+type SnapPosition = 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'none';
 
 interface WindowProps {
   id: AgentId;
@@ -32,6 +39,9 @@ const Window: React.FC<WindowProps> = ({
   const updateAgentSize = useAgentStore(state => state.updateAgentSize);
   const [isMaximized, setIsMaximized] = useState(false);
   const [preMaximizeState, setPreMaximizeState] = useState({ position, size });
+  const [currentSnapPosition, setCurrentSnapPosition] = useState<SnapPosition>('none');
+  const [isDragging, setIsDragging] = useState(false);
+  const { width: windowWidth, height: windowHeight } = useWindowSize();
   
   // Update stored position and size when maximized status changes
   useEffect(() => {
@@ -43,21 +53,149 @@ const Window: React.FC<WindowProps> = ({
 
   const toggleMaximize = () => {
     setIsMaximized(!isMaximized);
+    
+    if (isMaximized) {
+      // Restore to pre-maximized state
+      updateAgentPosition(id, preMaximizeState.position);
+      updateAgentSize(id, preMaximizeState.size);
+    } else {
+      // Save current state and maximize
+      setPreMaximizeState({ position, size });
+      updateAgentPosition(id, { x: 0, y: 0 });
+      updateAgentSize(id, { width: windowWidth, height: windowHeight });
+    }
   };
-
-  // Prevent windows from being dragged completely off-screen
+  
+  // Detect which edge/corner we are near
+  const detectSnapPosition = (x: number, y: number): SnapPosition => {
+    const rightEdge = windowWidth - SNAP_THRESHOLD;
+    const bottomEdge = windowHeight - SNAP_THRESHOLD;
+    const centerX = windowWidth / 2;
+    const centerY = windowHeight / 2;
+    
+    // Check corners first (they have priority)
+    if (x <= SNAP_THRESHOLD && y <= SNAP_THRESHOLD) return 'top-left';
+    if (x >= rightEdge && y <= SNAP_THRESHOLD) return 'top-right';
+    if (x <= SNAP_THRESHOLD && y >= bottomEdge - 40) return 'bottom-left';
+    if (x >= rightEdge && y >= bottomEdge - 40) return 'bottom-right';
+    
+    // Then check edges
+    if (x <= SNAP_THRESHOLD) return 'left';
+    if (x >= rightEdge) return 'right';
+    if (y <= SNAP_THRESHOLD) return 'top';
+    if (y >= bottomEdge - 40) return 'bottom';
+    
+    // Check center position
+    if (Math.abs(x - centerX) <= SNAP_THRESHOLD * 2 && Math.abs(y - centerY) <= SNAP_THRESHOLD * 2) {
+      return 'center';
+    }
+    
+    return 'none';
+  };
+  
+  // Apply snap positioning
+  const applySnapPosition = (snapPosition: SnapPosition) => {
+    let newPosition = { ...position };
+    let newSize = { ...size };
+    
+    const halfWidth = windowWidth / 2;
+    const halfHeight = windowHeight / 2;
+    
+    switch (snapPosition) {
+      case 'left':
+        newPosition = { x: 0, y: 0 };
+        newSize = { width: halfWidth, height: windowHeight };
+        break;
+      case 'right':
+        newPosition = { x: halfWidth, y: 0 };
+        newSize = { width: halfWidth, height: windowHeight };
+        break;
+      case 'top':
+        newPosition = { x: 0, y: 0 };
+        newSize = { width: windowWidth, height: halfHeight };
+        break;
+      case 'bottom':
+        newPosition = { x: 0, y: halfHeight };
+        newSize = { width: windowWidth, height: halfHeight };
+        break;
+      case 'top-left':
+        newPosition = { x: 0, y: 0 };
+        newSize = { width: halfWidth, height: halfHeight };
+        break;
+      case 'top-right':
+        newPosition = { x: halfWidth, y: 0 };
+        newSize = { width: halfWidth, height: halfHeight };
+        break;
+      case 'bottom-left':
+        newPosition = { x: 0, y: halfHeight };
+        newSize = { width: halfWidth, height: halfHeight };
+        break;
+      case 'bottom-right':
+        newPosition = { x: halfWidth, y: halfHeight };
+        newSize = { width: halfWidth, height: halfHeight };
+        break;
+      case 'center':
+        // Center the window with its current size
+        newPosition = {
+          x: (windowWidth - size.width) / 2,
+          y: (windowHeight - size.height) / 2
+        };
+        break;
+      default:
+        return; // No snap
+    }
+    
+    setCurrentSnapPosition(snapPosition);
+    updateAgentPosition(id, newPosition);
+    
+    if (snapPosition !== 'center') {
+      updateAgentSize(id, newSize);
+    }
+  };
+  
+  // Handle drag start
+  const handleDragStart = () => {
+    setIsDragging(true);
+    onFocus();
+  };
+  
+  // Handle drag during dragging
+  const handleDrag = (_e: any, d: { x: number, y: number }) => {
+    if (!isDragging) return;
+    
+    // Detect snap areas while dragging
+    const snapPosition = detectSnapPosition(d.x, d.y);
+    setCurrentSnapPosition(snapPosition);
+    
+    // Visual indicator could be added here
+  };
+  
+  // Prevent windows from being dragged completely off-screen and handle snapping
   const handleDragStop = (_e: any, d: { x: number, y: number }) => {
+    setIsDragging(false);
+    
+    // Check if we should snap
+    const snapPosition = detectSnapPosition(d.x, d.y);
+    
+    if (snapPosition !== 'none') {
+      // Apply the snap position
+      applySnapPosition(snapPosition);
+      return;
+    }
+    
+    // If not snapping, apply normal bounds
     // Ensure at least 20% of the window remains within the viewport
     const minVisibleX = -size.width * 0.8;
     const minVisibleY = 0; // Don't allow dragging above the viewport
-    const maxVisibleX = window.innerWidth - size.width * 0.2;
-    const maxVisibleY = window.innerHeight - 40; // Keep title bar visible
+    const maxVisibleX = windowWidth - size.width * 0.2;
+    const maxVisibleY = windowHeight - 40; // Keep title bar visible
 
     const boundedX = Math.max(minVisibleX, Math.min(d.x, maxVisibleX));
     const boundedY = Math.max(minVisibleY, Math.min(d.y, maxVisibleY));
 
     const newPosition = { x: boundedX, y: boundedY };
     updateAgentPosition(id, newPosition);
+    setCurrentSnapPosition('none');
   };
 
   // Handle resize
@@ -73,6 +211,34 @@ const Window: React.FC<WindowProps> = ({
   // Calculate content height (window height minus title bar)
   const contentHeight = size.height - 40;
 
+  // Create CSS classes based on snap position for visual feedback
+  const getSnapIndicatorClass = () => {
+    if (!isDragging || currentSnapPosition === 'none') return '';
+    
+    switch (currentSnapPosition) {
+      case 'left':
+        return 'window-snap-left';
+      case 'right':
+        return 'window-snap-right';
+      case 'top':
+        return 'window-snap-top';
+      case 'bottom':
+        return 'window-snap-bottom';
+      case 'top-left':
+        return 'window-snap-top-left';
+      case 'top-right':
+        return 'window-snap-top-right';
+      case 'bottom-left':
+        return 'window-snap-bottom-left';
+      case 'bottom-right':
+        return 'window-snap-bottom-right';
+      case 'center':
+        return 'window-snap-center';
+      default:
+        return '';
+    }
+  };
+
   return (
     <Rnd
       style={{
@@ -83,7 +249,9 @@ const Window: React.FC<WindowProps> = ({
         ...size,
       }}
       position={isMaximized ? { x: 0, y: 0 } : position}
-      size={isMaximized ? { width: window.innerWidth, height: window.innerHeight } : size}
+      size={isMaximized ? { width: windowWidth, height: windowHeight } : size}
+      onDragStart={handleDragStart}
+      onDrag={handleDrag}
       onDragStop={handleDragStop}
       onResizeStop={handleResizeStop}
       onMouseDown={onFocus}
@@ -93,6 +261,7 @@ const Window: React.FC<WindowProps> = ({
       bounds="parent"
       minWidth={300}
       minHeight={200}
+      className={getSnapIndicatorClass()}
     >
       <div 
         className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border border-white/20 ${
