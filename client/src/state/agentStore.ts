@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { log } from './systemLogStore';
 
 export type AgentId = string;
 
@@ -72,6 +73,9 @@ export const useAgentStore = create<AgentState>()(
           return state;
         }
 
+        // Log the registration
+        log.info(`Registered new agent: ${agent.title} (${agent.id})`);
+
         // Create a window for this agent (initially closed)
         const newWindow: AgentWindow = {
           ...agent,
@@ -98,6 +102,9 @@ export const useAgentStore = create<AgentState>()(
         set((state) => {
           const agent = state.windows[id];
           if (!agent) return state;
+          
+          // Log the action
+          log.action(`Opening agent window: ${agent.title}`);
   
           const newZIndex = state.highestZIndex + 1;
   
@@ -124,6 +131,9 @@ export const useAgentStore = create<AgentState>()(
         set((state) => {
           const agent = state.windows[id];
           if (!agent) return state;
+          
+          // Log the action
+          log.action(`Closing agent window: ${agent.title}`);
   
           return {
             windows: {

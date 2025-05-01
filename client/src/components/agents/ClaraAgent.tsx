@@ -6,15 +6,33 @@ import TypingIndicator from '../TypingIndicator';
 import RotatingTagline from '../RotatingTagline';
 import { useChat } from '../../hooks/useChat';
 import { Message } from '../../types/chat';
+import { log } from '../../state/systemLogStore';
 
 const ClaraAgent: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  // Log when the component mounts and unmounts
+  useEffect(() => {
+    log.action('Clara agent window opened');
+    
+    return () => {
+      log.action('Clara agent window closed');
+    };
+  }, []);
+
   // Scroll to bottom of chat when new messages arrive
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+    
+    // Log when new messages are received
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (!lastMessage.isUser) {
+        log.thinking('Updated conversation with new response');
+      }
     }
   }, [messages]);
 

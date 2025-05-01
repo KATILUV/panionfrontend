@@ -68,7 +68,9 @@ export const useChat = () => {
       }
       
       if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
+        const errorMsg = `Error: ${response.status} ${response.statusText}`;
+        log.error(errorMsg);
+        throw new Error(errorMsg);
       }
       
       const data: ChatResponse = await response.json();
@@ -76,7 +78,12 @@ export const useChat = () => {
       // Update conversation ID if provided
       if (data.conversationId) {
         setConversationId(data.conversationId);
+        log.info(`Conversation ID updated: ${data.conversationId}`);
       }
+      
+      // Log thinking and memory access
+      log.thinking(`Processing response for: "${content.substring(0, 30)}${content.length > 30 ? '...' : ''}"`);
+      log.memory(`Retrieving relevant memories for context`);
       
       // Add AI response to state
       const aiMessage: Message = {
@@ -85,6 +92,8 @@ export const useChat = () => {
         timestamp: new Date().toISOString(),
         imageUrl: data.imageUrl, // Include image URL if provided by the API
       };
+      
+      log.action(`Clara responded with: "${data.response.substring(0, 50)}${data.response.length > 50 ? '...' : ''}"`);
       
       setMessages(prev => [...prev, aiMessage]);
     } catch (err) {
@@ -101,6 +110,7 @@ export const useChat = () => {
   const clearMessages = () => {
     setMessages([]);
     setConversationId(undefined);
+    log.action('Conversation history cleared');
   };
   
   return {
