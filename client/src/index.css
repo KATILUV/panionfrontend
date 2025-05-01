@@ -5,49 +5,166 @@
 @tailwind utilities;
 
 :root {
-    --background: 220 70% 15%;
-    --foreground: 210 40% 98%;
-    --muted: 217 45% 20%;
-    --muted-foreground: 215 20.2% 75.1%;
-    --popover: 224 58% 12%;
-    --popover-foreground: 210 40% 98%;
-    --card: 224 58% 12%;
-    --card-foreground: 210 40% 98%;
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --primary: 330 100% 80%;
-    --primary-foreground: 211 100% 99%;
-    --secondary: 249 90% 95%;
-    --secondary-foreground: 24 9.8% 10%;
-    --accent: 222 60% 20%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Base theme */
     --radius: 0.5rem;
+    
+    /* Light mode colors (default) */
+    --background: 220 30% 95%;
+    --foreground: 220 40% 15%;
+    --muted: 220 20% 88%;
+    --muted-foreground: 220 20% 40%;
+    --popover: 220 30% 98%;
+    --popover-foreground: 220 40% 15%;
+    --card: 220 30% 98%;
+    --card-foreground: 220 40% 15%;
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --ring: 224 71.4% 60%;
 }
 
+/* Dark mode colors */
 .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --primary: 330 100% 80%;
-    --primary-foreground: 211 100% 99%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 240 10% 4%;
+    --foreground: 220 10% 98%;
+    --muted: 240 8% 12%;
+    --muted-foreground: 240 5% 65%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 220 10% 98%;
+    --card: 240 10% 6%;
+    --card-foreground: 220 10% 98%;
+    --border: 240 8% 12%;
+    --input: 240 8% 16%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --ring: 240 4.9% 83.9%;
-    --radius: 0.5rem;
+}
+
+/* Accent Color: Purple (default) */
+:root,
+[data-accent="purple"] {
+    --primary: 265 83.3% 45.1%;
+    --primary-hover: 265 83.3% 40%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 265 50% 93.1%;
+    --secondary-hover: 265 50% 89%;
+    --secondary-foreground: 265 83.3% 25.1%; 
+    --accent: 265 83.3% 45.1%;
+    --accent-foreground: 210 40% 98%;
+    
+    /* Theme specific colors for desktop */
+    --theme-gradient-start: #0F0326;
+    --theme-gradient-end: #231655;
+    --theme-accent-glow: rgba(138, 43, 226, 0.3);
+}
+
+.dark[data-accent="purple"] {
+    --primary: 265 83.3% 65.1%;
+    --primary-hover: 265 83.3% 60%;
+    --secondary: 265 50% 18%;
+    --secondary-hover: 265 50% 22%;
+    --accent: 265 83.3% 55.1%;
+}
+
+/* Accent Color: Blue */
+[data-accent="blue"] {
+    --primary: 217.2 91.2% 59.8%;
+    --primary-hover: 217.2 91.2% 54.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 50% 91.1%;
+    --secondary-hover: 217.2 50% 87.1%;
+    --secondary-foreground: 217.2 91.2% 39.8%;
+    --accent: 217.2 91.2% 59.8%;
+    --accent-foreground: 210 40% 98%;
+    
+    /* Theme specific colors */
+    --theme-gradient-start: #03045e;
+    --theme-gradient-end: #023e8a;
+    --theme-accent-glow: rgba(0, 122, 255, 0.3);
+}
+
+.dark[data-accent="blue"] {
+    --primary: 217.2 91.2% 69.8%;
+    --primary-hover: 217.2 91.2% 64.8%;
+    --secondary: 217.2 50% 18%;
+    --secondary-hover: 217.2 50% 22%;
+    --accent: 217.2 91.2% 59.8%;
+}
+
+/* Accent Color: Green */
+[data-accent="green"] {
+    --primary: 142.1 76.2% 36.3%;
+    --primary-hover: 142.1 76.2% 31.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 142.1 50% 91.1%;
+    --secondary-hover: 142.1 50% 87.1%;
+    --secondary-foreground: 142.1 76.2% 26.3%;
+    --accent: 142.1 76.2% 36.3%;
+    --accent-foreground: 355.7 100% 97.3%;
+    
+    /* Theme specific colors */
+    --theme-gradient-start: #003805;
+    --theme-gradient-end: #0b5c0b;
+    --theme-accent-glow: rgba(0, 222, 102, 0.3);
+}
+
+.dark[data-accent="green"] {
+    --primary: 142.1 76.2% 46.3%;
+    --primary-hover: 142.1 76.2% 41.3%;
+    --secondary: 142.1 50% 18%;
+    --secondary-hover: 142.1 50% 22%;
+    --accent: 142.1 76.2% 36.3%;
+}
+
+/* Accent Color: Orange */
+[data-accent="orange"] {
+    --primary: 24.6 95% 53.1%;
+    --primary-hover: 24.6 95% 48.1%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --secondary: 24.6 50% 91.1%;
+    --secondary-hover: 24.6 50% 87.1%;
+    --secondary-foreground: 24.6 95% 33.1%;
+    --accent: 24.6 95% 53.1%;
+    --accent-foreground: 60 9.1% 97.8%;
+    
+    /* Theme specific colors */
+    --theme-gradient-start: #441f00;
+    --theme-gradient-end: #602e02;
+    --theme-accent-glow: rgba(255, 138, 0, 0.3);
+}
+
+.dark[data-accent="orange"] {
+    --primary: 24.6 95% 63.1%;
+    --primary-hover: 24.6 95% 58.1%;
+    --secondary: 24.6 50% 18%;
+    --secondary-hover: 24.6 50% 22%;
+    --accent: 24.6 95% 53.1%;
+}
+
+/* Accent Color: Pink */
+[data-accent="pink"] {
+    --primary: 346.8 77.2% 49.8%;
+    --primary-hover: 346.8 77.2% 44.8%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 346.8 50% 91.1%;
+    --secondary-hover: 346.8 50% 87.1%;
+    --secondary-foreground: 346.8 77.2% 29.8%;
+    --accent: 346.8 77.2% 49.8%;
+    --accent-foreground: 355.7 100% 97.3%;
+    
+    /* Theme specific colors */
+    --theme-gradient-start: #4a0020;
+    --theme-gradient-end: #720042;
+    --theme-accent-glow: rgba(255, 64, 190, 0.3);
+}
+
+.dark[data-accent="pink"] {
+    --primary: 346.8 77.2% 59.8%;
+    --primary-hover: 346.8 77.2% 54.8%;
+    --secondary: 346.8 50% 18%;
+    --secondary-hover: 346.8 50% 22%;
+    --accent: 346.8 77.2% 49.8%;
 }
 
 @layer base {
@@ -58,12 +175,13 @@
   body {
     @apply font-sans antialiased text-foreground;
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(to bottom, #0F0326, #231655);
+    background: linear-gradient(to bottom, var(--theme-gradient-start), var(--theme-gradient-end));
     height: 100vh;
     margin: 0;
     padding: 0;
     position: relative;
     overflow: hidden;
+    transition: background 0.5s ease;
   }
   
   body::before {
@@ -74,10 +192,11 @@
     width: 100%;
     height: 100%;
     background: 
-      radial-gradient(circle at 20% 20%, rgba(138, 43, 226, 0.15), transparent 40%),
-      radial-gradient(circle at 80% 80%, rgba(25, 118, 210, 0.15), transparent 40%),
-      radial-gradient(circle at 50% 50%, rgba(72, 52, 212, 0.05), transparent 70%);
+      radial-gradient(circle at 20% 20%, var(--theme-accent-glow), transparent 40%),
+      radial-gradient(circle at 80% 80%, var(--theme-accent-glow), transparent 40%),
+      radial-gradient(circle at 50% 50%, var(--theme-accent-glow), transparent 70%);
     z-index: -1;
+    transition: background 0.5s ease;
   }
 
   /* Floating particles in background */
@@ -332,9 +451,14 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(to bottom right, #0F0326, #231655, #560A86);
+  background: linear-gradient(to bottom right, 
+    var(--theme-gradient-start), 
+    var(--theme-gradient-end), 
+    color-mix(in srgb, var(--theme-gradient-end), white 20%)
+  );
   display: flex;
   flex-direction: column;
+  transition: all 0.5s ease;
 }
 
 /* Window snap indicators */

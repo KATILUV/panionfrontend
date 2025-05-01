@@ -1,9 +1,14 @@
 import React from 'react';
 import { useAgentStore, AgentId } from '../../state/agentStore';
+import { useThemeStore } from '../../state/themeStore';
 import LayoutManager from './LayoutManager';
+import ThemeSelector from './ThemeSelector';
 import { Button } from '@/components/ui/button';
 import { 
   Layout, 
+  Moon,
+  Sun,
+  Paintbrush, 
   Settings, 
   Monitor, 
   SplitSquareVertical 
@@ -46,6 +51,17 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     return activeLayout ? activeLayout.name : null;
   };
   
+  // Get theme information
+  const mode = useThemeStore(state => state.mode);
+  const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
+  
+  // Get the appropriate theme icon
+  const getThemeIcon = () => {
+    const currentTheme = getCurrentTheme();
+    if (mode === 'system') return <Monitor size={18} />;
+    return currentTheme === 'dark' ? <Moon size={18} /> : <Sun size={18} />;
+  };
+  
   return (
     <div className={`flex items-center bg-black/30 backdrop-blur-md border-t border-white/10 px-4 py-2 ${className}`}>
       <div className="flex-1 flex items-center space-x-1">
@@ -73,6 +89,18 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       </div>
       
       <div className="flex items-center space-x-3">
+        {/* Theme Selector Button */}
+        <ThemeSelector>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="h-10 px-3 text-white/70 hover:text-white hover:bg-white/10 flex items-center space-x-2"
+          >
+            {getThemeIcon()}
+            <span className="hidden sm:inline">Theme</span>
+          </Button>
+        </ThemeSelector>
+        
         {/* Layout Manager Button */}
         <LayoutManager>
           <Button 

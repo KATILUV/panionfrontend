@@ -9,6 +9,7 @@ import Desktop from "./components/Desktop";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import { useAgentStore } from "./state/agentStore";
+import ThemeProvider from "./components/common/ThemeProvider";
 
 function Router() {
   return (
@@ -68,10 +69,12 @@ function App() {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
