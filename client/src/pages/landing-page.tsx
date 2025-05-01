@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { 
   Cpu, Users, Layout, Sparkles, MessageSquare, Fingerprint, LucideProps, Brain,
-  LayoutGrid, Search, Terminal, Check, X
+  LayoutGrid, Search, Terminal, Check, X, ChevronLeft, ChevronRight,
+  PenTool, FileText, Database, Layers, Code, Presentation
 } from 'lucide-react';
 import RotatingTagline from '@/components/RotatingTagline';
 
@@ -12,6 +13,17 @@ import RotatingTagline from '@/components/RotatingTagline';
 
 const LandingPage: React.FC = () => {
   const [_, setLocation] = useLocation();
+  const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
+  const featuresRef = useRef<HTMLDivElement>(null);
+
+  // Function to navigate carousel
+  const nextFeature = () => {
+    setCurrentFeatureIndex((prev) => (prev === features.length - 3 ? 0 : prev + 1));
+  };
+  
+  const prevFeature = () => {
+    setCurrentFeatureIndex((prev) => (prev === 0 ? features.length - 3 : prev - 1));
+  };
   
   // Tagline phrases
   const taglinePhrases = [
@@ -56,6 +68,86 @@ const LandingPage: React.FC = () => {
       title: "Contextual Memory System",
       description: "Experience AI that truly understands you with advanced memory systems that learn from every interaction and anticipate your needs.",
       icon: Brain
+    }
+  ];
+  
+  // Use case examples
+  const useCases = [
+    {
+      title: "Creative Studio Setup",
+      description: "Graphic designer Sarah created a workspace with a mood board agent, visual reference collector, and color palette generator, all working in harmony.",
+      user: "Sarah T., Graphic Designer",
+      icon: PenTool,
+      accent: "violet"
+    },
+    {
+      title: "Research Dashboard",
+      description: "Professor James built a research environment with automatic literature review, data analysis, and summary generation agents to accelerate his academic work.",
+      user: "James L., Research Scientist",
+      icon: FileText,
+      accent: "indigo"
+    },
+    {
+      title: "Data Analysis Hub",
+      description: "Data scientist Mei configured data cleaning, visualization, and insight generation agents that work together to process large datasets efficiently.",
+      user: "Mei W., Data Scientist",
+      icon: Database,
+      accent: "purple"
+    },
+    {
+      title: "Product Development Suite",
+      description: "Product manager Alex created a workspace with market research, feature prioritization, and roadmap planning agents to streamline product development.",
+      user: "Alex R., Product Manager",
+      icon: Layers,
+      accent: "blue"
+    },
+    {
+      title: "Marketing Campaign Center",
+      description: "Marketer Jordan built a campaign management environment with content creation, audience analysis, and performance tracking agents in one place.",
+      user: "Jordan K., Marketing Director",
+      icon: Presentation,
+      accent: "purple"
+    },
+    {
+      title: "Developer Workspace",
+      description: "Software engineer Miguel set up a coding environment with documentation, testing, and code review agents that collaborate on his projects.",
+      user: "Miguel S., Software Engineer",
+      icon: Code,
+      accent: "indigo"
+    }
+  ];
+  
+  // Mini features for the carousel
+  const keyFeatures = [
+    {
+      icon: LayoutGrid,
+      title: "Multi-Agent Environment",
+      description: "Work with multiple specialized AI agents in one workspace"
+    },
+    {
+      icon: Layout,
+      title: "Window Management",
+      description: "Create the perfect layout with draggable and resizable windows"
+    },
+    {
+      icon: Sparkles,
+      title: "Command Palette",
+      description: "Navigate efficiently with keyboard-centric controls"
+    },
+    {
+      icon: Brain,
+      title: "Contextual Memory",
+      description: "Agents remember past interactions for personalized assistance"
+    },
+    {
+      icon: Cpu,
+      title: "Smart Integrations",
+      description: "Connect with various tools for a seamless workflow"
+    },
+    {
+      icon: Fingerprint,
+      title: "Customizable Themes",
+      description: "Personalize with themes to match your visual preferences"
     }
   ];
   
@@ -249,20 +341,85 @@ const LandingPage: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent opacity-90 z-10"></div>
       </section>
       
-      {/* Features Section */}
+      {/* Features Carousel Section */}
+      <section className="py-10 md:py-16 bg-white text-gray-900 border-b border-gray-100">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900">
+              Key <span className="text-indigo-600">Features</span>
+            </h2>
+            <p className="text-lg text-gray-600">
+              Discover what makes Panion a revolutionary AI experience
+            </p>
+          </div>
+          
+          <div className="relative" ref={featuresRef}>
+            <div className="flex items-center justify-between mb-8">
+              <button 
+                onClick={prevFeature}
+                className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              
+              <button 
+                onClick={nextFeature}
+                className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="overflow-hidden">
+              <motion.div 
+                className="flex gap-6"
+                animate={{ x: `-${currentFeatureIndex * 33.33}%` }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              >
+                {keyFeatures.map((feature, index) => (
+                  <div key={index} className="min-w-[33.33%] px-2">
+                    <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300 h-full">
+                      <div className="rounded-full p-3 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-4">
+                        <feature.icon className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <h3 className="text-lg font-bold mb-2 text-gray-900">{feature.title}</h3>
+                      <p className="text-gray-600 text-sm">{feature.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+            
+            <div className="flex justify-center mt-6 gap-2">
+              {keyFeatures.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentFeatureIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === currentFeatureIndex ? "bg-indigo-600" : "bg-gray-300"
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Use Cases Section */}
       <section className="py-20 md:py-32 bg-white text-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">
-              <span className="text-indigo-600">Revolutionary</span> Capabilities
+              What others have <span className="text-indigo-600">created</span> with Panion
             </h2>
             <p className="text-xl text-gray-600 mt-6">
-              Panion transforms how you interact with AI by providing a complete ecosystem of intelligent agents in an intuitive desktop environment
+              See how people are using Panion to transform their work and creative processes
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {features.map((feature, index) => (
+            {useCases.map((useCase, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
@@ -271,12 +428,25 @@ const LandingPage: React.FC = () => {
                 className="bg-white border border-gray-100 rounded-xl p-7 flex flex-col shadow-md hover:shadow-xl transition-shadow duration-300 group"
                 whileHover={{ y: -5 }}
               >
-                <div className="rounded-full p-3 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-5 group-hover:shadow-md transition-all duration-300">
-                  <feature.icon className="w-7 h-7 text-indigo-600" />
+                <div className={`rounded-full p-3 ${
+                  useCase.accent === 'violet' ? 'bg-violet-100' : 
+                  useCase.accent === 'indigo' ? 'bg-indigo-100' : 
+                  useCase.accent === 'purple' ? 'bg-purple-100' : 'bg-blue-100'
+                } w-fit mb-5 group-hover:shadow-md transition-all duration-300`}>
+                  <useCase.icon className={`w-7 h-7 ${
+                    useCase.accent === 'violet' ? 'text-violet-600' : 
+                    useCase.accent === 'indigo' ? 'text-indigo-600' : 
+                    useCase.accent === 'purple' ? 'text-purple-600' : 'text-blue-600'
+                  }`} />
                 </div>
-                <h3 className="text-xl font-bold mt-3 mb-3 text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">{feature.title}</h3>
-                <div className="w-12 h-1 bg-violet-500 mb-4 rounded-full group-hover:w-16 transition-all duration-300"></div>
-                <p className="text-gray-600 text-base leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-bold mt-3 mb-3 text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">{useCase.title}</h3>
+                <div className={`w-12 h-1 ${
+                  useCase.accent === 'violet' ? 'bg-violet-500' : 
+                  useCase.accent === 'indigo' ? 'bg-indigo-500' : 
+                  useCase.accent === 'purple' ? 'bg-purple-500' : 'bg-blue-500'
+                } mb-4 rounded-full group-hover:w-16 transition-all duration-300`}></div>
+                <p className="text-gray-600 text-base leading-relaxed">{useCase.description}</p>
+                <span className="mt-auto pt-5 text-sm italic text-gray-500">{useCase.user}</span>
               </motion.div>
             ))}
           </div>
