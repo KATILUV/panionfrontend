@@ -269,11 +269,12 @@ const Window: React.FC<WindowProps> = ({
       className={getSnapIndicatorClass()}
     >
       <motion.div 
-        className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border ${
-          isActive ? 'border-purple-500/40' : 'border-white/20'
-        } ${
-          isActive ? 'bg-white/10' : 'bg-white/5'
-        } overflow-hidden`}
+        className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border overflow-hidden
+          ${isActive 
+            ? 'border-primary/40 bg-white/10 dark:bg-black/20' 
+            : 'border-white/20 bg-white/5 dark:bg-black/10'
+          }
+        `}
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ 
           opacity: 1, 
@@ -301,7 +302,7 @@ const Window: React.FC<WindowProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <div className={`absolute inset-0 rounded-lg border-2 border-purple-500 bg-purple-500/20`} />
+              <div className={`absolute inset-0 rounded-lg border-2 border-primary bg-primary/20`} />
             </motion.div>
           )}
         </AnimatePresence>

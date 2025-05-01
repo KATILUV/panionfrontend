@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Window from './common/Window';
 import Taskbar from './common/Taskbar';
 import { useAgentStore, AgentId, WindowLayout } from '../state/agentStore';
+import { useThemeStore } from '../state/themeStore';
 import { initializeAgentRegistry } from '../state/agentStore';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
