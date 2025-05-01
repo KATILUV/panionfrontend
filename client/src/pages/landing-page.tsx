@@ -28,33 +28,33 @@ const LandingPage: React.FC = () => {
   // Features data
   const features = [
     {
-      title: "Multi-Agent Environment",
-      description: "Run multiple AI agents in flexible windows, each specialized for different tasks.",
+      title: "AI Agent Ecosystem",
+      description: "Orchestrate multiple specialized AI assistants in your workspace, each with unique capabilities tailored to specific tasks.",
       icon: Users
     },
     {
-      title: "Window Management",
-      description: "Resize, move, and arrange your agent windows just like in a desktop operating system.",
+      title: "Dynamic Window Management",
+      description: "Create your ideal layout with intuitive controls—drag, resize, and snap windows exactly where you need them for maximum productivity.",
       icon: Layout
     },
     {
-      title: "Clara AI Assistant",
-      description: "Your personal AI assistant with advanced memory and context awareness.",
+      title: "Intelligent Assistant",
+      description: "Clara remembers context across all conversations, making each interaction more personalized and efficient than traditional chatbots.",
       icon: MessageSquare
     },
     {
-      title: "Command Palette",
-      description: "Quick access to all features and actions with a simple keyboard shortcut.",
+      title: "Command-First Navigation",
+      description: "Work faster with keyboard-driven commands and instant access to all features through a powerful searchable command palette.",
       icon: Sparkles
     },
     {
-      title: "Customizable Themes",
-      description: "Choose from multiple themes and accent colors to personalize your experience.",
+      title: "Visual Customization",
+      description: "Transform your workspace with beautiful themes and accent colors that adapt to your preferences and reduce eye strain.",
       icon: Fingerprint
     },
     {
-      title: "Context Awareness",
-      description: "Agents understand your conversation history and can reference past interactions.",
+      title: "Contextual Memory System",
+      description: "Experience AI that truly understands you with advanced memory systems that learn from every interaction and anticipate your needs.",
       icon: Brain
     }
   ];
@@ -80,36 +80,65 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
-      {/* Hero Section */}
-      <section className="relative py-28 md:py-40 bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-900 text-white overflow-hidden">
+      {/* Hero Section - Twilight Purple-Blue */}
+      <section className="relative py-28 md:py-40 bg-gradient-to-br from-[#1a1245] via-[#2d2468] to-[#33284b] text-white overflow-hidden">
         {/* Particle effect background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          {Array.from({ length: 20 }).map((_, i) => (
+          {/* Animated particles */}
+          {Array.from({ length: 30 }).map((_, i) => (
             <motion.div
               key={i}
               className="absolute rounded-full bg-white/10"
               initial={{
-                width: Math.random() * 10 + 2,
-                height: Math.random() * 10 + 2,
+                width: Math.random() * 12 + 2,
+                height: Math.random() * 12 + 2,
                 x: Math.random() * 100,
                 y: Math.random() * 100,
                 opacity: Math.random() * 0.5 + 0.1
               }}
               animate={{
-                x: `calc(${Math.random() * 100}% + ${(Math.random() - 0.5) * 100}px)`,
-                y: `calc(${Math.random() * 100}% + ${(Math.random() - 0.5) * 100}px)`,
-                opacity: [0.1, 0.3, 0.1]
+                x: `calc(${Math.random() * 100}% + ${(Math.random() - 0.5) * 150}px)`,
+                y: `calc(${Math.random() * 100}% + ${(Math.random() - 0.5) * 150}px)`,
+                opacity: [0.1, 0.3, 0.1],
+                scale: [1, Math.random() * 0.3 + 1.1, 1]
               }}
               transition={{
                 duration: Math.random() * 20 + 15,
                 repeat: Infinity,
-                ease: "linear"
+                ease: "easeInOut"
               }}
             />
           ))}
-          <div className="absolute top-1/3 left-10 w-72 h-72 rounded-full bg-blue-500/20 blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-10 w-80 h-80 rounded-full bg-cyan-500/20 blur-3xl"></div>
-          <div className="absolute top-3/4 left-1/3 w-64 h-64 rounded-full bg-sky-400/20 blur-3xl"></div>
+          
+          {/* Digital connections/lines */}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <motion.div
+              key={`line-${i}`}
+              className="absolute h-[1px] bg-gradient-to-r from-transparent via-blue-400/20 to-transparent transform"
+              style={{
+                top: `${15 + i * 20}%`,
+                left: 0,
+                right: 0,
+                transformOrigin: 'center'
+              }}
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ 
+                scaleX: 1, 
+                opacity: [0, 0.5, 0],
+                y: [0, Math.random() * 50 - 25, 0]
+              }}
+              transition={{
+                duration: Math.random() * 8 + 10,
+                repeat: Infinity,
+                repeatType: 'loop',
+                ease: "easeInOut",
+                delay: i * 2
+              }}
+            />
+          ))}
+          <div className="absolute top-1/3 left-10 w-72 h-72 rounded-full bg-indigo-600/20 blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-10 w-80 h-80 rounded-full bg-purple-600/20 blur-3xl"></div>
+          <div className="absolute top-3/4 left-1/3 w-64 h-64 rounded-full bg-violet-500/20 blur-3xl"></div>
         </div>
         
         {/* Floating window mockup in background */}
@@ -190,13 +219,20 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-6"
             >
-              <Button 
-                size="lg" 
-                onClick={() => setLocation('/desktop')}
-                className="text-lg bg-blue-500 hover:bg-blue-400 text-white px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all"
-              >
-                Get Started
-              </Button>
+              <div className="relative">
+                <motion.div
+                  className="absolute inset-0 rounded-xl bg-blue-400/50 blur-md z-0"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <Button 
+                  size="lg" 
+                  onClick={() => setLocation('/desktop')}
+                  className="text-lg bg-blue-500 hover:bg-blue-400 text-white px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all relative z-10"
+                >
+                  Get Started
+                </Button>
+              </div>
               <Button 
                 size="lg" 
                 variant="outline" 
@@ -217,24 +253,30 @@ const LandingPage: React.FC = () => {
       <section className="py-20 md:py-32 bg-white text-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Key Features</h2>
-            <p className="text-xl text-gray-600">Discover what makes Panion a revolutionary AI environment</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">
+              <span className="text-blue-600">Revolutionary</span> Capabilities
+            </h2>
+            <p className="text-xl text-gray-600 mt-6">
+              Panion transforms how you interact with AI by providing a complete ecosystem of intelligent agents in an intuitive desktop environment
+            </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 * index }}
-                className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col shadow-sm"
+                className="bg-white border border-gray-100 rounded-xl p-7 flex flex-col shadow-md hover:shadow-xl transition-shadow duration-300 group"
+                whileHover={{ y: -5 }}
               >
-                <div className="rounded-full p-2 bg-blue-100 w-fit">
-                  <feature.icon className="w-6 h-6 text-blue-600" />
+                <div className="rounded-full p-3 bg-blue-100 bg-gradient-to-br from-blue-50 to-blue-200 w-fit mb-5 group-hover:shadow-md transition-all duration-300">
+                  <feature.icon className="w-7 h-7 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-bold mt-4 text-gray-900">{feature.title}</h3>
-                <p className="text-gray-600 mt-2">{feature.description}</p>
+                <h3 className="text-xl font-bold mt-3 mb-3 text-gray-900 group-hover:text-blue-600 transition-colors duration-300">{feature.title}</h3>
+                <div className="w-12 h-1 bg-blue-500 mb-4 rounded-full group-hover:w-16 transition-all duration-300"></div>
+                <p className="text-gray-600 text-base leading-relaxed">{feature.description}</p>
               </motion.div>
             ))}
           </div>
