@@ -4,6 +4,7 @@ import { useAgentStore, AgentId } from '../../state/agentStore';
 import { Minimize2, X, Maximize2 } from 'lucide-react';
 import { useWindowSize } from 'react-use';
 import { motion, AnimatePresence } from 'framer-motion';
+import { playSnapSound, playOpenSound, playCloseSound } from '../../lib/audioEffects';
 
 // Snap threshold in pixels
 const SNAP_THRESHOLD = 20;
@@ -145,6 +146,9 @@ const Window: React.FC<WindowProps> = ({
       default:
         return; // No snap
     }
+    
+    // Play snap sound when window snaps to a position
+    playSnapSound();
     
     setCurrentSnapPosition(snapPosition);
     updateAgentPosition(id, newPosition);

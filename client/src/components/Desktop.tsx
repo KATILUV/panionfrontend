@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Window from './common/Window';
 import Taskbar from './common/Taskbar';
-import { useAgentStore, AgentId } from '../state/agentStore';
+import { useAgentStore, AgentId, WindowLayout } from '../state/agentStore';
 import { initializeAgentRegistry } from '../state/agentStore';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
+import { useToast } from '@/hooks/use-toast';
 
 // Component rendering helper
 const renderAgentContent = (agentId: string) => {
@@ -24,11 +25,31 @@ const Desktop: React.FC = () => {
   const closeAgent = useAgentStore(state => state.closeAgent);
   const minimizeAgent = useAgentStore(state => state.minimizeAgent);
   const focusAgent = useAgentStore(state => state.focusAgent);
+  const layouts = useAgentStore(state => state.layouts);
+  const activeLayoutId = useAgentStore(state => state.activeLayoutId);
+  const saveLayout = useAgentStore(state => state.saveLayout);
+  const loadLayout = useAgentStore(state => state.loadLayout);
+  const deleteLayout = useAgentStore(state => state.deleteLayout);
+  const [showLayoutPrompt, setShowLayoutPrompt] = useState(false);
+  const [newLayoutName, setNewLayoutName] = useState('');
+  const { toast } = useToast();
   
   // Initialize agent registry when component mounts
   useEffect(() => {
     initializeAgentRegistry();
   }, []);
+  
+  // Load layout handler
+  const handleLoadLayout = (layoutId: string) => {
+    loadLayout(layoutId);
+    const layout = layouts.find(l => l.id === layoutId);
+    if (layout) {
+      toast({
+        title: "Layout loaded",
+        description: `Window layout "${layout.name}" has been applied`,
+      });
+    }
+  };
   
   return (
     <div className="panion-desktop">

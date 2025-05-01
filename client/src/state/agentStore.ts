@@ -91,43 +91,53 @@ export const useAgentStore = create<AgentState>()(
         };
       }),
 
-      openAgent: (id) => set((state) => {
-        const agent = state.windows[id];
-        if (!agent) return state;
+      openAgent: (id) => {
+        // Play open sound (will be imported with implementation)
+        import('../lib/audioEffects').then(({ playOpenSound }) => playOpenSound());
+        
+        set((state) => {
+          const agent = state.windows[id];
+          if (!agent) return state;
+  
+          const newZIndex = state.highestZIndex + 1;
+  
+          return {
+            windows: {
+              ...state.windows,
+              [id]: {
+                ...agent,
+                isOpen: true,
+                isMinimized: false,
+                zIndex: newZIndex
+              }
+            },
+            focusedAgentId: id,
+            highestZIndex: newZIndex
+          };
+        });
+      },
 
-        const newZIndex = state.highestZIndex + 1;
-
-        return {
-          windows: {
-            ...state.windows,
-            [id]: {
-              ...agent,
-              isOpen: true,
-              isMinimized: false,
-              zIndex: newZIndex
-            }
-          },
-          focusedAgentId: id,
-          highestZIndex: newZIndex
-        };
-      }),
-
-      closeAgent: (id) => set((state) => {
-        const agent = state.windows[id];
-        if (!agent) return state;
-
-        return {
-          windows: {
-            ...state.windows,
-            [id]: {
-              ...agent,
-              isOpen: false,
-              isMinimized: false
-            }
-          },
-          focusedAgentId: state.focusedAgentId === id ? null : state.focusedAgentId
-        };
-      }),
+      closeAgent: (id) => {
+        // Play close sound
+        import('../lib/audioEffects').then(({ playCloseSound }) => playCloseSound());
+        
+        set((state) => {
+          const agent = state.windows[id];
+          if (!agent) return state;
+  
+          return {
+            windows: {
+              ...state.windows,
+              [id]: {
+                ...agent,
+                isOpen: false,
+                isMinimized: false
+              }
+            },
+            focusedAgentId: state.focusedAgentId === id ? null : state.focusedAgentId
+          };
+        });
+      },
 
       minimizeAgent: (id) => set((state) => {
         const agent = state.windows[id];
