@@ -337,8 +337,8 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
         
-        {/* Bottom gradient overlay */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent opacity-90 z-10"></div>
+        {/* Bottom gradient overlay - smoother transition */}
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent z-10"></div>
       </section>
       
       {/* Use Cases Section */}
