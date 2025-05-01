@@ -36,7 +36,7 @@ const ChatPage: React.FC = () => {
         {/* Chat Messages Container */}
         <div 
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto mb-4 pr-2 space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+          className="flex-1 overflow-y-auto mb-6 pr-2 space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
         >
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-white/50 space-y-4">
@@ -62,6 +62,9 @@ const ChatPage: React.FC = () => {
           )}
         </div>
 
+        {/* Empty space before input */}
+        <div className="h-6"></div>
+        
         {/* Chat Input */}
         <ChatInput 
           onSendMessage={handleSendMessage}
@@ -69,7 +72,7 @@ const ChatPage: React.FC = () => {
         />
         
         {/* Empty footer to maintain spacing */}
-        <div className="h-2"></div>
+        <div className="h-4"></div>
       </div>
     </div>
   );
