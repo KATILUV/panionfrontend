@@ -107,13 +107,13 @@
 /* Custom animations */
 @keyframes float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-2px) rotate(0.5deg); }
-  50% { transform: translateY(-3px) rotate(0deg); }
-  75% { transform: translateY(-2px) rotate(-0.5deg); }
+  25% { transform: translateY(-1px) rotate(0.2deg); }
+  50% { transform: translateY(-1.5px) rotate(0deg); }
+  75% { transform: translateY(-1px) rotate(-0.2deg); }
 }
 
 .floating-orb {
-  animation: float 10s ease-in-out infinite;
+  animation: float 15s ease-in-out infinite;
   transition: all 0.3s ease;
 }
 
@@ -248,7 +248,7 @@
 
 @keyframes floating-bubble {
   0%, 100% { transform: perspective(1000px) translateY(0) translateZ(0); }
-  50% { transform: perspective(1000px) translateY(-2px) translateZ(2px); }
+  50% { transform: perspective(1000px) translateY(-1px) translateZ(1px); }
 }
 
 .chat-time {
@@ -493,16 +493,16 @@
     border-radius: 60% 40% 50% 50% / 50%;
   }
   25% { 
-    transform: translateY(-5%) translateX(2%) scale(1.01); 
-    border-radius: 45% 55% 45% 55% / 55% 45% 55% 45%;
+    transform: translateY(-2%) translateX(1%) scale(1.005); 
+    border-radius: 55% 45% 50% 50% / 52% 48% 52% 48%;
   }
   50% { 
-    transform: translateY(-8%) translateX(-2%) scale(0.99); 
-    border-radius: 50% 50% 45% 55% / 45% 55% 50% 50%;
+    transform: translateY(-3%) translateX(-1%) scale(0.995); 
+    border-radius: 52% 48% 47% 53% / 48% 52% 50% 50%;
   }
   75% { 
-    transform: translateY(-4%) translateX(-3%) scale(1.02); 
-    border-radius: 55% 45% 55% 45% / 45% 55% 45% 55%;
+    transform: translateY(-2%) translateX(-1.5%) scale(1.007); 
+    border-radius: 58% 42% 52% 48% / 48% 52% 48% 52%;
   }
 }
 

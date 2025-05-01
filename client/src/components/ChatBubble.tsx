@@ -37,13 +37,13 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
           max-w-[80%] px-4 py-3 rounded-2xl
           ${isUser 
             ? 'chat-bubble-user rounded-tr-2xl rounded-tl-2xl rounded-bl-md rounded-br-2xl' 
-            : 'chat-bubble-ai bg-black/40 backdrop-blur-md text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md'
+            : 'chat-bubble-ai bg-white/85 backdrop-blur-md text-black rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md'
           }
         `}
       >
         <div className="relative z-10">
           {content}
-          <div className={`text-xs mt-1 ${isUser ? 'text-white/70' : 'text-white/50'}`}>
+          <div className={`text-xs mt-1 ${isUser ? 'text-white/70' : 'text-black/50'}`}>
             {formatTime(timestamp)}
           </div>
         </div>
