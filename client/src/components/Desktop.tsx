@@ -9,6 +9,7 @@ import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
+import EmptyStateDashboard from './system/EmptyStateDashboard';
 import { useToast } from '@/hooks/use-toast';
 
 // Component rendering helper
@@ -65,10 +66,16 @@ const Desktop: React.FC = () => {
     }
   };
   
+  // Check if there are any open windows
+  const hasOpenWindows = Object.values(windows).some(window => window.isOpen && !window.isMinimized);
+
   return (
     <div className="panion-desktop">
       {/* Desktop Area */}
       <div className="flex-1 relative">
+        {/* Show empty state dashboard if no windows are open */}
+        {!hasOpenWindows && <EmptyStateDashboard />}
+        
         {/* Render Windows */}
         {Object.values(windows)
           .filter(window => window.isOpen && !window.isMinimized)
