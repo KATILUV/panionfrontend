@@ -7,6 +7,8 @@ import { useSystemLogStore, log } from '../state/systemLogStore';
 import { initializeAgentRegistry } from '../state/agentStore';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
+import ClaraContextPanel from './system/ClaraContextPanel';
+import CommandPalette from './system/CommandPalette';
 import { useToast } from '@/hooks/use-toast';
 
 // Component rendering helper
@@ -87,6 +89,14 @@ const Desktop: React.FC = () => {
             </Window>
           ))}
       </div>
+      
+      {/* Clara's Context Panel - visible when Clara is active */}
+      <ClaraContextPanel 
+        active={focusedAgentId === 'clara' || Object.values(windows).some(w => w.id === 'clara' && w.isOpen)} 
+      />
+      
+      {/* Command Palette */}
+      <CommandPalette />
       
       {/* Taskbar */}
       <Taskbar className="h-14" />
