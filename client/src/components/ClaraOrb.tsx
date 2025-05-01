@@ -33,6 +33,15 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           {/* Gold blob */}
           <div className="lava-blob lava-blob-4 animate-blob-float-4"></div>
           
+          {/* Bubbles - small ones */}
+          <div className="bubble bubble-iridescent" style={{ width: '3px', height: '3px', left: '40%', bottom: '0%', '--duration': '5s', '--opacity': '0.7', '--move-x': '3px' } as React.CSSProperties}></div>
+          <div className="bubble bubble-iridescent" style={{ width: '2px', height: '2px', left: '60%', bottom: '5%', '--duration': '7s', '--opacity': '0.6', '--move-x': '-5px' } as React.CSSProperties}></div>
+          <div className="bubble bubble-iridescent" style={{ width: '4px', height: '4px', left: '30%', bottom: '10%', '--duration': '6s', '--opacity': '0.8', '--move-x': '4px' } as React.CSSProperties}></div>
+          <div className="bubble bubble-iridescent" style={{ width: '2px', height: '2px', left: '50%', bottom: '15%', '--duration': '8s', '--opacity': '0.5', '--move-x': '-3px' } as React.CSSProperties}></div>
+          <div className="bubble bubble-iridescent" style={{ width: '3px', height: '3px', left: '70%', bottom: '5%', '--duration': '5.5s', '--opacity': '0.7', '--move-x': '2px' } as React.CSSProperties}></div>
+          <div className="bubble bubble-iridescent" style={{ width: '2px', height: '2px', left: '35%', bottom: '8%', '--duration': '6.5s', '--opacity': '0.6', '--move-x': '-4px' } as React.CSSProperties}></div>
+          <div className="bubble bubble-iridescent" style={{ width: '4px', height: '4px', left: '55%', bottom: '12%', '--duration': '7.5s', '--opacity': '0.8', '--move-x': '5px' } as React.CSSProperties}></div>
+          
           {/* Iridescent overlay */}
           <div className="iridescent-layer"></div>
         </div>
