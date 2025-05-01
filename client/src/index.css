@@ -107,9 +107,9 @@
 /* Custom animations */
 @keyframes float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-7px) rotate(1deg); }
-  50% { transform: translateY(-10px) rotate(0deg); }
-  75% { transform: translateY(-7px) rotate(-1deg); }
+  25% { transform: translateY(-2px) rotate(0.5deg); }
+  50% { transform: translateY(-3px) rotate(0deg); }
+  75% { transform: translateY(-2px) rotate(-0.5deg); }
 }
 
 .floating-orb {
@@ -248,7 +248,7 @@
 
 @keyframes floating-bubble {
   0%, 100% { transform: perspective(1000px) translateY(0) translateZ(0); }
-  50% { transform: perspective(1000px) translateY(-5px) translateZ(5px); }
+  50% { transform: perspective(1000px) translateY(-2px) translateZ(2px); }
 }
 
 .chat-time {
@@ -493,16 +493,16 @@
     border-radius: 60% 40% 50% 50% / 50%;
   }
   25% { 
-    transform: translateY(-15%) translateX(5%) scale(1.02); 
-    border-radius: 40% 60% 40% 60% / 60% 40% 60% 40%;
+    transform: translateY(-5%) translateX(2%) scale(1.01); 
+    border-radius: 45% 55% 45% 55% / 55% 45% 55% 45%;
   }
   50% { 
-    transform: translateY(-25%) translateX(-5%) scale(0.98); 
-    border-radius: 50% 50% 40% 60% / 40% 60% 50% 50%;
+    transform: translateY(-8%) translateX(-2%) scale(0.99); 
+    border-radius: 50% 50% 45% 55% / 45% 55% 50% 50%;
   }
   75% { 
-    transform: translateY(-10%) translateX(-8%) scale(1.05); 
-    border-radius: 60% 40% 60% 40% / 40% 60% 40% 60%;
+    transform: translateY(-4%) translateX(-3%) scale(1.02); 
+    border-radius: 55% 45% 55% 45% / 45% 55% 45% 55%;
   }
 }
 
