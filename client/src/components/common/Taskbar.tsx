@@ -152,7 +152,11 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           <Button 
             variant="ghost" 
             size="sm"
-            className="h-10 px-3 text-white/70 hover:text-white hover:bg-white/10 flex items-center space-x-2"
+            className={`h-10 px-3 flex items-center space-x-2 ${
+              getCurrentTheme() === 'dark' 
+                ? 'text-white/70 hover:text-white hover:bg-white/10' 
+                : 'text-gray-800 hover:text-gray-900 hover:bg-black/10'
+            }`}
           >
             <Layout size={18} />
             <span className="hidden sm:inline">
@@ -164,7 +168,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           </Button>
         </LayoutManager>
         
-        <div className="text-white/50 text-sm">
+        <div className={`text-sm ${getCurrentTheme() === 'dark' ? 'text-white/50' : 'text-gray-600'}`}>
           Panion OS v0.1
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Rnd } from 'react-rnd';
 import { useAgentStore, AgentId } from '../../state/agentStore';
+import { useThemeStore } from '../../state/themeStore';
 import { Minimize2, X, Maximize2 } from 'lucide-react';
 import { useWindowSize } from 'react-use';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,6 +45,7 @@ const Window: React.FC<WindowProps> = ({
   const [currentSnapPosition, setCurrentSnapPosition] = useState<SnapPosition>('none');
   const [isDragging, setIsDragging] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
+  const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   
   // Update stored position and size when maximized status changes
   useEffect(() => {
@@ -308,14 +310,26 @@ const Window: React.FC<WindowProps> = ({
         </AnimatePresence>
         
         <div 
-          className="window-drag-handle flex items-center justify-between px-4 h-10 cursor-move bg-black/30"
+          className={`window-drag-handle flex items-center justify-between px-4 h-10 cursor-move ${
+            isActive 
+              ? 'bg-gradient-to-r from-primary/80 to-primary/50' 
+              : getCurrentTheme() === 'dark'
+                ? 'bg-black/40'
+                : 'bg-gray-300/70'
+          }`}
           onDoubleClick={toggleMaximize}
         >
-          <div className="font-medium text-white truncate">{title}</div>
+          <div className={`font-medium truncate drop-shadow-sm ${
+            getCurrentTheme() === 'dark' || isActive ? 'text-white' : 'text-gray-800'
+          }`}>{title}</div>
           <motion.div className="flex items-center space-x-2">
             <motion.button 
               onClick={onMinimize}
-              className="p-1 text-white/90 hover:text-white hover:bg-white/30 rounded"
+              className={`p-1 rounded ${
+                getCurrentTheme() === 'dark' || isActive 
+                  ? 'text-white/90 hover:text-white hover:bg-white/30' 
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-black/10'
+              }`}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -323,7 +337,11 @@ const Window: React.FC<WindowProps> = ({
             </motion.button>
             <motion.button 
               onClick={toggleMaximize}
-              className="p-1 text-white/90 hover:text-white hover:bg-white/30 rounded"
+              className={`p-1 rounded ${
+                getCurrentTheme() === 'dark' || isActive 
+                  ? 'text-white/90 hover:text-white hover:bg-white/30' 
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-black/10'
+              }`}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -331,7 +349,7 @@ const Window: React.FC<WindowProps> = ({
             </motion.button>
             <motion.button 
               onClick={onClose}
-              className="p-1 text-white/90 hover:text-white hover:bg-red-600 rounded"
+              className="p-1 text-gray-700 hover:text-white hover:bg-red-600 rounded"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}
