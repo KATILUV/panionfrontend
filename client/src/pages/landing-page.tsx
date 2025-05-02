@@ -562,38 +562,15 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
           
-          <div className="relative max-w-5xl mx-auto" ref={featuresRef}>
-            {/* Positioned arrows on the sides */}
-            <div className="absolute top-1/2 -left-4 -translate-y-1/2 z-10">
-              <button 
-                onClick={prevFeature}
-                className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 shadow-md"
-                aria-label="Previous agents"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="absolute top-1/2 -right-4 -translate-y-1/2 z-10">
-              <button 
-                onClick={nextFeature}
-                className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 shadow-md"
-                aria-label="Next agents"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
+          <div className="max-w-5xl mx-auto" ref={featuresRef}>
             
             {/* Scrollable cards - showing 3 at a time */}
             <div className="overflow-hidden px-6">
-              <motion.div 
-                className="flex gap-5"
-                animate={{ x: `-${currentFeatureIndex * 33.33}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              >
-                {keyFeatures.map((feature, index) => (
-                  <div key={index} className="min-w-[31%] flex-shrink-0">
-                    <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
+              <div className="flex justify-between gap-8">
+                {/* First 3 cards - always visible */}
+                {keyFeatures.slice(0, 3).map((feature, index) => (
+                  <div key={index} className="w-[32%] flex-shrink-0">
+                    <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
                       <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
                         <feature.icon className="w-10 h-10 text-indigo-600" />
                       </div>
@@ -610,7 +587,7 @@ const LandingPage: React.FC = () => {
                     </div>
                   </div>
                 ))}
-              </motion.div>
+              </div>
             </div>
             
             {/* Position indicators */}
