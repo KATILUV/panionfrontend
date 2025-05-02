@@ -55,6 +55,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   
   // Get theme information
   const mode = useThemeStore(state => state.mode);
+  const accent = useThemeStore(state => state.accent);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   
   // Get system log information and actions
@@ -98,7 +99,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                 }
                 ${isOpen 
                   ? 'after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-1/3 after:h-0.5 ' + 
-                    (getCurrentTheme() === 'dark' ? 'after:bg-white' : 'after:bg-primary') + 
+                    (getCurrentTheme() === 'dark' 
+                      ? 'after:bg-white' 
+                      : (accent === 'light' ? 'after:bg-gray-400' : 'after:bg-primary')
+                    ) + 
                     ' after:rounded-full' 
                   : ''
                 }
@@ -125,7 +129,9 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
             isSystemLogVisible 
               ? getCurrentTheme() === 'dark'
                 ? 'text-primary bg-white/10'
-                : 'text-primary bg-primary/10 shadow-sm'
+                : accent === 'light'
+                  ? 'text-gray-700 bg-gray-100 shadow-sm'
+                  : 'text-primary bg-primary/10 shadow-sm'
               : getCurrentTheme() === 'dark' 
                 ? 'text-white/70 hover:text-white hover:bg-white/10' 
                 : 'text-gray-700 hover:text-gray-900 hover:bg-black/5 hover:shadow-sm'

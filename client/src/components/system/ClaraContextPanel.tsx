@@ -23,6 +23,10 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
     const isDark = getCurrentTheme() === 'dark';
     
     switch (accent) {
+      case 'light':
+        return isDark 
+          ? 'border-gray-500/30 bg-gray-900/10' 
+          : 'border-gray-300 bg-gray-50';
       case 'blue': 
         return isDark 
           ? 'border-blue-500/30 bg-blue-900/10' 
@@ -89,7 +93,9 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
         className={`fixed bottom-20 left-4 text-xs rounded-lg backdrop-blur-xl border overflow-hidden z-40 ${
           getCurrentTheme() === 'dark' 
             ? 'bg-black/70 border-purple-500/30' 
-            : 'bg-white/95 border-purple-200'
+            : accent === 'light'
+              ? 'bg-white/95 border-gray-200'
+              : 'bg-white/95 border-purple-200'
         } ${className}`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -100,7 +106,9 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
           className={`p-2 cursor-pointer transition-colors ${
             getCurrentTheme() === 'dark' 
               ? 'hover:bg-purple-800/30 border-b border-purple-500/20' 
-              : 'hover:bg-purple-100 border-b border-purple-100'
+              : accent === 'light'
+                ? 'hover:bg-gray-100 border-b border-gray-200'
+                : 'hover:bg-purple-100 border-b border-purple-100'
           }`}
           onClick={() => setExpanded(!expanded)}
         >
@@ -118,7 +126,9 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
           <div className={`px-3 pb-3 space-y-2 ${
             getCurrentTheme() === 'dark' 
               ? 'bg-black/30' 
-              : 'bg-purple-50/50'
+              : accent === 'light'
+                ? 'bg-gray-50/50'
+                : 'bg-purple-50/50'
           }`}>
             <div className="space-y-1">
               <div className={`flex items-center ${
@@ -158,7 +168,9 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
               <div className={`flex items-center ${
                 getCurrentTheme() === 'dark' 
                   ? 'text-purple-300' 
-                  : 'text-purple-600'
+                  : accent === 'light'
+                    ? 'text-gray-600'
+                    : 'text-purple-600'
               }`}>
                 <Sparkles className="w-3 h-3 mr-1" /> 
                 <span className="text-xs uppercase font-semibold">Current Tone</span>
