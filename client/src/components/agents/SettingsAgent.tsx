@@ -16,7 +16,7 @@ const SettingsAgent = () => {
     { id: 'purple', name: 'Purple', color: 'bg-purple-500' },
     { id: 'blue', name: 'Blue', color: 'bg-blue-500' },
     { id: 'green', name: 'Green', color: 'bg-green-500' },
-    { id: 'orange', name: 'Orange', color: 'bg-amber-500' },
+    { id: 'orange', name: 'Black', color: 'bg-black' },
     { id: 'pink', name: 'Pink', color: 'bg-fuchsia-400' }
   ];
 
