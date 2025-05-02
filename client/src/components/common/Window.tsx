@@ -273,10 +273,10 @@ const Window: React.FC<WindowProps> = ({
       <motion.div 
         className={`flex flex-col rounded-lg backdrop-blur-lg h-full overflow-hidden
           ${isActive 
-            ? getCurrentTheme() === 'dark'
+            ? useThemeStore.getState().getCurrentTheme() === 'dark'
               ? 'border border-primary/40 bg-white/10 shadow-lg' 
               : 'border border-purple-300/70 bg-white/70 shadow-md'
-            : getCurrentTheme() === 'dark'
+            : useThemeStore.getState().getCurrentTheme() === 'dark'
               ? 'border border-white/20 bg-white/5 shadow-md'
               : 'border border-purple-200/50 bg-white/50 shadow-sm'
           }
@@ -314,10 +314,14 @@ const Window: React.FC<WindowProps> = ({
         </AnimatePresence>
         
         <div 
-          className="window-drag-handle flex items-center justify-between px-4 h-10 cursor-move bg-black/30"
+          className={`window-drag-handle flex items-center justify-between px-4 h-10 cursor-move 
+            ${useThemeStore.getState().getCurrentTheme() === 'dark' 
+              ? 'bg-black/30' 
+              : 'bg-purple-700/80 border-b border-purple-500/30'
+            }`}
           onDoubleClick={toggleMaximize}
         >
-          <div className="font-medium text-white truncate">{title}</div>
+          <div className="font-medium text-white truncate drop-shadow-sm">{title}</div>
           <motion.div className="flex items-center space-x-2">
             <motion.button 
               onClick={onMinimize}
