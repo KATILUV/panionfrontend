@@ -277,10 +277,16 @@ const Window: React.FC<WindowProps> = ({
       className={getSnapIndicatorClass()}
     >
       <motion.div 
-        className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border overflow-hidden
+        className={`flex flex-col rounded-lg backdrop-blur-lg h-full border overflow-hidden
           ${isActive 
-            ? 'border-primary/40 bg-white/10 dark:bg-black/20' 
-            : 'border-white/20 bg-white/5 dark:bg-black/10'
+            ? 'border-primary/40 bg-white/10 dark:bg-black/30' 
+            : 'border-white/20 bg-white/5 dark:bg-black/20'
+          }
+          dark:shadow-[0_10px_50px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_1px_rgba(255,255,255,0.1)_inset]
+          shadow-[0_10px_50px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05),0_1px_0_rgba(255,255,255,0.6)_inset]
+          ${isActive 
+            ? 'dark:shadow-[0_20px_70px_-15px_rgba(82,0,255,0.15),0_0_0_1px_rgba(255,255,255,0.07)_inset,0_1px_1px_rgba(255,255,255,0.15)_inset]' 
+            : ''
           }
         `}
         initial={{ opacity: 0, scale: 0.95, y: -10 }}
@@ -363,7 +369,11 @@ const Window: React.FC<WindowProps> = ({
           </motion.div>
         </div>
         <motion.div 
-          className="flex-1 overflow-auto"
+          className={`flex-1 overflow-auto ${
+            isActive 
+              ? 'dark:bg-black/40 bg-white/70' 
+              : 'dark:bg-black/30 bg-white/50'
+          }`}
           style={{ height: contentHeight }}
           animate={{ 
             opacity: 1,
