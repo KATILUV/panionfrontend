@@ -74,11 +74,12 @@ const Desktop: React.FC = () => {
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const activePreset = useThemeStore(state => state.activePreset);
   const getActiveSettings = useThemeStore(state => state.getActiveSettings);
+  const activeSettings = getActiveSettings();
 
   // Generate background gradient based on current theme and accent
   const getBackgroundGradient = () => {
     const isDark = currentTheme === 'dark';
-    const { accent } = useThemeStore.getState().getActiveSettings();
+    const { accent } = activeSettings;
     
     switch (accent) {
       case 'purple':
@@ -103,8 +104,8 @@ const Desktop: React.FC = () => {
           : 'bg-gradient-to-br from-white via-white to-pink-50/30'; // Lighter pink
       default:
         return isDark 
-          ? 'bg-gradient-to-br from-black via-[#110a2e] to-[#0a0520]' // Darker purple default
-          : 'bg-gradient-to-br from-white via-white to-purple-50/30'; // Lighter purple default
+          ? 'bg-black' // Pure black as fallback
+          : 'bg-white'; // Pure white as fallback
     }
   };
 
@@ -114,7 +115,7 @@ const Desktop: React.FC = () => {
       <div className="absolute inset-0 w-full h-full">
         {/* Background pattern based on theme setting */}
         {(() => {
-          const { backgroundPattern, accent } = getActiveSettings();
+          const { backgroundPattern } = activeSettings;
           
           if (backgroundPattern === 'grid') {
             return (
@@ -147,7 +148,7 @@ const Desktop: React.FC = () => {
         
         {/* Enhanced glow effects */}
         {(() => {
-          const { accent } = getActiveSettings();
+          const { accent } = activeSettings;
           const isDark = currentTheme === 'dark';
           
           let glowColor = '';
@@ -182,7 +183,7 @@ const Desktop: React.FC = () => {
         
         {/* Theme name indicator for non-system themes */}
         {activePreset !== 'system' && (
-          <div className="absolute bottom-20 right-6 text-xs text-white/30 font-mono">
+          <div className={`absolute bottom-20 right-6 text-xs font-mono ${currentTheme === 'dark' ? 'text-white/30' : 'text-black/30'}`}>
             Theme: {useThemeStore.getState().getThemePresets()[activePreset].displayName}
           </div>
         )}
