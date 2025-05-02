@@ -123,18 +123,27 @@ const CommandPalette: React.FC = () => {
   // Get class for command type
   const getCommandTypeClass = (type: CommandType) => {
     const isDark = getCurrentTheme() === 'dark';
+    const isLightAccent = useThemeStore.getState().accent === 'light' && !isDark;
     
     switch (type) {
       case 'window':
         return isDark ? 'text-blue-400' : 'text-blue-600';
       case 'agent':
-        return isDark ? 'text-purple-400' : 'text-purple-600';
+        return isDark 
+          ? 'text-purple-400' 
+          : (isLightAccent ? 'text-gray-600' : 'text-purple-600');
       case 'system':
-        return isDark ? 'text-indigo-400' : 'text-indigo-600';
+        return isDark 
+          ? 'text-indigo-400' 
+          : (isLightAccent ? 'text-gray-600' : 'text-indigo-600');
       case 'theme':
-        return isDark ? 'text-violet-400' : 'text-violet-600';
+        return isDark 
+          ? 'text-violet-400' 
+          : (isLightAccent ? 'text-gray-600' : 'text-violet-600');
       case 'suggestion':
-        return isDark ? 'text-fuchsia-400' : 'text-fuchsia-600';
+        return isDark 
+          ? 'text-fuchsia-400' 
+          : (isLightAccent ? 'text-gray-600' : 'text-fuchsia-600');
       default:
         return isDark ? 'text-white' : 'text-gray-900';
     }
@@ -176,12 +185,16 @@ const CommandPalette: React.FC = () => {
           <div className={`flex items-center px-4 py-3 border-b ${
             getCurrentTheme() === 'dark' 
               ? 'border-purple-500/20' 
-              : 'border-purple-100'
+              : (useThemeStore.getState().accent === 'light'
+                 ? 'border-gray-200' 
+                 : 'border-purple-100')
           }`}>
             <Search className={`w-5 h-5 mr-2 ${
               getCurrentTheme() === 'dark' 
                 ? 'text-white/50' 
-                : 'text-purple-400'
+                : (useThemeStore.getState().accent === 'light'
+                   ? 'text-gray-400'
+                   : 'text-purple-400')
             }`} />
             <Input
               ref={inputRef}
@@ -203,19 +216,25 @@ const CommandPalette: React.FC = () => {
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
                   ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  : (useThemeStore.getState().accent === 'light'
+                     ? 'bg-gray-100 border border-gray-200'
+                     : 'bg-purple-50 border border-purple-100')
               }`}>↑↓</kbd>
               <span>to navigate</span>
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
                   ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  : (useThemeStore.getState().accent === 'light'
+                     ? 'bg-gray-100 border border-gray-200'
+                     : 'bg-purple-50 border border-purple-100')
               }`}>↵</kbd>
               <span>to select</span>
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
                   ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  : (useThemeStore.getState().accent === 'light'
+                     ? 'bg-gray-100 border border-gray-200'
+                     : 'bg-purple-50 border border-purple-100')
               }`}>esc</kbd>
               <span>to close</span>
             </div>
@@ -244,10 +263,14 @@ const CommandPalette: React.FC = () => {
                       index === selectedIndex 
                         ? getCurrentTheme() === 'dark' 
                           ? 'bg-purple-800/30 border border-purple-700/30' 
-                          : 'bg-purple-100 border border-purple-200'
+                          : (useThemeStore.getState().accent === 'light'
+                             ? 'bg-gray-100 border border-gray-200'
+                             : 'bg-purple-100 border border-purple-200')
                         : getCurrentTheme() === 'dark'
                           ? 'hover:bg-black/30'
-                          : 'hover:bg-purple-50'
+                          : (useThemeStore.getState().accent === 'light'
+                             ? 'hover:bg-gray-50'
+                             : 'hover:bg-purple-50')
                     }`}
                     onClick={() => {
                       command.action();
@@ -284,20 +307,26 @@ const CommandPalette: React.FC = () => {
           <div className={`flex items-center justify-between px-4 py-2 border-t text-xs ${
             getCurrentTheme() === 'dark' 
               ? 'border-purple-500/20 text-white/50' 
-              : 'border-purple-100 text-gray-500'
+              : (useThemeStore.getState().accent === 'light'
+                 ? 'border-gray-200 text-gray-500'
+                 : 'border-purple-100 text-gray-500')
           }`}>
             <div>
               <span className="mr-1">Press</span>
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
                   ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  : (useThemeStore.getState().accent === 'light'
+                     ? 'bg-gray-100 border border-gray-200'
+                     : 'bg-purple-50 border border-purple-100')
               }`}>Ctrl</kbd>
               <span className="mx-1">+</span>
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
                   ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  : (useThemeStore.getState().accent === 'light'
+                     ? 'bg-gray-100 border border-gray-200'
+                     : 'bg-purple-50 border border-purple-100')
               }`}>K</kbd>
               <span className="ml-1">to open command palette</span>
             </div>
