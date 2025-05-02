@@ -37,66 +37,48 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
     console.log("Background component - accent color:", accent);
   }, [accent]);
   
-  // Get background class based on theme and accent
-  const getBackgroundClass = () => {
+  // This is a simpler approach - get direct background color based on theme and accent
+  const getBackgroundColor = () => {
+    // Handle special cases for dark and light accent with direct colors
+    if (accent === 'dark' && currentTheme === 'dark') return '#000000'; // Pure black
+    if (accent === 'light' && currentTheme === 'light') return '#ffffff'; // Pure white
+    if (accent === 'dark' && currentTheme === 'light') return '#d1d5db'; // Gray-300
+    if (accent === 'light' && currentTheme === 'dark') return '#374151'; // Gray-700
+    
+    // For other accents, fall back to existing gradient styles
     const isDark = currentTheme === 'dark';
     
-    // Enhanced background classes with more distinctive dark/light options
-    const backgroundClasses = {
-      purple: {
-        dark: 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]',
-        light: 'bg-gradient-to-br from-purple-50 via-white to-white'
-      },
-      blue: {
-        dark: 'bg-gradient-to-br from-blue-950 via-[#0a1a2f] to-[#0c1827]',
-        light: 'bg-gradient-to-br from-blue-50 via-white to-white'
-      },
-      green: {
-        dark: 'bg-gradient-to-br from-green-950 via-[#0f2922] to-[#0c211c]',
-        light: 'bg-gradient-to-br from-green-50 via-white to-white'
-      },
-      orange: {
-        dark: 'bg-gradient-to-br from-orange-950 via-[#261409] to-[#1f1107]',
-        light: 'bg-gradient-to-br from-orange-50 via-white to-white'
-      },
-      pink: {
-        dark: 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]',
-        light: 'bg-gradient-to-br from-pink-50 via-white to-white'
-      },
-      dark: {
-        dark: 'bg-black !important', // Pure black background in dark mode with !important
-        light: 'bg-gray-300 !important' // Solid gray without gradient in light mode with !important
-      },
-      light: {
-        dark: 'bg-gray-700 !important', // Solid medium gray in dark mode with !important
-        light: 'bg-white !important' // Pure white background with !important
-      }
-    };
-    
-    // Get background class for selected accent or default to purple
-    const selectedBg = backgroundClasses[accent] || backgroundClasses.purple;
-    return selectedBg[isDark ? 'dark' : 'light'];
+    switch (accent) {
+      case 'purple':
+        return isDark ? '#1a1245' : '#f9f7ff'; 
+      case 'blue':
+        return isDark ? '#0a1a2f' : '#f0f9ff';
+      case 'green':
+        return isDark ? '#0f2922' : '#f0fdf4';
+      case 'orange':
+        return isDark ? '#261409' : '#fff7ed';
+      case 'pink':
+        return isDark ? '#270d1a' : '#fdf2f8';
+      default:
+        return isDark ? '#1a1245' : '#f9f7ff';
+    }
   };
   
-  // Get computed background class
-  const bgClass = getBackgroundClass();
-  console.log("Applied background class:", bgClass);
-  
-  // Get background color for inline style
-  const getInlineStyle = () => {
-    if (accent === 'dark' && currentTheme === 'dark') return { backgroundColor: 'black' };
-    if (accent === 'light' && currentTheme === 'light') return { backgroundColor: 'white' };
-    if (accent === 'dark' && currentTheme === 'light') return { backgroundColor: '#d1d5db' }; // gray-300
-    if (accent === 'light' && currentTheme === 'dark') return { backgroundColor: '#374151' }; // gray-700
-    return {};
-  };
+  const backgroundColor = getBackgroundColor();
+  console.log("Applied background color:", backgroundColor);
   
   return (
-    <div 
-      className={`panion-desktop overflow-auto min-h-screen ${bgClass}`}
-      style={getInlineStyle()}
-    >
-      {children}
+    <div className="panion-desktop overflow-auto min-h-screen">
+      {/* Fixed position background overlay */}
+      <div
+        className="fixed top-0 left-0 right-0 bottom-0 w-full h-full -z-10"
+        style={{ backgroundColor }}
+      />
+      
+      {/* Content container */}
+      <div className="relative z-0">
+        {children}
+      </div>
     </div>
   );
 };
