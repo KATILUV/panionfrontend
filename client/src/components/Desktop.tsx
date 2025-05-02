@@ -7,6 +7,7 @@ import { useSystemLogStore, log } from '../state/systemLogStore';
 import { initializeAgentRegistry } from '../state/agentStore';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
+import SettingsAgent from './agents/SettingsAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
 import EmptyStateDashboard from './system/EmptyStateDashboard';
@@ -19,8 +20,10 @@ const renderAgentContent = (agentId: string) => {
       return <ClaraAgent />;
     case 'notes':
       return <NotesAgent />;
+    case 'settings':
+      return <SettingsAgent />;
     default:
-      return <div>Unknown agent type</div>;
+      return <div>Unknown agent type: {agentId}</div>;
   }
 };
 

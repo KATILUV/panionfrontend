@@ -113,7 +113,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           variant="ghost" 
           size="sm"
           className="h-10 px-3 text-white/70 hover:text-white hover:bg-white/10 flex items-center space-x-2"
-          onClick={() => handleIconClick('settings')}
+          onClick={() => {
+            console.log('Opening settings agent');
+            handleIconClick('settings');
+          }}
         >
           <Settings size={18} />
           <span className="hidden sm:inline">Settings</span>
