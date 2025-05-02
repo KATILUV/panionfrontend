@@ -60,7 +60,7 @@ const LandingPage: React.FC = () => {
     },
     {
       title: "Intelligent Assistant",
-      description: "Panion remembers context across all conversations, making each interaction more personalized and efficient than traditional chatbots.",
+      description: "Clara remembers context across all conversations, making each interaction more personalized and efficient than traditional chatbots.",
       icon: MessageSquare
     },
     {
@@ -93,7 +93,7 @@ const LandingPage: React.FC = () => {
   const keyFeatures = [
     {
       icon: MessageSquare,
-      title: "Panion AI Agent",
+      title: "Clara AI Agent",
       description: "Your primary AI companion for natural conversations and problem-solving"
     },
     {
@@ -136,7 +136,7 @@ const LandingPage: React.FC = () => {
       role: "Software Engineer"
     },
     {
-      quote: "Panion's memory capabilities are incredible. It remembers our previous conversations and builds upon them naturally.",
+      quote: "Clara's memory capabilities are incredible. She remembers our previous conversations and builds upon them naturally.",
       author: "Leila Rodriguez",
       role: "Content Creator"
     }

@@ -14,10 +14,10 @@ const ClaraAgent: React.FC = () => {
 
   // Log when the component mounts and unmounts
   useEffect(() => {
-    log.action('Panion agent window opened');
+    log.action('Clara agent window opened');
     
     return () => {
-      log.action('Panion agent window closed');
+      log.action('Clara agent window closed');
     };
   }, []);
 
@@ -49,7 +49,7 @@ const ClaraAgent: React.FC = () => {
             phrases={[
               "The future isn't artificial — it's intentional.",
               "Dream deeper. Build smarter. Evolve together.",
-              "You architect. Panion amplifies.",
+              "You architect. She amplifies.",
               "Co-building the future of you.",
               "Your thought partner in progress.",
               "Part interface, part intelligence, all intention.",
@@ -70,7 +70,7 @@ const ClaraAgent: React.FC = () => {
         >
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-white/50 space-y-4">
-              <p>Welcome to Panion! How can I assist you today?</p>
+              <p>Welcome to Clara! How can I assist you today?</p>
               <p className="text-sm">Ask me anything or share an image with me.</p>
             </div>
           ) : (

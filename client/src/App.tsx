@@ -8,7 +8,7 @@ import NotFound from "@/pages/not-found";
 import DesktopPage from "./pages/desktop-page";
 import LandingPage from "./pages/landing-page";
 import AuthPage from "./pages/auth-page";
-import PanionAgent from "./components/agents/PanionAgent";
+import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import { useAgentStore } from "./state/agentStore";
 import ThemeProvider from "./components/common/ThemeProvider";
@@ -41,8 +41,8 @@ function App() {
   useEffect(() => {
     const agentStore = useAgentStore.getState();
     
-    // Panion Agent
-    const panionIcon = `
+    // Clara Agent
+    const claraIcon = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
         <circle cx="12" cy="12" r="4" fill="currentColor" />
@@ -50,10 +50,10 @@ function App() {
     `;
     
     agentStore.registerAgent({
-      id: 'panion',
-      title: 'Panion',
-      icon: panionIcon,
-      component: () => <PanionAgent />,
+      id: 'clara',
+      title: 'Clara AI',
+      icon: claraIcon,
+      component: () => <ClaraAgent />,
       defaultPosition: { x: 100, y: 100 },
       defaultSize: { width: 640, height: 600 }
     });
@@ -77,8 +77,8 @@ function App() {
       defaultSize: { width: 400, height: 500 }
     });
     
-    // Auto-open Panion window by default
-    agentStore.openAgent('panion');
+    // Auto-open Clara window by default
+    agentStore.openAgent('clara');
   }, []);
   
   return (
