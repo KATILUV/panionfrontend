@@ -65,7 +65,7 @@ const ClaraAgent: React.FC = () => {
             className={`text-sm font-light ${
               getCurrentTheme() === 'dark' 
                 ? 'text-white/80'
-                : 'text-gray-700'
+                : 'text-indigo-800'
             }`}
           />
         </div>
