@@ -269,7 +269,7 @@ const LandingPage: React.FC = () => {
         </motion.div>
         
         {/* Main content */}
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-4 relative z-30">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -287,7 +287,8 @@ const LandingPage: React.FC = () => {
                 animate={{ scale: [1, 1.3, 1] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
               />
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm relative z-30">
+                <span className="absolute inset-0 blur-xl bg-black/20 -z-10 rounded-3xl"></span>
                 This is <span className="text-violet-300">Panion</span>
               </h1>
             </motion.div>
