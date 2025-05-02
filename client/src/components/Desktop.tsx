@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Window from './common/Window';
 import Taskbar from './common/Taskbar';
 import { useAgentStore, AgentId, WindowLayout } from '../state/agentStore';
@@ -75,6 +75,11 @@ const Desktop: React.FC = () => {
   // Get current theme and accent
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accent = useThemeStore(state => state.accent);
+  
+  // Debug: Log accent changes
+  useEffect(() => {
+    console.log("Current accent color:", accent);
+  }, [accent]);
 
   // Generate background gradient based on current theme and accent
   const getBackgroundGradient = () => {
@@ -116,8 +121,13 @@ const Desktop: React.FC = () => {
     }
   };
 
+  // Memoize the background gradient class based on theme and accent
+  const backgroundGradientClass = useMemo(() => {
+    return getBackgroundGradient();
+  }, [currentTheme, accent]);
+  
   return (
-    <div className={`panion-desktop overflow-auto min-h-screen ${getBackgroundGradient()}`}>
+    <div className={`panion-desktop overflow-auto min-h-screen ${backgroundGradientClass}`}>
       {/* Desktop Area */}
       <div className="flex-1 relative">
         {/* Show empty state dashboard if no windows are open */}
