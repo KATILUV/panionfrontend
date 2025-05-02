@@ -2,36 +2,35 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { log } from './systemLogStore';
 
-// Theme types
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type ThemeAccent = 'purple' | 'blue' | 'green' | 'orange' | 'pink';
-export type BackgroundPattern = 'grid' | 'dots' | 'waves' | 'none';
-export type ThemePreset = 'system' | 'dark' | 'light' | 'twilight' | 'ocean' | 'forest' | 'sunset' | 'candy';
+// Available theme presets
+export type ThemePreset = 'system' | 'dark' | 'light' | 'twilight' | 'ocean' | 'forest' | 'sunset';
 
-export interface ThemeSettings {
-  mode: ThemeMode;
-  accent: ThemeAccent;
-  backgroundPattern: BackgroundPattern;
+// Each theme preset contains these settings internally
+interface ThemeSettingsInternal {
+  mode: 'light' | 'dark' | 'system';
+  accent: 'purple' | 'blue' | 'green' | 'orange' | 'pink';
+  backgroundPattern: 'grid' | 'dots' | 'waves' | 'none';
   displayName: string;
 }
 
+// Simplified theme state
 interface ThemeState {
+  // The currently active theme preset
   activePreset: ThemePreset;
-  mode: ThemeMode;
-  accent: ThemeAccent;
-  backgroundPattern: BackgroundPattern;
+  
+  // System preference detection
   systemPrefersDark: boolean;
   
   // Actions
-  setMode: (mode: ThemeMode) => void;
-  setAccent: (accent: ThemeAccent) => void;
-  setBackgroundPattern: (pattern: BackgroundPattern) => void;
-  setSystemPreference: (prefersDark: boolean) => void;
   setThemePreset: (preset: ThemePreset) => void;
+  setSystemPreference: (prefersDark: boolean) => void;
   
   // Computed
   getCurrentTheme: () => 'light' | 'dark';
-  getThemePresets: () => Record<ThemePreset, ThemeSettings>;
+  getThemePresets: () => Record<ThemePreset, ThemeSettingsInternal>;
+  
+  // For internal use
+  getActiveSettings: () => ThemeSettingsInternal;
 }
 
 export const useThemeStore = create<ThemeState>()(
@@ -39,34 +38,7 @@ export const useThemeStore = create<ThemeState>()(
     (set, get) => ({
       // Default values
       activePreset: 'system',
-      mode: 'system',
-      accent: 'purple',
-      backgroundPattern: 'grid',
       systemPrefersDark: false,
-      
-      setMode: (mode) => {
-        log.info(`Theme mode changed to: ${mode}`);
-        set({ 
-          mode,
-          activePreset: 'system' // Reset to system when changing individual settings
-        });
-      },
-      
-      setAccent: (accent) => {
-        log.info(`Theme accent changed to: ${accent}`);
-        set({ 
-          accent,
-          activePreset: 'system' // Reset to system when changing individual settings
-        });
-      },
-      
-      setBackgroundPattern: (backgroundPattern) => {
-        log.info(`Background pattern changed to: ${backgroundPattern}`);
-        set({ 
-          backgroundPattern,
-          activePreset: 'system' // Reset to system when changing individual settings
-        });
-      },
       
       setSystemPreference: (prefersDark) => {
         log.info(`System theme preference detected: ${prefersDark ? 'dark' : 'light'}`);
@@ -79,24 +51,28 @@ export const useThemeStore = create<ThemeState>()(
         
         log.info(`Applying theme preset: ${settings.displayName}`);
         
-        set({
-          activePreset: preset,
-          mode: settings.mode,
-          accent: settings.accent,
-          backgroundPattern: settings.backgroundPattern
-        });
+        set({ activePreset: preset });
       },
       
+      // This returns the final light/dark mode based on all settings
       getCurrentTheme: () => {
-        const { mode, systemPrefersDark } = get();
-        if (mode === 'system') {
+        const { activePreset, systemPrefersDark } = get();
+        const activeSettings = get().getActiveSettings();
+        
+        if (activeSettings.mode === 'system') {
           return systemPrefersDark ? 'dark' : 'light';
         }
-        return mode;
+        return activeSettings.mode;
       },
       
+      // Get the currently active settings based on the active preset
+      getActiveSettings: () => {
+        const { activePreset } = get();
+        return get().getThemePresets()[activePreset];
+      },
+      
+      // Define all available theme presets
       getThemePresets: () => {
-        // Define all available theme presets
         return {
           system: {
             mode: 'system',
@@ -139,12 +115,6 @@ export const useThemeStore = create<ThemeState>()(
             accent: 'orange',
             backgroundPattern: 'dots',
             displayName: 'Sunset'
-          },
-          candy: {
-            mode: 'light',
-            accent: 'pink',
-            backgroundPattern: 'waves',
-            displayName: 'Candy'
           }
         };
       }

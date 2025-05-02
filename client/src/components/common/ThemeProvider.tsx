@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useThemeStore, ThemeMode, ThemeAccent } from '../../state/themeStore';
+import { useThemeStore } from '../../state/themeStore';
 import { useToast } from '@/hooks/use-toast';
 
 interface ThemeProviderProps {
@@ -7,8 +7,8 @@ interface ThemeProviderProps {
 }
 
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const mode = useThemeStore(state => state.mode);
-  const accent = useThemeStore(state => state.accent);
+  const activePreset = useThemeStore(state => state.activePreset);
+  const getActiveSettings = useThemeStore(state => state.getActiveSettings);
   const setSystemPreference = useThemeStore(state => state.setSystemPreference);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const systemPrefersDark = useThemeStore(state => state.systemPrefersDark);
@@ -18,6 +18,7 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   // Apply the theme classes to the document root
   useEffect(() => {
     const currentTheme = getCurrentTheme();
+    const activeSettings = getActiveSettings();
     
     // Set dark/light mode
     if (currentTheme === 'dark') {
@@ -29,7 +30,10 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
     
     // Set accent color
-    document.documentElement.setAttribute('data-accent', accent);
+    document.documentElement.setAttribute('data-accent', activeSettings.accent);
+    
+    // Set background pattern
+    document.documentElement.setAttribute('data-pattern', activeSettings.backgroundPattern);
     
     // Update meta theme-color for mobile browsers
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
@@ -40,7 +44,7 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       );
     }
     
-  }, [mode, accent, getCurrentTheme, systemPrefersDark]);
+  }, [activePreset, getCurrentTheme, getActiveSettings, systemPrefersDark]);
   
   // Listen for system preference changes
   useEffect(() => {
@@ -56,8 +60,8 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       const newIsDarkMode = event.matches;
       setSystemPreference(newIsDarkMode);
       
-      // Only show the notification if it's not the first detection and we're in system mode
-      if (initialSystemPreference !== null && mode === 'system') {
+      // Only show the notification if it's not the first detection and we're using system preset
+      if (initialSystemPreference !== null && activePreset === 'system') {
         toast({
           title: `System theme changed to ${newIsDarkMode ? 'Dark' : 'Light'} mode`,
           description: "Your theme has been updated to match your system preferences",
@@ -79,7 +83,7 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
     
     return undefined;
-  }, [setSystemPreference, toast, mode, initialSystemPreference]);
+  }, [setSystemPreference, toast, activePreset, initialSystemPreference]);
   
   return <>{children}</>;
 };

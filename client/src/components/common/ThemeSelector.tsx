@@ -1,12 +1,5 @@
 import React, { useEffect } from 'react';
-import { 
-  useThemeStore, 
-  ThemeMode, 
-  ThemeAccent, 
-  BackgroundPattern, 
-  ThemePreset, 
-  ThemeSettings 
-} from '../../state/themeStore';
+import { useThemeStore, ThemePreset } from '../../state/themeStore';
 import { 
   Dialog,
   DialogContent,
@@ -14,88 +7,35 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose,
-  DialogDescription
+  DialogClose
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Sun, 
   Moon, 
   Monitor, 
-  Palette,
   CheckCircle2,
-  Info,
-  Grid,
-  CircleDashed,
-  Waves,
-  XCircle
+  Sparkles,
+  Droplets,
+  Leaf,
+  Sunset
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 
 interface ThemeSelectorProps {
   children: React.ReactNode;
 }
 
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
-  const mode = useThemeStore(state => state.mode);
-  const accent = useThemeStore(state => state.accent);
-  const backgroundPattern = useThemeStore(state => state.backgroundPattern);
   const activePreset = useThemeStore(state => state.activePreset);
-  const setMode = useThemeStore(state => state.setMode);
-  const setAccent = useThemeStore(state => state.setAccent);
-  const setBackgroundPattern = useThemeStore(state => state.setBackgroundPattern);
   const setThemePreset = useThemeStore(state => state.setThemePreset);
   const getThemePresets = useThemeStore(state => state.getThemePresets);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const systemPrefersDark = useThemeStore(state => state.systemPrefersDark);
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [currentTab, setCurrentTab] = React.useState('presets');
   const { toast } = useToast();
 
-  // Define available accent colors
-  const accentColors: Array<{ id: ThemeAccent, name: string, color: string }> = [
-    { id: 'purple', name: 'Purple', color: 'bg-purple-500' },
-    { id: 'blue', name: 'Blue', color: 'bg-blue-500' },
-    { id: 'green', name: 'Green', color: 'bg-green-500' },
-    { id: 'orange', name: 'Orange', color: 'bg-orange-500' },
-    { id: 'pink', name: 'Pink', color: 'bg-pink-500' }
-  ];
-
-  const handleModeChange = (newMode: ThemeMode) => {
-    setMode(newMode);
-    
-    let description;
-    if (newMode === 'system') {
-      const currentSystemTheme = systemPrefersDark ? 'dark' : 'light';
-      description = `Theme will follow your system preference (currently ${currentSystemTheme})`;
-    } else {
-      description = `Theme mode set to ${newMode}`;
-    }
-    
-    toast({
-      title: 'Theme Updated',
-      description,
-    });
-  };
-
-  const handleAccentChange = (newAccent: ThemeAccent) => {
-    setAccent(newAccent);
-    toast({
-      title: 'Accent Color Updated',
-      description: `Accent color set to ${newAccent}`,
-    });
-  };
-  
-  const handleBackgroundPatternChange = (newPattern: BackgroundPattern) => {
-    setBackgroundPattern(newPattern);
-    toast({
-      title: 'Background Pattern Updated',
-      description: `Pattern set to ${newPattern}`,
-    });
-  };
-  
+  // Handle theme preset change
   const handleThemePresetChange = (preset: ThemePreset) => {
     setThemePreset(preset);
     const presetName = getThemePresets()[preset].displayName;
@@ -105,17 +45,32 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
     });
   };
 
-  // Get icon based on current theme
-  const getThemeIcon = () => {
-    const currentTheme = getCurrentTheme();
-    if (mode === 'system') return <Monitor size={18} />;
-    return currentTheme === 'dark' ? <Moon size={18} /> : <Sun size={18} />;
+  // Get theme preset icon
+  const getPresetIcon = (preset: ThemePreset) => {
+    switch (preset) {
+      case 'system':
+        return <Monitor size={20} />;
+      case 'dark':
+        return <Moon size={20} />;
+      case 'light':
+        return <Sun size={20} />;
+      case 'twilight':
+        return <Sparkles size={20} />;
+      case 'ocean':
+        return <Droplets size={20} />;
+      case 'forest':
+        return <Leaf size={20} />;
+      case 'sunset':
+        return <Sunset size={20} />;
+      default:
+        return <Monitor size={20} />;
+    }
   };
 
   // Display automatic theme change notifications
   useEffect(() => {
-    // Only show notifications when dialog is closed to avoid duplication
-    if (!dialogOpen && mode === 'system') {
+    // Only show notifications when dialog is closed
+    if (!dialogOpen && activePreset === 'system') {
       const metaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleSystemChange = (e: MediaQueryListEvent) => {
         const newMode = e.matches ? 'dark' : 'light';
@@ -129,7 +84,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
       metaQuery.addEventListener('change', handleSystemChange);
       return () => metaQuery.removeEventListener('change', handleSystemChange);
     }
-  }, [dialogOpen, mode, toast]);
+  }, [dialogOpen, activePreset, toast]);
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -152,138 +107,48 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
         aria-describedby="theme-settings-description"
       >
         <DialogHeader>
-          <DialogTitle className="text-xl">Appearance Settings</DialogTitle>
+          <DialogTitle className="text-xl">Choose a Theme</DialogTitle>
           <p className={`mt-2 ${
             getCurrentTheme() === 'dark' ? 'text-white/80' : 'text-gray-600'
           }`} id="theme-settings-description">
-            Customize the look and feel of your Panion desktop environment.
+            Select a theme preset for your Panion desktop environment.
           </p>
         </DialogHeader>
         
-        {/* Theme mode selector */}
-        <div className="space-y-6 my-2">
-          <div className={`p-4 rounded-lg ${
-            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
-          }`}>
-            <h3 className="text-lg font-medium mb-3">Theme Mode</h3>
-            <div className="grid grid-cols-3 gap-2">
-              <div 
-                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
-                  mode === 'light' 
-                    ? getCurrentTheme() === 'dark'
-                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
-                      : 'bg-purple-100 border-purple-300 text-purple-900'
-                    : getCurrentTheme() === 'dark'
-                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
-                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
-                }`}
-                onClick={() => handleModeChange('light')}
-              >
-                <div className="relative">
-                  <Sun className="h-5 w-5 mb-1" />
-                  {mode === 'light' && (
-                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
+        {/* Theme preset selector */}
+        <div className="space-y-2 my-4">
+          {Object.entries(getThemePresets()).map(([key, preset]) => (
+            <button
+              key={key}
+              className={`w-full flex items-center justify-between p-4 rounded-md border transition-colors ${
+                activePreset === key 
+                  ? getCurrentTheme() === 'dark'
+                    ? 'bg-purple-800/50 border-purple-500/50 text-white' 
+                    : 'bg-purple-100 border-purple-300 text-purple-900'
+                  : getCurrentTheme() === 'dark'
+                    ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80' 
+                    : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
+              }`}
+              onClick={() => handleThemePresetChange(key as ThemePreset)}
+            >
+              <div className="flex items-center">
+                <div className="mr-3">
+                  {getPresetIcon(key as ThemePreset)}
+                </div>
+                <div className="text-left">
+                  <p className="font-medium">{preset.displayName}</p>
+                  {key === 'system' && (
+                    <p className="text-xs mt-1 opacity-70">
+                      Follows your device settings (currently {systemPrefersDark ? 'dark' : 'light'})
+                    </p>
                   )}
                 </div>
-                <span className="text-sm">Light</span>
               </div>
-              <div 
-                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
-                  mode === 'dark' 
-                    ? getCurrentTheme() === 'dark'
-                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
-                      : 'bg-purple-100 border-purple-300 text-purple-900'
-                    : getCurrentTheme() === 'dark'
-                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
-                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
-                }`}
-                onClick={() => handleModeChange('dark')}
-              >
-                <div className="relative">
-                  <Moon className="h-5 w-5 mb-1" />
-                  {mode === 'dark' && (
-                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                  )}
-                </div>
-                <span className="text-sm">Dark</span>
-              </div>
-              <div 
-                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
-                  mode === 'system' 
-                    ? getCurrentTheme() === 'dark'
-                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
-                      : 'bg-purple-100 border-purple-300 text-purple-900'
-                    : getCurrentTheme() === 'dark'
-                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
-                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
-                }`}
-                onClick={() => handleModeChange('system')}
-              >
-                <div className="relative">
-                  <Monitor className="h-5 w-5 mb-1" />
-                  {mode === 'system' && (
-                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                  )}
-                </div>
-                <span className="text-sm">System</span>
-              </div>
-            </div>
-            
-            {/* System preference indicator */}
-            {mode === 'system' && (
-              <div className={`mt-3 p-3 rounded-md flex items-center gap-2 text-sm ${
-                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-purple-500/20' : 'bg-white/80 border border-purple-100'
-              }`}>
-                <Info size={16} className={`flex-shrink-0 ${
-                  getCurrentTheme() === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`} />
-                <div>
-                  <span>Your system is currently set to </span>
-                  <Badge 
-                    variant="outline" 
-                    className={`ml-1 font-medium ${
-                      systemPrefersDark 
-                        ? getCurrentTheme() === 'dark' ? 'bg-purple-950/50 text-white' : 'bg-purple-900/20 text-purple-900' 
-                        : getCurrentTheme() === 'dark' ? 'bg-purple-100/20 text-white' : 'bg-purple-100 text-purple-900'
-                    }`}
-                  >
-                    {systemPrefersDark ? 'Dark Mode' : 'Light Mode'}
-                  </Badge>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Accent color selector */}
-          <div className={`p-4 rounded-lg ${
-            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
-          }`}>
-            <h3 className="text-lg font-medium mb-3">Accent Color</h3>
-            <div className="grid grid-cols-5 gap-3">
-              {accentColors.map((color) => (
-                <button
-                  key={color.id}
-                  className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors ${
-                    accent === color.id 
-                      ? getCurrentTheme() === 'dark'
-                        ? 'bg-purple-800/50 border-purple-500/50' 
-                        : 'bg-purple-100 border-purple-300'
-                      : getCurrentTheme() === 'dark'
-                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30' 
-                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50'
-                  }`}
-                  onClick={() => handleAccentChange(color.id)}
-                >
-                  <div className={`w-8 h-8 rounded-full ${color.color} mb-1 relative`}>
-                    {accent === color.id && (
-                      <CheckCircle2 className="absolute -top-1 -right-1 text-white text-sm h-4 w-4" />
-                    )}
-                  </div>
-                  <span className="text-xs">{color.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+              {activePreset === key && (
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+              )}
+            </button>
+          ))}
         </div>
         
         <DialogFooter>
