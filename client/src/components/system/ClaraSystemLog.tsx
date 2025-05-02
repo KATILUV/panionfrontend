@@ -88,7 +88,9 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
       className={`fixed right-4 bottom-16 w-80 max-h-[70vh] backdrop-blur-lg rounded-lg overflow-hidden z-50 ${
         getCurrentTheme() === 'dark' 
           ? 'bg-black/40 border border-purple-500/30' 
-          : 'bg-white/30 border border-gray-200/50 shadow-md'
+          : (accent === 'light'
+              ? 'bg-white/30 border border-gray-200/50 shadow-md'
+              : 'bg-white/30 border border-purple-200/30 shadow-md')
       } ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -99,7 +101,9 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
       <div className={`flex items-center justify-between px-3 py-2 ${
         getCurrentTheme() === 'dark' 
           ? 'bg-black/20 border-b border-purple-500/20 text-white' 
-          : 'bg-white/30 border-b border-gray-200/50 text-gray-800'
+          : (accent === 'light'
+              ? 'bg-white/30 border-b border-gray-200/50 text-gray-800'
+              : 'bg-white/30 border-b border-purple-200/30 text-gray-800')
       }`}>
         <div className="flex items-center space-x-2">
           <Database className={`h-4 w-4 ${

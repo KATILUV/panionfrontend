@@ -31,7 +31,13 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
           <img 
             src={imageUrl} 
             alt="User shared image"
-            className="max-w-full max-h-[180px] rounded-xl border-3 border-white/20 shadow-lg"
+            className={`max-w-full max-h-[180px] rounded-xl shadow-lg ${
+              isDarkMode
+                ? 'border-3 border-white/20'
+                : (accent === 'light'
+                    ? 'border-2 border-gray-300/30'
+                    : 'border-2 border-indigo-300/30')
+            }`}
           />
         </div>
       )}
@@ -67,7 +73,11 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
           <img 
             src={imageUrl} 
             alt="AI shared image"
-            className="max-w-full rounded-xl border border-purple-300/30 shadow-lg"
+            className={`max-w-full rounded-xl shadow-lg ${
+              isDarkMode || accent !== 'light'
+                ? 'border border-purple-300/30'
+                : 'border border-gray-300/30'
+            }`}
           />
         </div>
       )}

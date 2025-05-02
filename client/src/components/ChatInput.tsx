@@ -62,7 +62,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             className={`max-w-full max-h-[180px] rounded-xl shadow-lg ${
               isDarkMode
                 ? 'border border-white/20'
-                : 'border border-indigo-200/50'
+                : (accent === 'light' 
+                    ? 'border border-gray-300/50' 
+                    : 'border border-indigo-200/50')
             }`}
           />
           <button 
@@ -80,7 +82,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         className={`relative flex items-center backdrop-blur-md rounded-full overflow-hidden shadow-lg ${
           isDarkMode
             ? 'bg-white/10 border border-white/20'
-            : 'bg-indigo-50/30 border border-indigo-200/30'
+            : (accent === 'light'
+                ? 'bg-white/60 border border-gray-200/30'
+                : 'bg-indigo-50/30 border border-indigo-200/30')
         }`}
       >
         <input
@@ -101,7 +105,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors mr-2 ${
               isDarkMode 
                 ? 'bg-white/20 text-white hover:bg-white/30' 
-                : 'bg-indigo-100/50 text-indigo-600 hover:bg-indigo-100/80'
+                : (accent === 'light'
+                    ? 'bg-gray-100/70 text-gray-600 hover:bg-gray-100'
+                    : 'bg-indigo-100/50 text-indigo-600 hover:bg-indigo-100/80')
             }`}
             disabled={isLoading}
             aria-label="Upload image"
@@ -123,7 +129,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           
           <button
             type="submit"
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-r from-purple-700 to-pink-600 text-white hover:from-purple-600 hover:to-pink-500 transition-colors"
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
+              isDarkMode || accent !== 'light'
+                ? 'bg-gradient-to-r from-purple-700 to-pink-600 hover:from-purple-600 hover:to-pink-500'
+                : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600'
+            }`}
             disabled={isLoading || (!message.trim() && !imageFile)}
             aria-label="Send message"
           >
