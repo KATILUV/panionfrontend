@@ -351,6 +351,170 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
           
+          {/* Visual Mockups for Use Cases */}
+          <div className="w-full overflow-hidden rounded-xl shadow-xl mb-16 border border-gray-100">
+            <div className="bg-gradient-to-br from-slate-900 to-indigo-950 aspect-[21/9] relative p-8 flex items-center overflow-hidden">
+              {/* Desktop-like mockup with multiple windows */}
+              <div className="absolute inset-0 bg-grid-white/5 bg-[length:20px_20px] opacity-20"></div>
+              
+              {/* Window 1: Creative Studio */}
+              <motion.div
+                initial={{ x: -40, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="absolute left-[10%] top-[15%] w-[30%] bg-black/80 rounded-lg overflow-hidden border border-white/10 shadow-2xl"
+              >
+                <div className="bg-black/70 h-7 border-b border-white/10 flex items-center px-3">
+                  <div className="flex items-center space-x-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="ml-4 text-xs text-white/70">Design Assistant</div>
+                </div>
+                <div className="p-3 overflow-hidden">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="h-16 rounded bg-violet-600/20 p-2">
+                      <div className="w-full h-full rounded bg-violet-500/40"></div>
+                    </div>
+                    <div className="h-16 rounded bg-indigo-600/20 p-2">
+                      <div className="w-full h-full rounded bg-indigo-500/40"></div>
+                    </div>
+                    <div className="h-16 rounded bg-purple-600/20 p-2">
+                      <div className="w-full h-full rounded bg-purple-500/40"></div>
+                    </div>
+                  </div>
+                  <div className="h-2 bg-white/20 rounded-full mt-3 mx-1"></div>
+                  <div className="h-2 bg-white/10 rounded-full mt-2 mx-1 w-3/4"></div>
+                </div>
+              </motion.div>
+              
+              {/* Window 2: Research Dashboard */}
+              <motion.div
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="absolute right-[10%] top-[25%] w-[35%] bg-black/80 rounded-lg overflow-hidden border border-white/10 shadow-2xl"
+              >
+                <div className="bg-black/70 h-7 border-b border-white/10 flex items-center px-3">
+                  <div className="flex items-center space-x-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="ml-4 text-xs text-white/70">Research Explorer</div>
+                </div>
+                <div className="p-3 overflow-hidden">
+                  <div className="flex space-x-2">
+                    <div className="w-2/3">
+                      <div className="h-3 bg-white/20 rounded-full mb-2"></div>
+                      <div className="h-3 bg-white/10 rounded-full mb-2 w-4/5"></div>
+                      <div className="h-3 bg-white/10 rounded-full mb-2"></div>
+                      <div className="h-3 bg-white/10 rounded-full mb-2 w-3/4"></div>
+                      <div className="h-3 bg-white/10 rounded-full mb-2 w-5/6"></div>
+                    </div>
+                    <div className="w-1/3 h-20 rounded bg-indigo-600/20 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-indigo-500/40"></div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+              
+              {/* Window 3: Data Analysis */}
+              <motion.div
+                initial={{ x: 40, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.7 }}
+                className="absolute left-[25%] bottom-[15%] w-[28%] bg-black/80 rounded-lg overflow-hidden border border-white/10 shadow-2xl"
+              >
+                <div className="bg-black/70 h-7 border-b border-white/10 flex items-center px-3">
+                  <div className="flex items-center space-x-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="ml-4 text-xs text-white/70">Data Insights</div>
+                </div>
+                <div className="p-3 overflow-hidden">
+                  <div className="h-10 rounded bg-purple-600/20 flex items-end justify-center pb-1">
+                    <div className="w-1/6 h-3/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-5/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-4/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-full rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-2/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-3/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                  </div>
+                  <div className="h-2 bg-white/20 rounded-full mt-3 mx-1"></div>
+                  <div className="h-2 bg-white/10 rounded-full mt-2 mx-1 w-1/2"></div>
+                </div>
+              </motion.div>
+              
+              {/* Central orbiting connection */}
+              <motion.div 
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.5, delay: 1 }}
+              >
+                <div className="relative w-16 h-16">
+                  <motion.div 
+                    className="absolute inset-0 rounded-full bg-indigo-500/40"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div 
+                    className="absolute inset-3 rounded-full bg-violet-500/60"
+                    animate={{ scale: [1.2, 1, 1.2] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  
+                  {/* Orbiting connections */}
+                  <motion.div
+                    className="absolute w-full h-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  >
+                    <div className="absolute top-0 left-1/2 w-1 h-1 bg-white rounded-full shadow-glow"></div>
+                    <div className="absolute top-1/4 right-0 w-2 h-2 bg-white rounded-full shadow-glow"></div>
+                    <div className="absolute bottom-0 left-1/3 w-1.5 h-1.5 bg-white rounded-full shadow-glow"></div>
+                  </motion.div>
+                </div>
+              </motion.div>
+              
+              {/* Connection lines */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+                <motion.path 
+                  d="M 200,100 C 250,150 300,180 400,200" 
+                  stroke="rgba(255,255,255,0.1)" 
+                  strokeWidth="1" 
+                  fill="none"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.5 }}
+                  transition={{ duration: 1.5, delay: 1.2 }}
+                />
+                <motion.path 
+                  d="M 600,150 C 550,200 450,200 400,200" 
+                  stroke="rgba(255,255,255,0.1)" 
+                  strokeWidth="1" 
+                  fill="none"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.5 }}
+                  transition={{ duration: 1.5, delay: 1.4 }}
+                />
+                <motion.path 
+                  d="M 300,250 C 350,230 380,220 400,200" 
+                  stroke="rgba(255,255,255,0.1)" 
+                  strokeWidth="1" 
+                  fill="none"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.5 }}
+                  transition={{ duration: 1.5, delay: 1.6 }}
+                />
+              </svg>
+            </div>
+          </div>
+          
+          {/* Use Case Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {useCases.map((useCase, index) => (
               <motion.div
