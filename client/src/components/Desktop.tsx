@@ -77,22 +77,13 @@ const Desktop: React.FC = () => {
   const backgroundPattern = useThemeStore(state => state.backgroundPattern);
   const activePreset = useThemeStore(state => state.activePreset);
 
-  // Generate background gradient based on current theme and accent
-  const getBackgroundGradient = () => {
-    const isDark = currentTheme === 'dark';
-    
-    // Apply pure black/white backgrounds when using specific mode
-    if (isDark) {
-      // Pure black background for dark theme
-      return 'bg-black';
-    } else {
-      // Pure white background for light theme
-      return 'bg-white';
-    }
+  // Apply background color based on theme
+  const getBackgroundClass = () => {
+    return 'bg-background'; // We'll use the CSS variable defined in our theme
   };
 
   return (
-    <div className={`panion-desktop overflow-auto min-h-screen ${getBackgroundGradient()}`}>
+    <div className={`panion-desktop overflow-auto min-h-screen ${getBackgroundClass()}`}>
       {/* Background Decoration */}
       <div className="absolute inset-0 w-full h-full pointer-events-none">
         {/* Background patterns based on theme settings */}
@@ -108,7 +99,7 @@ const Desktop: React.FC = () => {
         
         {/* Theme name indicator for non-system themes */}
         {activePreset !== 'system' && (
-          <div className="absolute bottom-20 right-6 text-xs text-white/30 font-mono">
+          <div className="absolute bottom-20 right-6 text-xs font-mono dark:text-white/30 text-black/30">
             Theme: {useThemeStore.getState().getThemePresets()[activePreset].displayName}
           </div>
         )}

@@ -32,16 +32,26 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // Set accent color
     document.documentElement.setAttribute('data-accent', accent);
     
+    // Set theme preset for custom styling
+    document.documentElement.setAttribute('data-theme', activePreset);
+    
     // Update meta theme-color for mobile browsers
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute(
-        'content', 
-        currentTheme === 'dark' ? '#1a1245' : '#ffffff'
-      );
+      // Custom theme colors
+      let themeColor = currentTheme === 'dark' ? '#000000' : '#ffffff';
+      
+      // Specialty theme colors
+      if (activePreset === 'twilight') themeColor = '#211042';
+      if (activePreset === 'ocean') themeColor = '#0c2237';
+      if (activePreset === 'forest') themeColor = '#0c2714';
+      if (activePreset === 'sunset') themeColor = '#fff5eb';
+      if (activePreset === 'candy') themeColor = '#fff0f7';
+      
+      metaThemeColor.setAttribute('content', themeColor);
     }
     
-  }, [mode, accent, getCurrentTheme, systemPrefersDark]);
+  }, [mode, accent, activePreset, getCurrentTheme, systemPrefersDark]);
   
   // Listen for system preference changes
   useEffect(() => {
