@@ -73,52 +73,87 @@ const Desktop: React.FC = () => {
   // Get current theme settings
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accent = useThemeStore(state => state.accent);
-  const mode = useThemeStore(state => state.mode);
   const backgroundPattern = useThemeStore(state => state.backgroundPattern);
   const activePreset = useThemeStore(state => state.activePreset);
 
-  // Apply background color based on theme
-  const getBackgroundClass = () => {
-    return 'bg-background'; // We'll use the CSS variable defined in our theme
+  // Generate background gradient based on current theme and accent
+  const getBackgroundGradient = () => {
+    const isDark = currentTheme === 'dark';
+    
+    switch (accent) {
+      case 'purple':
+        return isDark 
+          ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
+          : 'bg-gradient-to-br from-purple-100 via-purple-50/80 to-white/90';
+      case 'blue':
+        return isDark 
+          ? 'bg-gradient-to-br from-blue-950 via-[#0a1a2f] to-[#0c1827]' 
+          : 'bg-gradient-to-br from-blue-100 via-blue-50/80 to-white/90';
+      case 'green':
+        return isDark 
+          ? 'bg-gradient-to-br from-green-950 via-[#0f2922] to-[#0c211c]' 
+          : 'bg-gradient-to-br from-green-100 via-green-50/80 to-white/90';
+      case 'orange':
+        return isDark 
+          ? 'bg-gradient-to-br from-orange-950 via-[#261409] to-[#1f1107]' 
+          : 'bg-gradient-to-br from-orange-100 via-orange-50/80 to-white/90';
+      case 'pink':
+        return isDark 
+          ? 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]' 
+          : 'bg-gradient-to-br from-pink-100 via-pink-50/80 to-white/90';
+      default:
+        return isDark 
+          ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
+          : 'bg-gradient-to-br from-purple-100 via-purple-50/80 to-white/90';
+    }
   };
 
   return (
-    <div className={`panion-desktop overflow-auto min-h-screen ${getBackgroundClass()}`}>
+    <div className={`panion-desktop overflow-auto min-h-screen ${getBackgroundGradient()}`}>
       {/* Background Decoration */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none">
-        {/* Background patterns based on theme settings */}
+      <div className="absolute inset-0 w-full h-full">
+        {/* Background pattern based on theme setting */}
         {backgroundPattern === 'grid' && (
-          <div className="absolute inset-0 bg-grid-white/5 opacity-50"></div>
-        )}
-        {backgroundPattern === 'dots' && (
-          <div className="absolute inset-0 bg-dots-white/5 opacity-50"></div>
-        )}
-        {backgroundPattern === 'waves' && (
-          <div className="absolute inset-0 bg-waves-white/5 opacity-50"></div>
+          <div className={`absolute inset-0 w-full h-full ${
+            currentTheme === 'dark' ? 'bg-grid-white/5' : 'bg-[url("data:image/svg+xml,%3csvg_xmlns=%27http://www.w3.org/2000/svg%27_viewBox=%270_0_32_32%27_width=%2732%27_height=%2732%27_fill=%27none%27_stroke=%27rgb(0_0_0_/_0.05)%27%3e%3cpath_d=%27M0_.5H31.5V32%27/%3e%3c/svg%3e")]'
+          }`}></div>
         )}
         
-        {/* Theme-specific visual elements */}
-        {activePreset === 'twilight' && (
-          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-purple-700/30 to-transparent opacity-20"></div>
+        {backgroundPattern === 'dots' && (
+          <div className={`absolute inset-0 w-full h-full ${
+            currentTheme === 'dark' 
+              ? 'bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[length:20px_20px]' 
+              : 'bg-[radial-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[length:20px_20px]'
+          }`}></div>
         )}
-        {activePreset === 'ocean' && (
-          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-cyan-700/20 to-transparent opacity-20"></div>
+        
+        {backgroundPattern === 'waves' && (
+          <div className={`absolute inset-0 w-full h-full ${
+            currentTheme === 'dark' 
+              ? 'bg-[url("data:image/svg+xml,%3Csvg_width=%27100%25%27_height=%27100%25%27_viewBox=%270_0_1200_800%27_xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cdefs%3E%3ClinearGradient_id=%27a%27_gradientUnits=%27userSpaceOnUse%27_x1=%27600%27_y1=%27850%27_x2=%27600%27_y2=%27100%27%3E%3Cstop_offset=%270%27_stop-color=%27%23ffffff%27_stop-opacity=%270%27/%3E%3Cstop_offset=%271%27_stop-color=%27%23ffffff%27_stop-opacity=%270.05%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath_fill=%27url(%23a)%27_d=%27M0_0v800c175-125_350-125_525_0s350_125_525_0c175-125_350-125_525_0V0H0z%27/%3E%3C/svg%3E")]' 
+              : 'bg-[url("data:image/svg+xml,%3Csvg_width=%27100%25%27_height=%27100%25%27_viewBox=%270_0_1200_800%27_xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cdefs%3E%3ClinearGradient_id=%27a%27_gradientUnits=%27userSpaceOnUse%27_x1=%27600%27_y1=%27850%27_x2=%27600%27_y2=%27100%27%3E%3Cstop_offset=%270%27_stop-color=%27%23000000%27_stop-opacity=%270%27/%3E%3Cstop_offset=%271%27_stop-color=%27%23000000%27_stop-opacity=%270.03%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath_fill=%27url(%23a)%27_d=%27M0_0v800c175-125_350-125_525_0s350_125_525_0c175-125_350-125_525_0V0H0z%27/%3E%3C/svg%3E")]'
+          }`}></div>
         )}
-        {activePreset === 'forest' && (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(0,100,0,0.15)_0%,transparent_50%)]"></div>
-        )}
-        {activePreset === 'sunset' && (
-          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-orange-300/10 blur-3xl -z-10"></div>
-        )}
-        {activePreset === 'candy' && (
-          <div className="absolute top-20 left-20 w-80 h-80 rounded-full bg-pink-200/15 blur-3xl -z-10"></div>
-        )}
+        
+        {/* Add subtle glow effect with accent color */}
+        <div className={`absolute top-0 left-1/4 w-1/2 h-80 rounded-full blur-3xl ${
+          currentTheme === 'dark' 
+            ? accent === 'purple' ? 'bg-purple-900/20' 
+              : accent === 'blue' ? 'bg-blue-900/20'
+                : accent === 'green' ? 'bg-green-900/20'
+                  : accent === 'orange' ? 'bg-orange-900/20'
+                    : 'bg-pink-900/20'
+            : accent === 'purple' ? 'bg-purple-200/40' 
+              : accent === 'blue' ? 'bg-blue-200/40'
+                : accent === 'green' ? 'bg-green-200/40'
+                  : accent === 'orange' ? 'bg-orange-200/40'
+                    : 'bg-pink-200/40'
+        }`}></div>
         
         {/* Theme name indicator for non-system themes */}
         {activePreset !== 'system' && (
-          <div className="absolute bottom-8 right-8 text-xs font-mono px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 dark:text-white/70 text-foreground/70 backdrop-blur-sm shadow-sm">
-            <span className="mr-2 inline-block w-2 h-2 rounded-full bg-primary"></span>
-            {useThemeStore.getState().getThemePresets()[activePreset].displayName}
+          <div className="absolute bottom-20 right-6 text-xs text-white/30 font-mono">
+            Theme: {useThemeStore.getState().getThemePresets()[activePreset].displayName}
           </div>
         )}
       </div>

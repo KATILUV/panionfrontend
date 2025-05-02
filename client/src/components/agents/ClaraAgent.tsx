@@ -41,7 +41,7 @@ const ClaraAgent: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col items-center bg-transparent p-4">
+    <div className="h-full flex flex-col items-center bg-gradient-to-b from-transparent to-black/30 p-4">
       <div className="w-full max-w-full flex flex-col h-full">
         {/* Header */}
         <div className="text-center mb-2">

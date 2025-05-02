@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useThemeStore, ThemeMode, ThemeAccent, ThemePreset } from '../../state/themeStore';
+import { useThemeStore, ThemeMode, ThemeAccent } from '../../state/themeStore';
 import { useToast } from '@/hooks/use-toast';
 
 interface ThemeProviderProps {
@@ -9,7 +9,6 @@ interface ThemeProviderProps {
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const mode = useThemeStore(state => state.mode);
   const accent = useThemeStore(state => state.accent);
-  const activePreset = useThemeStore(state => state.activePreset);
   const setSystemPreference = useThemeStore(state => state.setSystemPreference);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const systemPrefersDark = useThemeStore(state => state.systemPrefersDark);
@@ -32,26 +31,16 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // Set accent color
     document.documentElement.setAttribute('data-accent', accent);
     
-    // Set theme preset for custom styling
-    document.documentElement.setAttribute('data-theme', activePreset);
-    
     // Update meta theme-color for mobile browsers
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      // Custom theme colors
-      let themeColor = currentTheme === 'dark' ? '#000000' : '#ffffff';
-      
-      // Specialty theme colors
-      if (activePreset === 'twilight') themeColor = '#211042';
-      if (activePreset === 'ocean') themeColor = '#0c2237';
-      if (activePreset === 'forest') themeColor = '#0c2714';
-      if (activePreset === 'sunset') themeColor = '#fff5eb';
-      if (activePreset === 'candy') themeColor = '#fff0f7';
-      
-      metaThemeColor.setAttribute('content', themeColor);
+      metaThemeColor.setAttribute(
+        'content', 
+        currentTheme === 'dark' ? '#1a1245' : '#ffffff'
+      );
     }
     
-  }, [mode, accent, activePreset, getCurrentTheme, systemPrefersDark]);
+  }, [mode, accent, getCurrentTheme, systemPrefersDark]);
   
   // Listen for system preference changes
   useEffect(() => {

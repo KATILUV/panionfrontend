@@ -277,10 +277,10 @@ const Window: React.FC<WindowProps> = ({
       className={getSnapIndicatorClass()}
     >
       <motion.div 
-        className={`flex flex-col rounded-lg backdrop-blur-lg h-full overflow-hidden
+        className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border overflow-hidden
           ${isActive 
-            ? 'border border-primary/40 bg-card/95 dark:active-window-glow shadow-lg' 
-            : 'border border-border/60 bg-card/80 shadow-md dark:shadow-black/20'
+            ? 'border-primary/40 bg-white/10 dark:bg-black/20' 
+            : 'border-white/20 bg-white/5 dark:bg-black/10'
           }
         `}
         initial={{ opacity: 0, scale: 0.95, y: -10 }}
@@ -330,17 +330,14 @@ const Window: React.FC<WindowProps> = ({
         </AnimatePresence>
         
         <div 
-          className="window-drag-handle flex items-center justify-between px-4 h-10 cursor-move bg-primary text-primary-foreground"
+          className="window-drag-handle flex items-center justify-between px-4 h-10 cursor-move bg-black/30"
           onDoubleClick={toggleMaximize}
         >
-          <div className="font-medium truncate flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary-foreground/70"></span>
-            {title}
-          </div>
+          <div className="font-medium text-white truncate">{title}</div>
           <motion.div className="flex items-center space-x-2">
             <motion.button 
               onClick={onMinimize}
-              className="p-1 text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/20 rounded"
+              className="p-1 text-white/90 hover:text-white hover:bg-white/30 rounded"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -348,7 +345,7 @@ const Window: React.FC<WindowProps> = ({
             </motion.button>
             <motion.button 
               onClick={toggleMaximize}
-              className="p-1 text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/20 rounded"
+              className="p-1 text-white/90 hover:text-white hover:bg-white/30 rounded"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -356,7 +353,7 @@ const Window: React.FC<WindowProps> = ({
             </motion.button>
             <motion.button 
               onClick={onClose}
-              className="p-1 text-primary-foreground/90 hover:text-white hover:bg-red-600 rounded"
+              className="p-1 text-white/90 hover:text-white hover:bg-red-600 rounded"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}

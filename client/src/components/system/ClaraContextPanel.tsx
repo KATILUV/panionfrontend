@@ -81,103 +81,103 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
     return () => clearInterval(contextChangeInterval);
   }, [active]);
   
+  if (!active) return null;
+  
   return (
     <AnimatePresence>
-      {active && (
-        <motion.div 
-          className={`fixed bottom-20 left-4 text-xs rounded-lg backdrop-blur-xl border overflow-hidden z-40 ${
+      <motion.div 
+        className={`fixed bottom-20 left-4 text-xs rounded-lg backdrop-blur-xl border overflow-hidden z-40 ${
+          getCurrentTheme() === 'dark' 
+            ? 'bg-black/70 border-purple-500/30' 
+            : 'bg-white/95 border-purple-200'
+        } ${className}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        transition={{ duration: 0.2 }}
+      >
+        <div 
+          className={`p-2 cursor-pointer transition-colors ${
             getCurrentTheme() === 'dark' 
-              ? 'bg-black/70 border-purple-500/30' 
-              : 'bg-white/95 border-purple-200'
-          } ${className}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.2 }}
+              ? 'hover:bg-purple-800/30 border-b border-purple-500/20' 
+              : 'hover:bg-purple-100 border-b border-purple-100'
+          }`}
+          onClick={() => setExpanded(!expanded)}
         >
-          <div 
-            className={`p-2 cursor-pointer transition-colors ${
+          <div className="flex items-center">
+            <div className="text-xl mr-2">{currentTone}</div>
+            <div className={`font-medium ${
               getCurrentTheme() === 'dark' 
-                ? 'hover:bg-purple-800/30 border-b border-purple-500/20' 
-                : 'hover:bg-purple-100 border-b border-purple-100'
-            }`}
-            onClick={() => setExpanded(!expanded)}
-          >
-            <div className="flex items-center">
-              <div className="text-xl mr-2">{currentTone}</div>
-              <div className={`font-medium ${
+                ? 'text-white' 
+                : 'text-gray-800'
+            }`}>Clara's Context</div>
+          </div>
+        </div>
+        
+        {expanded && (
+          <div className={`px-3 pb-3 space-y-2 ${
+            getCurrentTheme() === 'dark' 
+              ? 'bg-black/30' 
+              : 'bg-purple-50/50'
+          }`}>
+            <div className="space-y-1">
+              <div className={`flex items-center ${
                 getCurrentTheme() === 'dark' 
-                  ? 'text-white' 
-                  : 'text-gray-800'
-              }`}>Clara's Context</div>
+                  ? 'text-green-300' 
+                  : 'text-green-600'
+              }`}>
+                <Target className="w-3 h-3 mr-1" /> 
+                <span className="text-xs uppercase font-semibold">Current Goal</span>
+              </div>
+              <div className={`text-xs pl-4 ${
+                getCurrentTheme() === 'dark' 
+                  ? 'text-white/80' 
+                  : 'text-gray-700'
+              }`}>{currentGoal || "No specific goal"}</div>
+            </div>
+            
+            {currentMemory && (
+              <div className="space-y-1">
+                <div className={`flex items-center ${
+                  getCurrentTheme() === 'dark' 
+                    ? 'text-blue-300' 
+                    : 'text-blue-600'
+                }`}>
+                  <Database className="w-3 h-3 mr-1" /> 
+                  <span className="text-xs uppercase font-semibold">Relevant Memory</span>
+                </div>
+                <div className={`text-xs pl-4 ${
+                  getCurrentTheme() === 'dark' 
+                    ? 'text-white/80' 
+                    : 'text-gray-700'
+                }`}>{currentMemory}</div>
+              </div>
+            )}
+            
+            <div className="space-y-1">
+              <div className={`flex items-center ${
+                getCurrentTheme() === 'dark' 
+                  ? 'text-purple-300' 
+                  : 'text-purple-600'
+              }`}>
+                <Sparkles className="w-3 h-3 mr-1" /> 
+                <span className="text-xs uppercase font-semibold">Current Tone</span>
+              </div>
+              <div className={`text-xs pl-4 ${
+                getCurrentTheme() === 'dark' 
+                  ? 'text-white/80' 
+                  : 'text-gray-700'
+              }`}>
+                {currentTone === "🤔" && "Thinking"}
+                {currentTone === "💡" && "Insightful"}
+                {currentTone === "❤️" && "Supportive"}
+                {currentTone === "✨" && "Creative"}
+                {currentTone === "🔍" && "Analytical"}
+              </div>
             </div>
           </div>
-          
-          {expanded && (
-            <div className={`px-3 pb-3 space-y-2 ${
-              getCurrentTheme() === 'dark' 
-                ? 'bg-black/30' 
-                : 'bg-purple-50/50'
-            }`}>
-              <div className="space-y-1">
-                <div className={`flex items-center ${
-                  getCurrentTheme() === 'dark' 
-                    ? 'text-green-300' 
-                    : 'text-green-600'
-                }`}>
-                  <Target className="w-3 h-3 mr-1" /> 
-                  <span className="text-xs uppercase font-semibold">Current Goal</span>
-                </div>
-                <div className={`text-xs pl-4 ${
-                  getCurrentTheme() === 'dark' 
-                    ? 'text-white/80' 
-                    : 'text-gray-700'
-                }`}>{currentGoal || "No specific goal"}</div>
-              </div>
-              
-              {currentMemory && (
-                <div className="space-y-1">
-                  <div className={`flex items-center ${
-                    getCurrentTheme() === 'dark' 
-                      ? 'text-blue-300' 
-                      : 'text-blue-600'
-                  }`}>
-                    <Database className="w-3 h-3 mr-1" /> 
-                    <span className="text-xs uppercase font-semibold">Relevant Memory</span>
-                  </div>
-                  <div className={`text-xs pl-4 ${
-                    getCurrentTheme() === 'dark' 
-                      ? 'text-white/80' 
-                      : 'text-gray-700'
-                  }`}>{currentMemory}</div>
-                </div>
-              )}
-              
-              <div className="space-y-1">
-                <div className={`flex items-center ${
-                  getCurrentTheme() === 'dark' 
-                    ? 'text-purple-300' 
-                    : 'text-purple-600'
-                }`}>
-                  <Sparkles className="w-3 h-3 mr-1" /> 
-                  <span className="text-xs uppercase font-semibold">Current Tone</span>
-                </div>
-                <div className={`text-xs pl-4 ${
-                  getCurrentTheme() === 'dark' 
-                    ? 'text-white/80' 
-                    : 'text-gray-700'
-                }`}>
-                  {currentTone === "🤔" && "Thinking"}
-                  {currentTone === "💡" && "Insightful"}
-                  {currentTone === "❤️" && "Supportive"}
-                  {currentTone === "✨" && "Creative"}
-                  {currentTone === "🔍" && "Analytical"}
-                </div>
-              </div>
-            </div>
-          )}
-        </motion.div>
-      )}
+        )}
+      </motion.div>
     </AnimatePresence>
   );
 };

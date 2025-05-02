@@ -137,7 +137,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
         {children}
       </DialogTrigger>
       <DialogContent 
-        className={`sm:max-w-[500px] backdrop-blur-xl ${
+        className={`sm:max-w-[425px] backdrop-blur-xl ${
           getCurrentTheme() === 'dark' 
             ? 'bg-black/70 border border-purple-500/30 text-white' 
             : 'bg-white/95 border border-purple-200 text-gray-900'
@@ -160,315 +160,133 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
           </p>
         </DialogHeader>
         
-        <Tabs value={currentTab} onValueChange={setCurrentTab} className="mt-2">
-          <TabsList className={`grid w-full grid-cols-2 ${
-            getCurrentTheme() === 'dark' ? 'bg-black/30' : 'bg-purple-100/50'
+        {/* Theme mode selector */}
+        <div className="space-y-6 my-2">
+          <div className={`p-4 rounded-lg ${
+            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
           }`}>
-            <TabsTrigger 
-              value="presets" 
-              className={`${
-                getCurrentTheme() === 'dark' 
-                  ? 'data-[state=active]:bg-purple-900/50 data-[state=active]:text-white' 
-                  : 'data-[state=active]:bg-purple-100 data-[state=active]:text-purple-900'
-              }`}
-            >
-              Theme Presets
-            </TabsTrigger>
-            <TabsTrigger 
-              value="custom" 
-              className={`${
-                getCurrentTheme() === 'dark' 
-                  ? 'data-[state=active]:bg-purple-900/50 data-[state=active]:text-white' 
-                  : 'data-[state=active]:bg-purple-100 data-[state=active]:text-purple-900'
-              }`}
-            >
-              Custom Theme
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Theme Presets Tab */}
-          <TabsContent value="presets" className="space-y-4 mt-4">
-            <div className={`p-4 rounded-lg ${
-              getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
-            }`}>
-              <h3 className="text-lg font-medium mb-3">Select a Theme</h3>
-              <p className="mb-4 text-sm opacity-80">Choose from these curated themes to instantly change the look and feel.</p>
-              
-              <div className="grid grid-cols-1 gap-3">
-                {Object.entries(getThemePresets()).map(([id, preset]) => (
-                  <button
-                    key={id}
-                    className={`flex items-center gap-3 p-3 rounded-md border transition-colors text-left ${
-                      activePreset === id 
-                        ? getCurrentTheme() === 'dark'
-                          ? 'bg-purple-800/50 border-purple-500/50' 
-                          : 'bg-purple-100 border-purple-300'
-                        : getCurrentTheme() === 'dark'
-                          ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 hover:border-gray-600/40' 
-                          : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 hover:border-purple-200'
-                    }`}
-                    onClick={() => handleThemePresetChange(id as ThemePreset)}
-                  >
-                    <div className={`w-10 h-10 rounded-md flex items-center justify-center relative border ${
-                      preset.mode === 'dark'
-                        ? 'bg-slate-900 border-slate-700'
-                        : preset.mode === 'light'
-                          ? 'bg-white border-slate-200'
-                          : systemPrefersDark 
-                            ? 'bg-slate-900 border-slate-700'
-                            : 'bg-white border-slate-200'
-                    }`}>
-                      {preset.accent === 'purple' && <div className="w-4 h-4 rounded-full bg-purple-500" />}
-                      {preset.accent === 'blue' && <div className="w-4 h-4 rounded-full bg-blue-500" />}
-                      {preset.accent === 'green' && <div className="w-4 h-4 rounded-full bg-green-500" />}
-                      {preset.accent === 'orange' && <div className="w-4 h-4 rounded-full bg-orange-500" />}
-                      {preset.accent === 'pink' && <div className="w-4 h-4 rounded-full bg-pink-500" />}
-                      
-                      {activePreset === id && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-                          <CheckCircle2 className="text-white w-3 h-3" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="font-medium">{preset.displayName}</div>
-                      <div className="text-xs opacity-70">
-                        {preset.mode === 'system' 
-                          ? `System (${systemPrefersDark ? 'Dark' : 'Light'})` 
-                          : preset.mode.charAt(0).toUpperCase() + preset.mode.slice(1)
-                        } • {preset.accent.charAt(0).toUpperCase() + preset.accent.slice(1)}
-                      </div>
-                    </div>
-                  </button>
-                ))}
+            <h3 className="text-lg font-medium mb-3">Theme Mode</h3>
+            <div className="grid grid-cols-3 gap-2">
+              <div 
+                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
+                  mode === 'light' 
+                    ? getCurrentTheme() === 'dark'
+                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
+                      : 'bg-purple-100 border-purple-300 text-purple-900'
+                    : getCurrentTheme() === 'dark'
+                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
+                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
+                }`}
+                onClick={() => handleModeChange('light')}
+              >
+                <div className="relative">
+                  <Sun className="h-5 w-5 mb-1" />
+                  {mode === 'light' && (
+                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
+                  )}
+                </div>
+                <span className="text-sm">Light</span>
               </div>
-            </div>
-          </TabsContent>
-          
-          {/* Custom Theme Tab */}
-          <TabsContent value="custom" className="space-y-4 mt-4">
-            {/* Theme mode selector */}
-            <div className={`p-4 rounded-lg ${
-              getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
-            }`}>
-              <h3 className="text-lg font-medium mb-3">Theme Mode</h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div 
-                  className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
-                    mode === 'light' 
-                      ? getCurrentTheme() === 'dark'
-                        ? 'bg-purple-800/50 border-purple-500/50 text-white' 
-                        : 'bg-purple-100 border-purple-300 text-purple-900'
-                      : getCurrentTheme() === 'dark'
-                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
-                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
-                  }`}
-                  onClick={() => handleModeChange('light')}
-                >
-                  <div className="relative">
-                    <Sun className="h-5 w-5 mb-1" />
-                    {mode === 'light' && (
-                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                    )}
-                  </div>
-                  <span className="text-sm">Light</span>
+              <div 
+                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
+                  mode === 'dark' 
+                    ? getCurrentTheme() === 'dark'
+                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
+                      : 'bg-purple-100 border-purple-300 text-purple-900'
+                    : getCurrentTheme() === 'dark'
+                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
+                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
+                }`}
+                onClick={() => handleModeChange('dark')}
+              >
+                <div className="relative">
+                  <Moon className="h-5 w-5 mb-1" />
+                  {mode === 'dark' && (
+                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
+                  )}
                 </div>
-                <div 
-                  className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
-                    mode === 'dark' 
-                      ? getCurrentTheme() === 'dark'
-                        ? 'bg-purple-800/50 border-purple-500/50 text-white' 
-                        : 'bg-purple-100 border-purple-300 text-purple-900'
-                      : getCurrentTheme() === 'dark'
-                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
-                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
-                  }`}
-                  onClick={() => handleModeChange('dark')}
-                >
-                  <div className="relative">
-                    <Moon className="h-5 w-5 mb-1" />
-                    {mode === 'dark' && (
-                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                    )}
-                  </div>
-                  <span className="text-sm">Dark</span>
-                </div>
-                <div 
-                  className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
-                    mode === 'system' 
-                      ? getCurrentTheme() === 'dark'
-                        ? 'bg-purple-800/50 border-purple-500/50 text-white' 
-                        : 'bg-purple-100 border-purple-300 text-purple-900'
-                      : getCurrentTheme() === 'dark'
-                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
-                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
-                  }`}
-                  onClick={() => handleModeChange('system')}
-                >
-                  <div className="relative">
-                    <Monitor className="h-5 w-5 mb-1" />
-                    {mode === 'system' && (
-                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                    )}
-                  </div>
-                  <span className="text-sm">System</span>
-                </div>
+                <span className="text-sm">Dark</span>
               </div>
-              
-              {/* System preference indicator */}
-              {mode === 'system' && (
-                <div className={`mt-3 p-3 rounded-md flex items-center gap-2 text-sm ${
-                  getCurrentTheme() === 'dark' ? 'bg-black/30 border border-purple-500/20' : 'bg-white/80 border border-purple-100'
-                }`}>
-                  <Info size={16} className={`flex-shrink-0 ${
-                    getCurrentTheme() === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                  }`} />
-                  <div>
-                    <span>Your system is currently set to </span>
-                    <Badge 
-                      variant="outline" 
-                      className={`ml-1 font-medium ${
-                        systemPrefersDark 
-                          ? getCurrentTheme() === 'dark' ? 'bg-purple-950/50 text-white' : 'bg-purple-900/20 text-purple-900' 
-                          : getCurrentTheme() === 'dark' ? 'bg-purple-100/20 text-white' : 'bg-purple-100 text-purple-900'
-                      }`}
-                    >
-                      {systemPrefersDark ? 'Dark Mode' : 'Light Mode'}
-                    </Badge>
-                  </div>
+              <div 
+                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
+                  mode === 'system' 
+                    ? getCurrentTheme() === 'dark'
+                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
+                      : 'bg-purple-100 border-purple-300 text-purple-900'
+                    : getCurrentTheme() === 'dark'
+                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
+                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
+                }`}
+                onClick={() => handleModeChange('system')}
+              >
+                <div className="relative">
+                  <Monitor className="h-5 w-5 mb-1" />
+                  {mode === 'system' && (
+                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
+                  )}
                 </div>
-              )}
-            </div>
-            
-            {/* Accent color selector */}
-            <div className={`p-4 rounded-lg ${
-              getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
-            }`}>
-              <h3 className="text-lg font-medium mb-3">Accent Color</h3>
-              <div className="grid grid-cols-5 gap-3">
-                {accentColors.map((color) => (
-                  <button
-                    key={color.id}
-                    className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors ${
-                      accent === color.id 
-                        ? getCurrentTheme() === 'dark'
-                          ? 'bg-purple-800/50 border-purple-500/50' 
-                          : 'bg-purple-100 border-purple-300'
-                        : getCurrentTheme() === 'dark'
-                          ? 'bg-black/20 hover:bg-black/30 border-gray-700/30' 
-                          : 'bg-white/80 hover:bg-purple-50 border-purple-100/50'
-                    }`}
-                    onClick={() => handleAccentChange(color.id)}
-                  >
-                    <div className={`w-8 h-8 rounded-full ${color.color} mb-1 relative`}>
-                      {accent === color.id && (
-                        <CheckCircle2 className="absolute -top-1 -right-1 text-white text-sm h-4 w-4" />
-                      )}
-                    </div>
-                    <span className="text-xs">{color.name}</span>
-                  </button>
-                ))}
+                <span className="text-sm">System</span>
               </div>
             </div>
             
-            {/* Background pattern selector */}
-            <div className={`p-4 rounded-lg ${
-              getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
-            }`}>
-              <h3 className="text-lg font-medium mb-3">Background Pattern</h3>
-              <div className="grid grid-cols-4 gap-3">
-                <button
-                  className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors ${
-                    backgroundPattern === 'grid' 
-                      ? getCurrentTheme() === 'dark'
-                        ? 'bg-purple-800/50 border-purple-500/50' 
-                        : 'bg-purple-100 border-purple-300'
-                      : getCurrentTheme() === 'dark'
-                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30' 
-                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50'
-                  }`}
-                  onClick={() => handleBackgroundPatternChange('grid')}
-                >
-                  <div className="relative mb-1">
-                    <Grid className="h-6 w-6" />
-                    {backgroundPattern === 'grid' && (
-                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                    )}
-                  </div>
-                  <span className="text-xs">Grid</span>
-                </button>
-                <button
-                  className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors ${
-                    backgroundPattern === 'dots' 
-                      ? getCurrentTheme() === 'dark'
-                        ? 'bg-purple-800/50 border-purple-500/50' 
-                        : 'bg-purple-100 border-purple-300'
-                      : getCurrentTheme() === 'dark'
-                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30' 
-                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50'
-                  }`}
-                  onClick={() => handleBackgroundPatternChange('dots')}
-                >
-                  <div className="relative mb-1">
-                    <CircleDashed className="h-6 w-6" />
-                    {backgroundPattern === 'dots' && (
-                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                    )}
-                  </div>
-                  <span className="text-xs">Dots</span>
-                </button>
-                <button
-                  className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors ${
-                    backgroundPattern === 'waves' 
-                      ? getCurrentTheme() === 'dark'
-                        ? 'bg-purple-800/50 border-purple-500/50' 
-                        : 'bg-purple-100 border-purple-300'
-                      : getCurrentTheme() === 'dark'
-                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30' 
-                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50'
-                  }`}
-                  onClick={() => handleBackgroundPatternChange('waves')}
-                >
-                  <div className="relative mb-1">
-                    <Waves className="h-6 w-6" />
-                    {backgroundPattern === 'waves' && (
-                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                    )}
-                  </div>
-                  <span className="text-xs">Waves</span>
-                </button>
-                <button
-                  className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors ${
-                    backgroundPattern === 'none' 
-                      ? getCurrentTheme() === 'dark'
-                        ? 'bg-purple-800/50 border-purple-500/50' 
-                        : 'bg-purple-100 border-purple-300'
-                      : getCurrentTheme() === 'dark'
-                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30' 
-                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50'
-                  }`}
-                  onClick={() => handleBackgroundPatternChange('none')}
-                >
-                  <div className="relative mb-1">
-                    <XCircle className="h-6 w-6" />
-                    {backgroundPattern === 'none' && (
-                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                    )}
-                  </div>
-                  <span className="text-xs">None</span>
-                </button>
+            {/* System preference indicator */}
+            {mode === 'system' && (
+              <div className={`mt-3 p-3 rounded-md flex items-center gap-2 text-sm ${
+                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-purple-500/20' : 'bg-white/80 border border-purple-100'
+              }`}>
+                <Info size={16} className={`flex-shrink-0 ${
+                  getCurrentTheme() === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                }`} />
+                <div>
+                  <span>Your system is currently set to </span>
+                  <Badge 
+                    variant="outline" 
+                    className={`ml-1 font-medium ${
+                      systemPrefersDark 
+                        ? getCurrentTheme() === 'dark' ? 'bg-purple-950/50 text-white' : 'bg-purple-900/20 text-purple-900' 
+                        : getCurrentTheme() === 'dark' ? 'bg-purple-100/20 text-white' : 'bg-purple-100 text-purple-900'
+                    }`}
+                  >
+                    {systemPrefersDark ? 'Dark Mode' : 'Light Mode'}
+                  </Badge>
+                </div>
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        <DialogFooter className="flex items-center gap-2">
-          <div className="flex-1 text-sm opacity-70">
-            {activePreset !== 'system' && 
-              <span>Active theme: {getThemePresets()[activePreset].displayName}</span>
-            }
+            )}
           </div>
+          
+          {/* Accent color selector */}
+          <div className={`p-4 rounded-lg ${
+            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
+          }`}>
+            <h3 className="text-lg font-medium mb-3">Accent Color</h3>
+            <div className="grid grid-cols-5 gap-3">
+              {accentColors.map((color) => (
+                <button
+                  key={color.id}
+                  className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors ${
+                    accent === color.id 
+                      ? getCurrentTheme() === 'dark'
+                        ? 'bg-purple-800/50 border-purple-500/50' 
+                        : 'bg-purple-100 border-purple-300'
+                      : getCurrentTheme() === 'dark'
+                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30' 
+                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50'
+                  }`}
+                  onClick={() => handleAccentChange(color.id)}
+                >
+                  <div className={`w-8 h-8 rounded-full ${color.color} mb-1 relative`}>
+                    {accent === color.id && (
+                      <CheckCircle2 className="absolute -top-1 -right-1 text-white text-sm h-4 w-4" />
+                    )}
+                  </div>
+                  <span className="text-xs">{color.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        <DialogFooter>
           <DialogClose asChild>
             <Button 
               className={`${
