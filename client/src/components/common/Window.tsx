@@ -150,20 +150,12 @@ const Window: React.FC<WindowProps> = ({
     // Play snap sound when window snaps to a position
     playSnapSound();
     
-    // Update state with the new snap position
     setCurrentSnapPosition(snapPosition);
+    updateAgentPosition(id, newPosition);
     
-    // First update position with a slight delay before size for better visual effect
-    requestAnimationFrame(() => {
-      updateAgentPosition(id, newPosition);
-      
-      // Add a small delay before resizing for better animation effect
-      if (snapPosition !== 'center') {
-        setTimeout(() => {
-          updateAgentSize(id, newSize);
-        }, 50);
-      }
-    });
+    if (snapPosition !== 'center') {
+      updateAgentSize(id, newSize);
+    }
   };
   
   // Handle drag start
@@ -277,47 +269,27 @@ const Window: React.FC<WindowProps> = ({
       className={getSnapIndicatorClass()}
     >
       <motion.div 
-        className={`flex flex-col rounded-lg backdrop-blur-lg h-full border overflow-hidden
+        className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border overflow-hidden
           ${isActive 
-            ? 'border-primary/40 bg-white/10 dark:bg-black/30' 
-            : 'border-white/20 bg-white/5 dark:bg-black/20'
-          }
-          dark:shadow-[0_10px_50px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_1px_rgba(255,255,255,0.1)_inset]
-          shadow-[0_10px_50px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05),0_1px_0_rgba(255,255,255,0.6)_inset]
-          ${isActive 
-            ? 'dark:shadow-[0_20px_70px_-15px_rgba(82,0,255,0.15),0_0_0_1px_rgba(255,255,255,0.07)_inset,0_1px_1px_rgba(255,255,255,0.15)_inset]' 
-            : ''
+            ? 'border-primary/40 bg-white/10 dark:bg-black/20' 
+            : 'border-white/20 bg-white/5 dark:bg-black/10'
           }
         `}
-        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ 
           opacity: 1, 
           scale: 1,
-          y: 0,
           transition: { 
-            type: "spring",
-            damping: 25,
-            stiffness: 300,
-            duration: 0.4,
-            ease: [0.34, 1.56, 0.64, 1] // Custom cubic bezier for a more natural bounce
+            duration: 0.2,
+            ease: "easeOut"
           }
         }}
-        exit={{
-          opacity: 0,
-          scale: 0.95,
-          y: 20,
-          transition: {
-            duration: 0.25,
-            ease: "easeInOut"
-          }
-        }}
-        layout="position"
+        layout
         transition={{
           type: "spring",
-          damping: 22,
-          stiffness: 280,
-          mass: 1.2,
-          duration: 0.35
+          damping: 20,
+          stiffness: 300,
+          duration: 0.3
         }}
       >
         {/* Snap Overlay Indicators */}
@@ -369,25 +341,11 @@ const Window: React.FC<WindowProps> = ({
           </motion.div>
         </div>
         <motion.div 
-          className={`flex-1 overflow-auto ${
-            isActive 
-              ? 'dark:bg-black/40 bg-white/70' 
-              : 'dark:bg-black/30 bg-white/50'
-          }`}
+          className="flex-1 overflow-auto"
           style={{ height: contentHeight }}
-          animate={{ 
-            opacity: 1,
-            y: 0,
-            transition: {
-              delay: 0.05, 
-              duration: 0.25,
-              ease: "easeOut" 
-            }
-          }}
-          initial={{ 
-            opacity: 0, 
-            y: 10
-          }}
+          animate={{ opacity: 1 }}
+          initial={{ opacity: 0 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
         >
           {children}
         </motion.div>

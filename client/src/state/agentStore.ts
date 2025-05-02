@@ -149,57 +149,41 @@ export const useAgentStore = create<AgentState>()(
         });
       },
 
-      minimizeAgent: (id) => {
-        // Play a subtle minimize sound
-        import('../lib/audioEffects').then(({ playSnapSound }) => playSnapSound());
-        
-        set((state) => {
-          const agent = state.windows[id];
-          if (!agent) return state;
+      minimizeAgent: (id) => set((state) => {
+        const agent = state.windows[id];
+        if (!agent) return state;
 
-          // Log the action
-          import('../state/systemLogStore').then(({ log }) => log.action(`Minimized window: ${agent.title}`));
-          
-          return {
-            windows: {
-              ...state.windows,
-              [id]: {
-                ...agent,
-                isMinimized: true
-              }
-            },
-            focusedAgentId: state.focusedAgentId === id ? null : state.focusedAgentId
-          };
-        });
-      },
+        return {
+          windows: {
+            ...state.windows,
+            [id]: {
+              ...agent,
+              isMinimized: true
+            }
+          },
+          focusedAgentId: state.focusedAgentId === id ? null : state.focusedAgentId
+        };
+      }),
 
-      restoreAgent: (id) => {
-        // Play open sound when restoring
-        import('../lib/audioEffects').then(({ playOpenSound }) => playOpenSound());
-        
-        set((state) => {
-          const agent = state.windows[id];
-          if (!agent) return state;
+      restoreAgent: (id) => set((state) => {
+        const agent = state.windows[id];
+        if (!agent) return state;
 
-          // Log the action
-          import('../state/systemLogStore').then(({ log }) => log.action(`Restored window: ${agent.title}`));
-          
-          const newZIndex = state.highestZIndex + 1;
+        const newZIndex = state.highestZIndex + 1;
 
-          return {
-            windows: {
-              ...state.windows,
-              [id]: {
-                ...agent,
-                isMinimized: false,
-                zIndex: newZIndex
-              }
-            },
-            focusedAgentId: id,
-            highestZIndex: newZIndex
-          };
-        });
-      },
+        return {
+          windows: {
+            ...state.windows,
+            [id]: {
+              ...agent,
+              isMinimized: false,
+              zIndex: newZIndex
+            }
+          },
+          focusedAgentId: id,
+          highestZIndex: newZIndex
+        };
+      }),
 
       focusAgent: (id) => set((state) => {
         const agent = state.windows[id];
