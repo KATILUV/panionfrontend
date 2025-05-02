@@ -14,8 +14,9 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
   const [currentTone, setCurrentTone] = useState<string>("🤔");
   const [expanded, setExpanded] = useState(false);
   
-  // Use accent color from theme
+  // Use theme settings
   const accent = useThemeStore(state => state.accent);
+  const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   
   // Get accent color class based on theme accent
   const getAccentClass = () => {

@@ -28,18 +28,20 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
 
   // Get icon based on log type
   const getLogIcon = (type: LogType) => {
+    const isDark = getCurrentTheme() === 'dark';
+    
     switch (type) {
       case 'thinking':
-        return <Brain className="h-4 w-4 text-purple-400" />;
+        return <Brain className={`h-4 w-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />;
       case 'memory':
-        return <Database className="h-4 w-4 text-blue-400" />;
+        return <Database className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />;
       case 'action':
-        return <PlayCircle className="h-4 w-4 text-green-400" />;
+        return <PlayCircle className={`h-4 w-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />;
       case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-400" />;
+        return <AlertCircle className={`h-4 w-4 ${isDark ? 'text-red-400' : 'text-red-600'}`} />;
       case 'info':
       default:
-        return <Info className="h-4 w-4 text-amber-400" />;
+        return <Info className={`h-4 w-4 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />;
     }
   };
 
@@ -57,13 +59,15 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
 
   // Get text color based on log type
   const getLogTextColor = (type: LogType) => {
+    const isDark = getCurrentTheme() === 'dark';
+    
     switch (type) {
-      case 'thinking': return 'text-purple-300';
-      case 'memory': return 'text-blue-300';
-      case 'action': return 'text-green-300';
-      case 'error': return 'text-red-300';
+      case 'thinking': return isDark ? 'text-purple-300' : 'text-purple-600';
+      case 'memory': return isDark ? 'text-blue-300' : 'text-blue-600';
+      case 'action': return isDark ? 'text-green-300' : 'text-green-600';
+      case 'error': return isDark ? 'text-red-300' : 'text-red-600';
       case 'info':
-      default: return 'text-amber-300';
+      default: return isDark ? 'text-amber-300' : 'text-amber-600';
     }
   };
 
@@ -193,17 +197,29 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
 
       {/* Log Content */}
       {!isMinimized && (
-        <div className="max-h-[50vh] overflow-y-auto p-2 space-y-2 bg-black/20">
+        <div className={`max-h-[50vh] overflow-y-auto p-2 space-y-2 ${
+          getCurrentTheme() === 'dark' 
+            ? 'bg-black/20' 
+            : 'bg-gray-50'
+        }`}>
           <AnimatePresence initial={false}>
             {logs.length === 0 ? (
-              <div className="text-center py-6 text-white/50 text-sm">
+              <div className={`text-center py-6 text-sm ${
+                getCurrentTheme() === 'dark' 
+                  ? 'text-white/50' 
+                  : 'text-gray-400'
+              }`}>
                 No system logs yet
               </div>
             ) : (
               logs.map((log) => (
                 <motion.div
                   key={log.id}
-                  className="flex p-2 bg-black/30 rounded-md text-xs"
+                  className={`flex p-2 rounded-md text-xs ${
+                    getCurrentTheme() === 'dark' 
+                      ? 'bg-black/30' 
+                      : 'bg-white border border-purple-100'
+                  }`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
@@ -217,11 +233,19 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
                       <span className={`${getLogTextColor(log.type)} font-medium`}>
                         {getLogEmoji(log.type)} {log.type.charAt(0).toUpperCase() + log.type.slice(1)}
                       </span>
-                      <span className="text-white/40">
+                      <span className={`${
+                        getCurrentTheme() === 'dark' 
+                          ? 'text-white/40' 
+                          : 'text-gray-400'
+                      }`}>
                         {formatTime(log.timestamp)}
                       </span>
                     </div>
-                    <p className="text-white/90 leading-snug">
+                    <p className={`leading-snug ${
+                      getCurrentTheme() === 'dark' 
+                        ? 'text-white/90' 
+                        : 'text-gray-700'
+                    }`}>
                       {log.message}
                     </p>
                   </div>
