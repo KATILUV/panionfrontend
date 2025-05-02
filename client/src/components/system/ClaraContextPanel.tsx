@@ -86,7 +86,11 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
   return (
     <AnimatePresence>
       <motion.div 
-        className={`fixed bottom-20 left-4 text-xs rounded-lg backdrop-blur-md border overflow-hidden z-40 ${getAccentClass()} ${className}`}
+        className={`fixed bottom-20 left-4 text-xs rounded-lg backdrop-blur-xl border overflow-hidden z-40 ${
+          getCurrentTheme() === 'dark' 
+            ? 'bg-black/70 border-purple-500/30' 
+            : 'bg-white/95 border-purple-200'
+        } ${className}`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
@@ -95,8 +99,8 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
         <div 
           className={`p-2 cursor-pointer transition-colors ${
             getCurrentTheme() === 'dark' 
-              ? 'hover:bg-white/5' 
-              : 'hover:bg-purple-100/50'
+              ? 'hover:bg-purple-800/30 border-b border-purple-500/20' 
+              : 'hover:bg-purple-100 border-b border-purple-100'
           }`}
           onClick={() => setExpanded(!expanded)}
         >
@@ -111,7 +115,11 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
         </div>
         
         {expanded && (
-          <div className="px-3 pb-3 space-y-2">
+          <div className={`px-3 pb-3 space-y-2 ${
+            getCurrentTheme() === 'dark' 
+              ? 'bg-black/30' 
+              : 'bg-purple-50/50'
+          }`}>
             <div className="space-y-1">
               <div className={`flex items-center ${
                 getCurrentTheme() === 'dark' 
