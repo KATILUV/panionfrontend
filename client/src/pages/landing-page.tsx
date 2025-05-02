@@ -17,26 +17,13 @@ const LandingPage: React.FC = () => {
   const featuresRef = useRef<HTMLDivElement>(null);
   const autoScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-scroll functionality for continuous scrolling
+  // This useEffect is no longer needed as we'll use CSS animations instead
   useEffect(() => {
-    // Clear any existing timer
-    if (autoScrollTimerRef.current) {
-      clearInterval(autoScrollTimerRef.current);
-    }
+    // Just for mount/unmount events and debugging
+    console.log("Marquee carousel mounted");
     
-    // Set up automatic scrolling every 1.5 seconds for more visible movement
-    autoScrollTimerRef.current = setInterval(() => {
-      setCurrentFeatureIndex((prev) => (prev + 1) % (keyFeatures.length * 2)); // Double length for continuous effect
-    }, 1500);
-    
-    // For testing, log when the scroll happens
-    console.log("Auto-scroll initialized");
-    
-    // Clean up on unmount
     return () => {
-      if (autoScrollTimerRef.current) {
-        clearInterval(autoScrollTimerRef.current);
-      }
+      console.log("Marquee carousel unmounted");
     };
   }, []);
   
@@ -579,44 +566,64 @@ const LandingPage: React.FC = () => {
           
           <div className="max-w-5xl mx-auto" ref={featuresRef}>
             
-            {/* Continuous scrolling cards display */}
-            <div className="overflow-hidden relative px-6 my-4">
+            {/* Marquee-style continuous scrolling with pause on hover - showing 3 at a time */}
+            <div className="overflow-hidden relative px-6 my-4 pause-on-hover">
               <div className="relative h-80">
-                <div 
-                  className="flex gap-8 absolute transition-all duration-1000 ease-in-out"
-                  style={{ 
-                    transform: `translateX(calc(-${(currentFeatureIndex * 25) % 100}% - ${Math.floor(currentFeatureIndex / 4) * 100}%))`,
-                    width: "max-content" 
-                  }}
-                >
-                  {/* Double the cards to create continuous scrolling effect */}
-                  {[...keyFeatures, ...keyFeatures].map((feature, index) => (
-                    <div key={index} className="w-[300px] flex-shrink-0">
-                      <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
-                        <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
-                          <feature.icon className="w-10 h-10 text-indigo-600" />
-                        </div>
-                        <div className="text-center flex-1 flex flex-col">
-                          <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
-                          <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
-                          <p className="text-gray-600 flex-1">{feature.description}</p>
-                          <div className="mt-4 pt-4 border-t border-gray-100">
-                            <button className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
-                              Learn more
-                            </button>
+                {/* Visible container - limits to show only 3 cards */}
+                <div className="mx-auto max-w-[990px] overflow-hidden">
+                  <div className="flex animate-marquee">
+                    {/* First set of cards */}
+                    {keyFeatures.map((feature, index) => (
+                      <div key={index} className="w-[330px] flex-shrink-0 px-4">
+                        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
+                          <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
+                            <feature.icon className="w-10 h-10 text-indigo-600" />
+                          </div>
+                          <div className="text-center flex-1 flex flex-col">
+                            <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
+                            <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
+                            <p className="text-gray-600 flex-1">{feature.description}</p>
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <button className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
+                                Learn more
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                    
+                    {/* Duplicate set for seamless looping */}
+                    {keyFeatures.map((feature, index) => (
+                      <div key={`dup-${index}`} className="w-[330px] flex-shrink-0 px-4">
+                        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
+                          <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
+                            <feature.icon className="w-10 h-10 text-indigo-600" />
+                          </div>
+                          <div className="text-center flex-1 flex flex-col">
+                            <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
+                            <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
+                            <p className="text-gray-600 flex-1">{feature.description}</p>
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <button className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
+                                Learn more
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
             
-            {/* Auto-scroll indicator */}
+            {/* Auto-scroll indicator with pause instructions */}
             <div className="flex justify-center mt-4">
-              <div className="px-4 py-2 bg-indigo-100 rounded-full text-indigo-700 text-xs font-medium">
-                Auto-scrolling cards
+              <div className="px-4 py-2 bg-indigo-100 rounded-full text-indigo-700 text-xs font-medium flex items-center">
+                <span>Auto-scrolling cards</span>
+                <span className="mx-2">•</span>
+                <span>Hover to pause</span>
               </div>
             </div>
           </div>

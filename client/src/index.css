@@ -4,6 +4,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Marquee animation for continuous scrolling */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%); /* Only animate to half since we have duplicate */
+  }
+}
+
+.animate-marquee {
+  animation: marquee 15s linear infinite;
+}
+
+.pause-on-hover:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
 :root {
     /* Base theme */
     --radius: 0.5rem;
