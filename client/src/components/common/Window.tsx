@@ -271,10 +271,14 @@ const Window: React.FC<WindowProps> = ({
       className={getSnapIndicatorClass()}
     >
       <motion.div 
-        className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border overflow-hidden
-          ${isActive 
-            ? 'border-primary/40 bg-white/15 dark:bg-black/25' 
-            : 'border-white/20 bg-white/10 dark:bg-black/15'
+        className={`flex flex-col rounded-lg backdrop-blur-lg h-full overflow-hidden
+          ${getCurrentTheme() === 'dark'
+            ? isActive 
+              ? 'border border-primary/40 bg-black/25 shadow-xl' 
+              : 'border border-white/20 bg-black/15 shadow-lg'
+            : isActive 
+              ? 'border border-primary/30 bg-white/80 shadow-md' 
+              : 'border border-gray-200/70 bg-white/70 shadow'
           }
         `}
         initial={{ opacity: 0, scale: 0.9 }}
@@ -311,11 +315,13 @@ const Window: React.FC<WindowProps> = ({
         
         <div 
           className={`window-drag-handle flex items-center justify-between px-4 h-10 cursor-move ${
-            isActive 
-              ? 'bg-gradient-to-r from-primary/80 to-primary/50' 
-              : getCurrentTheme() === 'dark'
-                ? 'bg-black/40'
-                : 'bg-gray-300/70'
+            getCurrentTheme() === 'dark'
+              ? isActive 
+                ? 'bg-gradient-to-r from-primary/80 to-primary/50' 
+                : 'bg-black/40'
+              : isActive 
+                ? 'bg-gradient-to-r from-primary/20 to-primary/10 border-b border-primary/20' 
+                : 'bg-gray-100/80 border-b border-gray-200/50'
           }`}
           onDoubleClick={toggleMaximize}
         >

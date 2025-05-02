@@ -72,7 +72,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const getTaskbarBgClass = () => {
     return getCurrentTheme() === 'dark'
       ? 'bg-black/30 border-white/10'
-      : 'bg-white/20 border-gray-200/20 text-gray-800';
+      : 'bg-white/60 border-gray-100 shadow-sm text-gray-800';
   };
   
   return (
@@ -89,8 +89,12 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
               className={`
                 p-2 rounded-md transition-all duration-200 relative
                 ${isOpen && !isMinimized 
-                  ? getCurrentTheme() === 'dark' ? 'bg-white/20' : 'bg-black/10' 
-                  : 'bg-transparent hover:bg-white/10'
+                  ? getCurrentTheme() === 'dark' 
+                    ? 'bg-white/20' 
+                    : 'bg-black/5 shadow-sm' 
+                  : getCurrentTheme() === 'dark'
+                    ? 'bg-transparent hover:bg-white/10'
+                    : 'bg-transparent hover:bg-black/5 hover:shadow-sm'
                 }
                 ${isOpen 
                   ? 'after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-1/3 after:h-0.5 ' + 
@@ -117,12 +121,14 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           variant="ghost" 
           size="sm"
           onClick={toggleSystemLog}
-          className={`h-10 px-3 flex items-center space-x-2 ${
+          className={`h-9 px-3 flex items-center space-x-2 rounded-md ${
             isSystemLogVisible 
-              ? 'text-primary ' + (getCurrentTheme() === 'dark' ? 'bg-white/10' : 'bg-black/10') 
+              ? getCurrentTheme() === 'dark'
+                ? 'text-primary bg-white/10'
+                : 'text-primary bg-primary/10 shadow-sm'
               : getCurrentTheme() === 'dark' 
                 ? 'text-white/70 hover:text-white hover:bg-white/10' 
-                : 'text-gray-800 hover:text-gray-900 hover:bg-black/10'
+                : 'text-gray-700 hover:text-gray-900 hover:bg-black/5 hover:shadow-sm'
           }`}
         >
           <Terminal size={18} />
@@ -133,10 +139,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         <Button 
           variant="ghost" 
           size="sm"
-          className={`h-10 px-3 flex items-center space-x-2 ${
+          className={`h-9 px-3 flex items-center space-x-2 rounded-md ${
             getCurrentTheme() === 'dark' 
               ? 'text-white/70 hover:text-white hover:bg-white/10' 
-              : 'text-gray-800 hover:text-gray-900 hover:bg-black/10'
+              : 'text-gray-700 hover:text-gray-900 hover:bg-black/5 hover:shadow-sm'
           }`}
           onClick={() => {
             console.log('Opening settings agent');
@@ -152,10 +158,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           <Button 
             variant="ghost" 
             size="sm"
-            className={`h-10 px-3 flex items-center space-x-2 ${
+            className={`h-9 px-3 flex items-center space-x-2 rounded-md ${
               getCurrentTheme() === 'dark' 
                 ? 'text-white/70 hover:text-white hover:bg-white/10' 
-                : 'text-gray-800 hover:text-gray-900 hover:bg-black/10'
+                : 'text-gray-700 hover:text-gray-900 hover:bg-black/5 hover:shadow-sm'
             }`}
           >
             <Layout size={18} />
@@ -168,7 +174,11 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           </Button>
         </LayoutManager>
         
-        <div className={`text-sm ${getCurrentTheme() === 'dark' ? 'text-white/50' : 'text-gray-600'}`}>
+        <div className={`text-xs px-2 py-1 rounded-full ${
+            getCurrentTheme() === 'dark' 
+              ? 'text-white/50 bg-white/5' 
+              : 'text-gray-600 bg-black/5'
+          }`}>
           Panion OS v0.1
         </div>
       </div>
