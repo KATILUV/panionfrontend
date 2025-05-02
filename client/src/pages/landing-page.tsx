@@ -341,7 +341,216 @@ const LandingPage: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/80 to-transparent z-10"></div>
       </section>
       
-      {/* Use Cases Section removed as requested */}
+      {/* Use Cases Section */}
+      <section className="pt-0 pb-20 md:pt-0 md:pb-32 bg-white text-gray-900">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-16 mt-10">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 text-gray-900 tracking-tight">
+              One presence. <span className="text-indigo-600">Infinite agents.</span>
+            </h2>
+            <p className="text-xl text-gray-600 mt-4">
+              See how people are using Panion to transform their work and creative processes
+            </p>
+          </div>
+          
+          {/* Visual Mockups for Use Cases */}
+          <div className="w-full overflow-hidden rounded-xl shadow-xl mb-16 border border-gray-100">
+            <div className="bg-gradient-to-br from-slate-900 to-indigo-950 aspect-[21/9] relative p-8 flex items-center overflow-hidden">
+              {/* Desktop-like mockup with multiple windows */}
+              <div className="absolute inset-0 bg-grid-white/5 bg-[length:20px_20px] opacity-20"></div>
+              
+              {/* Window 1: Creative Studio */}
+              <motion.div
+                initial={{ x: -40, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="absolute left-[10%] top-[15%] w-[30%] bg-black/80 rounded-lg overflow-hidden border border-white/10 shadow-2xl"
+              >
+                <div className="bg-black/70 h-7 border-b border-white/10 flex items-center px-3">
+                  <div className="flex items-center space-x-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="ml-4 text-xs text-white/70">Design Assistant</div>
+                </div>
+                <div className="p-3 overflow-hidden">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="h-16 rounded bg-violet-600/20 p-2">
+                      <div className="w-full h-full rounded bg-violet-500/40"></div>
+                    </div>
+                    <div className="h-16 rounded bg-indigo-600/20 p-2">
+                      <div className="w-full h-full rounded bg-indigo-500/40"></div>
+                    </div>
+                    <div className="h-16 rounded bg-purple-600/20 p-2">
+                      <div className="w-full h-full rounded bg-purple-500/40"></div>
+                    </div>
+                  </div>
+                  <div className="h-2 bg-white/20 rounded-full mt-3 mx-1"></div>
+                  <div className="h-2 bg-white/10 rounded-full mt-2 mx-1 w-3/4"></div>
+                </div>
+              </motion.div>
+              
+              {/* Window 2: Research Dashboard */}
+              <motion.div
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="absolute right-[10%] top-[25%] w-[35%] bg-black/80 rounded-lg overflow-hidden border border-white/10 shadow-2xl"
+              >
+                <div className="bg-black/70 h-7 border-b border-white/10 flex items-center px-3">
+                  <div className="flex items-center space-x-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="ml-4 text-xs text-white/70">Research Explorer</div>
+                </div>
+                <div className="p-3 overflow-hidden">
+                  <div className="flex space-x-2">
+                    <div className="w-2/3">
+                      <div className="h-3 bg-white/20 rounded-full mb-2"></div>
+                      <div className="h-3 bg-white/10 rounded-full mb-2 w-4/5"></div>
+                      <div className="h-3 bg-white/10 rounded-full mb-2"></div>
+                      <div className="h-3 bg-white/10 rounded-full mb-2 w-3/4"></div>
+                      <div className="h-3 bg-white/10 rounded-full mb-2 w-5/6"></div>
+                    </div>
+                    <div className="w-1/3 h-20 rounded bg-indigo-600/20 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-indigo-500/40"></div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+              
+              {/* Window 3: Data Analysis */}
+              <motion.div
+                initial={{ x: 40, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.7 }}
+                className="absolute left-[25%] bottom-[15%] w-[28%] bg-black/80 rounded-lg overflow-hidden border border-white/10 shadow-2xl"
+              >
+                <div className="bg-black/70 h-7 border-b border-white/10 flex items-center px-3">
+                  <div className="flex items-center space-x-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="ml-4 text-xs text-white/70">Data Insights</div>
+                </div>
+                <div className="p-3 overflow-hidden">
+                  <div className="h-10 rounded bg-purple-600/20 flex items-end justify-center pb-1">
+                    <div className="w-1/6 h-3/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-5/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-4/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-full rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-2/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                    <div className="w-1/6 h-3/6 rounded-t bg-purple-500/70 mx-[2px]"></div>
+                  </div>
+                  <div className="h-2 bg-white/20 rounded-full mt-3 mx-1"></div>
+                  <div className="h-2 bg-white/10 rounded-full mt-2 mx-1 w-1/2"></div>
+                </div>
+              </motion.div>
+              
+              {/* Central orbiting connection */}
+              <motion.div 
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.5, delay: 1 }}
+              >
+                <div className="relative w-16 h-16">
+                  <motion.div 
+                    className="absolute inset-0 rounded-full bg-indigo-500/40"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div 
+                    className="absolute inset-3 rounded-full bg-violet-500/60"
+                    animate={{ scale: [1.2, 1, 1.2] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  
+                  {/* Orbiting connections */}
+                  <motion.div
+                    className="absolute w-full h-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  >
+                    <div className="absolute top-0 left-1/2 w-1 h-1 bg-white rounded-full shadow-glow"></div>
+                    <div className="absolute top-1/4 right-0 w-2 h-2 bg-white rounded-full shadow-glow"></div>
+                    <div className="absolute bottom-0 left-1/3 w-1.5 h-1.5 bg-white rounded-full shadow-glow"></div>
+                  </motion.div>
+                </div>
+              </motion.div>
+              
+              {/* Connection lines */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+                <motion.path 
+                  d="M 200,100 C 250,150 300,180 400,200" 
+                  stroke="rgba(255,255,255,0.1)" 
+                  strokeWidth="1" 
+                  fill="none"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.5 }}
+                  transition={{ duration: 1.5, delay: 1.2 }}
+                />
+                <motion.path 
+                  d="M 600,150 C 550,200 450,200 400,200" 
+                  stroke="rgba(255,255,255,0.1)" 
+                  strokeWidth="1" 
+                  fill="none"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.5 }}
+                  transition={{ duration: 1.5, delay: 1.4 }}
+                />
+                <motion.path 
+                  d="M 300,250 C 350,230 380,220 400,200" 
+                  stroke="rgba(255,255,255,0.1)" 
+                  strokeWidth="1" 
+                  fill="none"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.5 }}
+                  transition={{ duration: 1.5, delay: 1.6 }}
+                />
+              </svg>
+            </div>
+          </div>
+          
+          {/* Use Case Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {useCases.map((useCase, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 * index }}
+                className="bg-white border border-gray-100 rounded-xl p-7 flex flex-col shadow-md hover:shadow-xl transition-shadow duration-300 group"
+                whileHover={{ y: -5 }}
+              >
+                <div className={`rounded-full p-3 ${
+                  useCase.accent === 'violet' ? 'bg-violet-100' : 
+                  useCase.accent === 'indigo' ? 'bg-indigo-100' : 
+                  useCase.accent === 'purple' ? 'bg-purple-100' : 'bg-blue-100'
+                } w-fit mb-5 group-hover:shadow-md transition-all duration-300`}>
+                  <useCase.icon className={`w-7 h-7 ${
+                    useCase.accent === 'violet' ? 'text-violet-600' : 
+                    useCase.accent === 'indigo' ? 'text-indigo-600' : 
+                    useCase.accent === 'purple' ? 'text-purple-600' : 'text-blue-600'
+                  }`} />
+                </div>
+                <h3 className="text-xl font-bold mt-3 mb-3 text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">{useCase.title}</h3>
+                <div className={`w-12 h-1 ${
+                  useCase.accent === 'violet' ? 'bg-violet-500' : 
+                  useCase.accent === 'indigo' ? 'bg-indigo-500' : 
+                  useCase.accent === 'purple' ? 'bg-purple-500' : 'bg-blue-500'
+                } mb-4 rounded-full group-hover:w-16 transition-all duration-300`}></div>
+                <p className="text-gray-600 text-base leading-relaxed">{useCase.description}</p>
+                <span className="mt-auto pt-5 text-sm italic text-gray-500">{useCase.user}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
       
       {/* Agents Carousel Section */}
       <section className="py-10 md:py-16 bg-white text-gray-900 border-b border-gray-100">
