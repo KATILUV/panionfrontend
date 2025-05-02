@@ -298,7 +298,7 @@ const LandingPage: React.FC = () => {
             >
               <RotatingTagline 
                 phrases={taglinePhrases} 
-                interval={5000}
+                interval={8000}
                 className="text-xl md:text-2xl text-purple-100 font-medium leading-normal"
               />
             </motion.div>
