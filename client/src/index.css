@@ -172,17 +172,17 @@
     --accent-foreground: 355.7 100% 97.3%;
     
     /* Theme specific colors */
-    --theme-gradient-start: #7a2555;
-    --theme-gradient-end: #d4528c;
-    --theme-accent-glow: rgba(236, 158, 214, 0.5);
+    --theme-gradient-start: #982a68;
+    --theme-gradient-end: #e6589a;
+    --theme-accent-glow: rgba(246, 168, 224, 0.6);
 }
 
 .dark[data-accent="pink"] {
-    --primary: 327 73% 64%;
-    --primary-hover: 327 73% 68%;
-    --secondary: 329 60% 35%;
-    --secondary-hover: 329 60% 40%;
-    --accent: 327 73% 64%;
+    --primary: 330 80% 70%;
+    --primary-hover: 330 80% 75%;
+    --secondary: 332 65% 40%;
+    --secondary-hover: 332 65% 45%;
+    --accent: 330 80% 70%;
 }
 
 @layer base {
