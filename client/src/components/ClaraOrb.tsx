@@ -105,11 +105,12 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           ${getBorderClass()}
           overflow-hidden
           transition-all duration-300 ease-in-out
-          ${isProcessing ? 'scale-105' : ''} 
+          ${isProcessing ? 'scale-105' : ''}
+          ${!isDark ? '!border-0 !border-none' : ''}
         `}
       >
         {/* Crystal fluid container */}
-        <div className={`crystal-fluid ${isLightAccent ? 'light-fluid' : ''}`}>
+        <div className={`crystal-fluid ${isLightAccent ? 'light-fluid' : ''} ${!isDark ? '!border-0 !border-none' : ''}`}>
           {/* Pink blob */}
           <div className={`lava-blob ${
             isLightAccent

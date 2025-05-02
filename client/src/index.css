@@ -424,6 +424,31 @@
   /* No longer using the global orb-pulse animation as shadows are controlled by Tailwind classes */
 }
 
+/* Make sure no border appears in light mode */
+:root:not(.dark) .floating-orb,
+:root:not(.dark) .crystal-fluid,
+:root:not(.dark) .lava-blob {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Override all box-shadow in light mode */
+:root:not(.dark) .floating-orb {
+  box-shadow: 0 2px 8px rgba(200,200,200,0.2) !important;
+}
+
+/* Override crystal-fluid box shadow */
+:root:not(.dark) .crystal-fluid {
+  box-shadow: none !important;
+}
+
+/* Also override the pseudo-element */
+:root:not(.dark) .crystal-fluid::before {
+  box-shadow: none !important;
+  border: none !important;
+}
+
 .animate-reflection {
   animation: animate-reflection 20s linear infinite;
 }
@@ -715,6 +740,11 @@
   opacity: 0.8;
   mix-blend-mode: screen;
   box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+/* In light mode, remove any box-shadow */
+:root:not(.dark) .lava-blob {
+  box-shadow: none !important;
 }
 
 /* Pink blob */
