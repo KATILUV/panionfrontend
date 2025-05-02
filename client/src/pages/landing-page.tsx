@@ -71,7 +71,13 @@ const LandingPage: React.FC = () => {
   ];
   
   // Use case examples - removed individual cards as requested
-  const useCases = [];
+  const useCases: {
+    title: string;
+    description: string;
+    user: string;
+    icon: any;
+    accent: string;
+  }[] = [];
   
   // Agents for the carousel
   const keyFeatures = [
@@ -473,39 +479,7 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Use Case Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {useCases.map((useCase, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 * index }}
-                className="bg-white border border-gray-100 rounded-xl p-7 flex flex-col shadow-md hover:shadow-xl transition-shadow duration-300 group"
-                whileHover={{ y: -5 }}
-              >
-                <div className={`rounded-full p-3 ${
-                  useCase.accent === 'violet' ? 'bg-violet-100' : 
-                  useCase.accent === 'indigo' ? 'bg-indigo-100' : 
-                  useCase.accent === 'purple' ? 'bg-purple-100' : 'bg-blue-100'
-                } w-fit mb-5 group-hover:shadow-md transition-all duration-300`}>
-                  <useCase.icon className={`w-7 h-7 ${
-                    useCase.accent === 'violet' ? 'text-violet-600' : 
-                    useCase.accent === 'indigo' ? 'text-indigo-600' : 
-                    useCase.accent === 'purple' ? 'text-purple-600' : 'text-blue-600'
-                  }`} />
-                </div>
-                <h3 className="text-xl font-bold mt-3 mb-3 text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">{useCase.title}</h3>
-                <div className={`w-12 h-1 ${
-                  useCase.accent === 'violet' ? 'bg-violet-500' : 
-                  useCase.accent === 'indigo' ? 'bg-indigo-500' : 
-                  useCase.accent === 'purple' ? 'bg-purple-500' : 'bg-blue-500'
-                } mb-4 rounded-full group-hover:w-16 transition-all duration-300`}></div>
-                <p className="text-gray-600 text-base leading-relaxed">{useCase.description}</p>
-                <span className="mt-auto pt-5 text-sm italic text-gray-500">{useCase.user}</span>
-              </motion.div>
-            ))}
-          </div>
+          {/* Use Case Cards - Removed as requested */}
         </div>
       </section>
       
