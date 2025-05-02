@@ -101,6 +101,14 @@ const Desktop: React.FC = () => {
         return isDark 
           ? 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]' 
           : 'bg-gradient-to-br from-pink-50 via-white to-white';
+      case 'dark':
+        return isDark 
+          ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-black' 
+          : 'bg-gradient-to-br from-gray-200 via-gray-100 to-white';
+      case 'light':
+        return isDark 
+          ? 'bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800' 
+          : 'bg-gradient-to-br from-white via-gray-50 to-white';
       default:
         return isDark 
           ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 

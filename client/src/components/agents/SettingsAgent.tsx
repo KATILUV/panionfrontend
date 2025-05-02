@@ -23,7 +23,9 @@ const SettingsAgent = () => {
     { id: 'blue', name: 'Blue', color: 'bg-blue-500' },
     { id: 'green', name: 'Green', color: 'bg-green-500' },
     { id: 'orange', name: 'Orange', color: 'bg-amber-500' },
-    { id: 'pink', name: 'Pink', color: 'bg-fuchsia-400' }
+    { id: 'pink', name: 'Pink', color: 'bg-fuchsia-400' },
+    { id: 'dark', name: 'Dark', color: 'bg-gray-900' },
+    { id: 'light', name: 'Light', color: 'bg-white border border-gray-200' }
   ];
   
   const handleModeChange = (newMode: ThemeMode) => {

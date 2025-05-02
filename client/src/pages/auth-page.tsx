@@ -119,6 +119,14 @@ const AuthPage: React.FC = () => {
         return isDark 
           ? 'from-pink-950 via-background to-background' 
           : 'from-pink-100 via-pink-50 to-background';
+      case 'dark':
+        return isDark 
+          ? 'from-gray-950 via-background to-background' 
+          : 'from-gray-200 via-gray-100 to-background';
+      case 'light':
+        return isDark 
+          ? 'from-gray-800 via-background to-background' 
+          : 'from-white via-gray-50 to-background';
       default:
         return isDark 
           ? 'from-purple-950 via-background to-background' 

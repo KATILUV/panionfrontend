@@ -165,7 +165,7 @@ export const useCommandStore = create<CommandState>((set, get) => ({
       });
     });
     
-    const themeAccents: ThemeAccent[] = ['purple', 'blue', 'green', 'orange', 'pink'];
+    const themeAccents: ThemeAccent[] = ['purple', 'blue', 'green', 'orange', 'pink', 'dark', 'light'];
     themeAccents.forEach(accent => {
       commands.push({
         id: `accent-${accent}`,
