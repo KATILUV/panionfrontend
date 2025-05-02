@@ -70,51 +70,8 @@ const LandingPage: React.FC = () => {
     }
   ];
   
-  // Use case examples
-  const useCases = [
-    {
-      title: "Creative Studio Setup",
-      description: "Graphic designer Sarah created a workspace with a mood board agent, visual reference collector, and color palette generator, all working in harmony.",
-      user: "Sarah T., Graphic Designer",
-      icon: PenTool,
-      accent: "violet"
-    },
-    {
-      title: "Research Dashboard",
-      description: "Professor James built a research environment with automatic literature review, data analysis, and summary generation agents to accelerate his academic work.",
-      user: "James L., Research Scientist",
-      icon: FileText,
-      accent: "indigo"
-    },
-    {
-      title: "Data Analysis Hub",
-      description: "Data scientist Mei configured data cleaning, visualization, and insight generation agents that work together to process large datasets efficiently.",
-      user: "Mei W., Data Scientist",
-      icon: Database,
-      accent: "purple"
-    },
-    {
-      title: "Product Development Suite",
-      description: "Product manager Alex created a workspace with market research, feature prioritization, and roadmap planning agents to streamline product development.",
-      user: "Alex R., Product Manager",
-      icon: Layers,
-      accent: "blue"
-    },
-    {
-      title: "Marketing Campaign Center",
-      description: "Marketer Jordan built a campaign management environment with content creation, audience analysis, and performance tracking agents in one place.",
-      user: "Jordan K., Marketing Director",
-      icon: Presentation,
-      accent: "purple"
-    },
-    {
-      title: "Developer Workspace",
-      description: "Software engineer Miguel set up a coding environment with documentation, testing, and code review agents that collaborate on his projects.",
-      user: "Miguel S., Software Engineer",
-      icon: Code,
-      accent: "indigo"
-    }
-  ];
+  // Use case examples - removed individual cards as requested
+  const useCases = [];
   
   // Agents for the carousel
   const keyFeatures = [
