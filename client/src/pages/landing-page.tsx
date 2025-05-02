@@ -335,9 +335,9 @@ const LandingPage: React.FC = () => {
       </section>
       
       {/* Use Cases Section */}
-      <section className={`pt-0 pb-20 md:pt-0 md:pb-32 ${currentTheme === 'dark' ? 'bg-background text-foreground' : 'bg-white text-gray-900'}`}>
+      <section className={`pt-0 pb-12 md:pt-0 md:pb-16 ${currentTheme === 'dark' ? 'bg-background text-foreground' : 'bg-white text-gray-900'}`}>
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center mb-16 mt-10">
+          <div className="max-w-3xl mx-auto text-center mb-8 mt-6">
             <h2 className={`text-4xl md:text-6xl font-bold mb-6 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'} tracking-tight`}>
               One presence. <span className="text-purple-600">Infinite agents.</span>
             </h2>
@@ -347,7 +347,7 @@ const LandingPage: React.FC = () => {
           </div>
           
           {/* Visual Mockups for Use Cases */}
-          <div className="w-full overflow-hidden rounded-xl shadow-xl mb-16 border border-gray-100">
+          <div className="w-full overflow-hidden rounded-xl shadow-xl mb-8 border border-gray-100">
             <div className="bg-gradient-to-br from-slate-900 to-purple-950 aspect-[21/9] relative p-8 flex items-center overflow-hidden">
               {/* Desktop-like mockup with multiple windows */}
               <div className="absolute inset-0 bg-grid-white/5 bg-[length:20px_20px] opacity-20"></div>
@@ -514,7 +514,7 @@ const LandingPage: React.FC = () => {
       </section>
       
       {/* Agents Carousel Section */}
-      <section className={`py-10 md:py-16 ${currentTheme === 'dark' ? 'bg-background text-foreground border-gray-800' : 'bg-white text-gray-900 border-gray-100'} border-b`}>
+      <section className={`py-6 md:py-10 ${currentTheme === 'dark' ? 'bg-background text-foreground border-gray-800' : 'bg-white text-gray-900 border-gray-100'} border-b`}>
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-8">
             <h2 className={`text-2xl md:text-3xl font-bold mb-4 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
