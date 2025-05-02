@@ -37,47 +37,59 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
     console.log("Background component - accent color:", accent);
   }, [accent]);
   
-  // This is a simpler approach - get direct background color based on theme and accent
-  const getBackgroundColor = () => {
+  // Using linear-gradient backgrounds for all accents
+  const getBackgroundGradient = () => {
     // Force extreme values for dark and light accents
     if (accent === 'dark') {
-      // Always use pure black for dark accent regardless of theme mode
-      return '#000000'; // Pure black
+      // Always use black gradient for dark accent regardless of theme mode
+      return 'linear-gradient(135deg, #000000, #141414, #000000)';
     }
     if (accent === 'light') {
-      // Always use pure white for light accent regardless of theme mode
-      return '#ffffff'; // Pure white
+      // Always use white gradient for light accent regardless of theme mode
+      return 'linear-gradient(135deg, #ffffff, #f4f4f4, #ffffff)';
     }
     
-    // For other accents, fall back to existing gradient styles
+    // For other accents, use attractive gradients
     const isDark = currentTheme === 'dark';
     
     switch (accent) {
       case 'purple':
-        return isDark ? '#1a1245' : '#f9f7ff'; 
+        return isDark 
+          ? 'linear-gradient(135deg, #1a1245 0%, #2e1f6f 50%, #4728a7 75%, #1a1245 100%)' 
+          : 'linear-gradient(135deg, #f9f7ff 0%, #ffffff 50%, #f9f7ff 100%)'; 
       case 'blue':
-        return isDark ? '#0a1a2f' : '#f0f9ff';
+        return isDark 
+          ? 'linear-gradient(135deg, #0a1a2f 0%, #0f3460 50%, #2563eb 75%, #0a1a2f 100%)' 
+          : 'linear-gradient(135deg, #f0f9ff 0%, #ffffff 50%, #f0f9ff 100%)';
       case 'green':
-        return isDark ? '#0f2922' : '#f0fdf4';
-      case 'orange':
-        return isDark ? '#0a0a0a' : '#fff7ed';
+        return isDark 
+          ? 'linear-gradient(135deg, #0f2922 0%, #10543f 50%, #15b981 75%, #0f2922 100%)' 
+          : 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #f0fdf4 100%)';
+      case 'orange': // now black
+        return isDark 
+          ? 'linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 35%, #252525 65%, #0a0a0a 100%)' 
+          : 'linear-gradient(135deg, #fff7ed 0%, #ffffff 50%, #fff7ed 100%)';
       case 'pink':
-        return isDark ? '#4a1f35' : '#fdf2f8';
+        return isDark 
+          ? 'linear-gradient(135deg, #4a1f35 0%, #8f2a5c 50%, #b33c73 75%, #4a1f35 100%)' 
+          : 'linear-gradient(135deg, #fdf2f8 0%, #ffffff 50%, #fdf2f8 100%)';
       default:
-        return isDark ? '#1a1245' : '#f9f7ff';
+        return isDark 
+          ? 'linear-gradient(135deg, #1a1245 0%, #2a1d60 50%, #1a1245 100%)' 
+          : 'linear-gradient(135deg, #f9f7ff 0%, #ffffff 50%, #f9f7ff 100%)';
     }
   };
   
-  const backgroundColor = getBackgroundColor();
-  console.log("Applied background color:", backgroundColor);
+  const backgroundGradient = getBackgroundGradient();
+  console.log("Applied background gradient:", backgroundGradient);
   
   return (
     <div 
       className="panion-desktop overflow-auto min-h-screen"
       style={{ 
-        // Use direct inline background as highest priority
-        backgroundColor,
-        backgroundImage: 'none'
+        // Use direct inline background gradient as highest priority
+        backgroundImage: backgroundGradient,
+        backgroundColor: 'transparent' // Fallback only
       }}
     >
       {children}
