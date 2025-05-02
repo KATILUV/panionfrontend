@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings, Palette, Monitor, Bell, Shield, Info, Lock, Sun, Moon, CheckCircle2 } from 'lucide-react';
 import { useThemeStore, ThemeMode, ThemeAccent } from '@/state/themeStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
