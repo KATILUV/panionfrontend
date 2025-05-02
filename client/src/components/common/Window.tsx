@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Rnd } from 'react-rnd';
 import { useAgentStore, AgentId } from '../../state/agentStore';
+import { useThemeStore } from '../../state/themeStore';
 import { Minimize2, X, Maximize2 } from 'lucide-react';
 import { useWindowSize } from 'react-use';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,6 +45,7 @@ const Window: React.FC<WindowProps> = ({
   const [currentSnapPosition, setCurrentSnapPosition] = useState<SnapPosition>('none');
   const [isDragging, setIsDragging] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
+  const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   
   // Update stored position and size when maximized status changes
   useEffect(() => {
@@ -269,10 +271,14 @@ const Window: React.FC<WindowProps> = ({
       className={getSnapIndicatorClass()}
     >
       <motion.div 
-        className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border overflow-hidden
+        className={`flex flex-col rounded-lg backdrop-blur-lg h-full overflow-hidden
           ${isActive 
-            ? 'border-primary/40 bg-white/10 dark:bg-black/20' 
-            : 'border-white/20 bg-white/5 dark:bg-black/10'
+            ? getCurrentTheme() === 'dark'
+              ? 'border border-primary/40 bg-white/10 shadow-lg' 
+              : 'border border-purple-300/70 bg-white/70 shadow-md'
+            : getCurrentTheme() === 'dark'
+              ? 'border border-white/20 bg-white/5 shadow-md'
+              : 'border border-purple-200/50 bg-white/50 shadow-sm'
           }
         `}
         initial={{ opacity: 0, scale: 0.9 }}
