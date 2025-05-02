@@ -556,74 +556,9 @@ const LandingPage: React.FC = () => {
       
       {/* Screenshot/Demo Section - Removed as requested */}
       
-      {/* Testimonials */}
-      <section className="py-20 md:py-32 bg-white text-gray-900">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">What Users Say</h2>
-            <p className="text-xl text-gray-600">Join the community of Panion users</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 * index }}
-                className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm"
-              >
-                <div className="flex flex-col">
-                  <p className="text-gray-600 italic">{testimonial.quote}</p>
-                  <div className="mt-4">
-                    <p className="font-semibold text-gray-900">{testimonial.author}</p>
-                    <p className="text-sm text-gray-600">{testimonial.role}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Testimonials - Removed as requested */}
       
-      {/* CTA Section */}
-      <section className="py-20 md:py-32 bg-gradient-to-t from-indigo-100 via-violet-50 to-white text-gray-900">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <motion.h2 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl md:text-4xl font-bold mb-6 text-gray-900"
-            >
-              Ready to Transform Your AI Experience?
-            </motion.h2>
-            
-            <motion.p 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-xl text-gray-600 mb-8"
-            >
-              Get started with Panion today and discover a new way to interact with AI assistants.
-            </motion.p>
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Button 
-                size="lg" 
-                onClick={() => setLocation('/desktop')}
-                className="text-lg px-8 bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg hover:shadow-indigo-500/30"
-              >
-                Try Panion Now
-              </Button>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      {/* CTA Section - Removed as requested */}
       
       {/* Footer */}
       <footer className="bg-gray-100 py-12 text-gray-900">
