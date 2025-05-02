@@ -81,32 +81,55 @@ const Desktop: React.FC = () => {
       case 'purple':
         return isDark 
           ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
-          : 'bg-gradient-to-br from-purple-50 via-white to-white';
+          : 'bg-gradient-to-br from-purple-100 via-purple-50/80 to-white/90';
       case 'blue':
         return isDark 
           ? 'bg-gradient-to-br from-blue-950 via-[#0a1a2f] to-[#0c1827]' 
-          : 'bg-gradient-to-br from-blue-50 via-white to-white';
+          : 'bg-gradient-to-br from-blue-100 via-blue-50/80 to-white/90';
       case 'green':
         return isDark 
           ? 'bg-gradient-to-br from-green-950 via-[#0f2922] to-[#0c211c]' 
-          : 'bg-gradient-to-br from-green-50 via-white to-white';
+          : 'bg-gradient-to-br from-green-100 via-green-50/80 to-white/90';
       case 'orange':
         return isDark 
           ? 'bg-gradient-to-br from-orange-950 via-[#261409] to-[#1f1107]' 
-          : 'bg-gradient-to-br from-orange-50 via-white to-white';
+          : 'bg-gradient-to-br from-orange-100 via-orange-50/80 to-white/90';
       case 'pink':
         return isDark 
           ? 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]' 
-          : 'bg-gradient-to-br from-pink-50 via-white to-white';
+          : 'bg-gradient-to-br from-pink-100 via-pink-50/80 to-white/90';
       default:
         return isDark 
           ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
-          : 'bg-gradient-to-br from-purple-50 via-white to-white';
+          : 'bg-gradient-to-br from-purple-100 via-purple-50/80 to-white/90';
     }
   };
 
   return (
     <div className={`panion-desktop overflow-auto min-h-screen ${getBackgroundGradient()}`}>
+      {/* Background Decoration */}
+      <div className="absolute inset-0 w-full h-full">
+        {/* Add subtle grid pattern */}
+        <div className={`absolute inset-0 w-full h-full ${
+          currentTheme === 'dark' ? 'bg-grid-white/5' : 'bg-[url("data:image/svg+xml,%3csvg_xmlns=%27http://www.w3.org/2000/svg%27_viewBox=%270_0_32_32%27_width=%2732%27_height=%2732%27_fill=%27none%27_stroke=%27rgb(0_0_0_/_0.05)%27%3e%3cpath_d=%27M0_.5H31.5V32%27/%3e%3c/svg%3e")]'
+        }`}></div>
+        
+        {/* Add subtle glow effect */}
+        <div className={`absolute top-0 left-1/4 w-1/2 h-80 rounded-full blur-3xl ${
+          currentTheme === 'dark' 
+            ? accent === 'purple' ? 'bg-purple-900/20' 
+              : accent === 'blue' ? 'bg-blue-900/20'
+                : accent === 'green' ? 'bg-green-900/20'
+                  : accent === 'orange' ? 'bg-orange-900/20'
+                    : 'bg-pink-900/20'
+            : accent === 'purple' ? 'bg-purple-200/40' 
+              : accent === 'blue' ? 'bg-blue-200/40'
+                : accent === 'green' ? 'bg-green-200/40'
+                  : accent === 'orange' ? 'bg-orange-200/40'
+                    : 'bg-pink-200/40'
+        }`}></div>
+      </div>
+      
       {/* Desktop Area */}
       <div className="flex-1 relative">
         {/* Show empty state dashboard if no windows are open */}
