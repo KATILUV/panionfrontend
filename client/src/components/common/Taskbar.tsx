@@ -3,7 +3,6 @@ import { useAgentStore, AgentId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
 import { useSystemLogStore } from '../../state/systemLogStore';
 import LayoutManager from './LayoutManager';
-import ThemeSelector from './ThemeSelector';
 import ClaraSystemLog from '../system/ClaraSystemLog';
 import { Button } from '@/components/ui/button';
 import { 
