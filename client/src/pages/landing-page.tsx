@@ -135,55 +135,19 @@ const LandingPage: React.FC = () => {
     }
   ];
   
-  // Generate hero section gradient based on current theme and accent
+  // Generate hero section gradient based on current theme
   const getHeroGradient = () => {
     const isDark = currentTheme === 'dark';
     
-    // Default to purple shades
-    let gradientClasses = 'from-[#1a1245] via-[#2d2468] to-[#33284b]';
+    // Always use our twilight purple-blue theme
+    let gradientClasses = '';
     
     if (!isDark) {
-      // Light mode gradients
-      switch (accent) {
-        case 'purple':
-          gradientClasses = 'from-purple-700 via-purple-600 to-purple-800';
-          break;
-        case 'blue':
-          gradientClasses = 'from-blue-700 via-blue-600 to-blue-800';
-          break;
-        case 'green':
-          gradientClasses = 'from-green-700 via-green-600 to-green-800';
-          break;
-        case 'orange':
-          gradientClasses = 'from-orange-700 via-orange-600 to-orange-800';
-          break;
-        case 'pink':
-          gradientClasses = 'from-pink-700 via-pink-600 to-pink-800';
-          break;
-        default:
-          gradientClasses = 'from-purple-700 via-purple-600 to-purple-800';
-      }
+      // Light mode twilight gradient
+      gradientClasses = 'from-purple-700 via-indigo-600 to-purple-800';
     } else {
-      // Dark mode gradients
-      switch (accent) {
-        case 'purple':
-          gradientClasses = 'from-[#1a1245] via-[#2d2468] to-[#33284b]';
-          break;
-        case 'blue':
-          gradientClasses = 'from-[#0a1a2f] via-[#0c1827] to-[#0c1827]';
-          break;
-        case 'green':
-          gradientClasses = 'from-[#0f2922] via-[#0c211c] to-[#0f2824]';
-          break;
-        case 'orange':
-          gradientClasses = 'from-[#261409] via-[#1f1107] to-[#291a0d]';
-          break;
-        case 'pink':
-          gradientClasses = 'from-[#270d1a] via-[#1f0b16] to-[#2a0e1c]';
-          break;
-        default:
-          gradientClasses = 'from-[#1a1245] via-[#2d2468] to-[#33284b]';
-      }
+      // Dark mode twilight gradient
+      gradientClasses = 'from-[#1a1245] via-[#2d2468] to-[#33284b]';
     }
     
     return gradientClasses;
@@ -234,7 +198,7 @@ const LandingPage: React.FC = () => {
           {Array.from({ length: 5 }).map((_, i) => (
             <motion.div
               key={`line-${i}`}
-              className="absolute h-[1px] bg-gradient-to-r from-transparent via-blue-400/20 to-transparent transform"
+              className="absolute h-[1px] bg-gradient-to-r from-transparent via-purple-400/20 to-transparent transform"
               style={{
                 top: `${15 + i * 20}%`,
                 left: 0,
@@ -349,7 +313,7 @@ const LandingPage: React.FC = () => {
                 <Button 
                   size="lg" 
                   onClick={() => setLocation('/desktop')}
-                  className="text-lg bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-6 rounded-xl shadow-lg hover:shadow-indigo-500/30 transition-all relative z-10"
+                  className="text-lg bg-purple-600 hover:bg-purple-500 text-white px-8 py-6 rounded-xl shadow-lg hover:shadow-purple-500/30 transition-all relative z-10"
                 >
                   Get Started
                 </Button>
@@ -375,7 +339,7 @@ const LandingPage: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16 mt-10">
             <h2 className={`text-4xl md:text-6xl font-bold mb-6 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'} tracking-tight`}>
-              One presence. <span className="text-indigo-600">Infinite agents.</span>
+              One presence. <span className="text-purple-600">Infinite agents.</span>
             </h2>
             <p className={`text-xl ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mt-4`}>
               See how people are using Panion to transform their work and creative processes
@@ -384,7 +348,7 @@ const LandingPage: React.FC = () => {
           
           {/* Visual Mockups for Use Cases */}
           <div className="w-full overflow-hidden rounded-xl shadow-xl mb-16 border border-gray-100">
-            <div className="bg-gradient-to-br from-slate-900 to-indigo-950 aspect-[21/9] relative p-8 flex items-center overflow-hidden">
+            <div className="bg-gradient-to-br from-slate-900 to-purple-950 aspect-[21/9] relative p-8 flex items-center overflow-hidden">
               {/* Desktop-like mockup with multiple windows */}
               <div className="absolute inset-0 bg-grid-white/5 bg-[length:20px_20px] opacity-20"></div>
               
@@ -444,8 +408,8 @@ const LandingPage: React.FC = () => {
                       <div className="h-3 bg-white/10 rounded-full mb-2 w-3/4"></div>
                       <div className="h-3 bg-white/10 rounded-full mb-2 w-5/6"></div>
                     </div>
-                    <div className="w-1/3 h-20 rounded bg-indigo-600/20 flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full bg-indigo-500/40"></div>
+                    <div className="w-1/3 h-20 rounded bg-purple-600/20 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-purple-500/40"></div>
                     </div>
                   </div>
                 </div>
@@ -489,7 +453,7 @@ const LandingPage: React.FC = () => {
               >
                 <div className="relative w-16 h-16">
                   <motion.div 
-                    className="absolute inset-0 rounded-full bg-indigo-500/40"
+                    className="absolute inset-0 rounded-full bg-purple-500/40"
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   />
