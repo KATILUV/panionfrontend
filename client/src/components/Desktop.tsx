@@ -73,6 +73,7 @@ const Desktop: React.FC = () => {
   // Get current theme settings
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accent = useThemeStore(state => state.accent);
+  const mode = useThemeStore(state => state.mode);
   const backgroundPattern = useThemeStore(state => state.backgroundPattern);
   const activePreset = useThemeStore(state => state.activePreset);
 
@@ -80,44 +81,13 @@ const Desktop: React.FC = () => {
   const getBackgroundGradient = () => {
     const isDark = currentTheme === 'dark';
     
-    // Separate treatment for dark mode vs twilight presets
+    // Apply pure black/white backgrounds when using specific mode
     if (isDark) {
-      // True black background for the 'dark' preset
-      if (activePreset === 'dark') {
-        return 'bg-black';
-      }
-      
-      // Twilight and other dark-based presets get the colored gradients
-      switch (accent) {
-        case 'purple':
-          return 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]';
-        case 'blue':
-          return 'bg-gradient-to-br from-blue-950 via-[#0a1a2f] to-[#0c1827]';
-        case 'green':
-          return 'bg-gradient-to-br from-green-950 via-[#0f2922] to-[#0c211c]';
-        case 'orange':
-          return 'bg-gradient-to-br from-orange-950 via-[#261409] to-[#1f1107]';
-        case 'pink':
-          return 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]';
-        default:
-          return 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]';
-      }
+      // Pure black background for dark theme
+      return 'bg-black';
     } else {
-      // Light mode gradients
-      switch (accent) {
-        case 'purple':
-          return 'bg-gradient-to-br from-purple-100 via-purple-50/80 to-white/90';
-        case 'blue':
-          return 'bg-gradient-to-br from-blue-100 via-blue-50/80 to-white/90';
-        case 'green':
-          return 'bg-gradient-to-br from-green-100 via-green-50/80 to-white/90';
-        case 'orange':
-          return 'bg-gradient-to-br from-orange-100 via-orange-50/80 to-white/90';
-        case 'pink':
-          return 'bg-gradient-to-br from-pink-100 via-pink-50/80 to-white/90';
-        default:
-          return 'bg-gradient-to-br from-purple-100 via-purple-50/80 to-white/90';
-      }
+      // Pure white background for light theme
+      return 'bg-white';
     }
   };
 
