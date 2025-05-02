@@ -71,7 +71,11 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
         {children}
       </DialogTrigger>
       <DialogContent 
-        className="sm:max-w-[550px] bg-[#1a1538]/90 backdrop-blur-xl border-purple-500/30 text-white"
+        className={`sm:max-w-[550px] backdrop-blur-xl ${
+          useThemeStore.getState().getCurrentTheme() === 'dark' 
+            ? 'bg-[#1a1538]/90 border-purple-500/30 text-white' 
+            : 'bg-white border-purple-300/50 text-gray-900'
+        }`}
         style={{ 
           position: 'fixed', 
           top: '50%', 

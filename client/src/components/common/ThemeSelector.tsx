@@ -101,7 +101,11 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
         {children}
       </DialogTrigger>
       <DialogContent 
-        className="sm:max-w-[425px] bg-[#1a1538]/90 backdrop-blur-xl border-purple-500/30 text-white"
+        className={`sm:max-w-[425px] backdrop-blur-xl ${
+          getCurrentTheme() === 'dark' 
+            ? 'bg-[#1a1538]/90 border-purple-500/30 text-white' 
+            : 'bg-white border-purple-300/50 text-gray-900'
+        }`}
         style={{ 
           position: 'fixed', 
           top: '50%', 
@@ -113,7 +117,9 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
       >
         <DialogHeader>
           <DialogTitle className="text-xl">Appearance Settings</DialogTitle>
-          <p className="text-white/80 mt-2" id="theme-settings-description">
+          <p className={`mt-2 ${
+            getCurrentTheme() === 'dark' ? 'text-white/80' : 'text-gray-600'
+          }`} id="theme-settings-description">
             Customize the look and feel of your Panion desktop environment.
           </p>
         </DialogHeader>
@@ -125,7 +131,11 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
             <div className="flex flex-wrap gap-3">
               <Button
                 variant={mode === 'light' ? 'default' : 'outline'}
-                className={`flex-1 ${mode === 'light' ? 'bg-purple-700' : 'bg-transparent hover:bg-white/10'}`}
+                className={`flex-1 ${
+                  mode === 'light' 
+                    ? 'bg-purple-700' 
+                    : 'bg-transparent ' + (getCurrentTheme() === 'dark' ? 'hover:bg-white/10' : 'hover:bg-purple-50')
+                }`}
                 onClick={() => handleModeChange('light')}
               >
                 <Sun className="mr-2 h-4 w-4" />
@@ -133,7 +143,11 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
               </Button>
               <Button
                 variant={mode === 'dark' ? 'default' : 'outline'}
-                className={`flex-1 ${mode === 'dark' ? 'bg-purple-700' : 'bg-transparent hover:bg-white/10'}`}
+                className={`flex-1 ${
+                  mode === 'dark' 
+                    ? 'bg-purple-700' 
+                    : 'bg-transparent ' + (getCurrentTheme() === 'dark' ? 'hover:bg-white/10' : 'hover:bg-purple-50')
+                }`}
                 onClick={() => handleModeChange('dark')}
               >
                 <Moon className="mr-2 h-4 w-4" />
@@ -141,7 +155,11 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
               </Button>
               <Button
                 variant={mode === 'system' ? 'default' : 'outline'}
-                className={`flex-1 ${mode === 'system' ? 'bg-purple-700' : 'bg-transparent hover:bg-white/10'}`}
+                className={`flex-1 ${
+                  mode === 'system' 
+                    ? 'bg-purple-700' 
+                    : 'bg-transparent ' + (getCurrentTheme() === 'dark' ? 'hover:bg-white/10' : 'hover:bg-purple-50')
+                }`}
                 onClick={() => handleModeChange('system')}
               >
                 <Monitor className="mr-2 h-4 w-4" />
@@ -151,13 +169,21 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
             
             {/* System preference indicator */}
             {mode === 'system' && (
-              <div className="mt-3 p-3 rounded-md bg-white/10 flex items-center gap-2 text-sm">
-                <Info size={16} className="text-blue-300 flex-shrink-0" />
+              <div className={`mt-3 p-3 rounded-md flex items-center gap-2 text-sm ${
+                getCurrentTheme() === 'dark' ? 'bg-white/10' : 'bg-purple-50/50'
+              }`}>
+                <Info size={16} className={`flex-shrink-0 ${
+                  getCurrentTheme() === 'dark' ? 'text-purple-300' : 'text-purple-600'
+                }`} />
                 <div>
                   <span>Your system is currently set to </span>
                   <Badge 
                     variant="outline" 
-                    className={`ml-1 font-medium ${systemPrefersDark ? 'bg-blue-950/50' : 'bg-blue-100/20'}`}
+                    className={`ml-1 font-medium ${
+                      systemPrefersDark 
+                        ? getCurrentTheme() === 'dark' ? 'bg-purple-950/50 text-white' : 'bg-purple-900/20 text-purple-900' 
+                        : getCurrentTheme() === 'dark' ? 'bg-purple-100/20 text-white' : 'bg-purple-100 text-purple-900'
+                    }`}
                   >
                     {systemPrefersDark ? 'Dark Mode' : 'Light Mode'}
                   </Badge>
@@ -174,7 +200,9 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
                 <button
                   key={color.id}
                   className={`flex flex-col items-center justify-center p-2 rounded-md ${
-                    accent === color.id ? 'bg-white/20' : 'hover:bg-white/10'
+                    accent === color.id 
+                      ? getCurrentTheme() === 'dark' ? 'bg-white/20' : 'bg-purple-100' 
+                      : getCurrentTheme() === 'dark' ? 'hover:bg-white/10' : 'hover:bg-purple-50'
                   } transition-colors`}
                   onClick={() => handleAccentChange(color.id)}
                 >
@@ -192,7 +220,14 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
         
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline" className="border-white/20 hover:bg-white/10">
+            <Button 
+              variant="outline" 
+              className={`${
+                getCurrentTheme() === 'dark' 
+                  ? 'border-white/20 hover:bg-white/10 text-white' 
+                  : 'border-purple-200 hover:bg-purple-50 text-gray-800'
+              }`}
+            >
               Close
             </Button>
           </DialogClose>
