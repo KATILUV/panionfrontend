@@ -88,19 +88,37 @@ const Desktop: React.FC = () => {
       <div className="absolute inset-0 w-full h-full pointer-events-none">
         {/* Background patterns based on theme settings */}
         {backgroundPattern === 'grid' && (
-          <div className="absolute inset-0 bg-grid-white/5 opacity-30"></div>
+          <div className="absolute inset-0 bg-grid-white/5 opacity-50"></div>
         )}
         {backgroundPattern === 'dots' && (
-          <div className="absolute inset-0 bg-dots-white/5 opacity-30"></div>
+          <div className="absolute inset-0 bg-dots-white/5 opacity-50"></div>
         )}
         {backgroundPattern === 'waves' && (
-          <div className="absolute inset-0 bg-waves-white/5 opacity-30"></div>
+          <div className="absolute inset-0 bg-waves-white/5 opacity-50"></div>
+        )}
+        
+        {/* Theme-specific visual elements */}
+        {activePreset === 'twilight' && (
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-purple-700/30 to-transparent opacity-20"></div>
+        )}
+        {activePreset === 'ocean' && (
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-cyan-700/20 to-transparent opacity-20"></div>
+        )}
+        {activePreset === 'forest' && (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(0,100,0,0.15)_0%,transparent_50%)]"></div>
+        )}
+        {activePreset === 'sunset' && (
+          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-orange-300/10 blur-3xl -z-10"></div>
+        )}
+        {activePreset === 'candy' && (
+          <div className="absolute top-20 left-20 w-80 h-80 rounded-full bg-pink-200/15 blur-3xl -z-10"></div>
         )}
         
         {/* Theme name indicator for non-system themes */}
         {activePreset !== 'system' && (
-          <div className="absolute bottom-20 right-6 text-xs font-mono dark:text-white/30 text-black/30">
-            Theme: {useThemeStore.getState().getThemePresets()[activePreset].displayName}
+          <div className="absolute bottom-8 right-8 text-xs font-mono px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 dark:text-white/70 text-foreground/70 backdrop-blur-sm shadow-sm">
+            <span className="mr-2 inline-block w-2 h-2 rounded-full bg-primary"></span>
+            {useThemeStore.getState().getThemePresets()[activePreset].displayName}
           </div>
         )}
       </div>
