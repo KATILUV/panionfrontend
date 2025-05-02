@@ -75,7 +75,7 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
           : 'linear-gradient(135deg, #fdf2f8 0%, #ffffff 50%, #fdf2f8 100%)';
       default:
         return isDark 
-          ? 'linear-gradient(135deg, #1a1245 0%, #2a1d60 50%, #1a1245 100%)' 
+          ? 'linear-gradient(135deg, #1a1245 0%, #2e1f6f 50%, #4728a7 75%, #1a1245 100%)' 
           : 'linear-gradient(135deg, #f9f7ff 0%, #ffffff 50%, #f9f7ff 100%)';
     }
   };
