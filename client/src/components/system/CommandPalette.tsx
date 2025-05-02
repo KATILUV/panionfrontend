@@ -116,19 +116,21 @@ const CommandPalette: React.FC = () => {
   
   // Get class for command type
   const getCommandTypeClass = (type: CommandType) => {
+    const isDark = getCurrentTheme() === 'dark';
+    
     switch (type) {
       case 'window':
-        return 'text-blue-400';
+        return isDark ? 'text-blue-400' : 'text-blue-600';
       case 'agent':
-        return 'text-purple-400';
+        return isDark ? 'text-purple-400' : 'text-purple-600';
       case 'system':
-        return 'text-amber-400';
+        return isDark ? 'text-indigo-400' : 'text-indigo-600';
       case 'theme':
-        return 'text-green-400';
+        return isDark ? 'text-violet-400' : 'text-violet-600';
       case 'suggestion':
-        return 'text-pink-400';
+        return isDark ? 'text-fuchsia-400' : 'text-fuchsia-600';
       default:
-        return 'text-white';
+        return isDark ? 'text-white' : 'text-gray-900';
     }
   };
   
@@ -231,7 +233,13 @@ const CommandPalette: React.FC = () => {
                     key={command.id}
                     data-index={index}
                     className={`flex items-center px-3 py-2 rounded-md cursor-pointer transition-colors ${
-                      index === selectedIndex ? 'bg-white/10' : 'hover:bg-white/5'
+                      index === selectedIndex 
+                        ? getCurrentTheme() === 'dark' 
+                          ? 'bg-white/10' 
+                          : 'bg-purple-100'
+                        : getCurrentTheme() === 'dark'
+                          ? 'hover:bg-white/5'
+                          : 'hover:bg-purple-50'
                     }`}
                     onClick={() => {
                       command.action();
@@ -245,9 +253,17 @@ const CommandPalette: React.FC = () => {
                       )}
                     </div>
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-white">{command.title}</div>
+                      <div className={`text-sm font-medium ${
+                        getCurrentTheme() === 'dark' 
+                          ? 'text-white' 
+                          : 'text-gray-800'
+                      }`}>{command.title}</div>
                       {command.description && (
-                        <div className="text-xs text-white/50">{command.description}</div>
+                        <div className={`text-xs ${
+                          getCurrentTheme() === 'dark' 
+                            ? 'text-white/50' 
+                            : 'text-gray-500'
+                        }`}>{command.description}</div>
                       )}
                     </div>
                   </div>
@@ -257,12 +273,24 @@ const CommandPalette: React.FC = () => {
           </div>
           
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-2 border-t border-white/10 text-xs text-white/50">
+          <div className={`flex items-center justify-between px-4 py-2 border-t text-xs ${
+            getCurrentTheme() === 'dark' 
+              ? 'border-white/10 text-white/50' 
+              : 'border-purple-100 text-gray-500'
+          }`}>
             <div>
               <span className="mr-1">Press</span>
-              <kbd className="px-1.5 py-0.5 bg-white/10 rounded">Ctrl</kbd>
+              <kbd className={`px-1.5 py-0.5 rounded ${
+                getCurrentTheme() === 'dark' 
+                  ? 'bg-white/10' 
+                  : 'bg-purple-50 border border-purple-100'
+              }`}>Ctrl</kbd>
               <span className="mx-1">+</span>
-              <kbd className="px-1.5 py-0.5 bg-white/10 rounded">K</kbd>
+              <kbd className={`px-1.5 py-0.5 rounded ${
+                getCurrentTheme() === 'dark' 
+                  ? 'bg-white/10' 
+                  : 'bg-purple-50 border border-purple-100'
+              }`}>K</kbd>
               <span className="ml-1">to open command palette</span>
             </div>
             <div>

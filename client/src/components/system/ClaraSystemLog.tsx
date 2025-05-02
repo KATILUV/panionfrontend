@@ -24,6 +24,7 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
   const { logs, isVisible, toggleVisibility, clearLogs } = useSystemLogStore();
   const [isMinimized, setIsMinimized] = React.useState(false);
   const accent = useThemeStore(state => state.accent);
+  const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
 
   // Get icon based on log type
   const getLogIcon = (type: LogType) => {
@@ -80,16 +81,26 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
 
   return (
     <motion.div
-      className={`fixed right-4 bottom-16 w-80 max-h-[70vh] bg-black/50 backdrop-blur-md border border-primary/30 rounded-lg overflow-hidden z-50 ${className}`}
+      className={`fixed right-4 bottom-16 w-80 max-h-[70vh] backdrop-blur-md rounded-lg overflow-hidden z-50 ${
+        getCurrentTheme() === 'dark' 
+          ? 'bg-black/50 border border-primary/30' 
+          : 'bg-white/90 border border-purple-200 shadow-lg'
+      } ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.2 }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-black/30 border-b border-primary/20">
+      <div className={`flex items-center justify-between px-3 py-2 ${
+        getCurrentTheme() === 'dark' 
+          ? 'bg-black/30 border-b border-primary/20 text-white' 
+          : 'bg-purple-50 border-b border-purple-100 text-gray-800'
+      }`}>
         <div className="flex items-center space-x-2">
-          <Database className="h-4 w-4 text-primary" />
+          <Database className={`h-4 w-4 ${
+            getCurrentTheme() === 'dark' ? 'text-primary' : 'text-purple-600'
+          }`} />
           <span className="text-sm font-medium">Clara's System Log</span>
         </div>
         <div className="flex space-x-1">
@@ -99,10 +110,18 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-6 w-6 rounded-full hover:bg-white/10"
+                  className={`h-6 w-6 rounded-full ${
+                    getCurrentTheme() === 'dark' 
+                      ? 'hover:bg-white/10' 
+                      : 'hover:bg-purple-100'
+                  }`}
                   onClick={clearLogs}
                 >
-                  <MinusCircle className="h-4 w-4 text-white/70" />
+                  <MinusCircle className={`h-4 w-4 ${
+                    getCurrentTheme() === 'dark' 
+                      ? 'text-white/70' 
+                      : 'text-purple-500'
+                  }`} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -117,12 +136,24 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-6 w-6 rounded-full hover:bg-white/10"
+                  className={`h-6 w-6 rounded-full ${
+                    getCurrentTheme() === 'dark' 
+                      ? 'hover:bg-white/10' 
+                      : 'hover:bg-purple-100'
+                  }`}
                   onClick={toggleMinimize}
                 >
                   {isMinimized ? 
-                    <Maximize2 className="h-4 w-4 text-white/70" /> : 
-                    <Minimize2 className="h-4 w-4 text-white/70" />
+                    <Maximize2 className={`h-4 w-4 ${
+                      getCurrentTheme() === 'dark' 
+                        ? 'text-white/70' 
+                        : 'text-purple-500'
+                    }`} /> : 
+                    <Minimize2 className={`h-4 w-4 ${
+                      getCurrentTheme() === 'dark' 
+                        ? 'text-white/70' 
+                        : 'text-purple-500'
+                    }`} />
                   }
                 </Button>
               </TooltipTrigger>
@@ -138,10 +169,18 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-6 w-6 rounded-full hover:bg-white/10"
+                  className={`h-6 w-6 rounded-full ${
+                    getCurrentTheme() === 'dark' 
+                      ? 'hover:bg-white/10' 
+                      : 'hover:bg-purple-100'
+                  }`}
                   onClick={toggleVisibility}
                 >
-                  <X className="h-4 w-4 text-white/70" />
+                  <X className={`h-4 w-4 ${
+                    getCurrentTheme() === 'dark' 
+                      ? 'text-white/70' 
+                      : 'text-purple-500'
+                  }`} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
