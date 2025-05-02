@@ -618,14 +618,7 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
             
-            {/* Auto-scroll indicator with pause instructions */}
-            <div className="flex justify-center mt-4">
-              <div className="px-4 py-2 bg-indigo-100 rounded-full text-indigo-700 text-xs font-medium flex items-center">
-                <span>Auto-scrolling cards</span>
-                <span className="mx-2">•</span>
-                <span>Hover to pause</span>
-              </div>
-            </div>
+            {/* Removed auto-scroll indicator banner */}
           </div>
         </div>
       </section>
