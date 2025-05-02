@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Command, CommandType, useCommandStore } from '../../state/commandStore';
 import { useThemeStore } from '../../state/themeStore';
@@ -14,8 +14,13 @@ const CommandPalette: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const commandsRef = useRef<HTMLDivElement>(null);
   
-  // Get all available commands
-  const allCommands = getAvailableCommands();
+  // Memoize commands to prevent infinite renders
+  const allCommands = useMemo(() => {
+    if (isOpen) {
+      return getAvailableCommands();
+    }
+    return [];
+  }, [isOpen, getAvailableCommands]);
   
   // Filter commands based on search query
   useEffect(() => {
@@ -53,11 +58,12 @@ const CommandPalette: React.FC = () => {
     if (isOpen) {
       setSearchQuery('');
       setSelectedIndex(0);
+      setFilteredCommands(allCommands);
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [isOpen]);
+  }, [isOpen, allCommands]);
   
   // Keyboard navigation
   useEffect(() => {

@@ -54,15 +54,15 @@ export const useCommandStore = create<CommandState>((set, get) => ({
   
   getAvailableCommands: () => {
     const commands: Command[] = [];
-    
-    // Get agent-related commands from agentStore
-    const agentStore = useAgentStore.getState();
-    const agents = agentStore.registry;
-    
-    // Window control commands
-    agents.forEach(agent => {
-      const isOpen = agentStore.windows[agent.id]?.isOpen;
-      const isMinimized = agentStore.windows[agent.id]?.isMinimized;
+      
+      // Get agent-related commands from agentStore
+      const agentStore = useAgentStore.getState();
+      const agents = agentStore.registry;
+      
+      // Window control commands
+      agents.forEach(agent => {
+        const isOpen = agentStore.windows[agent.id]?.isOpen;
+        const isMinimized = agentStore.windows[agent.id]?.isMinimized;
       
       if (!isOpen) {
         commands.push({
