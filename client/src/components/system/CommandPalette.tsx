@@ -14,11 +14,11 @@ const CommandPalette: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const commandsRef = useRef<HTMLDivElement>(null);
   
-  // Get all available commands
-  const allCommands = getAvailableCommands();
-  
   // Filter commands based on search query
   useEffect(() => {
+    // Get commands inside the effect to prevent infinite loop
+    const allCommands = getAvailableCommands();
+    
     if (!searchQuery.trim()) {
       setFilteredCommands(allCommands);
       return;
@@ -46,7 +46,7 @@ const CommandPalette: React.FC = () => {
     
     setFilteredCommands(filtered);
     setSelectedIndex(0);
-  }, [searchQuery, allCommands]);
+  }, [searchQuery, getAvailableCommands]);
   
   // Reset state when command palette opens
   useEffect(() => {
