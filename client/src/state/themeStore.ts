@@ -2,52 +2,34 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { log } from './systemLogStore';
 
-// Theme types
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type ThemeAccent = 'purple' | 'blue' | 'green' | 'orange' | 'pink' | 'dark' | 'light';
+// Theme types - we're only using dark mode now
+export type ThemeMode = 'dark';
+export type ThemeAccent = 'purple' | 'blue' | 'green' | 'orange' | 'pink';
 
 interface ThemeState {
-  mode: ThemeMode;
+  mode: ThemeMode; // Always dark
   accent: ThemeAccent;
-  systemPrefersDark: boolean;
   
   // Actions
-  setMode: (mode: ThemeMode) => void;
   setAccent: (accent: ThemeAccent) => void;
-  setSystemPreference: (prefersDark: boolean) => void;
   
   // Computed
-  getCurrentTheme: () => 'light' | 'dark';
+  getCurrentTheme: () => 'dark';
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      mode: 'system',
-      accent: 'purple',
-      systemPrefersDark: false,
-      
-      setMode: (mode) => {
-        log.info(`Theme mode changed to: ${mode}`);
-        set({ mode });
-      },
+      mode: 'dark', // Fixed to dark mode
+      accent: 'purple', // Default purple accent
       
       setAccent: (accent) => {
         log.info(`Theme accent changed to: ${accent}`);
         set({ accent });
       },
       
-      setSystemPreference: (prefersDark) => {
-        log.info(`System theme preference detected: ${prefersDark ? 'dark' : 'light'}`);
-        set({ systemPrefersDark: prefersDark });
-      },
-      
       getCurrentTheme: () => {
-        const { mode, systemPrefersDark } = get();
-        if (mode === 'system') {
-          return systemPrefersDark ? 'dark' : 'light';
-        }
-        return mode;
+        return 'dark'; // Always return dark
       }
     }),
     {
