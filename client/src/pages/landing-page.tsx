@@ -18,11 +18,11 @@ const LandingPage: React.FC = () => {
 
   // Function to navigate carousel
   const nextFeature = () => {
-    setCurrentFeatureIndex((prev) => (prev === features.length - 3 ? 0 : prev + 1));
+    setCurrentFeatureIndex((prev) => (prev === keyFeatures.length - 1 ? 0 : prev + 1));
   };
   
   const prevFeature = () => {
-    setCurrentFeatureIndex((prev) => (prev === 0 ? features.length - 3 : prev - 1));
+    setCurrentFeatureIndex((prev) => (prev === 0 ? keyFeatures.length - 1 : prev - 1));
   };
   
   // Tagline phrases
@@ -562,43 +562,52 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
           
-          <div className="relative" ref={featuresRef}>
-            <div className="flex items-center justify-between mb-8">
+          <div className="relative max-w-4xl mx-auto" ref={featuresRef}>
+            {/* Positioned arrows on the sides */}
+            <div className="absolute top-1/2 -left-4 -translate-y-1/2 z-10">
               <button 
                 onClick={prevFeature}
-                className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+                className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 shadow-md"
+                aria-label="Previous agent"
               >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-              
-              <button 
-                onClick={nextFeature}
-                className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
-              >
-                <ChevronRight className="h-6 w-6" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
             </div>
             
-            <div className="overflow-hidden">
+            <div className="absolute top-1/2 -right-4 -translate-y-1/2 z-10">
+              <button 
+                onClick={nextFeature}
+                className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 shadow-md"
+                aria-label="Next agent"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Scrollable cards */}
+            <div className="overflow-hidden px-8">
               <motion.div 
-                className="flex gap-6"
-                animate={{ x: `-${currentFeatureIndex * 33.33}%` }}
+                className="flex gap-4"
+                animate={{ x: `-${currentFeatureIndex * 100}%` }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               >
                 {keyFeatures.map((feature, index) => (
-                  <div key={index} className="min-w-[33.33%] px-2">
-                    <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300 h-full">
-                      <div className="rounded-full p-3 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-4">
-                        <feature.icon className="w-5 h-5 text-indigo-600" />
+                  <div key={index} className="min-w-full">
+                    <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex items-center">
+                      <div className="rounded-full p-4 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 mr-5 flex-shrink-0">
+                        <feature.icon className="w-8 h-8 text-indigo-600" />
                       </div>
-                      <h3 className="text-lg font-bold mb-2 text-gray-900">{feature.title}</h3>
-                      <p className="text-gray-600 text-sm">{feature.description}</p>
+                      <div>
+                        <h3 className="text-xl font-bold mb-2 text-gray-900">{feature.title}</h3>
+                        <p className="text-gray-600">{feature.description}</p>
+                      </div>
                     </div>
                   </div>
                 ))}
               </motion.div>
             </div>
             
+            {/* Position indicators */}
             <div className="flex justify-center mt-6 gap-2">
               {keyFeatures.map((_, index) => (
                 <button
@@ -607,7 +616,7 @@ const LandingPage: React.FC = () => {
                   className={`w-2 h-2 rounded-full transition-colors ${
                     index === currentFeatureIndex ? "bg-indigo-600" : "bg-gray-300"
                   }`}
-                  aria-label={`Go to slide ${index + 1}`}
+                  aria-label={`Go to agent ${index + 1}`}
                 />
               ))}
             </div>
