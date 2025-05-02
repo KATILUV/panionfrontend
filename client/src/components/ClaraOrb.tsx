@@ -78,9 +78,9 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
     if (isDark) {
       return 'bg-white/10'; // Dark mode - standard glass effect
     } else if (isLightAccent) {
-      return 'bg-white/20'; // Light mode + light accent - more transparent glass
+      return 'bg-gradient-to-br from-gray-50/30 to-gray-200/20'; // Light mode + light accent - subtle gradient
     } else {
-      return 'bg-white/15'; // Light mode + color accent - subtle glass effect
+      return 'bg-gradient-to-br from-blue-50/20 to-purple-50/10'; // Light mode + color accent - very subtle color gradient
     }
   };
 
@@ -114,28 +114,28 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           {/* Pink blob */}
           <div className={`lava-blob ${
             isLightAccent
-              ? 'bg-gradient-radial from-gray-400/80 via-gray-300/50 to-gray-300/0'
+              ? 'bg-gradient-radial from-pink-50/40 via-gray-100/30 to-transparent'
               : 'lava-blob-1'
             } animate-blob-float-1`}></div>
           
           {/* Blue blob */}
           <div className={`lava-blob ${
             isLightAccent
-              ? 'bg-gradient-radial from-gray-500/70 via-gray-400/50 to-gray-400/0'
+              ? 'bg-gradient-radial from-blue-50/30 via-gray-200/25 to-transparent'
               : 'lava-blob-2'
             } animate-blob-float-2`}></div>
           
           {/* Purple blob */}
           <div className={`lava-blob ${
             isLightAccent
-              ? 'bg-gradient-radial from-gray-300/80 via-gray-200/60 to-gray-200/0'
+              ? 'bg-gradient-radial from-purple-50/35 via-gray-100/25 to-transparent'
               : 'lava-blob-3'
             } animate-blob-float-3`}></div>
           
           {/* Gold blob */}
           <div className={`lava-blob ${
             isLightAccent
-              ? 'bg-gradient-radial from-gray-200/90 via-gray-300/60 to-gray-300/0'
+              ? 'bg-gradient-radial from-amber-50/35 via-gray-100/25 to-transparent'
               : 'lava-blob-4'
             } animate-blob-float-4`}></div>
           
@@ -145,9 +145,9 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           {/* Iridescent overlay */}
           <div className={`${
             isLightAccent
-              ? 'bg-gradient-conic from-gray-200/40 via-white/40 to-gray-300/40 opacity-40'
+              ? 'bg-gradient-conic from-blue-50/20 via-purple-50/10 to-pink-50/15 opacity-30'
               : 'iridescent-layer'
-          } absolute inset-0 rounded-full mix-blend-soft-light`}></div>
+          } absolute inset-0 rounded-full mix-blend-soft-light animate-shimmer`}></div>
         </div>
         
         {/* Glass highlights */}
@@ -158,7 +158,7 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
         <div className={`absolute inset-0 rounded-full opacity-10 
           ${isDark || accent !== 'light'
             ? 'bg-gradient-to-br from-purple-300/30 via-transparent to-pink-300/30'
-            : 'bg-gradient-to-br from-gray-300/30 via-transparent to-gray-300/30'
+            : 'bg-gradient-to-br from-blue-100/20 via-transparent to-purple-100/20'
           } mix-blend-overlay animate-reflection`}></div>
       </div>
     </div>
