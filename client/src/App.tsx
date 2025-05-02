@@ -41,7 +41,7 @@ function App() {
   useEffect(() => {
     const agentStore = useAgentStore.getState();
     
-    // Clara Agent
+    // Panion Agent
     const claraIcon = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
@@ -51,7 +51,7 @@ function App() {
     
     agentStore.registerAgent({
       id: 'clara',
-      title: 'Clara AI',
+      title: 'Panion',
       icon: claraIcon,
       component: () => <ClaraAgent />,
       defaultPosition: { x: 100, y: 100 },
@@ -77,7 +77,7 @@ function App() {
       defaultSize: { width: 400, height: 500 }
     });
     
-    // Auto-open Clara window by default
+    // Auto-open Panion window by default
     agentStore.openAgent('clara');
   }, []);
   
