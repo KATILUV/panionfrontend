@@ -85,10 +85,10 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
 
   return (
     <motion.div
-      className={`fixed right-4 bottom-16 w-80 max-h-[70vh] backdrop-blur-xl rounded-lg overflow-hidden z-50 ${
+      className={`fixed right-4 bottom-16 w-80 max-h-[70vh] backdrop-blur-lg rounded-lg overflow-hidden z-50 ${
         getCurrentTheme() === 'dark' 
-          ? 'bg-black/70 border border-purple-500/30' 
-          : 'bg-white/95 border border-purple-200 shadow-lg'
+          ? 'bg-black/40 border border-purple-500/30' 
+          : 'bg-white/30 border border-gray-200/50 shadow-md'
       } ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -98,8 +98,8 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
       {/* Header */}
       <div className={`flex items-center justify-between px-3 py-2 ${
         getCurrentTheme() === 'dark' 
-          ? 'bg-black/30 border-b border-purple-500/20 text-white' 
-          : 'bg-purple-50 border-b border-purple-100 text-gray-800'
+          ? 'bg-black/20 border-b border-purple-500/20 text-white' 
+          : 'bg-white/30 border-b border-gray-200/50 text-gray-800'
       }`}>
         <div className="flex items-center space-x-2">
           <Database className={`h-4 w-4 ${
@@ -199,8 +199,8 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
       {!isMinimized && (
         <div className={`max-h-[50vh] overflow-y-auto p-2 space-y-2 ${
           getCurrentTheme() === 'dark' 
-            ? 'bg-black/20' 
-            : 'bg-gray-50'
+            ? 'bg-black/10' 
+            : 'bg-white/20'
         }`}>
           <AnimatePresence initial={false}>
             {logs.length === 0 ? (
@@ -217,8 +217,8 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
                   key={log.id}
                   className={`flex p-2 rounded-md text-xs ${
                     getCurrentTheme() === 'dark' 
-                      ? 'bg-black/30' 
-                      : 'bg-white border border-purple-100'
+                      ? 'bg-black/20 backdrop-blur-sm' 
+                      : 'bg-white/40 backdrop-blur-sm border border-gray-100/50 shadow-sm'
                   }`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
