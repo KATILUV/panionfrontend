@@ -627,17 +627,21 @@ const LandingPage: React.FC = () => {
       {/* CTA Section - Removed as requested */}
       
       {/* Footer */}
-      <footer className="bg-gray-100 py-12 text-gray-900">
+      <footer className={`${currentTheme === 'dark' ? 'bg-background/30 text-white' : 'bg-gray-100 text-gray-900'} py-12`}>
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
-              <h3 className="text-2xl font-bold text-gray-900">Panion</h3>
-              <p className="text-sm text-gray-600">© 2025 Panion. All rights reserved.</p>
+              <h3 className={`text-2xl font-bold ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Panion</h3>
+              <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>© 2025 Panion. All rights reserved.</p>
             </div>
             
             <div className="flex gap-6">
               {['About', 'Features', 'Contact', 'Terms', 'Privacy'].map((item, i) => (
-                <a key={i} href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                <a 
+                  key={i} 
+                  href="#" 
+                  className={`text-sm ${currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+                >
                   {item}
                 </a>
               ))}
