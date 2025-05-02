@@ -1,14 +1,5 @@
 import React, { useEffect } from 'react';
 import { useThemeStore, ThemeMode, ThemeAccent } from '../../state/themeStore';
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { 
   Sun, 
@@ -20,9 +11,10 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { useAgentStore } from '@/state/agentStore';
 
 interface ThemeSelectorProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
@@ -32,8 +24,8 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
   const setAccent = useThemeStore(state => state.setAccent);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const systemPrefersDark = useThemeStore(state => state.systemPrefersDark);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
   const { toast } = useToast();
+  const openSettingsAgent = useAgentStore(state => state.openAgent);
 
   // Define available accent colors
   const accentColors: Array<{ id: ThemeAccent, name: string, color: string }> = [
@@ -78,8 +70,8 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
 
   // Display automatic theme change notifications
   useEffect(() => {
-    // Only show notifications when dialog is closed to avoid duplication
-    if (!dialogOpen && mode === 'system') {
+    // Only show notifications for system theme changes
+    if (mode === 'system') {
       const metaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleSystemChange = (e: MediaQueryListEvent) => {
         const newMode = e.matches ? 'dark' : 'light';
@@ -93,178 +85,40 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
       metaQuery.addEventListener('change', handleSystemChange);
       return () => metaQuery.removeEventListener('change', handleSystemChange);
     }
-  }, [dialogOpen, mode, toast]);
+  }, [mode, toast]);
+
+  // Removed the Dialog component and replaced with a button to open the settings panel
+  const handleOpenSettings = () => {
+    openSettingsAgent('settings');
+  };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
-      <DialogContent 
-        className={`sm:max-w-[425px] backdrop-blur-xl ${
-          getCurrentTheme() === 'dark' 
-            ? 'bg-black/70 border border-purple-500/30 text-white' 
-            : 'bg-white/95 border border-purple-200 text-gray-900'
-        }`}
-        style={{ 
-          position: 'fixed', 
-          top: '50%', 
-          left: '50%', 
-          transform: 'translate(-50%, -50%)',
-          zIndex: 9999 
-        }}
-        aria-describedby="theme-settings-description"
-      >
-        <DialogHeader>
-          <DialogTitle className="text-xl">Appearance Settings</DialogTitle>
-          <p className={`mt-2 ${
-            getCurrentTheme() === 'dark' ? 'text-white/80' : 'text-gray-600'
-          }`} id="theme-settings-description">
-            Customize the look and feel of your Panion desktop environment.
-          </p>
-        </DialogHeader>
-        
-        {/* Theme mode selector */}
-        <div className="space-y-6 my-2">
-          <div className={`p-4 rounded-lg ${
-            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
-          }`}>
-            <h3 className="text-lg font-medium mb-3">Theme Mode</h3>
-            <div className="grid grid-cols-3 gap-2">
-              <div 
-                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
-                  mode === 'light' 
-                    ? getCurrentTheme() === 'dark'
-                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
-                      : 'bg-purple-100 border-purple-300 text-purple-900'
-                    : getCurrentTheme() === 'dark'
-                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
-                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
-                }`}
-                onClick={() => handleModeChange('light')}
-              >
-                <div className="relative">
-                  <Sun className="h-5 w-5 mb-1" />
-                  {mode === 'light' && (
-                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                  )}
-                </div>
-                <span className="text-sm">Light</span>
-              </div>
-              <div 
-                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
-                  mode === 'dark' 
-                    ? getCurrentTheme() === 'dark'
-                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
-                      : 'bg-purple-100 border-purple-300 text-purple-900'
-                    : getCurrentTheme() === 'dark'
-                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
-                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
-                }`}
-                onClick={() => handleModeChange('dark')}
-              >
-                <div className="relative">
-                  <Moon className="h-5 w-5 mb-1" />
-                  {mode === 'dark' && (
-                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                  )}
-                </div>
-                <span className="text-sm">Dark</span>
-              </div>
-              <div 
-                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
-                  mode === 'system' 
-                    ? getCurrentTheme() === 'dark'
-                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
-                      : 'bg-purple-100 border-purple-300 text-purple-900'
-                    : getCurrentTheme() === 'dark'
-                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
-                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
-                }`}
-                onClick={() => handleModeChange('system')}
-              >
-                <div className="relative">
-                  <Monitor className="h-5 w-5 mb-1" />
-                  {mode === 'system' && (
-                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
-                  )}
-                </div>
-                <span className="text-sm">System</span>
-              </div>
-            </div>
-            
-            {/* System preference indicator */}
-            {mode === 'system' && (
-              <div className={`mt-3 p-3 rounded-md flex items-center gap-2 text-sm ${
-                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-purple-500/20' : 'bg-white/80 border border-purple-100'
-              }`}>
-                <Info size={16} className={`flex-shrink-0 ${
-                  getCurrentTheme() === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                }`} />
-                <div>
-                  <span>Your system is currently set to </span>
-                  <Badge 
-                    variant="outline" 
-                    className={`ml-1 font-medium ${
-                      systemPrefersDark 
-                        ? getCurrentTheme() === 'dark' ? 'bg-purple-950/50 text-white' : 'bg-purple-900/20 text-purple-900' 
-                        : getCurrentTheme() === 'dark' ? 'bg-purple-100/20 text-white' : 'bg-purple-100 text-purple-900'
-                    }`}
-                  >
-                    {systemPrefersDark ? 'Dark Mode' : 'Light Mode'}
-                  </Badge>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Accent color selector */}
-          <div className={`p-4 rounded-lg ${
-            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
-          }`}>
-            <h3 className="text-lg font-medium mb-3">Accent Color</h3>
-            <div className="grid grid-cols-5 gap-3">
-              {accentColors.map((color) => (
-                <button
-                  key={color.id}
-                  className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors ${
-                    accent === color.id 
-                      ? getCurrentTheme() === 'dark'
-                        ? 'bg-purple-800/50 border-purple-500/50' 
-                        : 'bg-purple-100 border-purple-300'
-                      : getCurrentTheme() === 'dark'
-                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30' 
-                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50'
-                  }`}
-                  onClick={() => handleAccentChange(color.id)}
-                >
-                  <div className={`w-8 h-8 rounded-full ${color.color} mb-1 relative`}>
-                    {accent === color.id && (
-                      <CheckCircle2 className="absolute -top-1 -right-1 text-white text-sm h-4 w-4" />
-                    )}
-                  </div>
-                  <span className="text-xs">{color.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+    <>
+      {children ? (
+        // If children are provided, use them as the trigger
+        <div onClick={handleOpenSettings}>
+          {children}
         </div>
-        
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button 
-              className={`${
-                getCurrentTheme() === 'dark' 
-                  ? 'bg-purple-700 hover:bg-purple-600 text-white' 
-                  : 'bg-purple-500 hover:bg-purple-400 text-white'
-              }`}
-            >
-              Close
-            </Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      ) : (
+        // Otherwise, use default button
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className={`flex items-center gap-2 ${
+            getCurrentTheme() === 'dark' 
+              ? 'hover:bg-white/10 text-white' 
+              : 'hover:bg-gray-100 text-gray-700'
+          }`}
+          onClick={handleOpenSettings}
+        >
+          <div className="relative">
+            {getThemeIcon()}
+            <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-1.5 w-1.5"></div>
+          </div>
+          <span className="text-xs">Settings</span>
+        </Button>
+      )}
+    </>
   );
 };
 

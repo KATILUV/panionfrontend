@@ -109,17 +109,16 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           <span className="hidden sm:inline">Console</span>
         </Button>
 
-        {/* Theme Selector Button */}
-        <ThemeSelector>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="h-10 px-3 text-white/70 hover:text-white hover:bg-white/10 flex items-center space-x-2"
-          >
-            {getThemeIcon()}
-            <span className="hidden sm:inline">Theme</span>
-          </Button>
-        </ThemeSelector>
+        {/* Settings Button */}
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="h-10 px-3 text-white/70 hover:text-white hover:bg-white/10 flex items-center space-x-2"
+          onClick={() => handleIconClick('settings')}
+        >
+          <Settings size={18} />
+          <span className="hidden sm:inline">Settings</span>
+        </Button>
         
         {/* Layout Manager Button */}
         <LayoutManager>
