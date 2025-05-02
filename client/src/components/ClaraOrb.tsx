@@ -75,12 +75,24 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
 
   // Background color class
   const getBgClass = () => {
-    return isDark ? 'bg-white/10' : (isLightAccent ? 'bg-white/30' : 'bg-white/20');
+    if (isDark) {
+      return 'bg-white/10'; // Dark mode - standard glass effect
+    } else if (isLightAccent) {
+      return 'bg-white/20'; // Light mode + light accent - more transparent glass
+    } else {
+      return 'bg-white/15'; // Light mode + color accent - subtle glass effect
+    }
   };
 
-  // Border class
+  // Border class - much more subtle in light mode
   const getBorderClass = () => {
-    return isDark ? 'border border-white/60' : (isLightAccent ? 'border-2 border-gray-200/80' : 'border border-white/70');
+    if (isDark) {
+      return 'border border-white/60'; // Dark mode - visible white border
+    } else if (isLightAccent) {
+      return 'border border-gray-100/30'; // Light mode + light accent - nearly invisible border
+    } else {
+      return 'border border-white/40'; // Light mode + color accent - semi-transparent border
+    }
   };
 
   return (
