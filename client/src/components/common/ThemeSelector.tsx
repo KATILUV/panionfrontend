@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useThemeStore, ThemeMode, ThemeAccent } from '../../state/themeStore';
 import { 
   Dialog,
@@ -15,9 +15,11 @@ import {
   Moon, 
   Monitor, 
   Palette,
-  CheckCircle2
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface ThemeSelectorProps {
   children: React.ReactNode;
@@ -29,6 +31,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
   const setMode = useThemeStore(state => state.setMode);
   const setAccent = useThemeStore(state => state.setAccent);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
+  const systemPrefersDark = useThemeStore(state => state.systemPrefersDark);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { toast } = useToast();
 
@@ -43,9 +46,18 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
 
   const handleModeChange = (newMode: ThemeMode) => {
     setMode(newMode);
+    
+    let description;
+    if (newMode === 'system') {
+      const currentSystemTheme = systemPrefersDark ? 'dark' : 'light';
+      description = `Theme will follow your system preference (currently ${currentSystemTheme})`;
+    } else {
+      description = `Theme mode set to ${newMode}`;
+    }
+    
     toast({
       title: 'Theme Updated',
-      description: `Theme mode set to ${newMode}`,
+      description,
     });
   };
 
@@ -63,6 +75,25 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
     if (mode === 'system') return <Monitor size={18} />;
     return currentTheme === 'dark' ? <Moon size={18} /> : <Sun size={18} />;
   };
+
+  // Display automatic theme change notifications
+  useEffect(() => {
+    // Only show notifications when dialog is closed to avoid duplication
+    if (!dialogOpen && mode === 'system') {
+      const metaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleSystemChange = (e: MediaQueryListEvent) => {
+        const newMode = e.matches ? 'dark' : 'light';
+        toast({
+          title: `System Theme Changed`,
+          description: `Your device switched to ${newMode} mode`,
+          duration: 3000,
+        });
+      };
+      
+      metaQuery.addEventListener('change', handleSystemChange);
+      return () => metaQuery.removeEventListener('change', handleSystemChange);
+    }
+  }, [dialogOpen, mode, toast]);
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -88,7 +119,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
         </DialogHeader>
         
         {/* Theme mode selector */}
-        <div className="space-y-4 my-2">
+        <div className="space-y-6 my-2">
           <div>
             <h3 className="text-lg font-medium mb-3">Theme Mode</h3>
             <div className="flex flex-wrap gap-3">
@@ -117,6 +148,22 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
                 System
               </Button>
             </div>
+            
+            {/* System preference indicator */}
+            {mode === 'system' && (
+              <div className="mt-3 p-3 rounded-md bg-white/10 flex items-center gap-2 text-sm">
+                <Info size={16} className="text-blue-300 flex-shrink-0" />
+                <div>
+                  <span>Your system is currently set to </span>
+                  <Badge 
+                    variant="outline" 
+                    className={`ml-1 font-medium ${systemPrefersDark ? 'bg-blue-950/50' : 'bg-blue-100/20'}`}
+                  >
+                    {systemPrefersDark ? 'Dark Mode' : 'Light Mode'}
+                  </Badge>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Accent color selector */}
