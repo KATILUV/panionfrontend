@@ -22,9 +22,11 @@ const SettingsAgent = () => {
 
   const handleAccentChange = (newAccent: ThemeAccent) => {
     setAccent(newAccent);
+    // Display "Black" instead of "orange" in the toast notification
+    const displayName = newAccent === 'orange' ? 'Black' : newAccent;
     toast({
       title: 'Accent Color Updated',
-      description: `Accent color set to ${newAccent}`,
+      description: `Accent color set to ${displayName}`,
     });
   };
   
