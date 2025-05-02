@@ -108,7 +108,7 @@ export const useThemeStore = create<ThemeState>()(
             mode: 'dark',
             accent: 'purple',
             backgroundPattern: 'grid',
-            displayName: 'Dark Mode'
+            displayName: 'Pure Black'
           },
           light: {
             mode: 'light',
