@@ -56,7 +56,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   };
   
   // Get theme information
-  const mode = useThemeStore(state => state.mode);
+  const activePreset = useThemeStore(state => state.activePreset);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   
   // Get system log information and actions
@@ -66,7 +66,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   // Get the appropriate theme icon
   const getThemeIcon = () => {
     const currentTheme = getCurrentTheme();
-    if (mode === 'system') return <Monitor size={18} />;
+    if (activePreset === 'system') return <Monitor size={18} />;
     return currentTheme === 'dark' ? <Moon size={18} /> : <Sun size={18} />;
   };
   

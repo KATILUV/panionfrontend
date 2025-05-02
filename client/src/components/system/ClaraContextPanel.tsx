@@ -15,12 +15,13 @@ const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, classNa
   const [expanded, setExpanded] = useState(false);
   
   // Use theme settings
-  const accent = useThemeStore(state => state.accent);
+  const getActiveSettings = useThemeStore(state => state.getActiveSettings);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   
   // Get accent color class based on theme accent and current theme
   const getAccentClass = () => {
     const isDark = getCurrentTheme() === 'dark';
+    const { accent } = getActiveSettings();
     
     switch (accent) {
       case 'blue': 
