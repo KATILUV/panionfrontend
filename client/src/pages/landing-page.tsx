@@ -29,12 +29,9 @@ const LandingPage: React.FC = () => {
   const taglinePhrases = [
     "The system that syncs with your system.",
     "Not an app. Not a tool. A new kind of presence.",
-    "Your mind's favorite interface.",
-    "Co-create your next evolution.",
+    "One presence. Infinite agents.",
     "The future isn't artificial — it's intentional.",
-    "Dream deeper. Build smarter. Evolve together.",
-    "Your AI desktop environment with multi-agent capabilities.",
-    "One OS. Infinite agents."
+    "Dream deeper. Build smarter. Evolve together."
   ];
   
   // Features data
