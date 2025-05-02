@@ -553,10 +553,10 @@ const LandingPage: React.FC = () => {
       <section className={`py-10 md:py-16 ${currentTheme === 'dark' ? 'bg-background text-foreground border-gray-800' : 'bg-white text-gray-900 border-gray-100'} border-b`}>
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-8">
-            <h2 className={`text-2xl md:text-3xl font-bold mb-4 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900">
               Meet the <span className="text-indigo-600">Agents</span>
             </h2>
-            <p className={`text-lg ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+            <p className="text-lg text-gray-600">
               Specialized AI agents that work together to enhance your experience
             </p>
           </div>
@@ -572,16 +572,16 @@ const LandingPage: React.FC = () => {
                     {/* First set of cards */}
                     {keyFeatures.map((feature, index) => (
                       <div key={index} className="w-[330px] flex-shrink-0 px-4">
-                        <div className={`${currentTheme === 'dark' ? 'bg-card border-gray-800' : 'bg-white border-gray-100'} border rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]`}>
-                          <div className={`rounded-full p-5 ${currentTheme === 'dark' ? 'bg-indigo-950/50' : 'bg-indigo-100'} ${currentTheme === 'dark' ? 'bg-gradient-to-br from-indigo-950 to-purple-900' : 'bg-gradient-to-br from-violet-50 to-indigo-200'} w-fit mb-6 mx-auto`}>
+                        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
+                          <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
                             <feature.icon className="w-10 h-10 text-indigo-600" />
                           </div>
                           <div className="text-center flex-1 flex flex-col">
-                            <h3 className={`text-xl font-bold mb-3 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{feature.title}</h3>
+                            <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
                             <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
-                            <p className={`${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'} flex-1`}>{feature.description}</p>
-                            <div className={`mt-4 pt-4 ${currentTheme === 'dark' ? 'border-gray-800' : 'border-gray-100'} border-t`}>
-                              <button className="text-indigo-600 text-sm font-medium hover:text-indigo-400 transition-colors">
+                            <p className="text-gray-600 flex-1">{feature.description}</p>
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <button className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
                                 Learn more
                               </button>
                             </div>
@@ -593,16 +593,16 @@ const LandingPage: React.FC = () => {
                     {/* Duplicate set for seamless looping */}
                     {keyFeatures.map((feature, index) => (
                       <div key={`dup-${index}`} className="w-[330px] flex-shrink-0 px-4">
-                        <div className={`${currentTheme === 'dark' ? 'bg-card border-gray-800' : 'bg-white border-gray-100'} border rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]`}>
-                          <div className={`rounded-full p-5 ${currentTheme === 'dark' ? 'bg-indigo-950/50' : 'bg-indigo-100'} ${currentTheme === 'dark' ? 'bg-gradient-to-br from-indigo-950 to-purple-900' : 'bg-gradient-to-br from-violet-50 to-indigo-200'} w-fit mb-6 mx-auto`}>
+                        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
+                          <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
                             <feature.icon className="w-10 h-10 text-indigo-600" />
                           </div>
                           <div className="text-center flex-1 flex flex-col">
-                            <h3 className={`text-xl font-bold mb-3 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{feature.title}</h3>
+                            <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
                             <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
-                            <p className={`${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'} flex-1`}>{feature.description}</p>
-                            <div className={`mt-4 pt-4 ${currentTheme === 'dark' ? 'border-gray-800' : 'border-gray-100'} border-t`}>
-                              <button className="text-indigo-600 text-sm font-medium hover:text-indigo-400 transition-colors">
+                            <p className="text-gray-600 flex-1">{feature.description}</p>
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <button className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
                                 Learn more
                               </button>
                             </div>
