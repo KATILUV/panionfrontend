@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import ClaraOrb from '../ClaraOrb';
+import PanionOrb from '../PanionOrb';
 import ChatBubble from '../ChatBubble';
 import ChatInput from '../ChatInput';
 import TypingIndicator from '../TypingIndicator';
@@ -61,7 +61,7 @@ const PanionAgent: React.FC = () => {
         </div>
 
         {/* Orb */}
-        <ClaraOrb isProcessing={isLoading} />
+        <PanionOrb isProcessing={isLoading} />
 
         {/* Chat Messages Container */}
         <div 

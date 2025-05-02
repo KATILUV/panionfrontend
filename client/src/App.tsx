@@ -42,7 +42,7 @@ function App() {
     const agentStore = useAgentStore.getState();
     
     // Panion Agent
-    const claraIcon = `
+    const panionIcon = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
         <circle cx="12" cy="12" r="4" fill="currentColor" />
@@ -50,10 +50,10 @@ function App() {
     `;
     
     agentStore.registerAgent({
-      id: 'clara',
+      id: 'panion',
       title: 'Panion',
-      icon: claraIcon,
-      component: () => <ClaraAgent />,
+      icon: panionIcon,
+      component: () => <PanionAgent />,
       defaultPosition: { x: 100, y: 100 },
       defaultSize: { width: 640, height: 600 }
     });
@@ -78,7 +78,7 @@ function App() {
     });
     
     // Auto-open Panion window by default
-    agentStore.openAgent('clara');
+    agentStore.openAgent('panion');
   }, []);
   
   return (

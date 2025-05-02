@@ -120,7 +120,7 @@ const EmptyStateDashboard: React.FC = () => {
       title: "Chat with Panion",
       description: "Start a conversation with Panion, your AI assistant",
       icon: <MessageSquare className="h-5 w-5" />,
-      onClick: () => openAgent('clara'),
+      onClick: () => openAgent('panion'),
       color: getCardColor(0)
     },
     {
