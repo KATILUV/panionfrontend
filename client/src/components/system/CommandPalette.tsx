@@ -157,7 +157,7 @@ const CommandPalette: React.FC = () => {
           className={`relative w-full max-w-lg mt-20 backdrop-blur-xl rounded-lg shadow-2xl overflow-hidden ${
             getCurrentTheme() === 'dark'
               ? 'bg-black/70 border border-purple-500/30 text-white'
-              : 'bg-white/95 border border-purple-200 text-gray-900'
+              : 'bg-white/90 border border-purple-200/80 text-gray-900'
           }`}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -167,8 +167,8 @@ const CommandPalette: React.FC = () => {
           {/* Search header */}
           <div className={`flex items-center px-4 py-3 border-b ${
             getCurrentTheme() === 'dark' 
-              ? 'border-purple-500/20' 
-              : 'border-purple-100'
+              ? 'border-purple-500/30' 
+              : 'border-purple-200/80'
           }`}>
             <Search className={`w-5 h-5 mr-2 ${
               getCurrentTheme() === 'dark' 
@@ -194,20 +194,20 @@ const CommandPalette: React.FC = () => {
             }`}>
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  ? 'bg-purple-900/50 border border-purple-700/30' 
+                  : 'bg-purple-50 border border-purple-200/70'
               }`}>↑↓</kbd>
               <span>to navigate</span>
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  ? 'bg-purple-900/50 border border-purple-700/30' 
+                  : 'bg-purple-50 border border-purple-200/70'
               }`}>↵</kbd>
               <span>to select</span>
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  ? 'bg-purple-900/50 border border-purple-700/30' 
+                  : 'bg-purple-50 border border-purple-200/70'
               }`}>esc</kbd>
               <span>to close</span>
             </div>
@@ -235,11 +235,11 @@ const CommandPalette: React.FC = () => {
                     className={`flex items-center px-3 py-2 rounded-md cursor-pointer transition-colors ${
                       index === selectedIndex 
                         ? getCurrentTheme() === 'dark' 
-                          ? 'bg-purple-800/30 border border-purple-700/30' 
-                          : 'bg-purple-100 border border-purple-200'
+                          ? 'bg-purple-800/30 border border-purple-500/40' 
+                          : 'bg-purple-100/80 border border-purple-300/50'
                         : getCurrentTheme() === 'dark'
                           ? 'hover:bg-black/30'
-                          : 'hover:bg-purple-50'
+                          : 'hover:bg-purple-50/70'
                     }`}
                     onClick={() => {
                       command.action();
@@ -275,21 +275,21 @@ const CommandPalette: React.FC = () => {
           {/* Footer */}
           <div className={`flex items-center justify-between px-4 py-2 border-t text-xs ${
             getCurrentTheme() === 'dark' 
-              ? 'border-purple-500/20 text-white/50' 
-              : 'border-purple-100 text-gray-500'
+              ? 'border-purple-500/30 text-white/50' 
+              : 'border-purple-200/80 text-gray-500'
           }`}>
             <div>
               <span className="mr-1">Press</span>
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  ? 'bg-purple-900/50 border border-purple-700/30' 
+                  : 'bg-purple-50 border border-purple-200/70'
               }`}>Ctrl</kbd>
               <span className="mx-1">+</span>
               <kbd className={`px-1.5 py-0.5 rounded ${
                 getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : 'bg-purple-50 border border-purple-100'
+                  ? 'bg-purple-900/50 border border-purple-700/30' 
+                  : 'bg-purple-50 border border-purple-200/70'
               }`}>K</kbd>
               <span className="ml-1">to open command palette</span>
             </div>
