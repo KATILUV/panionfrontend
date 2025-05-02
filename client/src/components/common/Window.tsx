@@ -275,21 +275,35 @@ const Window: React.FC<WindowProps> = ({
             : 'border-white/20 bg-white/5 dark:bg-black/10'
           }
         `}
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95, y: -10 }}
         animate={{ 
           opacity: 1, 
           scale: 1,
+          y: 0,
           transition: { 
-            duration: 0.2,
-            ease: "easeOut"
+            type: "spring",
+            damping: 25,
+            stiffness: 300,
+            duration: 0.4,
+            ease: [0.34, 1.56, 0.64, 1] // Custom cubic bezier for a more natural bounce
           }
         }}
-        layout
+        exit={{
+          opacity: 0,
+          scale: 0.95,
+          y: 20,
+          transition: {
+            duration: 0.25,
+            ease: "easeInOut"
+          }
+        }}
+        layout="position"
         transition={{
           type: "spring",
-          damping: 20,
-          stiffness: 300,
-          duration: 0.3
+          damping: 22,
+          stiffness: 280,
+          mass: 1.2,
+          duration: 0.35
         }}
       >
         {/* Snap Overlay Indicators */}

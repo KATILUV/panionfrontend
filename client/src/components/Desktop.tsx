@@ -136,24 +136,36 @@ const Desktop: React.FC = () => {
         {!hasOpenWindows && <EmptyStateDashboard />}
         
         {/* Render Windows */}
-        {Object.values(windows)
-          .filter(window => window.isOpen && !window.isMinimized)
-          .map(window => (
-            <Window
-              key={window.id}
-              id={window.id}
-              title={window.title}
-              isActive={focusedAgentId === window.id}
-              position={window.position}
-              size={window.size}
-              zIndex={window.zIndex}
-              onClose={() => closeAgent(window.id)}
-              onMinimize={() => minimizeAgent(window.id)}
-              onFocus={() => focusAgent(window.id)}
-            >
-              {renderAgentContent(window.id)}
-            </Window>
-          ))}
+        <AnimatePresence>
+          {Object.values(windows)
+            .filter(window => window.isOpen && !window.isMinimized)
+            .map(window => (
+              <motion.div
+                key={window.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ 
+                  opacity: 0,
+                  scale: 0.9,
+                  transition: { duration: 0.2, ease: "easeInOut" }
+                }}
+              >
+                <Window
+                  id={window.id}
+                  title={window.title}
+                  isActive={focusedAgentId === window.id}
+                  position={window.position}
+                  size={window.size}
+                  zIndex={window.zIndex}
+                  onClose={() => closeAgent(window.id)}
+                  onMinimize={() => minimizeAgent(window.id)}
+                  onFocus={() => focusAgent(window.id)}
+                >
+                  {renderAgentContent(window.id)}
+                </Window>
+              </motion.div>
+            ))}
+        </AnimatePresence>
       </div>
       
       {/* Clara's Context Panel - visible when Clara is active */}
