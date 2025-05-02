@@ -17,9 +17,7 @@ const SettingsAgent = () => {
     { id: 'blue', name: 'Blue', color: 'bg-blue-500' },
     { id: 'green', name: 'Green', color: 'bg-green-500' },
     { id: 'orange', name: 'Orange', color: 'bg-amber-500' },
-    { id: 'pink', name: 'Pink', color: 'bg-fuchsia-400' },
-    { id: 'black', name: 'Black', color: 'bg-gray-900' },
-    { id: 'white', name: 'White', color: 'bg-white border border-gray-600' }
+    { id: 'pink', name: 'Pink', color: 'bg-fuchsia-400' }
   ];
 
   const handleAccentChange = (newAccent: ThemeAccent) => {

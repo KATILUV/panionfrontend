@@ -37,26 +37,34 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
     console.log("Background component - accent color:", accent);
   }, [accent]);
   
-  // Get direct background color based on accent color
+  // This is a simpler approach - get direct background color based on theme and accent
   const getBackgroundColor = () => {
-    // In dark mode only, we only need to handle different accent colors
+    // Force extreme values for dark and light accents
+    if (accent === 'dark') {
+      // Always use pure black for dark accent regardless of theme mode
+      return '#000000'; // Pure black
+    }
+    if (accent === 'light') {
+      // Always use pure white for light accent regardless of theme mode
+      return '#ffffff'; // Pure white
+    }
+    
+    // For other accents, fall back to existing gradient styles
+    const isDark = currentTheme === 'dark';
+    
     switch (accent) {
       case 'purple':
-        return '#1a1245';
+        return isDark ? '#1a1245' : '#f9f7ff'; 
       case 'blue':
-        return '#0a1a2f';
+        return isDark ? '#0a1a2f' : '#f0f9ff';
       case 'green':
-        return '#0f2922';
+        return isDark ? '#0f2922' : '#f0fdf4';
       case 'orange':
-        return '#261409';
+        return isDark ? '#261409' : '#fff7ed';
       case 'pink':
-        return '#270d1a';
-      case 'black':
-        return '#000000'; // Pure black
-      case 'white':
-        return '#1a1a1a'; // Dark gray for white accent (not pure white to maintain dark mode)
+        return isDark ? '#270d1a' : '#fdf2f8';
       default:
-        return '#1a1245'; // Default purple background
+        return isDark ? '#1a1245' : '#f9f7ff';
     }
   };
   
@@ -122,30 +130,47 @@ const Desktop: React.FC = () => {
   // Check if there are any open windows
   const hasOpenWindows = Object.values(windows).some(window => window.isOpen && !window.isMinimized);
 
-  // Generate background gradient based on accent
+  // Generate background gradient based on current theme and accent
   const getBackgroundGradient = () => {
     // Get fresh values directly from the store
+    const isDark = useThemeStore.getState().getCurrentTheme() === 'dark';
     const currentAccent = useThemeStore.getState().accent;
     
-    console.log('Generating background for:', { accent: currentAccent });
+    console.log('Generating background for:', { isDark, accent: currentAccent });
     
     switch (currentAccent) {
       case 'purple':
-        return 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]';
+        return isDark 
+          ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
+          : 'bg-gradient-to-br from-purple-50 via-white to-white';
       case 'blue':
-        return 'bg-gradient-to-br from-blue-950 via-[#0a1a2f] to-[#0c1827]';
+        return isDark 
+          ? 'bg-gradient-to-br from-blue-950 via-[#0a1a2f] to-[#0c1827]' 
+          : 'bg-gradient-to-br from-blue-50 via-white to-white';
       case 'green':
-        return 'bg-gradient-to-br from-green-950 via-[#0f2922] to-[#0c211c]';
+        return isDark 
+          ? 'bg-gradient-to-br from-green-950 via-[#0f2922] to-[#0c211c]' 
+          : 'bg-gradient-to-br from-green-50 via-white to-white';
       case 'orange':
-        return 'bg-gradient-to-br from-orange-950 via-[#261409] to-[#1f1107]';
+        return isDark 
+          ? 'bg-gradient-to-br from-orange-950 via-[#261409] to-[#1f1107]' 
+          : 'bg-gradient-to-br from-orange-50 via-white to-white';
       case 'pink':
-        return 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]';
-      case 'black':
-        return 'bg-gradient-to-br from-gray-950 via-black to-gray-900';
-      case 'white':
-        return 'bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800';
+        return isDark 
+          ? 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]' 
+          : 'bg-gradient-to-br from-pink-50 via-white to-white';
+      case 'dark':
+        return isDark 
+          ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-black' 
+          : 'bg-gradient-to-br from-gray-200 via-gray-100 to-white';
+      case 'light':
+        return isDark 
+          ? 'bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800' 
+          : 'bg-gradient-to-br from-white via-gray-50 to-white';
       default:
-        return 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]';
+        return isDark 
+          ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
+          : 'bg-gradient-to-br from-purple-50 via-white to-white';
     }
   };
 
