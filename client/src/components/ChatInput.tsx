@@ -58,7 +58,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           <img 
             src={imagePreview} 
             alt="Upload preview"
-            className="max-w-full max-h-[180px] rounded-xl border border-white/20 shadow-lg"
+            className={`max-w-full max-h-[180px] rounded-xl shadow-lg ${
+              isDarkMode
+                ? 'border border-white/20'
+                : 'border border-indigo-200/50'
+            }`}
           />
           <button 
             onClick={removeImage}
@@ -84,8 +88,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Message Clara..."
           className={`flex-grow py-3 px-4 bg-transparent border-none outline-none ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          } placeholder:${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}
+            isDarkMode ? 'text-white placeholder:text-white/50' : 'text-gray-800 placeholder:text-gray-500'
+          }`}
           disabled={isLoading}
         />
         
@@ -93,7 +97,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           <button
             type="button"
             onClick={handleImageClick}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20 text-white hover:bg-white/30 transition-colors mr-2"
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors mr-2 ${
+              isDarkMode 
+                ? 'bg-white/20 text-white hover:bg-white/30' 
+                : 'bg-indigo-100/50 text-indigo-600 hover:bg-indigo-100/80'
+            }`}
             disabled={isLoading}
             aria-label="Upload image"
           >
