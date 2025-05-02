@@ -1,5 +1,12 @@
 import React, { useEffect } from 'react';
-import { useThemeStore, ThemeMode, ThemeAccent } from '../../state/themeStore';
+import { 
+  useThemeStore, 
+  ThemeMode, 
+  ThemeAccent, 
+  BackgroundPattern, 
+  ThemePreset, 
+  ThemeSettings 
+} from '../../state/themeStore';
 import { 
   Dialog,
   DialogContent,
@@ -7,16 +14,22 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose
+  DialogClose,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Sun, 
   Moon, 
   Monitor, 
   Palette,
   CheckCircle2,
-  Info
+  Info,
+  Grid,
+  CircleDashed,
+  Waves,
+  XCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -28,11 +41,17 @@ interface ThemeSelectorProps {
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
   const mode = useThemeStore(state => state.mode);
   const accent = useThemeStore(state => state.accent);
+  const backgroundPattern = useThemeStore(state => state.backgroundPattern);
+  const activePreset = useThemeStore(state => state.activePreset);
   const setMode = useThemeStore(state => state.setMode);
   const setAccent = useThemeStore(state => state.setAccent);
+  const setBackgroundPattern = useThemeStore(state => state.setBackgroundPattern);
+  const setThemePreset = useThemeStore(state => state.setThemePreset);
+  const getThemePresets = useThemeStore(state => state.getThemePresets);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const systemPrefersDark = useThemeStore(state => state.systemPrefersDark);
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [currentTab, setCurrentTab] = React.useState('presets');
   const { toast } = useToast();
 
   // Define available accent colors
@@ -66,6 +85,23 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
     toast({
       title: 'Accent Color Updated',
       description: `Accent color set to ${newAccent}`,
+    });
+  };
+  
+  const handleBackgroundPatternChange = (newPattern: BackgroundPattern) => {
+    setBackgroundPattern(newPattern);
+    toast({
+      title: 'Background Pattern Updated',
+      description: `Pattern set to ${newPattern}`,
+    });
+  };
+  
+  const handleThemePresetChange = (preset: ThemePreset) => {
+    setThemePreset(preset);
+    const presetName = getThemePresets()[preset].displayName;
+    toast({
+      title: 'Theme Applied',
+      description: `"${presetName}" theme has been applied`,
     });
   };
 

@@ -70,9 +70,11 @@ const Desktop: React.FC = () => {
   // Check if there are any open windows
   const hasOpenWindows = Object.values(windows).some(window => window.isOpen && !window.isMinimized);
 
-  // Get current theme and accent
+  // Get current theme settings
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accent = useThemeStore(state => state.accent);
+  const backgroundPattern = useThemeStore(state => state.backgroundPattern);
+  const activePreset = useThemeStore(state => state.activePreset);
 
   // Generate background gradient based on current theme and accent
   const getBackgroundGradient = () => {
@@ -110,12 +112,30 @@ const Desktop: React.FC = () => {
     <div className={`panion-desktop overflow-auto min-h-screen ${getBackgroundGradient()}`}>
       {/* Background Decoration */}
       <div className="absolute inset-0 w-full h-full">
-        {/* Add subtle grid pattern */}
-        <div className={`absolute inset-0 w-full h-full ${
-          currentTheme === 'dark' ? 'bg-grid-white/5' : 'bg-[url("data:image/svg+xml,%3csvg_xmlns=%27http://www.w3.org/2000/svg%27_viewBox=%270_0_32_32%27_width=%2732%27_height=%2732%27_fill=%27none%27_stroke=%27rgb(0_0_0_/_0.05)%27%3e%3cpath_d=%27M0_.5H31.5V32%27/%3e%3c/svg%3e")]'
-        }`}></div>
+        {/* Background pattern based on theme setting */}
+        {backgroundPattern === 'grid' && (
+          <div className={`absolute inset-0 w-full h-full ${
+            currentTheme === 'dark' ? 'bg-grid-white/5' : 'bg-[url("data:image/svg+xml,%3csvg_xmlns=%27http://www.w3.org/2000/svg%27_viewBox=%270_0_32_32%27_width=%2732%27_height=%2732%27_fill=%27none%27_stroke=%27rgb(0_0_0_/_0.05)%27%3e%3cpath_d=%27M0_.5H31.5V32%27/%3e%3c/svg%3e")]'
+          }`}></div>
+        )}
         
-        {/* Add subtle glow effect */}
+        {backgroundPattern === 'dots' && (
+          <div className={`absolute inset-0 w-full h-full ${
+            currentTheme === 'dark' 
+              ? 'bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[length:20px_20px]' 
+              : 'bg-[radial-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[length:20px_20px]'
+          }`}></div>
+        )}
+        
+        {backgroundPattern === 'waves' && (
+          <div className={`absolute inset-0 w-full h-full ${
+            currentTheme === 'dark' 
+              ? 'bg-[url("data:image/svg+xml,%3Csvg_width=%27100%25%27_height=%27100%25%27_viewBox=%270_0_1200_800%27_xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cdefs%3E%3ClinearGradient_id=%27a%27_gradientUnits=%27userSpaceOnUse%27_x1=%27600%27_y1=%27850%27_x2=%27600%27_y2=%27100%27%3E%3Cstop_offset=%270%27_stop-color=%27%23ffffff%27_stop-opacity=%270%27/%3E%3Cstop_offset=%271%27_stop-color=%27%23ffffff%27_stop-opacity=%270.05%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath_fill=%27url(%23a)%27_d=%27M0_0v800c175-125_350-125_525_0s350_125_525_0c175-125_350-125_525_0V0H0z%27/%3E%3C/svg%3E")]' 
+              : 'bg-[url("data:image/svg+xml,%3Csvg_width=%27100%25%27_height=%27100%25%27_viewBox=%270_0_1200_800%27_xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cdefs%3E%3ClinearGradient_id=%27a%27_gradientUnits=%27userSpaceOnUse%27_x1=%27600%27_y1=%27850%27_x2=%27600%27_y2=%27100%27%3E%3Cstop_offset=%270%27_stop-color=%27%23000000%27_stop-opacity=%270%27/%3E%3Cstop_offset=%271%27_stop-color=%27%23000000%27_stop-opacity=%270.03%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath_fill=%27url(%23a)%27_d=%27M0_0v800c175-125_350-125_525_0s350_125_525_0c175-125_350-125_525_0V0H0z%27/%3E%3C/svg%3E")]'
+          }`}></div>
+        )}
+        
+        {/* Add subtle glow effect with accent color */}
         <div className={`absolute top-0 left-1/4 w-1/2 h-80 rounded-full blur-3xl ${
           currentTheme === 'dark' 
             ? accent === 'purple' ? 'bg-purple-900/20' 
@@ -129,6 +149,13 @@ const Desktop: React.FC = () => {
                   : accent === 'orange' ? 'bg-orange-200/40'
                     : 'bg-pink-200/40'
         }`}></div>
+        
+        {/* Theme name indicator for non-system themes */}
+        {activePreset !== 'system' && (
+          <div className="absolute bottom-20 right-6 text-xs text-white/30 font-mono">
+            Theme: {useThemeStore.getState().getThemePresets()[activePreset].displayName}
+          </div>
+        )}
       </div>
       
       {/* Desktop Area */}
