@@ -23,8 +23,8 @@ const LandingPage: React.FC = () => {
   // CSS classes for feature cards
   const featureIconClass = `rounded-full p-5 ${
     currentTheme === 'dark' 
-      ? 'bg-purple-950/50 bg-gradient-to-br from-purple-950 to-violet-900' 
-      : 'bg-purple-100 bg-gradient-to-br from-purple-50 to-violet-200'
+      ? 'bg-gradient-to-br from-purple-950 to-violet-900' 
+      : 'bg-gradient-to-br from-purple-50 to-violet-200'
   } w-fit mb-6 mx-auto`;
 
   // This useEffect is no longer needed as we'll use CSS animations instead
@@ -151,7 +151,7 @@ const LandingPage: React.FC = () => {
     
     if (!isDark) {
       // Light mode twilight gradient
-      gradientClasses = 'from-purple-700 via-indigo-600 to-purple-800';
+      gradientClasses = 'from-purple-700 via-violet-600 to-purple-800';
     } else {
       // Dark mode twilight gradient
       gradientClasses = 'from-[#1a1245] via-[#2d2468] to-[#33284b]';
@@ -250,9 +250,9 @@ const LandingPage: React.FC = () => {
               }}
             />
           ))}
-          <div className="absolute top-1/3 left-10 w-72 h-72 rounded-full bg-indigo-600/20 blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-10 w-80 h-80 rounded-full bg-purple-600/20 blur-3xl"></div>
-          <div className="absolute top-3/4 left-1/3 w-64 h-64 rounded-full bg-violet-500/20 blur-3xl"></div>
+          <div className="absolute top-1/3 left-10 w-72 h-72 rounded-full bg-purple-600/20 blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-10 w-80 h-80 rounded-full bg-violet-600/20 blur-3xl"></div>
+          <div className="absolute top-3/4 left-1/3 w-64 h-64 rounded-full bg-purple-500/20 blur-3xl"></div>
         </div>
         
         {/* Floating window mockup in background */}
@@ -300,7 +300,7 @@ const LandingPage: React.FC = () => {
               className="relative"
             >
               <motion.div 
-                className="absolute -top-5 -left-10 w-20 h-20 bg-indigo-500/40 rounded-full blur-2xl"
+                className="absolute -top-5 -left-10 w-20 h-20 bg-purple-500/40 rounded-full blur-2xl"
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               />
@@ -402,8 +402,8 @@ const LandingPage: React.FC = () => {
                     <div className="h-16 rounded bg-violet-600/20 p-2">
                       <div className="w-full h-full rounded bg-violet-500/40"></div>
                     </div>
-                    <div className="h-16 rounded bg-indigo-600/20 p-2">
-                      <div className="w-full h-full rounded bg-indigo-500/40"></div>
+                    <div className="h-16 rounded bg-violet-600/20 p-2">
+                      <div className="w-full h-full rounded bg-violet-500/40"></div>
                     </div>
                     <div className="h-16 rounded bg-purple-600/20 p-2">
                       <div className="w-full h-full rounded bg-purple-500/40"></div>
