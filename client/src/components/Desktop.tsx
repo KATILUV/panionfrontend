@@ -32,18 +32,34 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accent = useThemeStore(state => state.accent);
   
-  // Debug: Log accent changes
+  // Debug: Log accent changes and update document body
   useEffect(() => {
     console.log("Background component - accent color:", accent);
+    
+    // Apply background color directly to document body for dark and light accents
+    if (accent === 'dark') {
+      document.body.style.backgroundColor = '#000000';
+      document.body.style.backgroundImage = 'none';
+    } else if (accent === 'light') {
+      document.body.style.backgroundColor = '#ffffff';
+      document.body.style.backgroundImage = 'none';
+    } else {
+      document.body.style.backgroundColor = '';
+      document.body.style.backgroundImage = '';
+    }
   }, [accent]);
   
   // This is a simpler approach - get direct background color based on theme and accent
   const getBackgroundColor = () => {
-    // Handle special cases for dark and light accent with direct colors
-    if (accent === 'dark' && currentTheme === 'dark') return '#000000'; // Pure black
-    if (accent === 'light' && currentTheme === 'light') return '#ffffff'; // Pure white
-    if (accent === 'dark' && currentTheme === 'light') return '#d1d5db'; // Gray-300
-    if (accent === 'light' && currentTheme === 'dark') return '#374151'; // Gray-700
+    // Force extreme values for dark and light accents
+    if (accent === 'dark') {
+      // Always use pure black for dark accent regardless of theme mode
+      return '#000000'; // Pure black
+    }
+    if (accent === 'light') {
+      // Always use pure white for light accent regardless of theme mode
+      return '#ffffff'; // Pure white
+    }
     
     // For other accents, fall back to existing gradient styles
     const isDark = currentTheme === 'dark';
@@ -68,17 +84,15 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
   console.log("Applied background color:", backgroundColor);
   
   return (
-    <div className="panion-desktop overflow-auto min-h-screen">
-      {/* Fixed position background overlay */}
-      <div
-        className="fixed top-0 left-0 right-0 bottom-0 w-full h-full -z-10"
-        style={{ backgroundColor }}
-      />
-      
-      {/* Content container */}
-      <div className="relative z-0">
-        {children}
-      </div>
+    <div 
+      className="panion-desktop overflow-auto min-h-screen"
+      style={{ 
+        // Use direct inline background as highest priority
+        backgroundColor,
+        backgroundImage: 'none'
+      }}
+    >
+      {children}
     </div>
   );
 };
