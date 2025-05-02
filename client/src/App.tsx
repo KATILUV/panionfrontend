@@ -8,7 +8,7 @@ import NotFound from "@/pages/not-found";
 import DesktopPage from "./pages/desktop-page";
 import LandingPage from "./pages/landing-page";
 import AuthPage from "./pages/auth-page";
-import ClaraAgent from "./components/agents/ClaraAgent";
+import PanionAgent from "./components/agents/PanionAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import { useAgentStore } from "./state/agentStore";
 import ThemeProvider from "./components/common/ThemeProvider";

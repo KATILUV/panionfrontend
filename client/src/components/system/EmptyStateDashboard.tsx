@@ -117,8 +117,8 @@ const EmptyStateDashboard: React.FC = () => {
   
   const quickActions = [
     {
-      title: "Chat with Clara",
-      description: "Start a conversation with Clara, your AI assistant",
+      title: "Chat with Panion",
+      description: "Start a conversation with Panion, your AI assistant",
       icon: <MessageSquare className="h-5 w-5" />,
       onClick: () => openAgent('clara'),
       color: getCardColor(0)

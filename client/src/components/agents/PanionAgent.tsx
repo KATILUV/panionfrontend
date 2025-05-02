@@ -8,7 +8,7 @@ import { useChat } from '../../hooks/useChat';
 import { Message } from '../../types/chat';
 import { log } from '../../state/systemLogStore';
 
-const ClaraAgent: React.FC = () => {
+const PanionAgent: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -104,4 +104,4 @@ const ClaraAgent: React.FC = () => {
   );
 };
 
-export default ClaraAgent;
+export default PanionAgent;
