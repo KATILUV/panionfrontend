@@ -150,12 +150,20 @@ const Window: React.FC<WindowProps> = ({
     // Play snap sound when window snaps to a position
     playSnapSound();
     
+    // Update state with the new snap position
     setCurrentSnapPosition(snapPosition);
-    updateAgentPosition(id, newPosition);
     
-    if (snapPosition !== 'center') {
-      updateAgentSize(id, newSize);
-    }
+    // First update position with a slight delay before size for better visual effect
+    requestAnimationFrame(() => {
+      updateAgentPosition(id, newPosition);
+      
+      // Add a small delay before resizing for better animation effect
+      if (snapPosition !== 'center') {
+        setTimeout(() => {
+          updateAgentSize(id, newSize);
+        }, 50);
+      }
+    });
   };
   
   // Handle drag start
