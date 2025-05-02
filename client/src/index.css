@@ -135,29 +135,29 @@
     --accent: 142.1 76.2% 36.3%;
 }
 
-/* Accent Color: Orange (Amber) */
+/* Accent Color: Black (formerly Orange/Amber) */
 [data-accent="orange"] {
-    --primary: 38 92% 50%;
-    --primary-hover: 38 92% 45%;
-    --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 38 95% 94%;
-    --secondary-hover: 38 95% 90%;
-    --secondary-foreground: 38 92% 30%;
-    --accent: 38 92% 50%;
-    --accent-foreground: 60 9.1% 97.8%;
+    --primary: 0 0% 0%;
+    --primary-hover: 0 0% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 94%;
+    --secondary-hover: 0 0% 90%;
+    --secondary-foreground: 0 0% 30%;
+    --accent: 0 0% 0%;
+    --accent-foreground: 0 0% 98%;
     
     /* Theme specific colors */
-    --theme-gradient-start: #513c06;
-    --theme-gradient-end: #7c5e10;
-    --theme-accent-glow: rgba(245, 158, 11, 0.3);
+    --theme-gradient-start: #0a0a0a;
+    --theme-gradient-end: #1a1a1a;
+    --theme-accent-glow: rgba(50, 50, 50, 0.3);
 }
 
 .dark[data-accent="orange"] {
-    --primary: 38 92% 60%;
-    --primary-hover: 38 92% 55%;
-    --secondary: 38 50% 18%;
-    --secondary-hover: 38 50% 22%;
-    --accent: 38 92% 50%;
+    --primary: 0 0% 20%;
+    --primary-hover: 0 0% 25%;
+    --secondary: 0 0% 12%;
+    --secondary-hover: 0 0% 15%;
+    --accent: 0 0% 10%;
 }
 
 /* Accent Color: Pink (Fuchsia) */

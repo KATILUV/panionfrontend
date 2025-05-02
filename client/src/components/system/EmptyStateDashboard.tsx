@@ -60,7 +60,7 @@ const EmptyStateDashboard: React.FC = () => {
           : 'from-green-100 via-green-50/80 to-background';
       case 'orange':
         return currentTheme === 'dark' 
-          ? 'from-black/40 via-black/20 to-background' 
+          ? 'from-gray-800/30 via-gray-900/20 to-background' 
           : 'from-orange-100 via-orange-50/80 to-background';
       case 'pink':
         return currentTheme === 'dark' 
@@ -96,10 +96,10 @@ const EmptyStateDashboard: React.FC = () => {
             : 'from-teal-500 to-green-600';
       case 'orange':
         return index % 3 === 0 
-          ? 'from-gray-900 to-black' 
+          ? 'from-gray-800 to-black' 
           : index % 3 === 1 
-            ? 'from-black to-gray-900' 
-            : 'from-gray-800 to-black';
+            ? 'from-zinc-800 to-gray-900' 
+            : 'from-neutral-800 to-gray-950';
       case 'pink':
         return index % 3 === 0 
           ? 'from-pink-500 to-rose-600' 

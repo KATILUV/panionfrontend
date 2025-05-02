@@ -113,8 +113,8 @@ const AuthPage: React.FC = () => {
           : 'from-green-100 via-green-50 to-background';
       case 'orange':
         return isDark 
-          ? 'from-orange-950 via-background to-background' 
-          : 'from-orange-100 via-orange-50 to-background';
+          ? 'from-gray-950 via-gray-900 to-background' 
+          : 'from-gray-100 via-gray-50 to-background';
       case 'pink':
         return isDark 
           ? 'from-pink-950 via-background to-background' 
