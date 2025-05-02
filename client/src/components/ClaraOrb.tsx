@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useThemeStore } from '../state/themeStore';
 
 interface ClaraOrbProps {
@@ -8,6 +8,9 @@ interface ClaraOrbProps {
 const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const accent = useThemeStore(state => state.accent);
+  const isDark = getCurrentTheme() === 'dark';
+  const isLightAccent = accent === 'light' && !isDark;
+  
   // Random bubble generator
   const generateBubbles = () => {
     const bubbles = [];
@@ -45,6 +48,29 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
     return bubbles;
   };
 
+  // Determine shadow style based on theme and processing state
+  const getShadowClass = () => {
+    if (isDark || accent !== 'light') {
+      return isProcessing
+        ? 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_40px_rgba(138,43,226,0.6),0_0_60px_rgba(255,0,128,0.5),inset_0_0_80px_rgba(255,255,255,0.3)]'
+        : 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_30px_rgba(138,43,226,0.4),0_0_50px_rgba(255,0,128,0.3),inset_0_0_70px_rgba(255,255,255,0.2)]';
+    } else {
+      return isProcessing
+        ? 'shadow-[0_10px_30px_rgba(190,190,190,0.5),0_0_40px_rgba(190,190,190,0.35),0_0_60px_rgba(210,210,210,0.4),inset_0_0_80px_rgba(255,255,255,0.5)]'
+        : 'shadow-[0_10px_30px_rgba(190,190,190,0.3),0_0_30px_rgba(190,190,190,0.25),0_0_50px_rgba(210,210,210,0.3),inset_0_0_70px_rgba(255,255,255,0.4)]';
+    }
+  };
+
+  // Background color class
+  const getBgClass = () => {
+    return isDark ? 'bg-white/10' : (isLightAccent ? 'bg-white/30' : 'bg-white/20');
+  };
+
+  // Border class
+  const getBorderClass = () => {
+    return isDark ? 'border border-white/60' : (isLightAccent ? 'border-2 border-gray-200/80' : 'border border-white/70');
+  };
+
   return (
     <div className="flex justify-center items-center my-6">
       <div 
@@ -52,53 +78,40 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           relative w-32 h-32 rounded-full 
           floating-orb
           bg-opacity-15 backdrop-blur-lg
-          ${getCurrentTheme() === 'dark' 
-            ? 'bg-white/10' 
-            : (accent === 'light' ? 'bg-white/30' : 'bg-white/20')
-          }
-          ${getCurrentTheme() === 'dark' || accent !== 'light'
-            ? (isProcessing 
-              ? 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_40px_rgba(138,43,226,0.6),0_0_60px_rgba(255,0,128,0.5),inset_0_0_80px_rgba(255,255,255,0.3)]' 
-              : 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_30px_rgba(138,43,226,0.4),0_0_50px_rgba(255,0,128,0.3),inset_0_0_70px_rgba(255,255,255,0.2)]')
-            : (isProcessing
-              ? 'shadow-[0_20px_70px_rgba(0,0,0,0.2),0_0_40px_rgba(150,150,150,0.35),0_0_60px_rgba(200,200,200,0.4),inset_0_0_80px_rgba(255,255,255,0.5)]'
-              : 'shadow-[0_20px_70px_rgba(0,0,0,0.15),0_0_30px_rgba(150,150,150,0.25),0_0_50px_rgba(200,200,200,0.3),inset_0_0_70px_rgba(255,255,255,0.4)]')
-          }
-          ${getCurrentTheme() === 'dark' 
-            ? 'border border-white/60' 
-            : (accent === 'light' ? 'border-2 border-gray-200/80' : 'border border-white/70')
-          }
+          ${getBgClass()}
+          ${getShadowClass()}
+          ${getBorderClass()}
           overflow-hidden
           transition-all duration-300 ease-in-out
           ${isProcessing ? 'scale-105' : ''} 
         `}
       >
         {/* Crystal fluid container */}
-        <div className="crystal-fluid">
+        <div className={`crystal-fluid ${isLightAccent ? 'light-fluid' : ''}`}>
           {/* Pink blob */}
           <div className={`lava-blob ${
-            accent === 'light' && getCurrentTheme() === 'light'
+            isLightAccent
               ? 'bg-gradient-radial from-gray-400/80 via-gray-300/50 to-gray-300/0'
               : 'lava-blob-1'
             } animate-blob-float-1`}></div>
           
           {/* Blue blob */}
           <div className={`lava-blob ${
-            accent === 'light' && getCurrentTheme() === 'light'
+            isLightAccent
               ? 'bg-gradient-radial from-gray-500/70 via-gray-400/50 to-gray-400/0'
               : 'lava-blob-2'
             } animate-blob-float-2`}></div>
           
           {/* Purple blob */}
           <div className={`lava-blob ${
-            accent === 'light' && getCurrentTheme() === 'light'
+            isLightAccent
               ? 'bg-gradient-radial from-gray-300/80 via-gray-200/60 to-gray-200/0'
               : 'lava-blob-3'
             } animate-blob-float-3`}></div>
           
           {/* Gold blob */}
           <div className={`lava-blob ${
-            accent === 'light' && getCurrentTheme() === 'light'
+            isLightAccent
               ? 'bg-gradient-radial from-gray-200/90 via-gray-300/60 to-gray-300/0'
               : 'lava-blob-4'
             } animate-blob-float-4`}></div>
@@ -108,7 +121,7 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           
           {/* Iridescent overlay */}
           <div className={`${
-            accent === 'light' && getCurrentTheme() === 'light'
+            isLightAccent
               ? 'bg-gradient-conic from-gray-200/40 via-white/40 to-gray-300/40 opacity-40'
               : 'iridescent-layer'
           } absolute inset-0 rounded-full mix-blend-soft-light`}></div>
@@ -120,7 +133,7 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
         
         {/* Add additional dynamic reflection */}
         <div className={`absolute inset-0 rounded-full opacity-10 
-          ${getCurrentTheme() === 'dark' || accent !== 'light'
+          ${isDark || accent !== 'light'
             ? 'bg-gradient-to-br from-purple-300/30 via-transparent to-pink-300/30'
             : 'bg-gradient-to-br from-gray-300/30 via-transparent to-gray-300/30'
           } mix-blend-overlay animate-reflection`}></div>

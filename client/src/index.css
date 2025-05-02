@@ -699,6 +699,11 @@
   z-index: -1;
 }
 
+/* Light fluid container version for light mode + light accent */
+.light-fluid::before {
+  background-color: rgba(210, 210, 210, 0.2);
+}
+
 /* Lava lamp blobs */
 .lava-blob {
   position: absolute;
