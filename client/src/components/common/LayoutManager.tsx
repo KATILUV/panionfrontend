@@ -75,8 +75,8 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
       <DialogContent 
         className={`sm:max-w-[550px] backdrop-blur-xl ${
           getCurrentTheme() === 'dark' 
-            ? 'bg-[#1a1538]/90 border-purple-500/30 text-white' 
-            : 'bg-white border-purple-300/50 text-gray-900'
+            ? 'bg-black/60 border border-purple-500/30 text-white' 
+            : 'bg-white/95 border border-purple-200 text-gray-900'
         }`}
         style={{ 
           position: 'fixed', 
@@ -186,11 +186,10 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
         <DialogFooter>
           <DialogClose asChild>
             <Button 
-              variant="outline" 
               className={`${
                 getCurrentTheme() === 'dark' 
-                  ? 'border-white/20 hover:bg-white/10 text-white' 
-                  : 'border-purple-200 hover:bg-purple-50 text-gray-800'
+                  ? 'bg-purple-700 hover:bg-purple-600 text-white' 
+                  : 'bg-purple-500 hover:bg-purple-400 text-white'
               }`}
             >
               Close

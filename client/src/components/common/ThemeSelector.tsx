@@ -103,8 +103,8 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
       <DialogContent 
         className={`sm:max-w-[425px] backdrop-blur-xl ${
           getCurrentTheme() === 'dark' 
-            ? 'bg-[#1a1538]/90 border-purple-500/30 text-white' 
-            : 'bg-white border-purple-300/50 text-gray-900'
+            ? 'bg-black/60 border border-purple-500/30 text-white' 
+            : 'bg-white/95 border border-purple-200 text-gray-900'
         }`}
         style={{ 
           position: 'fixed', 
@@ -135,8 +135,12 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
                 variant={mode === 'light' ? 'default' : 'outline'}
                 className={`flex-1 ${
                   mode === 'light' 
-                    ? 'bg-purple-700' 
-                    : 'bg-transparent ' + (getCurrentTheme() === 'dark' ? 'hover:bg-white/10' : 'hover:bg-purple-50')
+                    ? getCurrentTheme() === 'dark' 
+                      ? 'bg-purple-700' 
+                      : 'bg-purple-500 text-white' 
+                    : getCurrentTheme() === 'dark' 
+                      ? 'bg-transparent border-white/20 hover:bg-white/10' 
+                      : 'bg-transparent border-purple-200 hover:bg-purple-50'
                 }`}
                 onClick={() => handleModeChange('light')}
               >
@@ -147,8 +151,12 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
                 variant={mode === 'dark' ? 'default' : 'outline'}
                 className={`flex-1 ${
                   mode === 'dark' 
-                    ? 'bg-purple-700' 
-                    : 'bg-transparent ' + (getCurrentTheme() === 'dark' ? 'hover:bg-white/10' : 'hover:bg-purple-50')
+                    ? getCurrentTheme() === 'dark' 
+                      ? 'bg-purple-700' 
+                      : 'bg-purple-500 text-white'
+                    : getCurrentTheme() === 'dark' 
+                      ? 'bg-transparent border-white/20 hover:bg-white/10' 
+                      : 'bg-transparent border-purple-200 hover:bg-purple-50'
                 }`}
                 onClick={() => handleModeChange('dark')}
               >
@@ -159,8 +167,12 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
                 variant={mode === 'system' ? 'default' : 'outline'}
                 className={`flex-1 ${
                   mode === 'system' 
-                    ? 'bg-purple-700' 
-                    : 'bg-transparent ' + (getCurrentTheme() === 'dark' ? 'hover:bg-white/10' : 'hover:bg-purple-50')
+                    ? getCurrentTheme() === 'dark' 
+                      ? 'bg-purple-700' 
+                      : 'bg-purple-500 text-white'
+                    : getCurrentTheme() === 'dark' 
+                      ? 'bg-transparent border-white/20 hover:bg-white/10' 
+                      : 'bg-transparent border-purple-200 hover:bg-purple-50'
                 }`}
                 onClick={() => handleModeChange('system')}
               >
@@ -225,11 +237,10 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
         <DialogFooter>
           <DialogClose asChild>
             <Button 
-              variant="outline" 
               className={`${
                 getCurrentTheme() === 'dark' 
-                  ? 'border-white/20 hover:bg-white/10 text-white' 
-                  : 'border-purple-200 hover:bg-purple-50 text-gray-800'
+                  ? 'bg-purple-700 hover:bg-purple-600 text-white' 
+                  : 'bg-purple-500 hover:bg-purple-400 text-white'
               }`}
             >
               Close
