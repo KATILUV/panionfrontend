@@ -114,37 +114,37 @@ const LandingPage: React.FC = () => {
     }
   ];
   
-  // Mini features for the carousel
+  // Agents for the carousel
   const keyFeatures = [
     {
-      icon: LayoutGrid,
-      title: "Multi-Agent Environment",
-      description: "Work with multiple specialized AI agents in one workspace"
+      icon: MessageSquare,
+      title: "Clara AI Agent",
+      description: "Your primary AI companion for natural conversations and problem-solving"
+    },
+    {
+      icon: Search,
+      title: "Research Explorer",
+      description: "Organizes information and retrieves relevant context for complex topics"
+    },
+    {
+      icon: Database,
+      title: "Data Analyst",
+      description: "Creates visualizations and helps interpret complex data patterns"
+    },
+    {
+      icon: FileText,
+      title: "Notes Agent",
+      description: "Captures important information and organizes it for future reference"
+    },
+    {
+      icon: Terminal,
+      title: "System Monitor",
+      description: "Provides insights about agent activities and system status"
     },
     {
       icon: Layout,
-      title: "Window Management",
-      description: "Create the perfect layout with draggable and resizable windows"
-    },
-    {
-      icon: Sparkles,
-      title: "Command Palette",
-      description: "Navigate efficiently with keyboard-centric controls"
-    },
-    {
-      icon: Brain,
-      title: "Contextual Memory",
-      description: "Agents remember past interactions for personalized assistance"
-    },
-    {
-      icon: Cpu,
-      title: "Smart Integrations",
-      description: "Connect with various tools for a seamless workflow"
-    },
-    {
-      icon: Fingerprint,
-      title: "Customizable Themes",
-      description: "Personalize with themes to match your visual preferences"
+      title: "Workflow Orchestrator",
+      description: "Coordinates multiple agents to work together on complex tasks"
     }
   ];
   
@@ -550,15 +550,15 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       
-      {/* Features Carousel Section */}
+      {/* Agents Carousel Section */}
       <section className="py-10 md:py-16 bg-white text-gray-900 border-b border-gray-100">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900">
-              Key <span className="text-indigo-600">Features</span>
+              Meet the <span className="text-indigo-600">Agents</span>
             </h2>
             <p className="text-lg text-gray-600">
-              Discover what makes Panion a revolutionary AI experience
+              Specialized AI agents that work together to enhance your experience
             </p>
           </div>
           
