@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAgentStore, WindowLayout } from '../../state/agentStore';
+import { useThemeStore } from '../../state/themeStore';
 import { 
   Dialog,
   DialogContent,
@@ -20,6 +21,7 @@ interface LayoutManagerProps {
 
 const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
   const { layouts, activeLayoutId, saveLayout, loadLayout, deleteLayout } = useAgentStore();
+  const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const [newLayoutName, setNewLayoutName] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -72,7 +74,7 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
       </DialogTrigger>
       <DialogContent 
         className={`sm:max-w-[550px] backdrop-blur-xl ${
-          useThemeStore.getState().getCurrentTheme() === 'dark' 
+          getCurrentTheme() === 'dark' 
             ? 'bg-[#1a1538]/90 border-purple-500/30 text-white' 
             : 'bg-white border-purple-300/50 text-gray-900'
         }`}
@@ -87,21 +89,29 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
       >
         <DialogHeader>
           <DialogTitle className="text-xl">Window Layouts</DialogTitle>
-          <p className="text-white/80 mt-2" id="layout-manager-description">
+          <p className={`mt-2 ${
+            getCurrentTheme() === 'dark' ? 'text-white/80' : 'text-gray-600'
+          }`} id="layout-manager-description">
             Save and manage your window arrangements.
           </p>
         </DialogHeader>
         
         {/* Layout creation */}
         <div className="space-y-4 my-2">
-          <div className="bg-black/20 p-4 rounded-lg">
+          <div className={`p-4 rounded-lg ${
+            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
+          }`}>
             <h3 className="text-lg font-medium mb-2">Save Current Layout</h3>
             <div className="flex gap-2">
               <Input
                 placeholder="Layout name"
                 value={newLayoutName}
                 onChange={e => setNewLayoutName(e.target.value)}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                className={`${
+                  getCurrentTheme() === 'dark' 
+                    ? 'bg-white/10 border-white/20 text-white placeholder:text-white/50' 
+                    : 'bg-white border-purple-200 text-gray-900 placeholder:text-gray-500'
+                }`}
               />
               <Button 
                 onClick={handleSaveLayout}
@@ -114,10 +124,14 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
           </div>
           
           {/* Saved layouts list */}
-          <div className="bg-black/20 p-4 rounded-lg">
+          <div className={`p-4 rounded-lg ${
+            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
+          }`}>
             <h3 className="text-lg font-medium mb-2">Saved Layouts</h3>
             {layouts.length === 0 ? (
-              <div className="text-white/50 text-center py-4">
+              <div className={`text-center py-4 ${
+                getCurrentTheme() === 'dark' ? 'text-white/50' : 'text-gray-500'
+              }`}>
                 No saved layouts yet
               </div>
             ) : (
@@ -127,8 +141,12 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
                     key={layout.id}
                     className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
                       activeLayoutId === layout.id 
-                        ? 'bg-purple-800/50 border border-purple-500/50' 
-                        : 'bg-black/20 hover:bg-black/30'
+                        ? getCurrentTheme() === 'dark'
+                          ? 'bg-purple-800/50 border border-purple-500/50' 
+                          : 'bg-purple-100 border border-purple-300'
+                        : getCurrentTheme() === 'dark'
+                          ? 'bg-black/20 hover:bg-black/30'
+                          : 'bg-white/80 hover:bg-purple-50 border border-purple-100/50'
                     }`}
                   >
                     <span className="font-medium">{layout.name}</span>
@@ -137,7 +155,11 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleLoadLayout(layout.id, layout.name)}
-                        className="border-white/20 hover:bg-purple-800/50"
+                        className={`${
+                          getCurrentTheme() === 'dark' 
+                            ? 'border-white/20 hover:bg-purple-800/50' 
+                            : 'border-purple-200 hover:bg-purple-100'
+                        }`}
                       >
                         <Download className="h-4 w-4" />
                       </Button>
@@ -145,7 +167,11 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteLayout(layout.id, layout.name)}
-                        className="border-white/20 hover:bg-red-900/50"
+                        className={`${
+                          getCurrentTheme() === 'dark' 
+                            ? 'border-white/20 hover:bg-red-900/50' 
+                            : 'border-red-200 hover:bg-red-50'
+                        }`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -159,7 +185,14 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
         
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline" className="border-white/20 hover:bg-white/10">
+            <Button 
+              variant="outline" 
+              className={`${
+                getCurrentTheme() === 'dark' 
+                  ? 'border-white/20 hover:bg-white/10 text-white' 
+                  : 'border-purple-200 hover:bg-purple-50 text-gray-800'
+              }`}
+            >
               Close
             </Button>
           </DialogClose>
