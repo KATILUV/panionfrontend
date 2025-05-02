@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { 
   Cpu, Users, Layout, Sparkles, MessageSquare, Fingerprint, LucideProps, Brain,
   LayoutGrid, Search, Terminal, Check, X, ChevronLeft, ChevronRight,
-  PenTool, FileText, Database, Layers, Code, Presentation
+  PenTool, FileText, Database, Layers, Code, Presentation, Pause
 } from 'lucide-react';
 import RotatingTagline from '@/components/RotatingTagline';
 
@@ -14,15 +14,47 @@ import RotatingTagline from '@/components/RotatingTagline';
 const LandingPage: React.FC = () => {
   const [_, setLocation] = useLocation();
   const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const featuresRef = useRef<HTMLDivElement>(null);
+  const autoScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-scroll functionality for the agents carousel
+  useEffect(() => {
+    if (!isPaused) {
+      // Clear any existing timer
+      if (autoScrollTimerRef.current) {
+        clearInterval(autoScrollTimerRef.current);
+      }
+      
+      // Set up automatic scrolling every 4 seconds
+      autoScrollTimerRef.current = setInterval(() => {
+        nextGroupOfCards();
+      }, 4000);
+    } else if (autoScrollTimerRef.current) {
+      // Clear the timer if paused
+      clearInterval(autoScrollTimerRef.current);
+    }
+    
+    // Clean up on unmount
+    return () => {
+      if (autoScrollTimerRef.current) {
+        clearInterval(autoScrollTimerRef.current);
+      }
+    };
+  }, [isPaused, currentFeatureIndex]);
+
+  // Function to toggle pause state
+  const togglePause = () => {
+    setIsPaused(prev => !prev);
+  };
 
   // Function to navigate carousel
-  const nextFeature = () => {
-    setCurrentFeatureIndex((prev) => (prev === keyFeatures.length - 1 ? 0 : prev + 1));
+  const nextGroupOfCards = () => {
+    setCurrentFeatureIndex((prev) => ((prev + 1) % 2)); // With 6 cards showing 3 at a time, we have 2 groups
   };
   
-  const prevFeature = () => {
-    setCurrentFeatureIndex((prev) => (prev === 0 ? keyFeatures.length - 1 : prev - 1));
+  const prevGroupOfCards = () => {
+    setCurrentFeatureIndex((prev) => (prev === 0 ? 1 : 0)); // Toggle between 0 and 1
   };
   
   // Tagline phrases
@@ -564,29 +596,74 @@ const LandingPage: React.FC = () => {
           
           <div className="max-w-5xl mx-auto" ref={featuresRef}>
             
-            {/* Scrollable cards - showing 3 at a time */}
-            <div className="overflow-hidden px-6">
-              <div className="flex justify-between gap-8">
-                {/* First 3 cards - always visible */}
-                {keyFeatures.slice(0, 3).map((feature, index) => (
-                  <div key={index} className="w-[32%] flex-shrink-0">
-                    <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
-                      <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
-                        <feature.icon className="w-10 h-10 text-indigo-600" />
-                      </div>
-                      <div className="text-center flex-1 flex flex-col">
-                        <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
-                        <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
-                        <p className="text-gray-600 flex-1">{feature.description}</p>
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                          <button className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
-                            Learn more
-                          </button>
+            {/* Scrollable cards - showing all 6 agents, 3 at a time with auto-scroll */}
+            <div 
+              className="overflow-hidden px-6 relative" 
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              onClick={togglePause}
+            >
+              <div className="h-[22rem] relative">
+                <div 
+                  className={`absolute inset-0 transition-all duration-500 ease-in-out flex justify-between gap-8 ${isPaused ? 'opacity-40' : 'opacity-100'}`} 
+                  style={{ transform: `translateX(${currentFeatureIndex === 0 ? '0%' : '-100%'})` }}
+                >
+                  {/* First 3 cards */}
+                  {keyFeatures.slice(0, 3).map((feature, index) => (
+                    <div key={index} className="w-[32%] flex-shrink-0">
+                      <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
+                        <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
+                          <feature.icon className="w-10 h-10 text-indigo-600" />
+                        </div>
+                        <div className="text-center flex-1 flex flex-col">
+                          <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
+                          <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
+                          <p className="text-gray-600 flex-1">{feature.description}</p>
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <button className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
+                              Learn more
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+                
+                <div 
+                  className={`absolute inset-0 transition-all duration-500 ease-in-out flex justify-between gap-8 ${isPaused ? 'opacity-40' : 'opacity-100'}`} 
+                  style={{ transform: `translateX(${currentFeatureIndex === 1 ? '0%' : '100%'})` }}
+                >
+                  {/* Second 3 cards */}
+                  {keyFeatures.slice(3, 6).map((feature, index) => (
+                    <div key={index + 3} className="w-[32%] flex-shrink-0">
+                      <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
+                        <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
+                          <feature.icon className="w-10 h-10 text-indigo-600" />
+                        </div>
+                        <div className="text-center flex-1 flex flex-col">
+                          <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
+                          <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
+                          <p className="text-gray-600 flex-1">{feature.description}</p>
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <button className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
+                              Learn more
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Pause indicator */}
+                {isPaused && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-indigo-600/80 text-white rounded-full p-4 backdrop-blur-sm">
+                      <Pause className="w-8 h-8" />
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
             
@@ -595,9 +672,12 @@ const LandingPage: React.FC = () => {
               {Array.from({ length: Math.ceil(keyFeatures.length / 3) }).map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentFeatureIndex(index * 3)}
+                  onClick={() => {
+                    setCurrentFeatureIndex(index);
+                    setIsPaused(true);
+                  }}
                   className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                    Math.floor(currentFeatureIndex / 3) === index ? "bg-indigo-600 scale-125" : "bg-gray-300"
+                    currentFeatureIndex === index ? "bg-indigo-600 scale-125" : "bg-gray-300"
                   }`}
                   aria-label={`Go to agent group ${index + 1}`}
                 />
