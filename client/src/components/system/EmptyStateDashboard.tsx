@@ -162,8 +162,8 @@ const EmptyStateDashboard: React.FC = () => {
           animate={{ y: 0 }}
           className="text-center mb-10"
         >
-          <h1 className="text-5xl font-bold mb-2">Panion</h1>
-          <div className="text-xl text-muted-foreground">
+          <h1 className="text-5xl font-bold mb-2 text-white">Panion</h1>
+          <div className="text-xl text-white">
             <RotatingTagline phrases={welcomePhrases} interval={3000} />
           </div>
         </motion.div>
@@ -187,7 +187,7 @@ const EmptyStateDashboard: React.FC = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-center text-muted-foreground text-sm mt-4"
+          className="text-center text-white text-sm mt-4"
         >
           <p>Pro tip: You can open multiple agents and arrange them in your workspace</p>
         </motion.div>

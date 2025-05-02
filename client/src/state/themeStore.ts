@@ -4,7 +4,7 @@ import { log } from './systemLogStore';
 
 // Theme types - we're only using dark mode now
 export type ThemeMode = 'dark';
-export type ThemeAccent = 'purple' | 'blue' | 'green' | 'orange' | 'pink';
+export type ThemeAccent = 'purple' | 'blue' | 'green' | 'orange' | 'pink' | 'dark' | 'light';
 
 interface ThemeState {
   mode: ThemeMode; // Always dark
