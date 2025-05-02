@@ -130,61 +130,73 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
             getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
           }`}>
             <h3 className="text-lg font-medium mb-3">Theme Mode</h3>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                variant={mode === 'light' ? 'default' : 'outline'}
-                className={`flex-1 ${
+            <div className="grid grid-cols-3 gap-2">
+              <div 
+                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
                   mode === 'light' 
-                    ? getCurrentTheme() === 'dark' 
-                      ? 'bg-purple-700' 
-                      : 'bg-purple-500 text-white' 
-                    : getCurrentTheme() === 'dark' 
-                      ? 'bg-transparent border-white/20 hover:bg-white/10' 
-                      : 'bg-transparent border-purple-200 hover:bg-purple-50'
+                    ? getCurrentTheme() === 'dark'
+                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
+                      : 'bg-purple-100 border-purple-300 text-purple-900'
+                    : getCurrentTheme() === 'dark'
+                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
+                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
                 }`}
                 onClick={() => handleModeChange('light')}
               >
-                <Sun className="mr-2 h-4 w-4" />
-                Light
-              </Button>
-              <Button
-                variant={mode === 'dark' ? 'default' : 'outline'}
-                className={`flex-1 ${
+                <div className="relative">
+                  <Sun className="h-5 w-5 mb-1" />
+                  {mode === 'light' && (
+                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
+                  )}
+                </div>
+                <span className="text-sm">Light</span>
+              </div>
+              <div 
+                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
                   mode === 'dark' 
-                    ? getCurrentTheme() === 'dark' 
-                      ? 'bg-purple-700' 
-                      : 'bg-purple-500 text-white'
-                    : getCurrentTheme() === 'dark' 
-                      ? 'bg-transparent border-white/20 hover:bg-white/10' 
-                      : 'bg-transparent border-purple-200 hover:bg-purple-50'
+                    ? getCurrentTheme() === 'dark'
+                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
+                      : 'bg-purple-100 border-purple-300 text-purple-900'
+                    : getCurrentTheme() === 'dark'
+                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
+                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
                 }`}
                 onClick={() => handleModeChange('dark')}
               >
-                <Moon className="mr-2 h-4 w-4" />
-                Dark
-              </Button>
-              <Button
-                variant={mode === 'system' ? 'default' : 'outline'}
-                className={`flex-1 ${
+                <div className="relative">
+                  <Moon className="h-5 w-5 mb-1" />
+                  {mode === 'dark' && (
+                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
+                  )}
+                </div>
+                <span className="text-sm">Dark</span>
+              </div>
+              <div 
+                className={`flex flex-col items-center justify-center p-3 rounded-md cursor-pointer border transition-colors ${
                   mode === 'system' 
-                    ? getCurrentTheme() === 'dark' 
-                      ? 'bg-purple-700' 
-                      : 'bg-purple-500 text-white'
-                    : getCurrentTheme() === 'dark' 
-                      ? 'bg-transparent border-white/20 hover:bg-white/10' 
-                      : 'bg-transparent border-purple-200 hover:bg-purple-50'
+                    ? getCurrentTheme() === 'dark'
+                      ? 'bg-purple-800/50 border-purple-500/50 text-white' 
+                      : 'bg-purple-100 border-purple-300 text-purple-900'
+                    : getCurrentTheme() === 'dark'
+                      ? 'bg-black/20 hover:bg-black/30 border-gray-700/30 text-white/80'
+                      : 'bg-white/80 hover:bg-purple-50 border-purple-100/50 text-gray-700'
                 }`}
                 onClick={() => handleModeChange('system')}
               >
-                <Monitor className="mr-2 h-4 w-4" />
-                System
-              </Button>
+                <div className="relative">
+                  <Monitor className="h-5 w-5 mb-1" />
+                  {mode === 'system' && (
+                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full h-2 w-2"></div>
+                  )}
+                </div>
+                <span className="text-sm">System</span>
+              </div>
             </div>
             
             {/* System preference indicator */}
             {mode === 'system' && (
               <div className={`mt-3 p-3 rounded-md flex items-center gap-2 text-sm ${
-                getCurrentTheme() === 'dark' ? 'bg-white/5 border border-white/10' : 'bg-white/80 border border-purple-100'
+                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-purple-500/20' : 'bg-white/80 border border-purple-100'
               }`}>
                 <Info size={16} className={`flex-shrink-0 ${
                   getCurrentTheme() === 'dark' ? 'text-purple-300' : 'text-purple-600'
@@ -215,11 +227,15 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
               {accentColors.map((color) => (
                 <button
                   key={color.id}
-                  className={`flex flex-col items-center justify-center p-2 rounded-md ${
+                  className={`flex flex-col items-center justify-center p-2 rounded-md border transition-colors ${
                     accent === color.id 
-                      ? getCurrentTheme() === 'dark' ? 'bg-white/20' : 'bg-purple-100' 
-                      : getCurrentTheme() === 'dark' ? 'hover:bg-white/10' : 'hover:bg-purple-50'
-                  } transition-colors`}
+                      ? getCurrentTheme() === 'dark'
+                        ? 'bg-purple-800/50 border-purple-500/50' 
+                        : 'bg-purple-100 border-purple-300'
+                      : getCurrentTheme() === 'dark'
+                        ? 'bg-black/20 hover:bg-black/30 border-gray-700/30' 
+                        : 'bg-white/80 hover:bg-purple-50 border-purple-100/50'
+                  }`}
                   onClick={() => handleAccentChange(color.id)}
                 >
                   <div className={`w-8 h-8 rounded-full ${color.color} mb-1 relative`}>
