@@ -46,6 +46,7 @@ const Window: React.FC<WindowProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
+  const accent = useThemeStore(state => state.accent);
   
   // Update stored position and size when maximized status changes
   useEffect(() => {
@@ -320,7 +321,9 @@ const Window: React.FC<WindowProps> = ({
                 ? 'bg-gradient-to-r from-primary/80 to-primary/50' 
                 : 'bg-black/40'
               : isActive 
-                ? 'bg-gradient-to-r from-primary/15 to-indigo-100/30 border-b border-primary/20' 
+                ? (accent === 'light' 
+                  ? 'bg-white border-b border-gray-200/50' 
+                  : 'bg-gradient-to-r from-primary/15 to-indigo-100/30 border-b border-primary/20')
                 : 'bg-gray-100/80 border-b border-gray-200/50'
           }`}
           onDoubleClick={toggleMaximize}
@@ -328,7 +331,9 @@ const Window: React.FC<WindowProps> = ({
           <div className={`font-medium truncate ${
             getCurrentTheme() === 'dark' 
               ? 'text-white drop-shadow-sm'
-              : (isActive ? 'text-primary-700' : 'text-gray-800')
+              : (accent === 'light' 
+                  ? 'text-gray-800' 
+                  : (isActive ? 'text-primary-700' : 'text-gray-800'))
           }`}>{title}</div>
           <motion.div className="flex items-center space-x-2">
             <motion.button 

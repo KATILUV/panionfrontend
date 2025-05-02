@@ -9,6 +9,7 @@ interface ChatBubbleProps {
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
   const { content, isUser, timestamp, imageUrl } = message;
   const getCurrentTheme = useThemeStore((state) => state.getCurrentTheme);
+  const accent = useThemeStore((state) => state.accent);
   const isDarkMode = getCurrentTheme() === 'dark';
 
   // Format timestamp to readable time
@@ -39,7 +40,12 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
         className={`
           max-w-[80%] px-4 py-3 rounded-2xl
           ${isUser 
-            ? `${isDarkMode ? 'chat-bubble-user' : 'bg-indigo-600/90 text-white'} rounded-tr-2xl rounded-tl-2xl rounded-bl-md rounded-br-2xl` 
+            ? `${isDarkMode 
+                ? 'chat-bubble-user' 
+                : (accent === 'light' 
+                    ? 'bg-gray-500/90 text-white' 
+                    : 'bg-indigo-600/90 text-white')
+              } rounded-tr-2xl rounded-tl-2xl rounded-bl-md rounded-br-2xl` 
             : `chat-bubble-ai bg-white/85 backdrop-blur-md text-black rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md`
           }
         `}

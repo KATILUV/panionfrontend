@@ -13,6 +13,7 @@ const ClaraAgent: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const getCurrentTheme = useThemeStore((state) => state.getCurrentTheme);
+  const accent = useThemeStore((state) => state.accent);
 
   // Log when the component mounts and unmounts
   useEffect(() => {
@@ -65,7 +66,9 @@ const ClaraAgent: React.FC = () => {
             className={`text-sm font-light ${
               getCurrentTheme() === 'dark' 
                 ? 'text-white/80'
-                : 'text-indigo-800'
+                : (accent === 'light' 
+                    ? 'text-gray-700' 
+                    : 'text-indigo-800')
             }`}
           />
         </div>
