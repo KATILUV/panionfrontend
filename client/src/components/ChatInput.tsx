@@ -12,6 +12,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const getCurrentTheme = useThemeStore((state) => state.getCurrentTheme);
+  const accent = useThemeStore((state) => state.accent);
   const isDarkMode = getCurrentTheme() === 'dark';
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useThemeStore } from '../state/themeStore';
 
 interface ClaraOrbProps {
   isProcessing?: boolean;
 }
 
 const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
+  const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
+  const accent = useThemeStore(state => state.accent);
   // Random bubble generator
   const generateBubbles = () => {
     const bubbles = [];
@@ -50,9 +53,13 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           floating-orb
           bg-opacity-15 backdrop-blur-lg
           bg-white/10
-          ${isProcessing 
-            ? 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_40px_rgba(138,43,226,0.6),0_0_60px_rgba(255,0,128,0.5),inset_0_0_80px_rgba(255,255,255,0.3)]' 
-            : 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_30px_rgba(138,43,226,0.4),0_0_50px_rgba(255,0,128,0.3),inset_0_0_70px_rgba(255,255,255,0.2)]'
+          ${getCurrentTheme() === 'dark' || accent !== 'light'
+            ? (isProcessing 
+              ? 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_40px_rgba(138,43,226,0.6),0_0_60px_rgba(255,0,128,0.5),inset_0_0_80px_rgba(255,255,255,0.3)]' 
+              : 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_30px_rgba(138,43,226,0.4),0_0_50px_rgba(255,0,128,0.3),inset_0_0_70px_rgba(255,255,255,0.2)]')
+            : (isProcessing
+              ? 'shadow-[0_20px_70px_rgba(0,0,0,0.3),0_0_40px_rgba(128,128,128,0.4),0_0_60px_rgba(200,200,200,0.4),inset_0_0_80px_rgba(255,255,255,0.4)]'
+              : 'shadow-[0_20px_70px_rgba(0,0,0,0.3),0_0_30px_rgba(128,128,128,0.3),0_0_50px_rgba(200,200,200,0.3),inset_0_0_70px_rgba(255,255,255,0.3)]')
           }
           border border-white/60
           overflow-hidden
@@ -86,7 +93,11 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
         <div className="crystal-highlight-small"></div>
         
         {/* Add additional dynamic reflection */}
-        <div className="absolute inset-0 rounded-full opacity-10 bg-gradient-to-br from-purple-300/30 via-transparent to-pink-300/30 mix-blend-overlay animate-reflection"></div>
+        <div className={`absolute inset-0 rounded-full opacity-10 
+          ${getCurrentTheme() === 'dark' || accent !== 'light'
+            ? 'bg-gradient-to-br from-purple-300/30 via-transparent to-pink-300/30'
+            : 'bg-gradient-to-br from-gray-300/30 via-transparent to-gray-300/30'
+          } mix-blend-overlay animate-reflection`}></div>
       </div>
     </div>
   );
