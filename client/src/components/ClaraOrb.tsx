@@ -50,14 +50,26 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
 
   // Determine shadow style based on theme and processing state
   const getShadowClass = () => {
-    if (isDark || accent !== 'light') {
+    // Light mode with light accent gets the most subtle shadows
+    if (!isDark && accent === 'light') {
+      // Light shadows in light mode + light accent
       return isProcessing
-        ? 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_40px_rgba(138,43,226,0.6),0_0_60px_rgba(255,0,128,0.5),inset_0_0_80px_rgba(255,255,255,0.3)]'
-        : 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_30px_rgba(138,43,226,0.4),0_0_50px_rgba(255,0,128,0.3),inset_0_0_70px_rgba(255,255,255,0.2)]';
-    } else {
+        ? 'shadow-[0_4px_20px_rgba(190,190,190,0.5),0_0_40px_rgba(200,200,200,0.35),0_0_60px_rgba(210,210,210,0.4),inset_0_0_80px_rgba(255,255,255,0.5)]'
+        : 'shadow-[0_4px_15px_rgba(190,190,190,0.3),0_0_30px_rgba(200,200,200,0.25),0_0_50px_rgba(210,210,210,0.3),inset_0_0_70px_rgba(255,255,255,0.4)]';
+    } 
+    // Light mode with colored accents gets medium strength shadows
+    else if (!isDark) {
+      // Medium shadows for light mode with color accents
       return isProcessing
-        ? 'shadow-[0_10px_30px_rgba(190,190,190,0.5),0_0_40px_rgba(190,190,190,0.35),0_0_60px_rgba(210,210,210,0.4),inset_0_0_80px_rgba(255,255,255,0.5)]'
-        : 'shadow-[0_10px_30px_rgba(190,190,190,0.3),0_0_30px_rgba(190,190,190,0.25),0_0_50px_rgba(210,210,210,0.3),inset_0_0_70px_rgba(255,255,255,0.4)]';
+        ? 'shadow-[0_4px_25px_rgba(150,150,180,0.5),0_0_40px_rgba(138,43,226,0.2),0_0_60px_rgba(255,0,128,0.2),inset_0_0_80px_rgba(255,255,255,0.5)]'
+        : 'shadow-[0_4px_20px_rgba(150,150,180,0.4),0_0_30px_rgba(138,43,226,0.15),0_0_50px_rgba(255,0,128,0.15),inset_0_0_70px_rgba(255,255,255,0.4)]';
+    }
+    // Dark mode gets strong purple/pink glow shadows
+    else {
+      // Dark mode strong shadows
+      return isProcessing
+        ? 'shadow-[0_8px_35px_rgba(0,0,0,0.6),0_0_40px_rgba(138,43,226,0.6),0_0_60px_rgba(255,0,128,0.5),inset_0_0_80px_rgba(255,255,255,0.3)]'
+        : 'shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_30px_rgba(138,43,226,0.4),0_0_50px_rgba(255,0,128,0.3),inset_0_0_70px_rgba(255,255,255,0.2)]';
     }
   };
 

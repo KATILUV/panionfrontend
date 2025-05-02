@@ -420,18 +420,20 @@
 }
 
 .floating-orb {
-  animation: orb-pulse 7s infinite ease-in-out, orb-float 15s infinite ease-in-out;
+  animation: orb-float 15s infinite ease-in-out;
+  /* No longer using the global orb-pulse animation as shadows are controlled by Tailwind classes */
 }
 
 .animate-reflection {
   animation: animate-reflection 20s linear infinite;
 }
 
-/* We don't use this animation directly anymore as we're setting the shadows via classes */
+/* We no longer use this animation as shadows are handled via Tailwind classes 
 @keyframes orb-pulse {
   0%, 100% { box-shadow: 0 20px 70px rgba(0,0,0,0.6), 0 0 30px rgba(138,43,226,0.4), 0 0 50px rgba(255,0,128,0.3), inset 0 0 70px rgba(255,255,255,0.2); }
   50% { box-shadow: 0 20px 70px rgba(0,0,0,0.6), 0 0 40px rgba(138,43,226,0.5), 0 0 60px rgba(255,0,128,0.4), inset 0 0 80px rgba(255,255,255,0.25); }
 }
+*/
 
 @keyframes orb-float {
   0%, 100% { transform: translateY(0); }
