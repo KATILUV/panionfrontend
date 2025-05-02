@@ -279,8 +279,8 @@ const Window: React.FC<WindowProps> = ({
       <motion.div 
         className={`flex flex-col rounded-lg backdrop-blur-lg shadow-xl h-full border overflow-hidden
           ${isActive 
-            ? 'border-primary/40 bg-white/10 dark:bg-black/20' 
-            : 'border-white/20 bg-white/5 dark:bg-black/10'
+            ? 'border-primary/40 bg-white/10 dark:bg-black/30' 
+            : 'border-white/20 bg-white/5 dark:bg-black/20'
           }
         `}
         initial={{ opacity: 0, scale: 0.95, y: -10 }}
