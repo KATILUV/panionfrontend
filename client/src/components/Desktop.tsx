@@ -64,12 +64,12 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
         light: 'bg-gradient-to-br from-pink-50 via-white to-white'
       },
       dark: {
-        dark: 'bg-black', // Pure black background in dark mode
-        light: 'bg-gradient-to-br from-gray-300 via-gray-200 to-gray-100' // Darker gray in light mode
+        dark: 'bg-black !important', // Pure black background in dark mode with !important
+        light: 'bg-gray-300 !important' // Solid gray without gradient in light mode with !important
       },
       light: {
-        dark: 'bg-gray-700', // Medium gray in dark mode
-        light: 'bg-white' // Pure white background in light mode
+        dark: 'bg-gray-700 !important', // Solid medium gray in dark mode with !important
+        light: 'bg-white !important' // Pure white background with !important
       }
     };
     
@@ -82,8 +82,20 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
   const bgClass = getBackgroundClass();
   console.log("Applied background class:", bgClass);
   
+  // Get background color for inline style
+  const getInlineStyle = () => {
+    if (accent === 'dark' && currentTheme === 'dark') return { backgroundColor: 'black' };
+    if (accent === 'light' && currentTheme === 'light') return { backgroundColor: 'white' };
+    if (accent === 'dark' && currentTheme === 'light') return { backgroundColor: '#d1d5db' }; // gray-300
+    if (accent === 'light' && currentTheme === 'dark') return { backgroundColor: '#374151' }; // gray-700
+    return {};
+  };
+  
   return (
-    <div className={`panion-desktop overflow-auto min-h-screen ${bgClass}`}>
+    <div 
+      className={`panion-desktop overflow-auto min-h-screen ${bgClass}`}
+      style={getInlineStyle()}
+    >
       {children}
     </div>
   );
