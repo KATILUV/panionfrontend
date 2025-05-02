@@ -29,10 +29,15 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
   // Get icon based on log type
   const getLogIcon = (type: LogType) => {
     const isDark = getCurrentTheme() === 'dark';
+    const isLightAccent = accent === 'light' && !isDark;
     
     switch (type) {
       case 'thinking':
-        return <Brain className={`h-4 w-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />;
+        return <Brain className={`h-4 w-4 ${
+          isDark 
+            ? 'text-purple-400' 
+            : (isLightAccent ? 'text-gray-600' : 'text-purple-600')
+        }`} />;
       case 'memory':
         return <Database className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />;
       case 'action':
@@ -60,14 +65,22 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
   // Get text color based on log type
   const getLogTextColor = (type: LogType) => {
     const isDark = getCurrentTheme() === 'dark';
+    const isLightAccent = accent === 'light' && !isDark;
     
     switch (type) {
-      case 'thinking': return isDark ? 'text-purple-300' : 'text-purple-600';
-      case 'memory': return isDark ? 'text-blue-300' : 'text-blue-600';
-      case 'action': return isDark ? 'text-green-300' : 'text-green-600';
-      case 'error': return isDark ? 'text-red-300' : 'text-red-600';
+      case 'thinking': 
+        return isDark 
+          ? 'text-purple-300' 
+          : (isLightAccent ? 'text-gray-700' : 'text-purple-600');
+      case 'memory': 
+        return isDark ? 'text-blue-300' : 'text-blue-600';
+      case 'action': 
+        return isDark ? 'text-green-300' : 'text-green-600';
+      case 'error': 
+        return isDark ? 'text-red-300' : 'text-red-600';
       case 'info':
-      default: return isDark ? 'text-amber-300' : 'text-amber-600';
+      default: 
+        return isDark ? 'text-amber-300' : 'text-amber-600';
     }
   };
 
@@ -107,7 +120,9 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
       }`}>
         <div className="flex items-center space-x-2">
           <Database className={`h-4 w-4 ${
-            getCurrentTheme() === 'dark' ? 'text-purple-500' : 'text-purple-600'
+            getCurrentTheme() === 'dark' 
+              ? 'text-purple-500' 
+              : (accent === 'light' ? 'text-gray-600' : 'text-purple-600')
           }`} />
           <span className="text-sm font-medium">Clara's System Log</span>
         </div>
@@ -121,14 +136,18 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
                   className={`h-6 w-6 rounded-full ${
                     getCurrentTheme() === 'dark' 
                       ? 'hover:bg-white/10' 
-                      : 'hover:bg-purple-100'
+                      : (accent === 'light' 
+                          ? 'hover:bg-gray-100' 
+                          : 'hover:bg-purple-100')
                   }`}
                   onClick={clearLogs}
                 >
                   <MinusCircle className={`h-4 w-4 ${
                     getCurrentTheme() === 'dark' 
                       ? 'text-white/70' 
-                      : 'text-purple-500'
+                      : (accent === 'light' 
+                          ? 'text-gray-500' 
+                          : 'text-purple-500')
                   }`} />
                 </Button>
               </TooltipTrigger>
@@ -147,7 +166,9 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
                   className={`h-6 w-6 rounded-full ${
                     getCurrentTheme() === 'dark' 
                       ? 'hover:bg-white/10' 
-                      : 'hover:bg-purple-100'
+                      : (accent === 'light' 
+                          ? 'hover:bg-gray-100' 
+                          : 'hover:bg-purple-100')
                   }`}
                   onClick={toggleMinimize}
                 >
@@ -155,12 +176,16 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
                     <Maximize2 className={`h-4 w-4 ${
                       getCurrentTheme() === 'dark' 
                         ? 'text-white/70' 
-                        : 'text-purple-500'
+                        : (accent === 'light' 
+                            ? 'text-gray-500' 
+                            : 'text-purple-500')
                     }`} /> : 
                     <Minimize2 className={`h-4 w-4 ${
                       getCurrentTheme() === 'dark' 
                         ? 'text-white/70' 
-                        : 'text-purple-500'
+                        : (accent === 'light' 
+                            ? 'text-gray-500' 
+                            : 'text-purple-500')
                     }`} />
                   }
                 </Button>
@@ -180,14 +205,18 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
                   className={`h-6 w-6 rounded-full ${
                     getCurrentTheme() === 'dark' 
                       ? 'hover:bg-white/10' 
-                      : 'hover:bg-purple-100'
+                      : (accent === 'light' 
+                          ? 'hover:bg-gray-100' 
+                          : 'hover:bg-purple-100')
                   }`}
                   onClick={toggleVisibility}
                 >
                   <X className={`h-4 w-4 ${
                     getCurrentTheme() === 'dark' 
                       ? 'text-white/70' 
-                      : 'text-purple-500'
+                      : (accent === 'light' 
+                          ? 'text-gray-500' 
+                          : 'text-purple-500')
                   }`} />
                 </Button>
               </TooltipTrigger>

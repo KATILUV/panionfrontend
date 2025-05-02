@@ -163,7 +163,9 @@ const CommandPalette: React.FC = () => {
           className={`relative w-full max-w-lg mt-20 backdrop-blur-xl rounded-lg shadow-2xl overflow-hidden ${
             getCurrentTheme() === 'dark'
               ? 'bg-black/70 border border-purple-500/30 text-white'
-              : 'bg-white/95 border border-purple-200 text-gray-900'
+              : (useThemeStore.getState().accent === 'light' 
+                 ? 'bg-white/95 border border-gray-200 text-gray-900'
+                 : 'bg-white/95 border border-purple-200 text-gray-900')
           }`}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
