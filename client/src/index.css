@@ -27,7 +27,7 @@
     --radius: 0.5rem;
     
     /* Light mode colors (default) */
-    --background: 220 30% 95%;
+    --background: 0 0% 100%;  /* Pure white */
     --foreground: 220 40% 15%;
     --muted: 220 20% 88%;
     --muted-foreground: 220 20% 40%;
@@ -44,7 +44,7 @@
 
 /* Dark mode colors */
 .dark {
-    --background: 240 10% 4%;
+    --background: 0 0% 0%;  /* Pure black */
     --foreground: 220 10% 98%;
     --muted: 240 8% 12%;
     --muted-foreground: 240 5% 65%;
@@ -193,7 +193,7 @@
   body {
     @apply font-sans antialiased text-foreground;
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(to bottom, var(--theme-gradient-start), var(--theme-gradient-end));
+    background: var(--background);
     min-height: 100vh;
     margin: 0;
     padding: 0;
@@ -202,40 +202,7 @@
     transition: background 0.5s ease;
   }
   
-  body::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-      radial-gradient(circle at 20% 20%, var(--theme-accent-glow), transparent 40%),
-      radial-gradient(circle at 80% 80%, var(--theme-accent-glow), transparent 40%),
-      radial-gradient(circle at 50% 50%, var(--theme-accent-glow), transparent 70%);
-    z-index: -1;
-    transition: background 0.5s ease;
-  }
-
-  /* Floating particles in background */
-  body::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background-image: 
-      radial-gradient(circle at 85% 27%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 0.2%),
-      radial-gradient(circle at 49% 90%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 0.2%),
-      radial-gradient(circle at 33% 42%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 0.15%),
-      radial-gradient(circle at 91% 73%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 0.1%),
-      radial-gradient(circle at 15% 75%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 0.12%),
-      radial-gradient(circle at 62% 10%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 0.18%);
-    z-index: -1;
-    animation: float-particles 15s infinite linear;
-  }
+  /* No background patterns for clean pure black/white */
 
   @keyframes float-particles {
     0% { transform: translateY(0) rotate(0deg); }
@@ -469,11 +436,6 @@
   width: 100vw;
   min-height: 100vh;
   overflow: auto;
-  background: linear-gradient(to bottom right, 
-    var(--theme-gradient-start), 
-    var(--theme-gradient-end), 
-    color-mix(in srgb, var(--theme-gradient-end), white 20%)
-  );
   display: flex;
   flex-direction: column;
   transition: all 0.5s ease;
