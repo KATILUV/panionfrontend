@@ -235,7 +235,7 @@ const LandingPage: React.FC = () => {
         
         {/* Floating window mockup in background */}
         <motion.div 
-          className="absolute hidden md:block right-10 lg:right-20 top-20 w-56 lg:w-72 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-0"
+          className="absolute hidden md:block right-10 lg:right-20 top-20 w-56 lg:w-72 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-20"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 0.6 }}
           transition={{ duration: 1, delay: 0.8 }}
@@ -252,7 +252,7 @@ const LandingPage: React.FC = () => {
         </motion.div>
         
         <motion.div 
-          className="absolute hidden md:block left-20 bottom-20 w-48 lg:w-64 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-0 rotate-3"
+          className="absolute hidden md:block left-20 bottom-20 w-48 lg:w-64 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-20 rotate-3"
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 0.6 }}
           transition={{ duration: 1, delay: 1.2 }}
