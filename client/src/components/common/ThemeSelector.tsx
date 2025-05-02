@@ -40,8 +40,8 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
     { id: 'purple', name: 'Purple', color: 'bg-purple-500' },
     { id: 'blue', name: 'Blue', color: 'bg-blue-500' },
     { id: 'green', name: 'Green', color: 'bg-green-500' },
-    { id: 'orange', name: 'Orange', color: 'bg-orange-500' },
-    { id: 'pink', name: 'Pink', color: 'bg-pink-500' }
+    { id: 'orange', name: 'Orange', color: 'bg-amber-500' }, // Prettier orange (amber) shade
+    { id: 'pink', name: 'Pink', color: 'bg-fuchsia-400' }    // Prettier pink (fuchsia) shade
   ];
 
   const handleModeChange = (newMode: ThemeMode) => {

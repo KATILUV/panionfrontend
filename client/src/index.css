@@ -135,54 +135,54 @@
     --accent: 142.1 76.2% 36.3%;
 }
 
-/* Accent Color: Orange */
+/* Accent Color: Orange (Amber) */
 [data-accent="orange"] {
-    --primary: 24.6 95% 53.1%;
-    --primary-hover: 24.6 95% 48.1%;
+    --primary: 38 92% 50%;
+    --primary-hover: 38 92% 45%;
     --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 24.6 50% 91.1%;
-    --secondary-hover: 24.6 50% 87.1%;
-    --secondary-foreground: 24.6 95% 33.1%;
-    --accent: 24.6 95% 53.1%;
+    --secondary: 38 95% 94%;
+    --secondary-hover: 38 95% 90%;
+    --secondary-foreground: 38 92% 30%;
+    --accent: 38 92% 50%;
     --accent-foreground: 60 9.1% 97.8%;
     
     /* Theme specific colors */
-    --theme-gradient-start: #441f00;
-    --theme-gradient-end: #602e02;
-    --theme-accent-glow: rgba(255, 138, 0, 0.3);
+    --theme-gradient-start: #513c06;
+    --theme-gradient-end: #7c5e10;
+    --theme-accent-glow: rgba(245, 158, 11, 0.3);
 }
 
 .dark[data-accent="orange"] {
-    --primary: 24.6 95% 63.1%;
-    --primary-hover: 24.6 95% 58.1%;
-    --secondary: 24.6 50% 18%;
-    --secondary-hover: 24.6 50% 22%;
-    --accent: 24.6 95% 53.1%;
+    --primary: 38 92% 60%;
+    --primary-hover: 38 92% 55%;
+    --secondary: 38 50% 18%;
+    --secondary-hover: 38 50% 22%;
+    --accent: 38 92% 50%;
 }
 
-/* Accent Color: Pink */
+/* Accent Color: Pink (Fuchsia) */
 [data-accent="pink"] {
-    --primary: 346.8 77.2% 49.8%;
-    --primary-hover: 346.8 77.2% 44.8%;
+    --primary: 292 84% 60%;
+    --primary-hover: 292 84% 55%;
     --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 346.8 50% 91.1%;
-    --secondary-hover: 346.8 50% 87.1%;
-    --secondary-foreground: 346.8 77.2% 29.8%;
-    --accent: 346.8 77.2% 49.8%;
+    --secondary: 292 70% 94%;
+    --secondary-hover: 292 70% 90%;
+    --secondary-foreground: 292 84% 30%;
+    --accent: 292 84% 60%;
     --accent-foreground: 355.7 100% 97.3%;
     
     /* Theme specific colors */
-    --theme-gradient-start: #4a0020;
-    --theme-gradient-end: #720042;
-    --theme-accent-glow: rgba(255, 64, 190, 0.3);
+    --theme-gradient-start: #4a0072;
+    --theme-gradient-end: #7e22ce;
+    --theme-accent-glow: rgba(192, 132, 252, 0.4);
 }
 
 .dark[data-accent="pink"] {
-    --primary: 346.8 77.2% 59.8%;
-    --primary-hover: 346.8 77.2% 54.8%;
-    --secondary: 346.8 50% 18%;
-    --secondary-hover: 346.8 50% 22%;
-    --accent: 346.8 77.2% 49.8%;
+    --primary: 292 84% 70%;
+    --primary-hover: 292 84% 65%;
+    --secondary: 292 50% 20%;
+    --secondary-hover: 292 50% 24%;
+    --accent: 292 84% 60%;
 }
 
 @layer base {
