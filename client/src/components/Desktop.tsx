@@ -94,10 +94,17 @@ const Desktop: React.FC = () => {
   return (
     <div className={`panion-desktop overflow-auto min-h-screen ${getBackgroundGradient()}`}>
       {/* Background Decoration */}
-      <div className="absolute inset-0 w-full h-full">
-        {/* No background patterns in pure black/white mode */}
-        
-        {/* No glow effects in pure black/white mode */}
+      <div className="absolute inset-0 w-full h-full pointer-events-none">
+        {/* Background patterns based on theme settings */}
+        {backgroundPattern === 'grid' && (
+          <div className="absolute inset-0 bg-grid-white/5 opacity-30"></div>
+        )}
+        {backgroundPattern === 'dots' && (
+          <div className="absolute inset-0 bg-dots-white/5 opacity-30"></div>
+        )}
+        {backgroundPattern === 'waves' && (
+          <div className="absolute inset-0 bg-waves-white/5 opacity-30"></div>
+        )}
         
         {/* Theme name indicator for non-system themes */}
         {activePreset !== 'system' && (

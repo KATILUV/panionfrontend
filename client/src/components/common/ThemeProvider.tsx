@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useThemeStore, ThemeMode, ThemeAccent } from '../../state/themeStore';
+import { useThemeStore, ThemeMode, ThemeAccent, ThemePreset } from '../../state/themeStore';
 import { useToast } from '@/hooks/use-toast';
 
 interface ThemeProviderProps {
@@ -9,6 +9,7 @@ interface ThemeProviderProps {
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const mode = useThemeStore(state => state.mode);
   const accent = useThemeStore(state => state.accent);
+  const activePreset = useThemeStore(state => state.activePreset);
   const setSystemPreference = useThemeStore(state => state.setSystemPreference);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const systemPrefersDark = useThemeStore(state => state.systemPrefersDark);
