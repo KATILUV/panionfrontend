@@ -19,6 +19,13 @@ const LandingPage: React.FC = () => {
   const autoScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accent = useThemeStore(state => state.accent);
+  
+  // CSS classes for feature cards
+  const featureIconClass = `rounded-full p-5 ${
+    currentTheme === 'dark' 
+      ? 'bg-purple-950/50 bg-gradient-to-br from-purple-950 to-violet-900' 
+      : 'bg-purple-100 bg-gradient-to-br from-purple-50 to-violet-200'
+  } w-fit mb-6 mx-auto`;
 
   // This useEffect is no longer needed as we'll use CSS animations instead
   useEffect(() => {
@@ -151,6 +158,29 @@ const LandingPage: React.FC = () => {
     }
     
     return gradientClasses;
+  };
+  
+  // Function to generate feature card for consistent card display
+  const renderFeatureCard = (feature: any, key: string | number) => {
+    return (
+      <div key={key} className="w-[330px] flex-shrink-0 px-4">
+        <div className={`${currentTheme === 'dark' ? 'bg-card border-gray-800' : 'bg-white border-gray-100'} border rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]`}>
+          <div className={featureIconClass}>
+            <feature.icon className="w-10 h-10 text-purple-600" />
+          </div>
+          <div className="text-center flex-1 flex flex-col">
+            <h3 className={`text-xl font-bold mb-3 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{feature.title}</h3>
+            <div className="w-12 h-1 bg-purple-600 rounded-full mx-auto mb-4"></div>
+            <p className={`${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'} flex-1`}>{feature.description}</p>
+            <div className={`mt-4 pt-4 ${currentTheme === 'dark' ? 'border-gray-800' : 'border-gray-100'} border-t`}>
+              <button className="text-purple-600 text-sm font-medium hover:text-purple-400 transition-colors">
+                Learn more
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Text colors based on theme
@@ -534,46 +564,10 @@ const LandingPage: React.FC = () => {
                 <div className="mx-auto max-w-[990px] overflow-hidden">
                   <div className="flex animate-marquee">
                     {/* First set of cards */}
-                    {keyFeatures.map((feature, index) => (
-                      <div key={index} className="w-[330px] flex-shrink-0 px-4">
-                        <div className={`${currentTheme === 'dark' ? 'bg-card border-gray-800' : 'bg-white border-gray-100'} border rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]`}>
-                          <div className={`rounded-full p-5 ${currentTheme === 'dark' ? 'bg-purple-950/50' : 'bg-purple-100'} ${currentTheme === 'dark' ? 'bg-gradient-to-br from-purple-950 to-indigo-900' : 'bg-gradient-to-br from-purple-50 to-indigo-200'} w-fit mb-6 mx-auto`}>
-                            <feature.icon className="w-10 h-10 text-purple-600" />
-                          </div>
-                          <div className="text-center flex-1 flex flex-col">
-                            <h3 className={`text-xl font-bold mb-3 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{feature.title}</h3>
-                            <div className="w-12 h-1 bg-purple-600 rounded-full mx-auto mb-4"></div>
-                            <p className={`${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'} flex-1`}>{feature.description}</p>
-                            <div className={`mt-4 pt-4 ${currentTheme === 'dark' ? 'border-gray-800' : 'border-gray-100'} border-t`}>
-                              <button className="text-purple-600 text-sm font-medium hover:text-purple-400 transition-colors">
-                                Learn more
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                    {keyFeatures.map((feature, index) => renderFeatureCard(feature, index))}
                     
                     {/* Duplicate set for seamless looping */}
-                    {keyFeatures.map((feature, index) => (
-                      <div key={`dup-${index}`} className="w-[330px] flex-shrink-0 px-4">
-                        <div className={`${currentTheme === 'dark' ? 'bg-card border-gray-800' : 'bg-white border-gray-100'} border rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]`}>
-                          <div className={`rounded-full p-5 ${currentTheme === 'dark' ? 'bg-purple-950/50' : 'bg-purple-100'} ${currentTheme === 'dark' ? 'bg-gradient-to-br from-purple-950 to-indigo-900' : 'bg-gradient-to-br from-purple-50 to-indigo-200'} w-fit mb-6 mx-auto`}>
-                            <feature.icon className="w-10 h-10 text-purple-600" />
-                          </div>
-                          <div className="text-center flex-1 flex flex-col">
-                            <h3 className={`text-xl font-bold mb-3 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{feature.title}</h3>
-                            <div className="w-12 h-1 bg-purple-600 rounded-full mx-auto mb-4"></div>
-                            <p className={`${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'} flex-1`}>{feature.description}</p>
-                            <div className={`mt-4 pt-4 ${currentTheme === 'dark' ? 'border-gray-800' : 'border-gray-100'} border-t`}>
-                              <button className="text-purple-600 text-sm font-medium hover:text-purple-400 transition-colors">
-                                Learn more
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                    {keyFeatures.map((feature, index) => renderFeatureCard(feature, `dup-${index}`))}
                   </div>
                 </div>
               </div>
