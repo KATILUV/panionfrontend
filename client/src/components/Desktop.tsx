@@ -27,6 +27,63 @@ const renderAgentContent = (agentId: string) => {
   }
 };
 
+// Create background component to ensure re-rendering
+const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  const currentTheme = useThemeStore(state => state.getCurrentTheme());
+  const accent = useThemeStore(state => state.accent);
+  
+  // Debug: Log accent changes
+  useEffect(() => {
+    console.log("Background component - accent color:", accent);
+  }, [accent]);
+  
+  // Generate background gradient based on current theme and accent
+  const getBackgroundGradient = () => {
+    const isDark = currentTheme === 'dark';
+    
+    switch (accent) {
+      case 'purple':
+        return isDark 
+          ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
+          : 'bg-gradient-to-br from-purple-50 via-white to-white';
+      case 'blue':
+        return isDark 
+          ? 'bg-gradient-to-br from-blue-950 via-[#0a1a2f] to-[#0c1827]' 
+          : 'bg-gradient-to-br from-blue-50 via-white to-white';
+      case 'green':
+        return isDark 
+          ? 'bg-gradient-to-br from-green-950 via-[#0f2922] to-[#0c211c]' 
+          : 'bg-gradient-to-br from-green-50 via-white to-white';
+      case 'orange':
+        return isDark 
+          ? 'bg-gradient-to-br from-orange-950 via-[#261409] to-[#1f1107]' 
+          : 'bg-gradient-to-br from-orange-50 via-white to-white';
+      case 'pink':
+        return isDark 
+          ? 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]' 
+          : 'bg-gradient-to-br from-pink-50 via-white to-white';
+      case 'dark':
+        return isDark 
+          ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-black' 
+          : 'bg-gradient-to-br from-gray-200 via-gray-100 to-white';
+      case 'light':
+        return isDark 
+          ? 'bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800' 
+          : 'bg-gradient-to-br from-white via-gray-50 to-white';
+      default:
+        return isDark 
+          ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
+          : 'bg-gradient-to-br from-purple-50 via-white to-white';
+    }
+  };
+  
+  return (
+    <div className={`panion-desktop overflow-auto min-h-screen ${getBackgroundGradient()}`}>
+      {children}
+    </div>
+  );
+};
+
 const Desktop: React.FC = () => {
   const windows = useAgentStore(state => state.windows);
   const focusedAgentId = useAgentStore(state => state.focusedAgentId);
@@ -72,20 +129,15 @@ const Desktop: React.FC = () => {
   // Check if there are any open windows
   const hasOpenWindows = Object.values(windows).some(window => window.isOpen && !window.isMinimized);
 
-  // Get current theme and accent
-  const currentTheme = useThemeStore(state => state.getCurrentTheme());
-  const accent = useThemeStore(state => state.accent);
-  
-  // Debug: Log accent changes
-  useEffect(() => {
-    console.log("Current accent color:", accent);
-  }, [accent]);
-
   // Generate background gradient based on current theme and accent
   const getBackgroundGradient = () => {
-    const isDark = currentTheme === 'dark';
+    // Get fresh values directly from the store
+    const isDark = useThemeStore.getState().getCurrentTheme() === 'dark';
+    const currentAccent = useThemeStore.getState().accent;
     
-    switch (accent) {
+    console.log('Generating background for:', { isDark, accent: currentAccent });
+    
+    switch (currentAccent) {
       case 'purple':
         return isDark 
           ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
@@ -121,13 +173,8 @@ const Desktop: React.FC = () => {
     }
   };
 
-  // Memoize the background gradient class based on theme and accent
-  const backgroundGradientClass = useMemo(() => {
-    return getBackgroundGradient();
-  }, [currentTheme, accent]);
-  
   return (
-    <div className={`panion-desktop overflow-auto min-h-screen ${backgroundGradientClass}`}>
+    <DesktopBackground>
       {/* Desktop Area */}
       <div className="flex-1 relative">
         {/* Show empty state dashboard if no windows are open */}
@@ -164,7 +211,7 @@ const Desktop: React.FC = () => {
       
       {/* Taskbar */}
       <Taskbar className="h-14" />
-    </div>
+    </DesktopBackground>
   );
 };
 
