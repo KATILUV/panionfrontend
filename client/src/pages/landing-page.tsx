@@ -342,13 +342,13 @@ const LandingPage: React.FC = () => {
       </section>
       
       {/* Use Cases Section */}
-      <section className="py-20 md:py-32 bg-white text-gray-900">
+      <section className="pt-10 pb-20 md:pt-16 md:pb-32 bg-white text-gray-900">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 text-gray-900 tracking-tight">
               Real systems. <span className="text-indigo-600">Real selves.</span>
             </h2>
-            <p className="text-xl text-gray-600 mt-6">
+            <p className="text-xl text-gray-600 mt-4">
               See how people are using Panion to transform their work and creative processes
             </p>
           </div>
