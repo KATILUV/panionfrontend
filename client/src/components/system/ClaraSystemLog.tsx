@@ -85,10 +85,10 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
 
   return (
     <motion.div
-      className={`fixed right-4 bottom-16 w-80 max-h-[70vh] backdrop-blur-md rounded-lg overflow-hidden z-50 ${
+      className={`fixed right-4 bottom-16 w-80 max-h-[70vh] backdrop-blur-xl rounded-lg overflow-hidden z-50 ${
         getCurrentTheme() === 'dark' 
-          ? 'bg-black/50 border border-primary/30' 
-          : 'bg-white/90 border border-purple-200 shadow-lg'
+          ? 'bg-black/70 border border-purple-500/30' 
+          : 'bg-white/95 border border-purple-200 shadow-lg'
       } ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -98,12 +98,12 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
       {/* Header */}
       <div className={`flex items-center justify-between px-3 py-2 ${
         getCurrentTheme() === 'dark' 
-          ? 'bg-black/30 border-b border-primary/20 text-white' 
+          ? 'bg-black/30 border-b border-purple-500/20 text-white' 
           : 'bg-purple-50 border-b border-purple-100 text-gray-800'
       }`}>
         <div className="flex items-center space-x-2">
           <Database className={`h-4 w-4 ${
-            getCurrentTheme() === 'dark' ? 'text-primary' : 'text-purple-600'
+            getCurrentTheme() === 'dark' ? 'text-purple-500' : 'text-purple-600'
           }`} />
           <span className="text-sm font-medium">Clara's System Log</span>
         </div>

@@ -156,8 +156,8 @@ const CommandPalette: React.FC = () => {
         <motion.div
           className={`relative w-full max-w-lg mt-20 backdrop-blur-xl rounded-lg shadow-2xl overflow-hidden ${
             getCurrentTheme() === 'dark'
-              ? 'bg-[#1a1538]/90 border border-purple-500/30 text-white'
-              : 'bg-white/95 border border-purple-300/50 text-gray-900'
+              ? 'bg-black/70 border border-purple-500/30 text-white'
+              : 'bg-white/95 border border-purple-200 text-gray-900'
           }`}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -167,7 +167,7 @@ const CommandPalette: React.FC = () => {
           {/* Search header */}
           <div className={`flex items-center px-4 py-3 border-b ${
             getCurrentTheme() === 'dark' 
-              ? 'border-white/10' 
+              ? 'border-purple-500/20' 
               : 'border-purple-100'
           }`}>
             <Search className={`w-5 h-5 mr-2 ${
@@ -235,10 +235,10 @@ const CommandPalette: React.FC = () => {
                     className={`flex items-center px-3 py-2 rounded-md cursor-pointer transition-colors ${
                       index === selectedIndex 
                         ? getCurrentTheme() === 'dark' 
-                          ? 'bg-white/10' 
-                          : 'bg-purple-100'
+                          ? 'bg-purple-800/30 border border-purple-700/30' 
+                          : 'bg-purple-100 border border-purple-200'
                         : getCurrentTheme() === 'dark'
-                          ? 'hover:bg-white/5'
+                          ? 'hover:bg-black/30'
                           : 'hover:bg-purple-50'
                     }`}
                     onClick={() => {
@@ -275,7 +275,7 @@ const CommandPalette: React.FC = () => {
           {/* Footer */}
           <div className={`flex items-center justify-between px-4 py-2 border-t text-xs ${
             getCurrentTheme() === 'dark' 
-              ? 'border-white/10 text-white/50' 
+              ? 'border-purple-500/20 text-white/50' 
               : 'border-purple-100 text-gray-500'
           }`}>
             <div>

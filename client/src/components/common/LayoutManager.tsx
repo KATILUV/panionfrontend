@@ -75,7 +75,7 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
       <DialogContent 
         className={`sm:max-w-[550px] backdrop-blur-xl ${
           getCurrentTheme() === 'dark' 
-            ? 'bg-black/60 border border-purple-500/30 text-white' 
+            ? 'bg-black/70 border border-purple-500/30 text-white' 
             : 'bg-white/95 border border-purple-200 text-gray-900'
         }`}
         style={{ 
