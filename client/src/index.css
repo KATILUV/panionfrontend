@@ -45,13 +45,13 @@
 /* Dark mode colors */
 .dark {
     --background: 0 0% 0%;  /* Pure black */
-    --foreground: 220 10% 98%;
+    --foreground: 220 10% 90%;  /* Reduced brightness to 90% for eye comfort */
     --muted: 240 8% 12%;
-    --muted-foreground: 240 5% 65%;
+    --muted-foreground: 240 5% 55%;  /* Further reduced contrast for secondary text */
     --popover: 240 10% 6%;
-    --popover-foreground: 220 10% 98%;
+    --popover-foreground: 220 10% 90%;
     --card: 240 10% 6%;
-    --card-foreground: 220 10% 98%;
+    --card-foreground: 220 10% 90%;
     --border: 240 8% 12%;
     --input: 240 8% 16%;
     --destructive: 0 62.8% 30.6%;
@@ -870,7 +870,7 @@ body:not(.dark) {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 0.05)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
 }
 
-/* Custom window shadows for light mode */
+/* Custom window shadows for light/dark mode */
 .light-mode-shadow {
   box-shadow: 
     0 10px 35px rgba(0, 0, 0, 0.08),
@@ -883,4 +883,18 @@ body:not(.dark) {
     0 5px 20px rgba(0, 0, 0, 0.05),
     0 2px 8px rgba(0, 0, 0, 0.02),
     inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+/* Dark mode active window glow effect */
+.dark .active-window-glow {
+  box-shadow: 
+    0 0 20px rgba(0, 0, 0, 0.6),
+    0 0 5px hsl(var(--primary) / 0.3),
+    0 0 15px hsl(var(--primary) / 0.15);
+}
+
+/* Dark mode window header gradient */
+.window-header-gradient {
+  background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+  border-bottom: 1px solid #333;
 }

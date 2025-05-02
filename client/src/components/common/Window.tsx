@@ -279,7 +279,7 @@ const Window: React.FC<WindowProps> = ({
       <motion.div 
         className={`flex flex-col rounded-lg backdrop-blur-lg h-full overflow-hidden
           ${isActive 
-            ? 'border border-primary/40 bg-white/10 dark:bg-black/30 light-mode-shadow dark:shadow-xl' 
+            ? 'border border-primary/40 bg-white/10 dark:bg-black/30 light-mode-shadow dark:active-window-glow' 
             : 'border border-gray-200/30 dark:border-white/20 bg-white/5 dark:bg-black/20 light-mode-shadow-inactive dark:shadow-lg'
           }
         `}
@@ -330,7 +330,7 @@ const Window: React.FC<WindowProps> = ({
         </AnimatePresence>
         
         <div 
-          className="window-drag-handle flex items-center justify-between px-4 h-10 cursor-move bg-primary/90 dark:bg-black/30"
+          className="window-drag-handle flex items-center justify-between px-4 h-10 cursor-move bg-primary/90 dark:window-header-gradient"
           onDoubleClick={toggleMaximize}
         >
           <div className="font-medium text-white truncate">{title}</div>
