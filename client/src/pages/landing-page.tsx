@@ -562,13 +562,13 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
           
-          <div className="relative max-w-4xl mx-auto" ref={featuresRef}>
+          <div className="relative max-w-5xl mx-auto" ref={featuresRef}>
             {/* Positioned arrows on the sides */}
             <div className="absolute top-1/2 -left-4 -translate-y-1/2 z-10">
               <button 
                 onClick={prevFeature}
                 className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 shadow-md"
-                aria-label="Previous agent"
+                aria-label="Previous agents"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
@@ -578,28 +578,34 @@ const LandingPage: React.FC = () => {
               <button 
                 onClick={nextFeature}
                 className="p-2 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 shadow-md"
-                aria-label="Next agent"
+                aria-label="Next agents"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
             
-            {/* Scrollable cards */}
-            <div className="overflow-hidden px-8">
+            {/* Scrollable cards - showing 3 at a time */}
+            <div className="overflow-hidden px-6">
               <motion.div 
-                className="flex gap-4"
-                animate={{ x: `-${currentFeatureIndex * 100}%` }}
+                className="flex gap-5"
+                animate={{ x: `-${currentFeatureIndex * 33.33}%` }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               >
                 {keyFeatures.map((feature, index) => (
-                  <div key={index} className="min-w-full">
-                    <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex items-center">
-                      <div className="rounded-full p-4 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 mr-5 flex-shrink-0">
-                        <feature.icon className="w-8 h-8 text-indigo-600" />
+                  <div key={index} className="min-w-[31%] flex-shrink-0">
+                    <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]">
+                      <div className="rounded-full p-5 bg-indigo-100 bg-gradient-to-br from-violet-50 to-indigo-200 w-fit mb-6 mx-auto">
+                        <feature.icon className="w-10 h-10 text-indigo-600" />
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold mb-2 text-gray-900">{feature.title}</h3>
-                        <p className="text-gray-600">{feature.description}</p>
+                      <div className="text-center flex-1 flex flex-col">
+                        <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
+                        <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
+                        <p className="text-gray-600 flex-1">{feature.description}</p>
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <button className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
+                            Learn more
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -608,15 +614,15 @@ const LandingPage: React.FC = () => {
             </div>
             
             {/* Position indicators */}
-            <div className="flex justify-center mt-6 gap-2">
-              {keyFeatures.map((_, index) => (
+            <div className="flex justify-center mt-8 gap-2">
+              {Array.from({ length: Math.ceil(keyFeatures.length / 3) }).map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentFeatureIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentFeatureIndex ? "bg-indigo-600" : "bg-gray-300"
+                  onClick={() => setCurrentFeatureIndex(index * 3)}
+                  className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                    Math.floor(currentFeatureIndex / 3) === index ? "bg-indigo-600 scale-125" : "bg-gray-300"
                   }`}
-                  aria-label={`Go to agent ${index + 1}`}
+                  aria-label={`Go to agent group ${index + 1}`}
                 />
               ))}
             </div>
