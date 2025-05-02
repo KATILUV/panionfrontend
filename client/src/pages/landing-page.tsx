@@ -554,7 +554,7 @@ const LandingPage: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-8">
             <h2 className={`text-2xl md:text-3xl font-bold mb-4 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Meet the <span className="text-indigo-600">Agents</span>
+              Meet the <span className="text-purple-600">Agents</span>
             </h2>
             <p className={`text-lg ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               Specialized AI agents that work together to enhance your experience
@@ -573,15 +573,15 @@ const LandingPage: React.FC = () => {
                     {keyFeatures.map((feature, index) => (
                       <div key={index} className="w-[330px] flex-shrink-0 px-4">
                         <div className={`${currentTheme === 'dark' ? 'bg-card border-gray-800' : 'bg-white border-gray-100'} border rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]`}>
-                          <div className={`rounded-full p-5 ${currentTheme === 'dark' ? 'bg-indigo-950/50' : 'bg-indigo-100'} ${currentTheme === 'dark' ? 'bg-gradient-to-br from-indigo-950 to-purple-900' : 'bg-gradient-to-br from-violet-50 to-indigo-200'} w-fit mb-6 mx-auto`}>
-                            <feature.icon className="w-10 h-10 text-indigo-600" />
+                          <div className={`rounded-full p-5 ${currentTheme === 'dark' ? 'bg-purple-950/50' : 'bg-purple-100'} ${currentTheme === 'dark' ? 'bg-gradient-to-br from-purple-950 to-indigo-900' : 'bg-gradient-to-br from-purple-50 to-indigo-200'} w-fit mb-6 mx-auto`}>
+                            <feature.icon className="w-10 h-10 text-purple-600" />
                           </div>
                           <div className="text-center flex-1 flex flex-col">
                             <h3 className={`text-xl font-bold mb-3 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{feature.title}</h3>
-                            <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
+                            <div className="w-12 h-1 bg-purple-600 rounded-full mx-auto mb-4"></div>
                             <p className={`${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'} flex-1`}>{feature.description}</p>
                             <div className={`mt-4 pt-4 ${currentTheme === 'dark' ? 'border-gray-800' : 'border-gray-100'} border-t`}>
-                              <button className="text-indigo-600 text-sm font-medium hover:text-indigo-400 transition-colors">
+                              <button className="text-purple-600 text-sm font-medium hover:text-purple-400 transition-colors">
                                 Learn more
                               </button>
                             </div>
@@ -594,15 +594,15 @@ const LandingPage: React.FC = () => {
                     {keyFeatures.map((feature, index) => (
                       <div key={`dup-${index}`} className="w-[330px] flex-shrink-0 px-4">
                         <div className={`${currentTheme === 'dark' ? 'bg-card border-gray-800' : 'bg-white border-gray-100'} border rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 h-80 flex flex-col hover:translate-y-[-5px]`}>
-                          <div className={`rounded-full p-5 ${currentTheme === 'dark' ? 'bg-indigo-950/50' : 'bg-indigo-100'} ${currentTheme === 'dark' ? 'bg-gradient-to-br from-indigo-950 to-purple-900' : 'bg-gradient-to-br from-violet-50 to-indigo-200'} w-fit mb-6 mx-auto`}>
-                            <feature.icon className="w-10 h-10 text-indigo-600" />
+                          <div className={`rounded-full p-5 ${currentTheme === 'dark' ? 'bg-purple-950/50' : 'bg-purple-100'} ${currentTheme === 'dark' ? 'bg-gradient-to-br from-purple-950 to-indigo-900' : 'bg-gradient-to-br from-purple-50 to-indigo-200'} w-fit mb-6 mx-auto`}>
+                            <feature.icon className="w-10 h-10 text-purple-600" />
                           </div>
                           <div className="text-center flex-1 flex flex-col">
                             <h3 className={`text-xl font-bold mb-3 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{feature.title}</h3>
-                            <div className="w-12 h-1 bg-indigo-500 rounded-full mx-auto mb-4"></div>
+                            <div className="w-12 h-1 bg-purple-600 rounded-full mx-auto mb-4"></div>
                             <p className={`${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'} flex-1`}>{feature.description}</p>
                             <div className={`mt-4 pt-4 ${currentTheme === 'dark' ? 'border-gray-800' : 'border-gray-100'} border-t`}>
-                              <button className="text-indigo-600 text-sm font-medium hover:text-indigo-400 transition-colors">
+                              <button className="text-purple-600 text-sm font-medium hover:text-purple-400 transition-colors">
                                 Learn more
                               </button>
                             </div>
@@ -626,29 +626,7 @@ const LandingPage: React.FC = () => {
       
       {/* CTA Section - Removed as requested */}
       
-      {/* Footer */}
-      <footer className={`${currentTheme === 'dark' ? 'bg-background/30 text-white' : 'bg-gray-100 text-gray-900'} py-12`}>
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <h3 className={`text-2xl font-bold ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Panion</h3>
-              <p className={`text-sm ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>© 2025 Panion. All rights reserved.</p>
-            </div>
-            
-            <div className="flex gap-6">
-              {['About', 'Features', 'Contact', 'Terms', 'Privacy'].map((item, i) => (
-                <a 
-                  key={i} 
-                  href="#" 
-                  className={`text-sm ${currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
-                >
-                  {item}
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+{/* Footer removed as requested */}
     </div>
   );
 };
