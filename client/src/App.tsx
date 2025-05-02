@@ -7,7 +7,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import DesktopPage from "./pages/desktop-page";
 import LandingPage from "./pages/landing-page";
-import AuthPage from "./pages/auth-page";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
@@ -19,9 +18,6 @@ function Router() {
     <Switch>
       {/* Landing page */}
       <Route path="/" component={LandingPage} />
-      
-      {/* Auth page */}
-      <Route path="/auth" component={AuthPage} />
       
       {/* Desktop environment */}
       <Route path="/desktop" component={DesktopPage} />
