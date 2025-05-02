@@ -334,7 +334,7 @@ const SettingsAgent = () => {
             <div>
               <h3 className="text-xl font-medium mb-6">Privacy Settings</h3>
               <div className={`p-4 rounded-lg ${
-                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-white/80 border border-gray-200'
+                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-purple-50/90 border border-purple-100/70'
               }`}>
                 <h4 className="text-lg font-medium mb-4">Memory & Data</h4>
                 <p className="text-sm mb-4 opacity-80">
@@ -360,7 +360,7 @@ const SettingsAgent = () => {
             <div>
               <h3 className="text-xl font-medium mb-6">About Panion</h3>
               <div className={`p-4 rounded-lg ${
-                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-white/80 border border-gray-200'
+                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-purple-50/90 border border-purple-100/70'
               }`}>
                 <div className="flex items-center mb-4">
                   <div className={`h-16 w-16 rounded-full ${
