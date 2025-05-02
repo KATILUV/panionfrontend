@@ -76,7 +76,11 @@ const ClaraAgent: React.FC = () => {
         {/* Chat Messages Container */}
         <div 
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto pr-2 space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+          className={`flex-1 overflow-y-auto pr-2 space-y-2 scrollbar-thin ${
+            getCurrentTheme() === 'dark'
+              ? 'scrollbar-thumb-white/10'
+              : 'scrollbar-thumb-gray-400/20'
+          } scrollbar-track-transparent`}
         >
           {messages.length === 0 ? (
             <div className={`flex flex-col items-center justify-center h-full text-center space-y-4 ${

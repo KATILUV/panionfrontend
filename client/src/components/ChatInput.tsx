@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useThemeStore } from '../state/themeStore';
 
 interface ChatInputProps {
   onSendMessage: (message: string, imageFile?: File | null) => void;
@@ -10,6 +11,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const getCurrentTheme = useThemeStore((state) => state.getCurrentTheme);
+  const isDarkMode = getCurrentTheme() === 'dark';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,14 +72,20 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
       
       <form 
         onSubmit={handleSubmit}
-        className="relative flex items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-full overflow-hidden shadow-lg"
+        className={`relative flex items-center backdrop-blur-md rounded-full overflow-hidden shadow-lg ${
+          isDarkMode
+            ? 'bg-white/10 border border-white/20'
+            : 'bg-indigo-50/30 border border-indigo-200/30'
+        }`}
       >
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Message Clara..."
-          className="flex-grow py-3 px-4 bg-transparent text-white border-none outline-none"
+          className={`flex-grow py-3 px-4 bg-transparent border-none outline-none ${
+            isDarkMode ? 'text-white' : 'text-gray-800'
+          } placeholder:${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}
           disabled={isLoading}
         />
         
