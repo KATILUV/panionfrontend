@@ -32,21 +32,9 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accent = useThemeStore(state => state.accent);
   
-  // Debug: Log accent changes and update document body
+  // Debug: Log accent changes - no longer modifying document body
   useEffect(() => {
     console.log("Background component - accent color:", accent);
-    
-    // Apply background color directly to document body for dark and light accents
-    if (accent === 'dark') {
-      document.body.style.backgroundColor = '#000000';
-      document.body.style.backgroundImage = 'none';
-    } else if (accent === 'light') {
-      document.body.style.backgroundColor = '#ffffff';
-      document.body.style.backgroundImage = 'none';
-    } else {
-      document.body.style.backgroundColor = '';
-      document.body.style.backgroundImage = '';
-    }
   }, [accent]);
   
   // This is a simpler approach - get direct background color based on theme and accent
