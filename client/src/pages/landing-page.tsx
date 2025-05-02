@@ -338,13 +338,13 @@ const LandingPage: React.FC = () => {
         </div>
         
         {/* Bottom gradient overlay - smoother transition */}
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent z-10"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-60 bg-gradient-to-t from-white via-white/90 to-transparent z-10"></div>
       </section>
       
       {/* Use Cases Section */}
-      <section className="pt-10 pb-20 md:pt-16 md:pb-32 bg-white text-gray-900">
+      <section className="pt-0 pb-20 md:pt-0 md:pb-32 bg-white text-gray-900">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center mb-12">
+          <div className="max-w-3xl mx-auto text-center mb-16 -mt-32">
             <h2 className="text-4xl md:text-6xl font-bold mb-6 text-gray-900 tracking-tight">
               Real systems. <span className="text-indigo-600">Real selves.</span>
             </h2>
