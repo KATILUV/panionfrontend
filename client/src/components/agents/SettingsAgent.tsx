@@ -1,14 +1,55 @@
 import { useState } from 'react';
-import { Settings, Palette, Monitor, Bell, Shield, Info, Lock } from 'lucide-react';
-import ThemeSelector from '../common/ThemeSelector';
-import { useThemeStore } from '@/state/themeStore';
+import { Settings, Palette, Monitor, Bell, Shield, Info, Lock, Sun, Moon, CheckCircle2 } from 'lucide-react';
+import { useThemeStore, ThemeMode, ThemeAccent } from '@/state/themeStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 const SettingsAgent = () => {
   const [activeTab, setActiveTab] = useState('appearance');
+  const mode = useThemeStore(state => state.mode);
+  const accent = useThemeStore(state => state.accent);
+  const setMode = useThemeStore(state => state.setMode);
+  const setAccent = useThemeStore(state => state.setAccent);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
+  const systemPrefersDark = useThemeStore(state => state.systemPrefersDark);
+  const { toast } = useToast();
+  
+  // Define available accent colors
+  const accentColors: Array<{ id: ThemeAccent, name: string, color: string }> = [
+    { id: 'purple', name: 'Purple', color: 'bg-purple-500' },
+    { id: 'blue', name: 'Blue', color: 'bg-blue-500' },
+    { id: 'green', name: 'Green', color: 'bg-green-500' },
+    { id: 'orange', name: 'Orange', color: 'bg-amber-500' },
+    { id: 'pink', name: 'Pink', color: 'bg-fuchsia-400' }
+  ];
+  
+  const handleModeChange = (newMode: ThemeMode) => {
+    setMode(newMode);
+    
+    let description;
+    if (newMode === 'system') {
+      const currentSystemTheme = systemPrefersDark ? 'dark' : 'light';
+      description = `Theme will follow your system preference (currently ${currentSystemTheme})`;
+    } else {
+      description = `Theme mode set to ${newMode}`;
+    }
+    
+    toast({
+      title: 'Theme Updated',
+      description,
+    });
+  };
+
+  const handleAccentChange = (newAccent: ThemeAccent) => {
+    setAccent(newAccent);
+    toast({
+      title: 'Accent Color Updated',
+      description: `Accent color set to ${newAccent}`,
+    });
+  };
   
   return (
     <div className={`w-full h-full flex flex-col overflow-hidden ${
@@ -118,17 +159,94 @@ const SettingsAgent = () => {
               <div className={`p-4 rounded-lg ${
                 getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-white/80 border border-gray-200'
               }`}>
-                <h4 className="text-lg font-medium mb-4">Theme and Colors</h4>
+                <h4 className="text-lg font-medium mb-4">Theme Mode</h4>
                 <p className="text-sm mb-4 opacity-80">
-                  Choose your preferred theme mode and accent color to personalize the appearance of your Panion desktop.
+                  Choose your preferred theme mode to personalize the appearance of your Panion desktop.
                 </p>
                 
-                <ThemeSelector>
-                  <Button variant="outline" className="w-full flex items-center justify-between">
-                    <span>Customize Theme</span>
-                    <Palette className="h-4 w-4 ml-2" />
+                <div className="flex flex-wrap gap-2 mb-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`flex items-center gap-2 ${
+                      mode === 'light' ? 
+                        (getCurrentTheme() === 'dark' 
+                          ? 'bg-purple-800/20 border-purple-500/50' 
+                          : 'bg-purple-100 border-purple-300'
+                        ) : ''
+                    }`}
+                    onClick={() => handleModeChange('light')}
+                  >
+                    <Sun size={16} />
+                    <span>Light</span>
+                    {mode === 'light' && <CheckCircle2 className="h-4 w-4 ml-1 text-green-500" />}
                   </Button>
-                </ThemeSelector>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`flex items-center gap-2 ${
+                      mode === 'dark' ? 
+                        (getCurrentTheme() === 'dark' 
+                          ? 'bg-purple-800/20 border-purple-500/50' 
+                          : 'bg-purple-100 border-purple-300'
+                        ) : ''
+                    }`}
+                    onClick={() => handleModeChange('dark')}
+                  >
+                    <Moon size={16} />
+                    <span>Dark</span>
+                    {mode === 'dark' && <CheckCircle2 className="h-4 w-4 ml-1 text-green-500" />}
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`flex items-center gap-2 ${
+                      mode === 'system' ? 
+                        (getCurrentTheme() === 'dark' 
+                          ? 'bg-purple-800/20 border-purple-500/50' 
+                          : 'bg-purple-100 border-purple-300'
+                        ) : ''
+                    }`}
+                    onClick={() => handleModeChange('system')}
+                  >
+                    <Monitor size={16} />
+                    <span>System</span>
+                    {mode === 'system' && (
+                      <Badge variant="outline" className="ml-1 text-xs py-0">
+                        {systemPrefersDark ? 'Dark' : 'Light'}
+                      </Badge>
+                    )}
+                  </Button>
+                </div>
+                
+                <h4 className="text-lg font-medium mt-6 mb-4">Accent Color</h4>
+                <p className="text-sm mb-4 opacity-80">
+                  Choose your preferred accent color for highlights and interactive elements.
+                </p>
+                
+                <div className="flex flex-wrap gap-2">
+                  {accentColors.map((color) => (
+                    <Button
+                      key={color.id}
+                      variant="outline"
+                      size="sm"
+                      className={`flex items-center gap-2 ${
+                        accent === color.id ? 
+                          (getCurrentTheme() === 'dark' 
+                            ? 'bg-purple-800/20 border-purple-500/50' 
+                            : 'bg-purple-100 border-purple-300'
+                          ) : ''
+                      }`}
+                      onClick={() => handleAccentChange(color.id)}
+                    >
+                      <div className={`h-4 w-4 rounded-full ${color.color}`} />
+                      <span>{color.name}</span>
+                      {accent === color.id && <CheckCircle2 className="h-4 w-4 ml-1 text-green-500" />}
+                    </Button>
+                  ))}
+                </div>
               </div>
               
               <div className={`mt-6 p-4 rounded-lg ${
