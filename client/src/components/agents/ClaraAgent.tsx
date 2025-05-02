@@ -7,10 +7,12 @@ import RotatingTagline from '../RotatingTagline';
 import { useChat } from '../../hooks/useChat';
 import { Message } from '../../types/chat';
 import { log } from '../../state/systemLogStore';
+import { useThemeStore } from '../../state/themeStore';
 
 const ClaraAgent: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const getCurrentTheme = useThemeStore((state) => state.getCurrentTheme);
 
   // Log when the component mounts and unmounts
   useEffect(() => {
@@ -39,9 +41,13 @@ const ClaraAgent: React.FC = () => {
   const handleSendMessage = (message: string, imageFile?: File | null) => {
     sendMessage(message, imageFile);
   };
-
+  
   return (
-    <div className="h-full flex flex-col items-center bg-gradient-to-b from-transparent to-black/30 p-4">
+    <div className={`h-full flex flex-col items-center p-4 ${
+      getCurrentTheme() === 'dark'
+        ? 'bg-gradient-to-b from-transparent to-black/30'
+        : 'bg-gradient-to-b from-transparent to-white/20'
+    }`}>
       <div className="w-full max-w-full flex flex-col h-full">
         {/* Header */}
         <div className="text-center mb-2">
@@ -56,7 +62,11 @@ const ClaraAgent: React.FC = () => {
               "Dream bigger. Build together."
             ]}
             interval={7000}
-            className="text-white/80 text-sm font-light"
+            className={`text-sm font-light ${
+              getCurrentTheme() === 'dark' 
+                ? 'text-white/80'
+                : 'text-gray-700'
+            }`}
           />
         </div>
 
@@ -69,7 +79,11 @@ const ClaraAgent: React.FC = () => {
           className="flex-1 overflow-y-auto pr-2 space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
         >
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center text-white/50 space-y-4">
+            <div className={`flex flex-col items-center justify-center h-full text-center space-y-4 ${
+              getCurrentTheme() === 'dark' 
+                ? 'text-white/50'
+                : 'text-gray-500'
+            }`}>
               <p>Welcome to Clara! How can I assist you today?</p>
               <p className="text-sm">Ask me anything or share an image with me.</p>
             </div>
@@ -93,7 +107,11 @@ const ClaraAgent: React.FC = () => {
         </div>
         
         {/* Chat Input - Fixed at bottom */}
-        <div className="sticky bottom-0 pt-2 bg-gradient-to-t from-black/10 to-transparent">
+        <div className={`sticky bottom-0 pt-2 ${
+          getCurrentTheme() === 'dark'
+            ? 'bg-gradient-to-t from-black/10 to-transparent'
+            : 'bg-gradient-to-t from-white/10 to-transparent'
+        }`}>
           <ChatInput 
             onSendMessage={handleSendMessage}
             isLoading={isLoading}
