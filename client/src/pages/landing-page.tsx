@@ -24,10 +24,13 @@ const LandingPage: React.FC = () => {
       clearInterval(autoScrollTimerRef.current);
     }
     
-    // Set up automatic scrolling every 3 seconds
+    // Set up automatic scrolling every 1.5 seconds for more visible movement
     autoScrollTimerRef.current = setInterval(() => {
-      setCurrentFeatureIndex((prev) => (prev + 1) % keyFeatures.length);
-    }, 3000);
+      setCurrentFeatureIndex((prev) => (prev + 1) % (keyFeatures.length * 2)); // Double length for continuous effect
+    }, 1500);
+    
+    // For testing, log when the scroll happens
+    console.log("Auto-scroll initialized");
     
     // Clean up on unmount
     return () => {
