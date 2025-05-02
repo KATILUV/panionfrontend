@@ -126,7 +126,9 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
         
         {/* Theme mode selector */}
         <div className="space-y-6 my-2">
-          <div>
+          <div className={`p-4 rounded-lg ${
+            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
+          }`}>
             <h3 className="text-lg font-medium mb-3">Theme Mode</h3>
             <div className="flex flex-wrap gap-3">
               <Button
@@ -170,7 +172,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
             {/* System preference indicator */}
             {mode === 'system' && (
               <div className={`mt-3 p-3 rounded-md flex items-center gap-2 text-sm ${
-                getCurrentTheme() === 'dark' ? 'bg-white/10' : 'bg-purple-50/50'
+                getCurrentTheme() === 'dark' ? 'bg-white/5 border border-white/10' : 'bg-white/80 border border-purple-100'
               }`}>
                 <Info size={16} className={`flex-shrink-0 ${
                   getCurrentTheme() === 'dark' ? 'text-purple-300' : 'text-purple-600'
@@ -193,7 +195,9 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ children }) => {
           </div>
           
           {/* Accent color selector */}
-          <div>
+          <div className={`p-4 rounded-lg ${
+            getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
+          }`}>
             <h3 className="text-lg font-medium mb-3">Accent Color</h3>
             <div className="grid grid-cols-5 gap-3">
               {accentColors.map((color) => (

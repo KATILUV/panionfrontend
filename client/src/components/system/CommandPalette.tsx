@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Command, CommandType, useCommandStore } from '../../state/commandStore';
+import { useThemeStore } from '../../state/themeStore';
 import { Search, X, Command as CommandIcon, Monitor, Paintbrush, LayoutGrid, Terminal, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const CommandPalette: React.FC = () => {
   const { isOpen, getAvailableCommands, setIsOpen } = useCommandStore();
+  const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCommands, setFilteredCommands] = useState<Command[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -137,7 +139,11 @@ const CommandPalette: React.FC = () => {
       <div className="fixed inset-0 z-50 flex items-start justify-center">
         {/* Backdrop */}
         <motion.div 
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          className={`absolute inset-0 backdrop-blur-sm ${
+            getCurrentTheme() === 'dark' 
+              ? 'bg-black/50' 
+              : 'bg-slate-900/30'
+          }`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -146,29 +152,61 @@ const CommandPalette: React.FC = () => {
         
         {/* Command palette */}
         <motion.div
-          className="relative w-full max-w-lg mt-20 bg-black/80 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl overflow-hidden"
+          className={`relative w-full max-w-lg mt-20 backdrop-blur-xl rounded-lg shadow-2xl overflow-hidden ${
+            getCurrentTheme() === 'dark'
+              ? 'bg-[#1a1538]/90 border border-purple-500/30 text-white'
+              : 'bg-white/95 border border-purple-300/50 text-gray-900'
+          }`}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.2 }}
         >
           {/* Search header */}
-          <div className="flex items-center px-4 py-3 border-b border-white/10">
-            <Search className="w-5 h-5 mr-2 text-white/50" />
+          <div className={`flex items-center px-4 py-3 border-b ${
+            getCurrentTheme() === 'dark' 
+              ? 'border-white/10' 
+              : 'border-purple-100'
+          }`}>
+            <Search className={`w-5 h-5 mr-2 ${
+              getCurrentTheme() === 'dark' 
+                ? 'text-white/50' 
+                : 'text-purple-400'
+            }`} />
             <Input
               ref={inputRef}
               type="text"
               placeholder="Type a command or search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-white placeholder:text-white/50"
+              className={`flex-1 bg-transparent border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                getCurrentTheme() === 'dark'
+                  ? 'text-white placeholder:text-white/50'
+                  : 'text-gray-800 placeholder:text-gray-400'
+              }`}
             />
-            <div className="flex items-center gap-1 text-xs text-white/40">
-              <kbd className="px-1.5 py-0.5 bg-white/10 rounded">↑↓</kbd>
+            <div className={`flex items-center gap-1 text-xs ${
+              getCurrentTheme() === 'dark' 
+                ? 'text-white/40' 
+                : 'text-gray-500'
+            }`}>
+              <kbd className={`px-1.5 py-0.5 rounded ${
+                getCurrentTheme() === 'dark' 
+                  ? 'bg-white/10' 
+                  : 'bg-purple-50 border border-purple-100'
+              }`}>↑↓</kbd>
               <span>to navigate</span>
-              <kbd className="px-1.5 py-0.5 bg-white/10 rounded">↵</kbd>
+              <kbd className={`px-1.5 py-0.5 rounded ${
+                getCurrentTheme() === 'dark' 
+                  ? 'bg-white/10' 
+                  : 'bg-purple-50 border border-purple-100'
+              }`}>↵</kbd>
               <span>to select</span>
-              <kbd className="px-1.5 py-0.5 bg-white/10 rounded">esc</kbd>
+              <kbd className={`px-1.5 py-0.5 rounded ${
+                getCurrentTheme() === 'dark' 
+                  ? 'bg-white/10' 
+                  : 'bg-purple-50 border border-purple-100'
+              }`}>esc</kbd>
               <span>to close</span>
             </div>
           </div>
@@ -179,7 +217,11 @@ const CommandPalette: React.FC = () => {
             className="overflow-y-auto max-h-80"
           >
             {filteredCommands.length === 0 ? (
-              <div className="p-4 text-center text-white/50">
+              <div className={`p-4 text-center ${
+                getCurrentTheme() === 'dark' 
+                  ? 'text-white/50' 
+                  : 'text-gray-500'
+              }`}>
                 No commands found
               </div>
             ) : (
