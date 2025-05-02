@@ -8,6 +8,7 @@ import {
   PenTool, FileText, Database, Layers, Code, Presentation, Pause
 } from 'lucide-react';
 import RotatingTagline from '@/components/RotatingTagline';
+import { useThemeStore } from '@/state/themeStore';
 
 
 
@@ -16,6 +17,8 @@ const LandingPage: React.FC = () => {
   const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
   const featuresRef = useRef<HTMLDivElement>(null);
   const autoScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const currentTheme = useThemeStore(state => state.getCurrentTheme());
+  const accent = useThemeStore(state => state.accent);
 
   // This useEffect is no longer needed as we'll use CSS animations instead
   useEffect(() => {
@@ -131,11 +134,74 @@ const LandingPage: React.FC = () => {
       role: "Content Creator"
     }
   ];
+  
+  // Generate hero section gradient based on current theme and accent
+  const getHeroGradient = () => {
+    const isDark = currentTheme === 'dark';
+    
+    // Default to purple shades
+    let gradientClasses = 'from-[#1a1245] via-[#2d2468] to-[#33284b]';
+    
+    if (!isDark) {
+      // Light mode gradients
+      switch (accent) {
+        case 'purple':
+          gradientClasses = 'from-purple-700 via-purple-600 to-purple-800';
+          break;
+        case 'blue':
+          gradientClasses = 'from-blue-700 via-blue-600 to-blue-800';
+          break;
+        case 'green':
+          gradientClasses = 'from-green-700 via-green-600 to-green-800';
+          break;
+        case 'orange':
+          gradientClasses = 'from-orange-700 via-orange-600 to-orange-800';
+          break;
+        case 'pink':
+          gradientClasses = 'from-pink-700 via-pink-600 to-pink-800';
+          break;
+        default:
+          gradientClasses = 'from-purple-700 via-purple-600 to-purple-800';
+      }
+    } else {
+      // Dark mode gradients
+      switch (accent) {
+        case 'purple':
+          gradientClasses = 'from-[#1a1245] via-[#2d2468] to-[#33284b]';
+          break;
+        case 'blue':
+          gradientClasses = 'from-[#0a1a2f] via-[#0c1827] to-[#0c1827]';
+          break;
+        case 'green':
+          gradientClasses = 'from-[#0f2922] via-[#0c211c] to-[#0f2824]';
+          break;
+        case 'orange':
+          gradientClasses = 'from-[#261409] via-[#1f1107] to-[#291a0d]';
+          break;
+        case 'pink':
+          gradientClasses = 'from-[#270d1a] via-[#1f0b16] to-[#2a0e1c]';
+          break;
+        default:
+          gradientClasses = 'from-[#1a1245] via-[#2d2468] to-[#33284b]';
+      }
+    }
+    
+    return gradientClasses;
+  };
+
+  // Text colors based on theme
+  const getTextColor = () => {
+    return currentTheme === 'dark' ? 'text-white' : 'text-gray-900';
+  };
+  
+  const getMutedTextColor = () => {
+    return currentTheme === 'dark' ? 'text-white/80' : 'text-gray-700';
+  };
 
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
-      {/* Hero Section - Twilight Purple-Blue */}
-      <section className="relative py-28 md:py-40 bg-gradient-to-br from-[#1a1245] via-[#2d2468] to-[#33284b] text-white overflow-hidden">
+      {/* Hero Section with Dynamic Theme */}
+      <section className={`relative py-28 md:py-40 bg-gradient-to-br ${getHeroGradient()} ${currentTheme === 'dark' ? 'text-white' : 'text-white'} overflow-hidden`}>
         {/* Particle effect background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           {/* Animated particles */}
@@ -301,11 +367,11 @@ const LandingPage: React.FC = () => {
         </div>
         
         {/* Bottom gradient overlay - smoother transition */}
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/80 to-transparent z-10"></div>
+        <div className={`absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t ${currentTheme === 'dark' ? 'from-background via-background/80' : 'from-white via-white/80'} to-transparent z-10`}></div>
       </section>
       
       {/* Use Cases Section */}
-      <section className="pt-0 pb-20 md:pt-0 md:pb-32 bg-white text-gray-900">
+      <section className={`pt-0 pb-20 md:pt-0 md:pb-32 ${currentTheme === 'dark' ? 'bg-background text-foreground' : 'bg-white text-gray-900'}`}>
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16 mt-10">
             <h2 className="text-4xl md:text-6xl font-bold mb-6 text-gray-900 tracking-tight">
