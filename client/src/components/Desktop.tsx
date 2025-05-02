@@ -62,7 +62,7 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
       case 'orange':
         return isDark ? '#0a0a0a' : '#fff7ed';
       case 'pink':
-        return isDark ? '#270d1a' : '#fdf2f8';
+        return isDark ? '#331425' : '#fdf2f8';
       default:
         return isDark ? '#1a1245' : '#f9f7ff';
     }
@@ -157,7 +157,7 @@ const Desktop: React.FC = () => {
           : 'bg-gradient-to-br from-orange-50 via-white to-white';
       case 'pink':
         return isDark 
-          ? 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]' 
+          ? 'bg-gradient-to-br from-pink-800 via-[#331425] to-[#3a1a2a]' 
           : 'bg-gradient-to-br from-pink-50 via-white to-white';
       case 'dark':
         return isDark 

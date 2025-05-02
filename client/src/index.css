@@ -172,9 +172,9 @@
     --accent-foreground: 355.7 100% 97.3%;
     
     /* Theme specific colors */
-    --theme-gradient-start: #4a0072;
-    --theme-gradient-end: #7e22ce;
-    --theme-accent-glow: rgba(192, 132, 252, 0.4);
+    --theme-gradient-start: #5a1845;
+    --theme-gradient-end: #8e3366;
+    --theme-accent-glow: rgba(219, 144, 224, 0.4);
 }
 
 .dark[data-accent="pink"] {
