@@ -56,7 +56,7 @@ const SettingsAgent = () => {
       getCurrentTheme() === 'dark' ? 'text-white' : 'text-gray-800'
     }`}>
       <div className={`p-4 flex items-center ${
-        getCurrentTheme() === 'dark' ? 'bg-black/30' : 'bg-white/90'
+        getCurrentTheme() === 'dark' ? 'bg-black/30' : 'bg-purple-50/90 border-b border-purple-100'
       }`}>
         <Settings className="h-5 w-5 mr-2" />
         <h2 className="text-lg font-semibold">Settings</h2>
@@ -65,7 +65,7 @@ const SettingsAgent = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className={`w-48 shrink-0 ${
-          getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-gray-50/90'
+          getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/80 border-r border-purple-100/50'
         }`}>
           <div className="p-4">
             <div className={`flex flex-col space-y-2`}>
@@ -152,12 +152,14 @@ const SettingsAgent = () => {
         </div>
         
         {/* Main Content */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className={`flex-1 overflow-auto p-6 ${
+              getCurrentTheme() === 'dark' ? '' : 'bg-white/40'
+            }`}>
           {activeTab === 'appearance' && (
             <div>
               <h3 className="text-xl font-medium mb-6">Appearance Settings</h3>
               <div className={`p-4 rounded-lg ${
-                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-white/80 border border-gray-200'
+                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-purple-50/90 border border-purple-100/70'
               }`}>
                 <h4 className="text-lg font-medium mb-4">Theme Mode</h4>
                 <p className="text-sm mb-4 opacity-80">
@@ -250,7 +252,7 @@ const SettingsAgent = () => {
               </div>
               
               <div className={`mt-6 p-4 rounded-lg ${
-                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-white/80 border border-gray-200'
+                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-purple-50/90 border border-purple-100/70'
               }`}>
                 <h4 className="text-lg font-medium mb-4">User Interface Density</h4>
                 <p className="text-sm mb-4 opacity-80">
@@ -277,7 +279,7 @@ const SettingsAgent = () => {
             <div>
               <h3 className="text-xl font-medium mb-6">System Settings</h3>
               <div className={`p-4 rounded-lg ${
-                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-white/80 border border-gray-200'
+                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-purple-50/90 border border-purple-100/70'
               }`}>
                 <h4 className="text-lg font-medium mb-4">Startup Behavior</h4>
                 <p className="text-sm mb-4 opacity-80">
@@ -307,7 +309,7 @@ const SettingsAgent = () => {
             <div>
               <h3 className="text-xl font-medium mb-6">Notification Settings</h3>
               <div className={`p-4 rounded-lg ${
-                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-white/80 border border-gray-200'
+                getCurrentTheme() === 'dark' ? 'bg-black/30 border border-white/10' : 'bg-purple-50/90 border border-purple-100/70'
               }`}>
                 <h4 className="text-lg font-medium mb-4">General</h4>
                 <p className="text-sm mb-4 opacity-80">
