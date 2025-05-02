@@ -52,16 +52,22 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
           relative w-32 h-32 rounded-full 
           floating-orb
           bg-opacity-15 backdrop-blur-lg
-          bg-white/10
+          ${getCurrentTheme() === 'dark' 
+            ? 'bg-white/10' 
+            : (accent === 'light' ? 'bg-white/30' : 'bg-white/20')
+          }
           ${getCurrentTheme() === 'dark' || accent !== 'light'
             ? (isProcessing 
               ? 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_40px_rgba(138,43,226,0.6),0_0_60px_rgba(255,0,128,0.5),inset_0_0_80px_rgba(255,255,255,0.3)]' 
               : 'shadow-[0_20px_70px_rgba(0,0,0,0.6),0_0_30px_rgba(138,43,226,0.4),0_0_50px_rgba(255,0,128,0.3),inset_0_0_70px_rgba(255,255,255,0.2)]')
             : (isProcessing
-              ? 'shadow-[0_20px_70px_rgba(0,0,0,0.3),0_0_40px_rgba(128,128,128,0.4),0_0_60px_rgba(200,200,200,0.4),inset_0_0_80px_rgba(255,255,255,0.4)]'
-              : 'shadow-[0_20px_70px_rgba(0,0,0,0.3),0_0_30px_rgba(128,128,128,0.3),0_0_50px_rgba(200,200,200,0.3),inset_0_0_70px_rgba(255,255,255,0.3)]')
+              ? 'shadow-[0_20px_70px_rgba(0,0,0,0.2),0_0_40px_rgba(150,150,150,0.35),0_0_60px_rgba(200,200,200,0.4),inset_0_0_80px_rgba(255,255,255,0.5)]'
+              : 'shadow-[0_20px_70px_rgba(0,0,0,0.15),0_0_30px_rgba(150,150,150,0.25),0_0_50px_rgba(200,200,200,0.3),inset_0_0_70px_rgba(255,255,255,0.4)]')
           }
-          border border-white/60
+          ${getCurrentTheme() === 'dark' 
+            ? 'border border-white/60' 
+            : (accent === 'light' ? 'border-2 border-gray-200/80' : 'border border-white/70')
+          }
           overflow-hidden
           transition-all duration-300 ease-in-out
           ${isProcessing ? 'scale-105' : ''} 
@@ -70,22 +76,42 @@ const ClaraOrb: React.FC<ClaraOrbProps> = ({ isProcessing = false }) => {
         {/* Crystal fluid container */}
         <div className="crystal-fluid">
           {/* Pink blob */}
-          <div className="lava-blob lava-blob-1 animate-blob-float-1"></div>
+          <div className={`lava-blob ${
+            accent === 'light' && getCurrentTheme() === 'light'
+              ? 'bg-gradient-radial from-gray-400/80 via-gray-300/50 to-gray-300/0'
+              : 'lava-blob-1'
+            } animate-blob-float-1`}></div>
           
           {/* Blue blob */}
-          <div className="lava-blob lava-blob-2 animate-blob-float-2"></div>
+          <div className={`lava-blob ${
+            accent === 'light' && getCurrentTheme() === 'light'
+              ? 'bg-gradient-radial from-gray-500/70 via-gray-400/50 to-gray-400/0'
+              : 'lava-blob-2'
+            } animate-blob-float-2`}></div>
           
           {/* Purple blob */}
-          <div className="lava-blob lava-blob-3 animate-blob-float-3"></div>
+          <div className={`lava-blob ${
+            accent === 'light' && getCurrentTheme() === 'light'
+              ? 'bg-gradient-radial from-gray-300/80 via-gray-200/60 to-gray-200/0'
+              : 'lava-blob-3'
+            } animate-blob-float-3`}></div>
           
           {/* Gold blob */}
-          <div className="lava-blob lava-blob-4 animate-blob-float-4"></div>
+          <div className={`lava-blob ${
+            accent === 'light' && getCurrentTheme() === 'light'
+              ? 'bg-gradient-radial from-gray-200/90 via-gray-300/60 to-gray-300/0'
+              : 'lava-blob-4'
+            } animate-blob-float-4`}></div>
           
           {/* Dynamically generated bubbles */}
           {generateBubbles()}
           
           {/* Iridescent overlay */}
-          <div className="iridescent-layer"></div>
+          <div className={`${
+            accent === 'light' && getCurrentTheme() === 'light'
+              ? 'bg-gradient-conic from-gray-200/40 via-white/40 to-gray-300/40 opacity-40'
+              : 'iridescent-layer'
+          } absolute inset-0 rounded-full mix-blend-soft-light`}></div>
         </div>
         
         {/* Glass highlights */}
