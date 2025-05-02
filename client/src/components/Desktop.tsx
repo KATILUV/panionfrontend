@@ -84,27 +84,27 @@ const Desktop: React.FC = () => {
       case 'purple':
         return isDark 
           ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
-          : 'bg-gradient-to-br from-purple-100 via-purple-50/80 to-white';
+          : 'bg-gradient-to-br from-purple-50 via-white to-white';
       case 'blue':
         return isDark 
           ? 'bg-gradient-to-br from-blue-950 via-[#0a1a2f] to-[#0c1827]' 
-          : 'bg-gradient-to-br from-blue-100 via-blue-50/80 to-white';
+          : 'bg-gradient-to-br from-blue-50 via-white to-white';
       case 'green':
         return isDark 
           ? 'bg-gradient-to-br from-green-950 via-[#0f2922] to-[#0c211c]' 
-          : 'bg-gradient-to-br from-green-100 via-green-50/80 to-white';
+          : 'bg-gradient-to-br from-green-50 via-white to-white';
       case 'orange':
         return isDark 
           ? 'bg-gradient-to-br from-orange-950 via-[#261409] to-[#1f1107]' 
-          : 'bg-gradient-to-br from-amber-100 via-orange-50/80 to-white';
+          : 'bg-gradient-to-br from-orange-50 via-white to-white';
       case 'pink':
         return isDark 
           ? 'bg-gradient-to-br from-pink-950 via-[#270d1a] to-[#1f0b16]' 
-          : 'bg-gradient-to-br from-fuchsia-100 via-pink-50/80 to-white';
+          : 'bg-gradient-to-br from-pink-50 via-white to-white';
       default:
         return isDark 
           ? 'bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]' 
-          : 'bg-gradient-to-br from-purple-100 via-purple-50/80 to-white';
+          : 'bg-gradient-to-br from-purple-50 via-white to-white';
     }
   };
 

@@ -69,11 +69,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   };
   
   return (
-    <div className={`flex items-center backdrop-blur-md px-4 py-2 ${
-        getCurrentTheme() === 'dark' 
-          ? 'bg-black/30 border-t border-white/10' 
-          : 'bg-purple-700/80 border-t border-purple-500/30 shadow-lg'
-      } ${className}`}>
+    <div className={`flex items-center bg-black/30 backdrop-blur-md border-t border-white/10 px-4 py-2 ${className}`}>
       <div className="flex-1 flex items-center space-x-1">
         {registry.map(agent => {
           const isOpen = windows[agent.id]?.isOpen;
