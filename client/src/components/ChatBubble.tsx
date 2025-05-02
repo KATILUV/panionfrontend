@@ -1,5 +1,6 @@
 import React from 'react';
 import { Message } from '../types/chat';
+import { useThemeStore } from '../state/themeStore';
 
 interface ChatBubbleProps {
   message: Message;
@@ -7,6 +8,8 @@ interface ChatBubbleProps {
 
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
   const { content, isUser, timestamp, imageUrl } = message;
+  const getCurrentTheme = useThemeStore((state) => state.getCurrentTheme);
+  const isDarkMode = getCurrentTheme() === 'dark';
 
   // Format timestamp to readable time
   const formatTime = (timestamp: string) => {
@@ -36,14 +39,18 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
         className={`
           max-w-[80%] px-4 py-3 rounded-2xl
           ${isUser 
-            ? 'chat-bubble-user rounded-tr-2xl rounded-tl-2xl rounded-bl-md rounded-br-2xl' 
-            : 'chat-bubble-ai bg-white/85 backdrop-blur-md text-black rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md'
+            ? `${isDarkMode ? 'chat-bubble-user' : 'bg-indigo-600/90 text-white'} rounded-tr-2xl rounded-tl-2xl rounded-bl-md rounded-br-2xl` 
+            : `chat-bubble-ai bg-white/85 backdrop-blur-md text-black rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md`
           }
         `}
       >
         <div className="relative z-10">
           {content}
-          <div className={`text-xs mt-1 ${isUser ? 'text-white/70' : 'text-black/50'}`}>
+          <div className={`text-xs mt-1 ${
+            isUser 
+              ? (isDarkMode ? 'text-white/70' : 'text-white/90') 
+              : 'text-black/50'
+          }`}>
             {formatTime(timestamp)}
           </div>
         </div>
