@@ -357,9 +357,19 @@ const Window: React.FC<WindowProps> = ({
         <motion.div 
           className="flex-1 overflow-auto"
           style={{ height: contentHeight }}
-          animate={{ opacity: 1 }}
-          initial={{ opacity: 0 }}
-          transition={{ delay: 0.1, duration: 0.3 }}
+          animate={{ 
+            opacity: 1,
+            y: 0,
+            transition: {
+              delay: 0.05, 
+              duration: 0.25,
+              ease: "easeOut" 
+            }
+          }}
+          initial={{ 
+            opacity: 0, 
+            y: 10
+          }}
         >
           {children}
         </motion.div>

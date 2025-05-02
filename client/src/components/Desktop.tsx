@@ -11,6 +11,7 @@ import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
 import EmptyStateDashboard from './system/EmptyStateDashboard';
 import { useToast } from '@/hooks/use-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Component rendering helper
 const renderAgentContent = (agentId: string) => {

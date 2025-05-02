@@ -6,6 +6,7 @@ import LayoutManager from './LayoutManager';
 import ThemeSelector from './ThemeSelector';
 import ClaraSystemLog from '../system/ClaraSystemLog';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import { 
   Layout, 
   Moon,
@@ -77,20 +78,38 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           const isMinimized = windows[agent.id]?.isMinimized;
           
           return (
-            <button
+            <motion.button
               key={agent.id}
               onClick={() => handleIconClick(agent.id)}
               className={`
-                p-2 rounded-md transition-all duration-200 relative
+                p-2 rounded-md relative
                 ${isOpen && !isMinimized ? 'bg-white/20' : 'bg-transparent hover:bg-white/10'}
-                ${isOpen ? 'after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-1/3 after:h-0.5 after:bg-white after:rounded-full' : ''}
               `}
               title={agent.title}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              animate={{ 
+                y: isMinimized ? [0, -3, 0] : 0 
+              }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 400, 
+                damping: 10 
+              }}
             >
               <div className="flex items-center justify-center w-8 h-8 text-white">
                 <div dangerouslySetInnerHTML={{ __html: agent.icon }} />
               </div>
-            </button>
+              {isOpen && (
+                <motion.div 
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-0.5 bg-primary rounded-full"
+                  layoutId={`taskbar-indicator-${agent.id}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                />
+              )}
+            </motion.button>
           );
         })}
       </div>
