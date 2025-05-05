@@ -234,7 +234,7 @@ h4, .h4 {
   }
 
   body {
-    @apply font-sans antialiased text-foreground;
+    @apply font-sans antialiased text-foreground gradient-bg;
     font-family: 'Inter', sans-serif;
     background: linear-gradient(to bottom, var(--theme-gradient-start), var(--theme-gradient-end));
     min-height: 100vh;
@@ -244,46 +244,57 @@ h4, .h4 {
     overflow: auto;
     transition: background 0.5s ease;
   }
+}
+
+@layer components {
+  .window-content {
+    @apply bg-black/20 dark:bg-black/30 backdrop-blur-lg rounded-md p-4 text-sm;
+  }
   
-  body::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-      radial-gradient(circle at 20% 20%, var(--theme-accent-glow), transparent 40%),
-      radial-gradient(circle at 80% 80%, var(--theme-accent-glow), transparent 40%),
-      radial-gradient(circle at 50% 50%, var(--theme-accent-glow), transparent 70%);
-    z-index: -1;
-    transition: background 0.5s ease;
+  .window-panel {
+    @apply bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-md p-3 border border-white/10;
   }
+}
 
-  /* Floating particles in background */
-  body::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background-image: 
-      radial-gradient(circle at 85% 27%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 0.2%),
-      radial-gradient(circle at 49% 90%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 0.2%),
-      radial-gradient(circle at 33% 42%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 0.15%),
-      radial-gradient(circle at 91% 73%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 0.1%),
-      radial-gradient(circle at 15% 75%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 0.12%),
-      radial-gradient(circle at 62% 10%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 0.18%);
-    z-index: -1;
-    animation: float-particles 15s infinite linear;
-  }
+/* Background glow effects */
+.gradient-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, var(--theme-accent-glow), transparent 40%),
+    radial-gradient(circle at 80% 80%, var(--theme-accent-glow), transparent 40%),
+    radial-gradient(circle at 50% 50%, var(--theme-accent-glow), transparent 70%);
+  z-index: -1;
+  transition: background 0.5s ease;
+}
 
-  @keyframes float-particles {
-    0% { transform: translateY(0) rotate(0deg); }
-    100% { transform: translateY(-100px) rotate(5deg); }
-  }
+/* Floating particles in background */
+.gradient-bg::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(circle at 85% 27%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 0.2%),
+    radial-gradient(circle at 49% 90%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 0.2%),
+    radial-gradient(circle at 33% 42%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 0.15%),
+    radial-gradient(circle at 91% 73%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 0.1%),
+    radial-gradient(circle at 15% 75%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 0.12%),
+    radial-gradient(circle at 62% 10%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 0.18%);
+  z-index: -1;
+  animation: float-particles 15s infinite linear;
+}
+
+@keyframes float-particles {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-100px) rotate(5deg); }
 }
 
 /* Custom animations */
@@ -588,6 +599,47 @@ h4, .h4 {
       0 0 30px hsl(var(--primary) / 0.3),
       inset 0 0 20px rgba(255, 255, 255, 0.3);
   }
+}
+
+/* Custom Scrollbar Styling */
+/* For Webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Dark mode scrollbars */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox scrollbar (supports only limited customization) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .window-snap-left::after {
