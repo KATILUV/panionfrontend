@@ -217,7 +217,7 @@ const Window: React.FC<WindowProps> = ({
   };
 
   // Calculate content height (window height minus title bar)
-  const contentHeight = size.height - 40;
+  const contentHeight = size.height - 24; // 6px height for title bar
 
   // Create CSS classes based on snap position for visual feedback
   const getSnapIndicatorClass = () => {
@@ -272,31 +272,32 @@ const Window: React.FC<WindowProps> = ({
       className={getSnapIndicatorClass()}
     >
       <motion.div 
-        className={`flex flex-col rounded-lg backdrop-blur-lg h-full overflow-hidden
+        className={`flex flex-col rounded-lg backdrop-blur-xl h-full overflow-hidden
           ${getCurrentTheme() === 'dark'
             ? isActive 
-              ? 'border border-primary/40 bg-black/25 shadow-xl' 
-              : 'border border-white/20 bg-black/15 shadow-lg'
+              ? 'border border-white/20 bg-black/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]' 
+              : 'border border-white/10 bg-black/30 shadow-[0_10px_30px_rgba(0,0,0,0.4)]'
             : isActive 
-              ? 'border border-primary/30 bg-white/80 shadow-md' 
-              : 'border border-gray-200/70 bg-white/70 shadow'
+              ? 'border border-primary/30 bg-white/90 shadow-[0_10px_25px_rgba(0,0,0,0.1)]' 
+              : 'border border-gray-200/70 bg-white/80 shadow-[0_5px_15px_rgba(0,0,0,0.05)]'
           }
         `}
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ 
           opacity: 1, 
           scale: 1,
+          y: 0,
           transition: { 
-            duration: 0.2,
+            duration: 0.3,
             ease: "easeOut"
           }
         }}
         layout
         transition={{
           type: "spring",
-          damping: 20,
-          stiffness: 300,
-          duration: 0.3
+          damping: 26,
+          stiffness: 340,
+          duration: 0.4
         }}
       >
         {/* Snap Overlay Indicators */}
@@ -315,70 +316,66 @@ const Window: React.FC<WindowProps> = ({
         </AnimatePresence>
         
         <div 
-          className={`window-drag-handle flex items-center justify-between px-4 h-10 cursor-move ${
+          className={`window-drag-handle flex items-center justify-between px-3 h-6 cursor-move ${
             getCurrentTheme() === 'dark'
-              ? isActive 
-                ? 'bg-gradient-to-r from-primary/80 to-primary/50' 
-                : 'bg-black/40'
-              : isActive 
-                ? (accent === 'light' 
-                  ? 'bg-white border-b border-gray-200/50' 
-                  : 'bg-gradient-to-r from-primary/15 to-indigo-100/30 border-b border-primary/20')
-                : 'bg-gray-100/80 border-b border-gray-200/50'
+              ? 'bg-black/40 border-b border-white/10'
+              : 'bg-gray-100 border-b border-gray-200'
           }`}
           onDoubleClick={toggleMaximize}
         >
-          <div className={`font-medium truncate ${
-            getCurrentTheme() === 'dark' 
-              ? 'text-white drop-shadow-sm'
-              : (accent === 'light' 
-                  ? 'text-gray-800' 
-                  : (isActive ? 'text-primary-700' : 'text-gray-800'))
-          }`}>{title}</div>
-          <motion.div className="flex items-center space-x-2">
-            <motion.button 
+          <div className="flex items-center">
+            <div className="flex items-center space-x-1.5 mr-3">
+              <motion.div 
+                className="w-2 h-2 rounded-full bg-red-500 cursor-pointer"
+                whileHover={{ scale: 1.2 }}
+                onClick={onClose}
+              />
+              <motion.div 
+                className="w-2 h-2 rounded-full bg-yellow-500 cursor-pointer" 
+                whileHover={{ scale: 1.2 }}
+                onClick={onMinimize}
+              />
+              <motion.div 
+                className="w-2 h-2 rounded-full bg-green-500 cursor-pointer"
+                whileHover={{ scale: 1.2 }}
+                onClick={toggleMaximize}
+              />
+            </div>
+            <div className={`text-xs font-medium truncate ${
+              getCurrentTheme() === 'dark' 
+                ? 'text-white/70'
+                : 'text-gray-700'
+            }`}>
+              {title}
+            </div>
+          </div>
+          
+          {/* Keep the original buttons for mobile users but make them less prominent */}
+          <div className="sm:hidden flex items-center space-x-1">
+            <button 
               onClick={onMinimize}
-              className={`p-1 rounded ${
-                getCurrentTheme() === 'dark' || isActive 
-                  ? 'text-white/90 hover:text-white hover:bg-white/30' 
-                  : 'text-gray-700 hover:text-gray-900 hover:bg-black/10'
-              }`}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
+              className="p-1 rounded text-white/70 hover:text-white hover:bg-white/20"
             >
-              <Minimize2 size={16} className="drop-shadow-sm" />
-            </motion.button>
-            <motion.button 
-              onClick={toggleMaximize}
-              className={`p-1 rounded ${
-                getCurrentTheme() === 'dark' || isActive 
-                  ? 'text-white/90 hover:text-white hover:bg-white/30' 
-                  : 'text-gray-700 hover:text-gray-900 hover:bg-black/10'
-              }`}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Maximize2 size={16} className="drop-shadow-sm" />
-            </motion.button>
-            <motion.button 
+              <Minimize2 size={12} />
+            </button>
+            <button 
               onClick={onClose}
-              className="p-1 text-gray-700 hover:text-white hover:bg-red-600 rounded"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
+              className="p-1 rounded text-white/70 hover:text-white hover:bg-red-600/70"
             >
-              <X size={16} className="drop-shadow-sm" />
-            </motion.button>
-          </motion.div>
+              <X size={12} />
+            </button>
+          </div>
         </div>
         <motion.div 
-          className="flex-1 overflow-auto"
+          className="flex-1 overflow-auto p-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
           style={{ height: contentHeight }}
           animate={{ opacity: 1 }}
           initial={{ opacity: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}
         >
-          {children}
+          <div className="h-full">
+            {children}
+          </div>
         </motion.div>
       </motion.div>
     </Rnd>
