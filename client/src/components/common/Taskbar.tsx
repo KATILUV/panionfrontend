@@ -130,7 +130,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           }`}
         >
           <Terminal size={16} />
-          <span className="hidden sm:inline text-sm">Console</span>
+          <span className="hidden sm:inline text-sm">System Console</span>
         </Button>
 
         {/* Settings Button */}
