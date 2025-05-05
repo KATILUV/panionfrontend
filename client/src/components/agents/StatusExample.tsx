@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 /**
  * Example component showcasing the Agent Status indicators
  * and typography hierarchy inspired by Frame.io
+ * Optimized to prevent animation glitches and improve performance
  */
 export const StatusExample: React.FC = () => {
   return (
@@ -72,13 +73,13 @@ export const StatusExample: React.FC = () => {
             <h3>Standard Size</h3>
             <div className="flex flex-wrap gap-2">
               <AgentStatus status="idle" />
-              <AgentStatus status="thinking" />
-              <AgentStatus status="active" />
+              <AgentStatus status="thinking" pulsingAnimation={false} />
+              <AgentStatus status="active" pulsingAnimation={false} />
               <AgentStatus status="paused" />
               <AgentStatus status="error" />
               <AgentStatus status="success" />
-              <AgentStatus status="waiting" />
-              <AgentStatus status="learning" />
+              <AgentStatus status="waiting" pulsingAnimation={false} />
+              <AgentStatus status="learning" pulsingAnimation={false} />
             </div>
           </div>
           
@@ -86,13 +87,13 @@ export const StatusExample: React.FC = () => {
             <h3>Small Size</h3>
             <div className="flex flex-wrap gap-2">
               <AgentStatus status="idle" size="sm" />
-              <AgentStatus status="thinking" size="sm" />
-              <AgentStatus status="active" size="sm" />
+              <AgentStatus status="thinking" size="sm" pulsingAnimation={false} />
+              <AgentStatus status="active" size="sm" pulsingAnimation={false} />
               <AgentStatus status="paused" size="sm" />
               <AgentStatus status="error" size="sm" />
               <AgentStatus status="success" size="sm" />
-              <AgentStatus status="waiting" size="sm" />
-              <AgentStatus status="learning" size="sm" />
+              <AgentStatus status="waiting" size="sm" pulsingAnimation={false} />
+              <AgentStatus status="learning" size="sm" pulsingAnimation={false} />
             </div>
           </div>
           
@@ -100,13 +101,13 @@ export const StatusExample: React.FC = () => {
             <h3>Large Size</h3>
             <div className="flex flex-wrap gap-2">
               <AgentStatus status="idle" size="lg" />
-              <AgentStatus status="thinking" size="lg" />
-              <AgentStatus status="active" size="lg" />
+              <AgentStatus status="thinking" size="lg" pulsingAnimation={false} />
+              <AgentStatus status="active" size="lg" pulsingAnimation={false} />
               <AgentStatus status="paused" size="lg" />
               <AgentStatus status="error" size="lg" />
               <AgentStatus status="success" size="lg" />
-              <AgentStatus status="waiting" size="lg" />
-              <AgentStatus status="learning" size="lg" />
+              <AgentStatus status="waiting" size="lg" pulsingAnimation={false} />
+              <AgentStatus status="learning" size="lg" pulsingAnimation={false} />
             </div>
           </div>
           
@@ -114,13 +115,13 @@ export const StatusExample: React.FC = () => {
             <h3>Icon Only</h3>
             <div className="flex flex-wrap gap-2">
               <AgentStatus status="idle" showLabel={false} />
-              <AgentStatus status="thinking" showLabel={false} />
-              <AgentStatus status="active" showLabel={false} />
+              <AgentStatus status="thinking" showLabel={false} pulsingAnimation={false} />
+              <AgentStatus status="active" showLabel={false} pulsingAnimation={false} />
               <AgentStatus status="paused" showLabel={false} />
               <AgentStatus status="error" showLabel={false} />
               <AgentStatus status="success" showLabel={false} />
-              <AgentStatus status="waiting" showLabel={false} />
-              <AgentStatus status="learning" showLabel={false} />
+              <AgentStatus status="waiting" showLabel={false} pulsingAnimation={false} />
+              <AgentStatus status="learning" showLabel={false} pulsingAnimation={false} />
             </div>
           </div>
         </div>
@@ -130,7 +131,7 @@ export const StatusExample: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
             <Card className="p-4 relative">
               <div className="absolute top-2 right-2">
-                <AgentStatus status="active" showLabel={false} size="sm" />
+                <AgentStatus status="active" showLabel={false} size="sm" pulsingAnimation={false} />
               </div>
               <h4>Clara Agent</h4>
               <p className="text-content">Main conversational agent with access to short and long-term memory.</p>
@@ -142,7 +143,7 @@ export const StatusExample: React.FC = () => {
             
             <Card className="p-4 relative">
               <div className="absolute top-2 right-2">
-                <AgentStatus status="thinking" showLabel={false} size="sm" />
+                <AgentStatus status="thinking" showLabel={false} size="sm" pulsingAnimation={false} />
               </div>
               <h4>Research Agent</h4>
               <p className="text-content">Specialized agent for data analysis and information retrieval.</p>
@@ -154,7 +155,7 @@ export const StatusExample: React.FC = () => {
             
             <Card className="p-4 relative">
               <div className="absolute top-2 right-2">
-                <AgentStatus status="waiting" showLabel={false} size="sm" />
+                <AgentStatus status="waiting" showLabel={false} size="sm" pulsingAnimation={false} />
               </div>
               <h4>Code Assistant</h4>
               <p className="text-content">Specialized agent for code generation and review.</p>
