@@ -4,12 +4,16 @@ import { useThemeStore, ThemeAccent } from '@/state/themeStore';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { AgentStatus, AgentStatusType } from '@/components/ui/agent-status';
 
 const SettingsAgent = () => {
   const [activeTab, setActiveTab] = useState('appearance');
   const accent = useThemeStore(state => state.accent);
   const setAccent = useThemeStore(state => state.setAccent);
   const { toast } = useToast();
+  
+  // Track agent status
+  const [status, setStatus] = useState<AgentStatusType>("active");
   
   // Define available accent colors
   const accentColors: Array<{ id: ThemeAccent, name: string, color: string }> = [
@@ -32,19 +36,25 @@ const SettingsAgent = () => {
   
   return (
     <div className="w-full h-full flex flex-col overflow-hidden text-white">
-      <div className="p-4 flex items-center bg-black/30">
-        <Settings className="h-5 w-5 mr-2" />
-        <h2 className="text-lg font-semibold">Settings</h2>
+      <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <h2 className="h2 text-primary">Settings</h2>
+        </div>
+        <AgentStatus 
+          status={status} 
+          size="sm"
+          className="mr-1" 
+        />
       </div>
       
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className="w-48 shrink-0 bg-black/20">
-          <div className="p-4">
-            <div className="flex flex-col space-y-2">
+        <div className="w-48 shrink-0 bg-black/10 backdrop-blur-sm border-r border-white/10">
+          <div className="p-3">
+            <div className="flex flex-col space-y-1.5">
               <Button 
                 variant="ghost" 
-                className={`justify-start ${activeTab === 'appearance' ? 'bg-purple-800/20 text-white' : ''} px-2`}
+                className={`justify-start ${activeTab === 'appearance' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
                 onClick={() => setActiveTab('appearance')}
               >
                 <Palette className="h-4 w-4 mr-2" />
@@ -53,7 +63,7 @@ const SettingsAgent = () => {
               
               <Button 
                 variant="ghost" 
-                className={`justify-start ${activeTab === 'system' ? 'bg-purple-800/20 text-white' : ''} px-2`}
+                className={`justify-start ${activeTab === 'system' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
                 onClick={() => setActiveTab('system')}
               >
                 <Monitor className="h-4 w-4 mr-2" />
@@ -62,7 +72,7 @@ const SettingsAgent = () => {
               
               <Button 
                 variant="ghost" 
-                className={`justify-start ${activeTab === 'notifications' ? 'bg-purple-800/20 text-white' : ''} px-2`}
+                className={`justify-start ${activeTab === 'notifications' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
                 onClick={() => setActiveTab('notifications')}
               >
                 <Bell className="h-4 w-4 mr-2" />
@@ -71,7 +81,7 @@ const SettingsAgent = () => {
               
               <Button 
                 variant="ghost" 
-                className={`justify-start ${activeTab === 'privacy' ? 'bg-purple-800/20 text-white' : ''} px-2`}
+                className={`justify-start ${activeTab === 'privacy' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
                 onClick={() => setActiveTab('privacy')}
               >
                 <Shield className="h-4 w-4 mr-2" />
@@ -82,7 +92,7 @@ const SettingsAgent = () => {
               
               <Button 
                 variant="ghost" 
-                className={`justify-start ${activeTab === 'about' ? 'bg-purple-800/20 text-white' : ''} px-2`}
+                className={`justify-start ${activeTab === 'about' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
                 onClick={() => setActiveTab('about')}
               >
                 <Info className="h-4 w-4 mr-2" />
@@ -93,13 +103,13 @@ const SettingsAgent = () => {
         </div>
         
         {/* Main Content */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-6 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
           {activeTab === 'appearance' && (
             <div>
-              <h3 className="text-xl font-medium mb-6">Appearance Settings</h3>
-              <div className="p-4 rounded-lg bg-black/30 border border-white/10">
-                <h4 className="text-lg font-medium mb-4">Accent Color</h4>
-                <p className="text-sm mb-4 opacity-80">
+              <h3 className="h3 mb-6">Appearance Settings</h3>
+              <div className="window-panel mb-6">
+                <h4 className="h4 mb-4">Accent Color</h4>
+                <p className="text-caption mb-4">
                   Choose your preferred accent color for highlights and interactive elements.
                 </p>
                 
@@ -120,9 +130,9 @@ const SettingsAgent = () => {
                 </div>
               </div>
               
-              <div className="mt-6 p-4 rounded-lg bg-black/30 border border-white/10">
-                <h4 className="text-lg font-medium mb-4">User Interface Density</h4>
-                <p className="text-sm mb-4 opacity-80">
+              <div className="window-panel">
+                <h4 className="h4 mb-4">User Interface Density</h4>
+                <p className="text-caption mb-4">
                   Adjust how compact or spacious the user interface appears.
                 </p>
                 
@@ -130,7 +140,7 @@ const SettingsAgent = () => {
                   <Button variant="outline" className="flex-1">Compact</Button>
                   <Button 
                     variant="outline" 
-                    className="flex-1 bg-purple-800/20 border-purple-500/50"
+                    className="flex-1 bg-primary/10 border-primary/30"
                   >Standard</Button>
                   <Button variant="outline" className="flex-1">Comfortable</Button>
                 </div>
@@ -140,10 +150,10 @@ const SettingsAgent = () => {
           
           {activeTab === 'system' && (
             <div>
-              <h3 className="text-xl font-medium mb-6">System Settings</h3>
-              <div className="p-4 rounded-lg bg-black/30 border border-white/10">
-                <h4 className="text-lg font-medium mb-4">Startup Behavior</h4>
-                <p className="text-sm mb-4 opacity-80">
+              <h3 className="h3 mb-6">System Settings</h3>
+              <div className="window-panel mb-6">
+                <h4 className="h4 mb-4">Startup Behavior</h4>
+                <p className="text-caption mb-4">
                   Configure how Panion behaves when you start your session.
                 </p>
                 
@@ -168,21 +178,21 @@ const SettingsAgent = () => {
           
           {activeTab === 'notifications' && (
             <div>
-              <h3 className="text-xl font-medium mb-6">Notification Settings</h3>
-              <div className="p-4 rounded-lg bg-black/30 border border-white/10">
-                <h4 className="text-lg font-medium mb-4">General</h4>
-                <p className="text-sm mb-4 opacity-80">
+              <h3 className="h3 mb-6">Notification Settings</h3>
+              <div className="window-panel">
+                <h4 className="h4 mb-4">General</h4>
+                <p className="text-caption mb-4">
                   Control how and when notifications appear.
                 </p>
                 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center">
-                    <input type="checkbox" id="enableNotifs" className="mr-2" checked />
-                    <label htmlFor="enableNotifs">Enable notifications</label>
+                    <input type="checkbox" id="enableNotifs" className="mr-3" checked />
+                    <label htmlFor="enableNotifs" className="text-content">Enable notifications</label>
                   </div>
                   <div className="flex items-center">
-                    <input type="checkbox" id="soundNotifs" className="mr-2" checked />
-                    <label htmlFor="soundNotifs">Play sound for notifications</label>
+                    <input type="checkbox" id="soundNotifs" className="mr-3" checked />
+                    <label htmlFor="soundNotifs" className="text-content">Play sound for notifications</label>
                   </div>
                 </div>
               </div>
@@ -191,17 +201,17 @@ const SettingsAgent = () => {
           
           {activeTab === 'privacy' && (
             <div>
-              <h3 className="text-xl font-medium mb-6">Privacy Settings</h3>
-              <div className="p-4 rounded-lg bg-black/30 border border-white/10">
-                <h4 className="text-lg font-medium mb-4">Memory & Data</h4>
-                <p className="text-sm mb-4 opacity-80">
+              <h3 className="h3 mb-6">Privacy Settings</h3>
+              <div className="window-panel">
+                <h4 className="h4 mb-4">Memory & Data</h4>
+                <p className="text-caption mb-4">
                   Control how Panion stores and manages your data.
                 </p>
                 
                 <div className="space-y-4">
                   <div className="flex items-center">
-                    <input type="checkbox" id="storeConversations" className="mr-2" checked />
-                    <label htmlFor="storeConversations">Store conversation history</label>
+                    <input type="checkbox" id="storeConversations" className="mr-3" checked />
+                    <label htmlFor="storeConversations" className="text-content">Store conversation history</label>
                   </div>
                   
                   <Button variant="destructive" className="flex items-center">
@@ -215,19 +225,19 @@ const SettingsAgent = () => {
           
           {activeTab === 'about' && (
             <div>
-              <h3 className="text-xl font-medium mb-6">About Panion</h3>
-              <div className="p-4 rounded-lg bg-black/30 border border-white/10">
+              <h3 className="h3 mb-6">About Panion</h3>
+              <div className="window-panel mb-6">
                 <div className="flex items-center mb-4">
-                  <div className="h-16 w-16 rounded-full bg-purple-700 flex items-center justify-center">
+                  <div className="h-16 w-16 rounded-full bg-primary/60 flex items-center justify-center">
                     <Settings className="h-10 w-10 text-white" />
                   </div>
                   <div className="ml-4">
-                    <h4 className="text-lg font-medium">Panion OS</h4>
-                    <p className="text-sm opacity-80">Version 1.0.0</p>
+                    <h4 className="h4">Panion OS</h4>
+                    <p className="text-caption">Version 1.0.0</p>
                   </div>
                 </div>
                 
-                <p className="text-sm opacity-80 mb-4">
+                <p className="text-content mb-4">
                   Panion is a modular OS-like environment for AI companions. 
                   It provides a flexible, multi-agent interaction platform with sophisticated 
                   user experience design and adaptive interfaces.
@@ -239,9 +249,9 @@ const SettingsAgent = () => {
                 </div>
               </div>
               
-              <div className="mt-6 p-4 rounded-lg bg-black/30 border border-white/10">
-                <h4 className="text-lg font-medium mb-2">Credits</h4>
-                <p className="text-sm opacity-80">
+              <div className="window-panel">
+                <h4 className="h4 mb-2">Credits</h4>
+                <p className="text-caption">
                   Built with love by the Panion team.
                 </p>
               </div>
