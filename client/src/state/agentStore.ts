@@ -106,7 +106,10 @@ export const useAgentStore = create<AgentState>()(
           // Log the action
           log.action(`Opening agent window: ${agent.title}`);
   
-          const newZIndex = state.highestZIndex + 1;
+          // For the design agent, keep z-index lower to prevent glitching
+          const newZIndex = id === 'design'
+            ? Math.min(state.highestZIndex, 5) // Keep it lower than other windows
+            : state.highestZIndex + 1;
   
           return {
             windows: {
@@ -119,7 +122,7 @@ export const useAgentStore = create<AgentState>()(
               }
             },
             focusedAgentId: id,
-            highestZIndex: newZIndex
+            highestZIndex: id === 'design' ? state.highestZIndex : newZIndex
           };
         });
       },
@@ -175,7 +178,10 @@ export const useAgentStore = create<AgentState>()(
           const agent = state.windows[id];
           if (!agent) return state;
   
-          const newZIndex = state.highestZIndex + 1;
+          // Consistent handling of z-index for design agent
+          const newZIndex = id === 'design'
+            ? Math.min(state.highestZIndex, 5) // Keep it lower than other windows
+            : state.highestZIndex + 1;
   
           return {
             windows: {
@@ -187,7 +193,7 @@ export const useAgentStore = create<AgentState>()(
               }
             },
             focusedAgentId: id,
-            highestZIndex: newZIndex
+            highestZIndex: id === 'design' ? state.highestZIndex : newZIndex
           };
         });
       },
@@ -195,9 +201,16 @@ export const useAgentStore = create<AgentState>()(
       focusAgent: (id) => set((state) => {
         const agent = state.windows[id];
         if (!agent || !agent.isOpen || agent.isMinimized) return state;
-
-        const newZIndex = state.highestZIndex + 1;
-
+        
+        // If this is the 'design' agent, keep its z-index lower to prevent it from appearing on top of everything
+        // This prevents it from becoming glitchy when interacting with animations
+        const newZIndex = id === 'design' 
+          ? Math.min(state.highestZIndex, 10) // Cap at 10 to keep it from rising too high
+          : state.highestZIndex + 1;
+        
+        // Log the focus change
+        log.info(`Focused window: ${agent.title} with z-index ${newZIndex}`);
+        
         return {
           windows: {
             ...state.windows,
@@ -207,7 +220,7 @@ export const useAgentStore = create<AgentState>()(
             }
           },
           focusedAgentId: id,
-          highestZIndex: newZIndex
+          highestZIndex: id === 'design' ? state.highestZIndex : newZIndex
         };
       }),
 

@@ -105,13 +105,14 @@ function App() {
       </svg>
     `;
     
+    // Make Frame.io Design window more stable with smaller size and fixed position
     agentStore.registerAgent({
       id: 'design',
       title: 'Frame.io Design',
       icon: designIcon,
       component: () => <StatusExample />,
-      defaultPosition: { x: 400, y: 200 },
-      defaultSize: { width: 700, height: 700 }
+      defaultPosition: { x: 500, y: 100 },
+      defaultSize: { width: 600, height: 550 }
     });
     
     // Auto-open Clara window by default
