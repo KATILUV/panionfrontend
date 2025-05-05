@@ -6,6 +6,7 @@ import { Minimize2, X, Maximize2 } from 'lucide-react';
 import { useWindowSize } from 'react-use';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { playSnapSound, playOpenSound, playCloseSound } from '../../lib/audioEffects';
+import WindowContextMenu from './WindowContextMenu';
 
 // Snap threshold in pixels
 const SNAP_THRESHOLD = 20;
@@ -46,6 +47,10 @@ const Window: React.FC<WindowProps> = ({
   const [preMaximizeState, setPreMaximizeState] = useState({ position, size });
   const [currentSnapPosition, setCurrentSnapPosition] = useState<SnapPosition>('none');
   const [isDragging, setIsDragging] = useState(false);
+  const [contextMenu, setContextMenu] = useState({ 
+    isVisible: false, 
+    position: { x: 0, y: 0 } 
+  });
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const accent = useThemeStore(state => state.accent);
@@ -217,6 +222,38 @@ const Window: React.FC<WindowProps> = ({
     updateAgentSize(id, newSize);
     updateAgentPosition(id, position);
   };
+  
+  // Handle context menu
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Focus the window when right-clicking on it
+    onFocus();
+    
+    // Position the context menu
+    setContextMenu({
+      isVisible: true,
+      position: { x: e.clientX, y: e.clientY }
+    });
+  };
+  
+  // Handle closing context menu
+  const handleCloseContextMenu = () => {
+    setContextMenu({ ...contextMenu, isVisible: false });
+  };
+  
+  // Handle bring to front action from context menu
+  const handleMoveToFront = () => {
+    onFocus();
+  };
+  
+  // Handle center window action from context menu
+  const handleCenterWindow = () => {
+    const newPosition = {
+      x: (windowWidth - size.width) / 2,
+      y: (windowHeight - size.height) / 2
+    };
+    updateAgentPosition(id, newPosition);
+  };
 
   // Calculate content height (window height minus title bar)
   const contentHeight = size.height - 24; // 6px height for title bar
@@ -346,6 +383,7 @@ const Window: React.FC<WindowProps> = ({
           exit="closed"
           variants={windowVariants}
           layout
+          onContextMenu={handleContextMenu}
         >
         {/* Snap Overlay Indicators */}
         <AnimatePresence>
@@ -426,6 +464,28 @@ const Window: React.FC<WindowProps> = ({
         </motion.div>
       </motion.div>
     </Rnd>
+    
+    {/* Context Menu */}
+    <WindowContextMenu
+      isVisible={contextMenu.isVisible}
+      position={contextMenu.position}
+      onClose={onClose}
+      onMinimize={onMinimize}
+      onMaximize={toggleMaximize}
+      onMoveToFront={handleMoveToFront}
+      onCenter={handleCenterWindow}
+      onSnapToSide={(side) => {
+        const snapMap: Record<string, SnapPosition> = {
+          'left': 'left',
+          'right': 'right',
+          'top': 'top',
+          'bottom': 'bottom'
+        };
+        applySnapPosition(snapMap[side]);
+      }}
+      onCloseMenu={handleCloseContextMenu}
+      isMaximized={isMaximized}
+    />
     </MotionConfig>
   );
 };
