@@ -4,6 +4,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Typography hierarchy system inspired by Frame.io */
+h1, .h1 {
+  @apply text-2xl font-semibold tracking-tight mb-2;
+  letter-spacing: -0.02em;
+}
+
+h2, .h2 {
+  @apply text-xl font-medium tracking-tight mb-1.5;
+  letter-spacing: -0.01em;
+}
+
+h3, .h3 {
+  @apply text-lg font-medium mb-1;
+}
+
+h4, .h4 {
+  @apply text-base font-medium mb-1;
+}
+
+.text-caption {
+  @apply text-sm text-muted-foreground;
+}
+
+.text-small {
+  @apply text-xs font-medium;
+}
+
+.text-label {
+  @apply text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+  letter-spacing: 0.05em;
+}
+
+/* Enhanced readability for content text */
+.text-content {
+  @apply text-base leading-relaxed;
+  letter-spacing: 0.01em;
+}
+
+/* Monospace for code, commands, etc. */
+.text-mono {
+  @apply font-mono text-sm bg-muted/30 px-1 py-0.5 rounded;
+}
+
 /* Marquee animation for continuous scrolling */
 @keyframes marquee {
   0% {
