@@ -11,6 +11,7 @@ import AuthPage from "./pages/auth-page";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
+import { StatusExample } from "./components/agents/StatusExample";
 import { useAgentStore } from "./state/agentStore";
 import ThemeProvider from "./components/common/ThemeProvider";
 
@@ -93,6 +94,24 @@ function App() {
       component: () => <SettingsAgent />,
       defaultPosition: { x: 200, y: 150 },
       defaultSize: { width: 800, height: 600 }
+    });
+    
+    // Design Example Agent - Frame.io Inspired
+    const designIcon = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 2H17L22 7V17L17 22H7L2 17V7L7 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    
+    agentStore.registerAgent({
+      id: 'design',
+      title: 'Frame.io Design',
+      icon: designIcon,
+      component: () => <StatusExample />,
+      defaultPosition: { x: 400, y: 200 },
+      defaultSize: { width: 700, height: 700 }
     });
     
     // Auto-open Clara window by default
