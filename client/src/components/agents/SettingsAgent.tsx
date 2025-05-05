@@ -4,7 +4,8 @@ import { useThemeStore, ThemeAccent } from '@/state/themeStore';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { AgentStatus, AgentStatusType } from '@/components/ui/agent-status';
+import { AgentStatusType } from '@/components/ui/agent-status';
+import { WindowPanel, WindowContent, WindowSection } from '@/components/ui/window-components';
 
 const SettingsAgent = () => {
   const [activeTab, setActiveTab] = useState('appearance');
@@ -34,19 +35,155 @@ const SettingsAgent = () => {
     });
   };
   
-  return (
-    <div className="w-full h-full flex flex-col overflow-hidden text-white">
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center">
-          <h2 className="h2 text-primary">Settings</h2>
+  const renderAppearanceTab = () => (
+    <div>
+      <h3 className="h3 mb-6">Appearance Settings</h3>
+      <WindowSection 
+        title="Accent Color"
+        description="Choose your preferred accent color for highlights and interactive elements."
+        className="mb-6"
+      >
+        <div className="flex flex-wrap gap-2">
+          {accentColors.map((color) => (
+            <Button
+              key={color.id}
+              variant="outline"
+              size="sm"
+              className={`flex items-center gap-2 ${accent === color.id ? 'bg-primary/10 border-primary/30' : ''}`}
+              onClick={() => handleAccentChange(color.id)}
+            >
+              <div className={`h-4 w-4 rounded-full ${color.color}`} />
+              <span>{color.name}</span>
+              {accent === color.id && <CheckCircle2 className="h-4 w-4 ml-1 text-green-500" />}
+            </Button>
+          ))}
         </div>
-        <AgentStatus 
-          status={status} 
-          size="sm"
-          className="mr-1" 
-        />
-      </div>
+      </WindowSection>
       
+      <WindowSection
+        title="User Interface Density"
+        description="Adjust how compact or spacious the user interface appears."
+      >
+        <div className="flex gap-4">
+          <Button variant="outline" className="flex-1">Compact</Button>
+          <Button 
+            variant="outline" 
+            className="flex-1 bg-primary/10 border-primary/30"
+          >Standard</Button>
+          <Button variant="outline" className="flex-1">Comfortable</Button>
+        </div>
+      </WindowSection>
+    </div>
+  );
+  
+  const renderSystemTab = () => (
+    <div>
+      <h3 className="h3 mb-6">System Settings</h3>
+      <WindowSection
+        title="Startup Behavior"
+        description="Configure how Panion behaves when you start your session."
+      >
+        <div className="space-y-2">
+          <div className="flex items-center">
+            <input type="checkbox" id="startMaximized" className="mr-2" defaultChecked />
+            <label htmlFor="startMaximized">Start maximized</label>
+          </div>
+          <div className="flex items-center">
+            <input type="checkbox" id="rememberWindows" className="mr-2" defaultChecked />
+            <label htmlFor="rememberWindows">Remember open windows</label>
+          </div>
+          <div className="flex items-center">
+            <input type="checkbox" id="showStartupTips" className="mr-2" />
+            <label htmlFor="showStartupTips">Show startup tips</label>
+          </div>
+        </div>
+      </WindowSection>
+    </div>
+  );
+  
+  const renderNotificationsTab = () => (
+    <div>
+      <h3 className="h3 mb-6">Notification Settings</h3>
+      <WindowSection
+        title="General"
+        description="Control how and when notifications appear."
+      >
+        <div className="space-y-3">
+          <div className="flex items-center">
+            <input type="checkbox" id="enableNotifs" className="mr-3" defaultChecked />
+            <label htmlFor="enableNotifs" className="text-content">Enable notifications</label>
+          </div>
+          <div className="flex items-center">
+            <input type="checkbox" id="soundNotifs" className="mr-3" defaultChecked />
+            <label htmlFor="soundNotifs" className="text-content">Play sound for notifications</label>
+          </div>
+        </div>
+      </WindowSection>
+    </div>
+  );
+  
+  const renderPrivacyTab = () => (
+    <div>
+      <h3 className="h3 mb-6">Privacy Settings</h3>
+      <WindowSection
+        title="Memory & Data"
+        description="Control how Panion stores and manages your data."
+      >
+        <div className="space-y-4">
+          <div className="flex items-center">
+            <input type="checkbox" id="storeConversations" className="mr-3" defaultChecked />
+            <label htmlFor="storeConversations" className="text-content">Store conversation history</label>
+          </div>
+          
+          <Button variant="destructive" className="flex items-center">
+            <Lock className="h-4 w-4 mr-2" />
+            Clear All Stored Data
+          </Button>
+        </div>
+      </WindowSection>
+    </div>
+  );
+  
+  const renderAboutTab = () => (
+    <div>
+      <h3 className="h3 mb-6">About Panion</h3>
+      <WindowSection className="mb-6">
+        <div className="flex items-center mb-4">
+          <div className="h-16 w-16 rounded-full bg-primary/60 flex items-center justify-center">
+            <Settings className="h-10 w-10 text-white" />
+          </div>
+          <div className="ml-4">
+            <h4 className="h4">Panion OS</h4>
+            <p className="text-caption">Version 1.0.0</p>
+          </div>
+        </div>
+        
+        <p className="text-content mb-4">
+          Panion is a modular OS-like environment for AI companions. 
+          It provides a flexible, multi-agent interaction platform with sophisticated 
+          user experience design and adaptive interfaces.
+        </p>
+        
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">Changelog</Button>
+          <Button variant="outline" size="sm">License</Button>
+        </div>
+      </WindowSection>
+      
+      <WindowSection
+        title="Credits"
+        description="Built with love by the Panion team."
+      />
+    </div>
+  );
+  
+  return (
+    <WindowPanel 
+      title="Settings" 
+      status={status} 
+      fullHeight 
+      className="flex flex-col overflow-hidden"
+    >
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-48 shrink-0 bg-black/10 backdrop-blur-sm border-r border-white/10">
@@ -104,162 +241,14 @@ const SettingsAgent = () => {
         
         {/* Main Content */}
         <div className="flex-1 overflow-auto p-6 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-          {activeTab === 'appearance' && (
-            <div>
-              <h3 className="h3 mb-6">Appearance Settings</h3>
-              <div className="window-panel mb-6">
-                <h4 className="h4 mb-4">Accent Color</h4>
-                <p className="text-caption mb-4">
-                  Choose your preferred accent color for highlights and interactive elements.
-                </p>
-                
-                <div className="flex flex-wrap gap-2">
-                  {accentColors.map((color) => (
-                    <Button
-                      key={color.id}
-                      variant="outline"
-                      size="sm"
-                      className={`flex items-center gap-2 ${accent === color.id ? 'bg-purple-800/20 border-purple-500/50' : ''}`}
-                      onClick={() => handleAccentChange(color.id)}
-                    >
-                      <div className={`h-4 w-4 rounded-full ${color.color}`} />
-                      <span>{color.name}</span>
-                      {accent === color.id && <CheckCircle2 className="h-4 w-4 ml-1 text-green-500" />}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="window-panel">
-                <h4 className="h4 mb-4">User Interface Density</h4>
-                <p className="text-caption mb-4">
-                  Adjust how compact or spacious the user interface appears.
-                </p>
-                
-                <div className="flex gap-4">
-                  <Button variant="outline" className="flex-1">Compact</Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 bg-primary/10 border-primary/30"
-                  >Standard</Button>
-                  <Button variant="outline" className="flex-1">Comfortable</Button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'system' && (
-            <div>
-              <h3 className="h3 mb-6">System Settings</h3>
-              <div className="window-panel mb-6">
-                <h4 className="h4 mb-4">Startup Behavior</h4>
-                <p className="text-caption mb-4">
-                  Configure how Panion behaves when you start your session.
-                </p>
-                
-                {/* Just placeholders for now */}
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <input type="checkbox" id="startMaximized" className="mr-2" checked />
-                    <label htmlFor="startMaximized">Start maximized</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input type="checkbox" id="rememberWindows" className="mr-2" checked />
-                    <label htmlFor="rememberWindows">Remember open windows</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input type="checkbox" id="showStartupTips" className="mr-2" />
-                    <label htmlFor="showStartupTips">Show startup tips</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'notifications' && (
-            <div>
-              <h3 className="h3 mb-6">Notification Settings</h3>
-              <div className="window-panel">
-                <h4 className="h4 mb-4">General</h4>
-                <p className="text-caption mb-4">
-                  Control how and when notifications appear.
-                </p>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <input type="checkbox" id="enableNotifs" className="mr-3" checked />
-                    <label htmlFor="enableNotifs" className="text-content">Enable notifications</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input type="checkbox" id="soundNotifs" className="mr-3" checked />
-                    <label htmlFor="soundNotifs" className="text-content">Play sound for notifications</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'privacy' && (
-            <div>
-              <h3 className="h3 mb-6">Privacy Settings</h3>
-              <div className="window-panel">
-                <h4 className="h4 mb-4">Memory & Data</h4>
-                <p className="text-caption mb-4">
-                  Control how Panion stores and manages your data.
-                </p>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <input type="checkbox" id="storeConversations" className="mr-3" checked />
-                    <label htmlFor="storeConversations" className="text-content">Store conversation history</label>
-                  </div>
-                  
-                  <Button variant="destructive" className="flex items-center">
-                    <Lock className="h-4 w-4 mr-2" />
-                    Clear All Stored Data
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'about' && (
-            <div>
-              <h3 className="h3 mb-6">About Panion</h3>
-              <div className="window-panel mb-6">
-                <div className="flex items-center mb-4">
-                  <div className="h-16 w-16 rounded-full bg-primary/60 flex items-center justify-center">
-                    <Settings className="h-10 w-10 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="h4">Panion OS</h4>
-                    <p className="text-caption">Version 1.0.0</p>
-                  </div>
-                </div>
-                
-                <p className="text-content mb-4">
-                  Panion is a modular OS-like environment for AI companions. 
-                  It provides a flexible, multi-agent interaction platform with sophisticated 
-                  user experience design and adaptive interfaces.
-                </p>
-                
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">Changelog</Button>
-                  <Button variant="outline" size="sm">License</Button>
-                </div>
-              </div>
-              
-              <div className="window-panel">
-                <h4 className="h4 mb-2">Credits</h4>
-                <p className="text-caption">
-                  Built with love by the Panion team.
-                </p>
-              </div>
-            </div>
-          )}
+          {activeTab === 'appearance' && renderAppearanceTab()}
+          {activeTab === 'system' && renderSystemTab()}
+          {activeTab === 'notifications' && renderNotificationsTab()}
+          {activeTab === 'privacy' && renderPrivacyTab()}
+          {activeTab === 'about' && renderAboutTab()}
         </div>
       </div>
-    </div>
+    </WindowPanel>
   );
 };
 
