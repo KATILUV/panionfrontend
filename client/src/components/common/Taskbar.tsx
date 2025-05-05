@@ -65,19 +65,19 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   // Get the appropriate theme icon
   const getThemeIcon = () => {
     const currentTheme = getCurrentTheme();
-    if (mode === 'system') return <Monitor size={18} />;
-    return currentTheme === 'dark' ? <Moon size={18} /> : <Sun size={18} />;
+    // Since we only support dark mode, this is simplified
+    return <Moon size={18} />;
   };
   
-  // Determine background style based on theme
+  // Determine background style based on theme - updated to match window design
   const getTaskbarBgClass = () => {
     return getCurrentTheme() === 'dark'
-      ? 'bg-black/30 border-white/10'
+      ? 'bg-black/20 border-white/10'
       : 'bg-white/60 border-gray-100 shadow-sm text-gray-800';
   };
   
   return (
-    <div className={`flex items-center ${getTaskbarBgClass()} backdrop-blur-md border-t px-4 py-2 ${className}`}>
+    <div className={`flex items-center ${getTaskbarBgClass()} backdrop-blur-sm border-t px-4 py-1.5 ${className}`}>
       <div className="flex-1 flex items-center space-x-1">
         {registry.map(agent => {
           const isOpen = windows[agent.id]?.isOpen;
@@ -88,30 +88,28 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
               key={agent.id}
               onClick={() => handleIconClick(agent.id)}
               className={`
-                p-2 rounded-md transition-all duration-200 relative
+                p-2 rounded-lg transition-all duration-200 relative
                 ${isOpen && !isMinimized 
                   ? getCurrentTheme() === 'dark' 
-                    ? 'bg-white/20' 
-                    : 'bg-black/5 shadow-sm' 
+                    ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
+                    : 'bg-primary/10 shadow-sm text-primary-foreground' 
                   : getCurrentTheme() === 'dark'
-                    ? 'bg-transparent hover:bg-white/10'
-                    : 'bg-transparent hover:bg-black/5 hover:shadow-sm'
+                    ? 'bg-transparent hover:bg-white/10 text-white/70 hover:text-white hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+                    : 'bg-transparent hover:bg-black/5 hover:shadow-sm text-gray-600 hover:text-gray-900'
                 }
                 ${isOpen 
-                  ? 'after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-1/3 after:h-0.5 ' + 
+                  ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-0.5 ' + 
                     (getCurrentTheme() === 'dark' 
-                      ? 'after:bg-white' 
-                      : (accent === 'light' ? 'after:bg-gray-400' : 'after:bg-primary')
+                      ? 'after:bg-primary after:opacity-90' 
+                      : 'after:bg-primary after:opacity-80'
                     ) + 
-                    ' after:rounded-full' 
+                    ' after:rounded-full after:transition-all' 
                   : ''
                 }
               `}
               title={agent.title}
             >
-              <div className={`flex items-center justify-center w-8 h-8 ${
-                getCurrentTheme() === 'dark' ? 'text-white' : 'text-gray-800'
-              }`}>
+              <div className="flex items-center justify-center w-7 h-7">
                 <div dangerouslySetInnerHTML={{ __html: agent.icon }} />
               </div>
             </button>
@@ -119,44 +117,33 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         })}
       </div>
       
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2">
         {/* System Log Button */}
         <Button 
           variant="ghost" 
           size="sm"
           onClick={toggleSystemLog}
-          className={`h-9 px-3 flex items-center space-x-2 rounded-md ${
+          className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 ${
             isSystemLogVisible 
-              ? getCurrentTheme() === 'dark'
-                ? 'text-primary bg-white/10'
-                : accent === 'light'
-                  ? 'text-gray-700 bg-gray-100 shadow-sm'
-                  : 'text-primary bg-primary/10 shadow-sm'
-              : getCurrentTheme() === 'dark' 
-                ? 'text-white/70 hover:text-white hover:bg-white/10' 
-                : 'text-gray-700 hover:text-gray-900 hover:bg-black/5 hover:shadow-sm'
+              ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+              : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
           }`}
         >
-          <Terminal size={18} />
-          <span className="hidden sm:inline">Console</span>
+          <Terminal size={16} />
+          <span className="hidden sm:inline text-sm">Console</span>
         </Button>
 
         {/* Settings Button */}
         <Button 
           variant="ghost" 
           size="sm"
-          className={`h-9 px-3 flex items-center space-x-2 rounded-md ${
-            getCurrentTheme() === 'dark' 
-              ? 'text-white/70 hover:text-white hover:bg-white/10' 
-              : 'text-gray-700 hover:text-gray-900 hover:bg-black/5 hover:shadow-sm'
-          }`}
+          className="h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]"
           onClick={() => {
-            console.log('Opening settings agent');
             handleIconClick('settings');
           }}
         >
-          <Settings size={18} />
-          <span className="hidden sm:inline">Settings</span>
+          <Settings size={16} />
+          <span className="hidden sm:inline text-sm">Settings</span>
         </Button>
         
         {/* Layout Manager Button */}
@@ -164,14 +151,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           <Button 
             variant="ghost" 
             size="sm"
-            className={`h-9 px-3 flex items-center space-x-2 rounded-md ${
-              getCurrentTheme() === 'dark' 
-                ? 'text-white/70 hover:text-white hover:bg-white/10' 
-                : 'text-gray-700 hover:text-gray-900 hover:bg-black/5 hover:shadow-sm'
-            }`}
+            className="h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]"
           >
-            <Layout size={18} />
-            <span className="hidden sm:inline">
+            <Layout size={16} />
+            <span className="hidden sm:inline text-sm">
               {getActiveLayoutName() ? 
                 `Layout: ${getActiveLayoutName()}` : 
                 'Layouts'
@@ -180,12 +163,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           </Button>
         </LayoutManager>
         
-        <div className={`text-xs px-2 py-1 rounded-full ${
-            getCurrentTheme() === 'dark' 
-              ? 'text-white/50 bg-white/5' 
-              : 'text-gray-600 bg-black/5'
-          }`}>
-          Panion OS v0.1
+        <div className="text-xs px-2.5 py-1 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
+          v1.0
         </div>
       </div>
       
