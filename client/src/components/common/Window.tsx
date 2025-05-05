@@ -409,20 +409,33 @@ const Window: React.FC<WindowProps> = ({
         >
           <div className="flex items-center">
             <div className="flex items-center space-x-1.5 mr-3">
-              <motion.div 
-                className="w-2 h-2 rounded-full bg-red-500 cursor-pointer"
+              {/* Increase button size for better clickability and ensure proper z-index */}
+              <motion.button 
+                className="w-3 h-3 rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center"
                 whileHover={{ scale: 1.2 }}
-                onClick={onClose}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event propagation
+                  onClose();
+                }}
+                style={{ zIndex: 9999 }}
               />
-              <motion.div 
-                className="w-2 h-2 rounded-full bg-yellow-500 cursor-pointer" 
+              <motion.button 
+                className="w-3 h-3 rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center" 
                 whileHover={{ scale: 1.2 }}
-                onClick={onMinimize}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event propagation
+                  onMinimize();
+                }}
+                style={{ zIndex: 9999 }}
               />
-              <motion.div 
-                className="w-2 h-2 rounded-full bg-green-500 cursor-pointer"
+              <motion.button 
+                className="w-3 h-3 rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center"
                 whileHover={{ scale: 1.2 }}
-                onClick={toggleMaximize}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event propagation
+                  toggleMaximize();
+                }}
+                style={{ zIndex: 9999 }}
               />
             </div>
             <div className={`text-xs font-medium truncate ${
@@ -434,17 +447,35 @@ const Window: React.FC<WindowProps> = ({
             </div>
           </div>
           
-          {/* Keep the original buttons for mobile users but make them less prominent */}
-          <div className="sm:hidden flex items-center space-x-1">
+          {/* Alternative window controls for all users */}
+          <div className="flex items-center space-x-1">
             <button 
-              onClick={onMinimize}
-              className="p-1 rounded text-white/70 hover:text-white hover:bg-white/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMinimize();
+              }}
+              className="p-1 rounded text-white/70 hover:text-white hover:bg-white/20 z-50"
+              style={{ zIndex: 9999 }}
             >
               <Minimize2 size={12} />
             </button>
             <button 
-              onClick={onClose}
-              className="p-1 rounded text-white/70 hover:text-white hover:bg-red-600/70"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMaximize();
+              }}
+              className="p-1 rounded text-white/70 hover:text-white hover:bg-white/20 z-50"
+              style={{ zIndex: 9999 }}
+            >
+              <Maximize2 size={12} />
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="p-1 rounded text-white/70 hover:text-white hover:bg-red-600/70 z-50"
+              style={{ zIndex: 9999 }}
             >
               <X size={12} />
             </button>
