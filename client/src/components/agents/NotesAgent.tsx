@@ -42,12 +42,12 @@ const NotesAgent: React.FC = () => {
   };
   
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-[#20123A] to-[#331E6F] p-4 text-white">
-      <h2 className="text-xl font-semibold mb-4">Quick Notes</h2>
+    <div className="h-full flex flex-col p-4 text-white">
+      <h2 className="h2 text-primary mb-4">Quick Notes</h2>
       
-      <div className="flex-1 overflow-auto space-y-2 mb-4">
+      <div className="flex-1 overflow-auto space-y-2 mb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
         {notes.length === 0 ? (
-          <div className="text-white/50 text-center py-8">
+          <div className="window-panel flex items-center justify-center py-8 text-white/50 text-center">
             No notes yet. Add one below!
           </div>
         ) : (
@@ -55,9 +55,9 @@ const NotesAgent: React.FC = () => {
             {notes.map((note, index) => (
               <div 
                 key={index}
-                className="bg-white/10 backdrop-blur-sm rounded-lg p-3 break-words relative group"
+                className="window-panel break-words relative group hover:bg-white/[0.15] transition-colors duration-200"
               >
-                <p className="pr-6">{note}</p>
+                <p className="pr-6 text-content">{note}</p>
                 <button
                   onClick={() => handleDeleteNote(index)}
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-red-400"
@@ -71,24 +71,24 @@ const NotesAgent: React.FC = () => {
         )}
       </div>
       
-      <div className="bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden">
+      <div className="window-panel overflow-hidden">
         <textarea
           value={currentNote}
           onChange={(e) => setCurrentNote(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a new note..."
-          className="w-full p-3 bg-transparent text-white border-none outline-none resize-none"
+          className="w-full p-3 bg-transparent text-white border-none outline-none resize-none focus:ring-0"
           rows={3}
         />
         <div className="flex justify-end p-2 border-t border-white/10">
           <button
             onClick={handleAddNote}
             disabled={!currentNote.trim()}
-            className={`px-4 py-1 rounded-md ${
+            className={`px-4 py-1.5 rounded-md transition-colors text-sm shadow-sm ${
               currentNote.trim() 
-                ? 'bg-purple-600 hover:bg-purple-500 text-white' 
+                ? 'bg-primary hover:bg-primary-hover text-primary-foreground' 
                 : 'bg-white/10 text-white/30'
-            } transition-colors`}
+            }`}
           >
             Add Note
           </button>
