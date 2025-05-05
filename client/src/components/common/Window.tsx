@@ -24,6 +24,7 @@ interface WindowProps {
   onClose: () => void;
   onMinimize: () => void;
   onFocus: () => void;
+  isMinimized?: boolean;
 }
 
 const Window: React.FC<WindowProps> = ({
@@ -37,6 +38,7 @@ const Window: React.FC<WindowProps> = ({
   onClose,
   onMinimize,
   onFocus,
+  isMinimized = false,
 }) => {
   const updateAgentPosition = useAgentStore(state => state.updateAgentPosition);
   const updateAgentSize = useAgentStore(state => state.updateAgentSize);
@@ -340,7 +342,7 @@ const Window: React.FC<WindowProps> = ({
             }
           `}
           initial="closed"
-          animate="open"
+          animate={isMinimized ? "minimized" : "open"}
           exit="closed"
           variants={windowVariants}
           layout
@@ -416,7 +418,7 @@ const Window: React.FC<WindowProps> = ({
           style={{ height: contentHeight }}
           variants={contentVariants}
           initial="closed"
-          animate="open"
+          animate={isMinimized ? "closed" : "open"}
         >
           <div className="h-full">
             {children}

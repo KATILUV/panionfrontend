@@ -12,6 +12,7 @@ import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
 import EmptyStateDashboard from './system/EmptyStateDashboard';
 import { useToast } from '@/hooks/use-toast';
+import { AnimatePresence } from 'framer-motion';
 
 // Component rendering helper
 const renderAgentContent = (agentId: string) => {
@@ -194,24 +195,27 @@ const Desktop: React.FC = () => {
         {!hasOpenWindows && <EmptyStateDashboard />}
         
         {/* Render Windows */}
-        {Object.values(windows)
-          .filter(window => window.isOpen && !window.isMinimized)
-          .map(window => (
-            <Window
-              key={window.id}
-              id={window.id}
-              title={window.title}
-              isActive={focusedAgentId === window.id}
-              position={window.position}
-              size={window.size}
-              zIndex={window.zIndex}
-              onClose={() => closeAgent(window.id)}
-              onMinimize={() => minimizeAgent(window.id)}
-              onFocus={() => focusAgent(window.id)}
-            >
-              {renderAgentContent(window.id)}
-            </Window>
-          ))}
+        <AnimatePresence>
+          {Object.values(windows)
+            .filter(window => window.isOpen)
+            .map(window => (
+              <Window
+                key={window.id}
+                id={window.id}
+                title={window.title}
+                isActive={focusedAgentId === window.id}
+                position={window.position}
+                size={window.size}
+                zIndex={window.zIndex}
+                onClose={() => closeAgent(window.id)}
+                onMinimize={() => minimizeAgent(window.id)}
+                onFocus={() => focusAgent(window.id)}
+                isMinimized={window.isMinimized}
+              >
+                {renderAgentContent(window.id)}
+              </Window>
+            ))}
+        </AnimatePresence>
       </div>
       
       {/* Clara's Context Panel - visible when Clara is active */}
