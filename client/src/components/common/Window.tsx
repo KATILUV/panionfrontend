@@ -4,7 +4,7 @@ import { useAgentStore, AgentId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
 import { Minimize2, X, Maximize2 } from 'lucide-react';
 import { useWindowSize } from 'react-use';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { playSnapSound, playOpenSound, playCloseSound } from '../../lib/audioEffects';
 
 // Snap threshold in pixels
@@ -247,59 +247,104 @@ const Window: React.FC<WindowProps> = ({
     }
   };
 
+  // Animation variants for different window states
+  const windowVariants = {
+    open: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 26,
+        stiffness: 340,
+        duration: 0.4
+      }
+    },
+    closed: {
+      opacity: 0,
+      scale: 0.9,
+      y: 20,
+      transition: {
+        type: "spring",
+        damping: 25,
+        stiffness: 300,
+        duration: 0.3
+      }
+    },
+    minimized: {
+      opacity: 0,
+      scale: 0.8,
+      y: 50,
+      transition: {
+        type: "spring",
+        damping: 25,
+        stiffness: 300,
+        duration: 0.3
+      }
+    }
+  };
+
+  // Window content animations
+  const contentVariants = {
+    open: {
+      opacity: 1,
+      transition: {
+        delay: 0.1,
+        duration: 0.2
+      }
+    },
+    closed: {
+      opacity: 0
+    }
+  };
+
   return (
-    <Rnd
-      style={{
-        zIndex,
-      }}
-      default={{
-        ...position,
-        ...size,
-      }}
-      position={isMaximized ? { x: 0, y: 0 } : position}
-      size={isMaximized ? { width: windowWidth, height: windowHeight } : size}
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragStop={handleDragStop}
-      onResizeStop={handleResizeStop}
-      onMouseDown={onFocus}
-      disableDragging={isMaximized}
-      enableResizing={!isMaximized}
-      dragHandleClassName="window-drag-handle"
-      bounds="parent"
-      minWidth={300}
-      minHeight={200}
-      className={getSnapIndicatorClass()}
-    >
-      <motion.div 
-        className={`flex flex-col rounded-lg backdrop-blur-xl h-full overflow-hidden
-          ${getCurrentTheme() === 'dark'
-            ? isActive 
-              ? 'border border-white/20 bg-black/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]' 
-              : 'border border-white/10 bg-black/30 shadow-[0_10px_30px_rgba(0,0,0,0.4)]'
-            : isActive 
-              ? 'border border-primary/30 bg-white/90 shadow-[0_10px_25px_rgba(0,0,0,0.1)]' 
-              : 'border border-gray-200/70 bg-white/80 shadow-[0_5px_15px_rgba(0,0,0,0.05)]'
-          }
-        `}
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ 
-          opacity: 1, 
-          scale: 1,
-          y: 0,
-          transition: { 
-            duration: 0.3,
-            ease: "easeOut"
-          }
+    <MotionConfig transition={{ 
+      type: "spring", 
+      damping: 30, 
+      stiffness: 400,
+      duration: 0.4
+    }}>
+      <Rnd
+        style={{
+          zIndex,
         }}
-        layout
-        transition={{
-          type: "spring",
-          damping: 26,
-          stiffness: 340,
-          duration: 0.4
+        default={{
+          ...position,
+          ...size,
         }}
+        position={isMaximized ? { x: 0, y: 0 } : position}
+        size={isMaximized ? { width: windowWidth, height: windowHeight } : size}
+        onDragStart={handleDragStart}
+        onDrag={handleDrag}
+        onDragStop={handleDragStop}
+        onResizeStop={handleResizeStop}
+        onMouseDown={onFocus}
+        disableDragging={isMaximized}
+        enableResizing={!isMaximized}
+        dragHandleClassName="window-drag-handle"
+        bounds="parent"
+        minWidth={300}
+        minHeight={200}
+        className={getSnapIndicatorClass()}
       >
+        <motion.div 
+          className={`flex flex-col rounded-lg backdrop-blur-xl h-full overflow-hidden
+            ${getCurrentTheme() === 'dark'
+              ? isActive 
+                ? 'border border-white/20 bg-black/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]' 
+                : 'border border-white/10 bg-black/30 shadow-[0_10px_30px_rgba(0,0,0,0.4)]'
+              : isActive 
+                ? 'border border-primary/30 bg-white/90 shadow-[0_10px_25px_rgba(0,0,0,0.1)]' 
+                : 'border border-gray-200/70 bg-white/80 shadow-[0_5px_15px_rgba(0,0,0,0.05)]'
+            }
+          `}
+          initial="closed"
+          animate="open"
+          exit="closed"
+          variants={windowVariants}
+          layout
+        >
         {/* Snap Overlay Indicators */}
         <AnimatePresence>
           {isDragging && currentSnapPosition !== 'none' && (
@@ -369,9 +414,9 @@ const Window: React.FC<WindowProps> = ({
         <motion.div 
           className="flex-1 overflow-auto p-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
           style={{ height: contentHeight }}
-          animate={{ opacity: 1 }}
-          initial={{ opacity: 0 }}
-          transition={{ delay: 0.1, duration: 0.3 }}
+          variants={contentVariants}
+          initial="closed"
+          animate="open"
         >
           <div className="h-full">
             {children}
@@ -379,6 +424,7 @@ const Window: React.FC<WindowProps> = ({
         </motion.div>
       </motion.div>
     </Rnd>
+    </MotionConfig>
   );
 };
 
