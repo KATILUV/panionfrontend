@@ -110,121 +110,50 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Header */}
+      {/* MacOS Style Header */}
       <div className={`flex items-center justify-between px-3 py-2 ${
         getCurrentTheme() === 'dark' 
-          ? 'bg-black/20 border-b border-purple-500/20 text-white' 
-          : (accent === 'light'
-              ? 'bg-white/30 border-b border-gray-200/50 text-gray-800'
-              : 'bg-white/30 border-b border-purple-200/30 text-gray-800')
+          ? 'bg-black/40 border-b border-white/10 text-white' 
+          : 'bg-gray-100 border-b border-gray-200 text-gray-800'
       }`}>
-        <div className="flex items-center space-x-2">
-          <Database className={`h-4 w-4 ${
+        <div className="flex items-center">
+          <div className="flex items-center space-x-1.5 mr-3">
+            {/* MacOS-style window controls */}
+            <motion.button 
+              className="w-3 h-3 rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center"
+              whileHover={{ scale: 1.2 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleVisibility();
+              }}
+              style={{ zIndex: 9999 }}
+            />
+            <motion.button 
+              className="w-3 h-3 rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center" 
+              whileHover={{ scale: 1.2 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                clearLogs();
+              }}
+              style={{ zIndex: 9999 }}
+            />
+            <motion.button 
+              className="w-3 h-3 rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center"
+              whileHover={{ scale: 1.2 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMinimize();
+              }}
+              style={{ zIndex: 9999 }}
+            />
+          </div>
+          <div className={`text-xs font-medium truncate ${
             getCurrentTheme() === 'dark' 
-              ? 'text-purple-500' 
-              : (accent === 'light' ? 'text-gray-600' : 'text-purple-600')
-          }`} />
-          <span className="text-sm font-medium">Clara's System Log</span>
-        </div>
-        <div className="flex space-x-1">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className={`h-6 w-6 rounded-full ${
-                    getCurrentTheme() === 'dark' 
-                      ? 'hover:bg-white/10' 
-                      : (accent === 'light' 
-                          ? 'hover:bg-gray-100' 
-                          : 'hover:bg-purple-100')
-                  }`}
-                  onClick={clearLogs}
-                >
-                  <MinusCircle className={`h-4 w-4 ${
-                    getCurrentTheme() === 'dark' 
-                      ? 'text-white/70' 
-                      : (accent === 'light' 
-                          ? 'text-gray-500' 
-                          : 'text-purple-500')
-                  }`} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Clear Logs</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className={`h-6 w-6 rounded-full ${
-                    getCurrentTheme() === 'dark' 
-                      ? 'hover:bg-white/10' 
-                      : (accent === 'light' 
-                          ? 'hover:bg-gray-100' 
-                          : 'hover:bg-purple-100')
-                  }`}
-                  onClick={toggleMinimize}
-                >
-                  {isMinimized ? 
-                    <Maximize2 className={`h-4 w-4 ${
-                      getCurrentTheme() === 'dark' 
-                        ? 'text-white/70' 
-                        : (accent === 'light' 
-                            ? 'text-gray-500' 
-                            : 'text-purple-500')
-                    }`} /> : 
-                    <Minimize2 className={`h-4 w-4 ${
-                      getCurrentTheme() === 'dark' 
-                        ? 'text-white/70' 
-                        : (accent === 'light' 
-                            ? 'text-gray-500' 
-                            : 'text-purple-500')
-                    }`} />
-                  }
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isMinimized ? 'Expand' : 'Minimize'}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className={`h-6 w-6 rounded-full ${
-                    getCurrentTheme() === 'dark' 
-                      ? 'hover:bg-white/10' 
-                      : (accent === 'light' 
-                          ? 'hover:bg-gray-100' 
-                          : 'hover:bg-purple-100')
-                  }`}
-                  onClick={toggleVisibility}
-                >
-                  <X className={`h-4 w-4 ${
-                    getCurrentTheme() === 'dark' 
-                      ? 'text-white/70' 
-                      : (accent === 'light' 
-                          ? 'text-gray-500' 
-                          : 'text-purple-500')
-                  }`} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Close</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+              ? 'text-white/70'
+              : 'text-gray-700'
+          }`}>
+            Clara's System Console
+          </div>
         </div>
       </div>
 
