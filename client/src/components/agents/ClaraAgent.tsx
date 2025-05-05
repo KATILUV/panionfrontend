@@ -8,7 +8,8 @@ import { useChat } from '../../hooks/useChat';
 import { Message } from '../../types/chat';
 import { log } from '../../state/systemLogStore';
 import { useThemeStore } from '../../state/themeStore';
-import { AgentStatus, AgentStatusType } from '../ui/agent-status';
+import { AgentStatusType } from '../ui/agent-status';
+import { WindowPanel, WindowContent } from '../ui/window-components';
 
 const ClaraAgent: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
@@ -61,18 +62,13 @@ const ClaraAgent: React.FC = () => {
   };
   
   return (
-    <div className="h-full flex flex-col p-4 text-white">
+    <WindowPanel 
+      title="Clara" 
+      status={status}
+      fullHeight 
+      className="flex flex-col h-full"
+    >
       <div className="w-full max-w-full flex flex-col h-full">
-        {/* Header with status indicator */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="h2 text-primary">Clara</h2>
-          <AgentStatus 
-            status={status} 
-            size="sm"
-            className="mr-1" 
-          />
-        </div>
-        
         <div className="text-center mb-2">
           <RotatingTagline 
             phrases={[
@@ -93,15 +89,21 @@ const ClaraAgent: React.FC = () => {
         <ClaraOrb isProcessing={isLoading} />
 
         {/* Chat Messages Container */}
-        <div 
+        <WindowContent
+          variant="ghost"
+          padding="none"
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto pr-2 space-y-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+          className="flex-1 pr-2 space-y-2"
+          withScroll
         >
           {messages.length === 0 ? (
-            <div className="window-panel flex flex-col items-center justify-center h-full text-center space-y-4">
+            <WindowContent 
+              variant="default"
+              className="flex flex-col items-center justify-center h-full text-center space-y-4"
+            >
               <p className="text-content">Welcome to Clara! How can I assist you today?</p>
               <p className="text-caption">Ask me anything or share an image with me.</p>
-            </div>
+            </WindowContent>
           ) : (
             <>
               {messages.map((message: Message, index: number) => (
@@ -115,11 +117,14 @@ const ClaraAgent: React.FC = () => {
           )}
           
           {error && (
-            <div className="window-panel bg-red-900/10 text-red-400 text-center">
+            <WindowContent 
+              variant="primary"
+              className="bg-red-900/10 text-red-400 text-center"
+            >
               {error}
-            </div>
+            </WindowContent>
           )}
-        </div>
+        </WindowContent>
         
         {/* Chat Input - Fixed at bottom */}
         <div className="sticky bottom-0 pt-2 bg-gradient-to-t from-black/10 to-transparent">
@@ -129,7 +134,7 @@ const ClaraAgent: React.FC = () => {
           />
         </div>
       </div>
-    </div>
+    </WindowPanel>
   );
 };
 

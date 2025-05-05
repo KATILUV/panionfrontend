@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { WindowPanel, WindowContent, WindowSection } from '../ui/window-components';
 
 const NotesAgent: React.FC = () => {
   const [notes, setNotes] = useState<string[]>([]);
@@ -42,20 +43,30 @@ const NotesAgent: React.FC = () => {
   };
   
   return (
-    <div className="h-full flex flex-col p-4 text-white">
-      <h2 className="h2 text-primary mb-4">Quick Notes</h2>
-      
-      <div className="flex-1 overflow-auto space-y-2 mb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+    <WindowPanel 
+      title="Quick Notes" 
+      fullHeight 
+      className="flex flex-col h-full"
+    >
+      <WindowContent
+        variant="ghost"
+        padding="none"
+        className="flex-1 space-y-2 mb-4" 
+        withScroll
+      >
         {notes.length === 0 ? (
-          <div className="window-panel flex items-center justify-center py-8 text-white/50 text-center">
+          <WindowContent
+            className="flex items-center justify-center py-8 text-white/50 text-center"
+          >
             No notes yet. Add one below!
-          </div>
+          </WindowContent>
         ) : (
           <>
             {notes.map((note, index) => (
-              <div 
+              <WindowContent
                 key={index}
-                className="window-panel break-words relative group hover:bg-white/[0.15] transition-colors duration-200"
+                variant="default"
+                className="break-words relative group hover:bg-white/[0.15] transition-colors duration-200"
               >
                 <p className="pr-6 text-content">{note}</p>
                 <button
@@ -65,13 +76,13 @@ const NotesAgent: React.FC = () => {
                 >
                   ×
                 </button>
-              </div>
+              </WindowContent>
             ))}
           </>
         )}
-      </div>
+      </WindowContent>
       
-      <div className="window-panel overflow-hidden">
+      <WindowContent className="overflow-hidden">
         <textarea
           value={currentNote}
           onChange={(e) => setCurrentNote(e.target.value)}
@@ -93,8 +104,8 @@ const NotesAgent: React.FC = () => {
             Add Note
           </button>
         </div>
-      </div>
-    </div>
+      </WindowContent>
+    </WindowPanel>
   );
 };
 
