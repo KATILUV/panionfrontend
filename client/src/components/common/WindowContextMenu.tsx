@@ -38,21 +38,23 @@ const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
 }) => {
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
 
-  // Animation variants
+  // Animation variants - simplified for stability
   const menuVariants = {
     hidden: { 
       opacity: 0, 
       scale: 0.95,
       transition: { 
-        duration: 0.15,
-        ease: "easeInOut"
+        type: "tween",
+        duration: 0.1,
+        ease: "easeIn"
       }
     },
     visible: { 
       opacity: 1, 
       scale: 1,
       transition: { 
-        duration: 0.2,
+        type: "tween",
+        duration: 0.15,
         ease: "easeOut"
       }
     }

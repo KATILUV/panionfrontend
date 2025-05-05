@@ -140,8 +140,8 @@ const Desktop: React.FC = () => {
     }
   };
   
-  // Check if there are any open windows
-  const hasOpenWindows = Object.values(windows).some(window => window.isOpen && !window.isMinimized);
+  // Check if there are any visible windows (open and not minimized)
+  const hasVisibleWindows = Object.values(windows).some(window => window.isOpen && !window.isMinimized);
 
   // Generate background gradient based on current theme and accent
   const getBackgroundGradient = () => {
@@ -191,8 +191,8 @@ const Desktop: React.FC = () => {
     <DesktopBackground>
       {/* Desktop Area */}
       <div className="flex-1 relative">
-        {/* Show empty state dashboard if no windows are open */}
-        {!hasOpenWindows && <EmptyStateDashboard />}
+        {/* Show empty state dashboard if no visible windows */}
+        {!hasVisibleWindows && <EmptyStateDashboard />}
         
         {/* Render Windows */}
         <AnimatePresence>

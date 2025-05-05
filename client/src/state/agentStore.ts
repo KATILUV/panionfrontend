@@ -149,41 +149,48 @@ export const useAgentStore = create<AgentState>()(
         });
       },
 
-      minimizeAgent: (id) => set((state) => {
-        const agent = state.windows[id];
-        if (!agent) return state;
+      minimizeAgent: (id) => {
+        // Add a small delay to help animation complete properly
+        setTimeout(() => {
+          set((state) => {
+            const agent = state.windows[id];
+            if (!agent) return state;
+    
+            return {
+              windows: {
+                ...state.windows,
+                [id]: {
+                  ...agent,
+                  isMinimized: true
+                }
+              },
+              focusedAgentId: state.focusedAgentId === id ? null : state.focusedAgentId
+            };
+          });
+        }, 10); // Small delay to help with animation
+      },
 
-        return {
-          windows: {
-            ...state.windows,
-            [id]: {
-              ...agent,
-              isMinimized: true
-            }
-          },
-          focusedAgentId: state.focusedAgentId === id ? null : state.focusedAgentId
-        };
-      }),
-
-      restoreAgent: (id) => set((state) => {
-        const agent = state.windows[id];
-        if (!agent) return state;
-
-        const newZIndex = state.highestZIndex + 1;
-
-        return {
-          windows: {
-            ...state.windows,
-            [id]: {
-              ...agent,
-              isMinimized: false,
-              zIndex: newZIndex
-            }
-          },
-          focusedAgentId: id,
-          highestZIndex: newZIndex
-        };
-      }),
+      restoreAgent: (id) => {
+        set((state) => {
+          const agent = state.windows[id];
+          if (!agent) return state;
+  
+          const newZIndex = state.highestZIndex + 1;
+  
+          return {
+            windows: {
+              ...state.windows,
+              [id]: {
+                ...agent,
+                isMinimized: false,
+                zIndex: newZIndex
+              }
+            },
+            focusedAgentId: id,
+            highestZIndex: newZIndex
+          };
+        });
+      },
 
       focusAgent: (id) => set((state) => {
         const agent = state.windows[id];

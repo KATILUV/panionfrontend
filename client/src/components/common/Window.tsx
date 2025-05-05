@@ -286,63 +286,62 @@ const Window: React.FC<WindowProps> = ({
     }
   };
 
-  // Animation variants for different window states
+  // Animation variants for different window states - simplified for stability
   const windowVariants = {
     open: {
       opacity: 1,
       scale: 1,
       y: 0,
       transition: {
-        type: "spring",
-        damping: 26,
-        stiffness: 340,
-        duration: 0.4
+        type: "tween", // Changed to tween for more stability
+        duration: 0.2,
+        ease: "easeOut"
       }
     },
     closed: {
       opacity: 0,
-      scale: 0.9,
-      y: 20,
+      scale: 0.95,
+      y: 10,
       transition: {
-        type: "spring",
-        damping: 25,
-        stiffness: 300,
-        duration: 0.3
+        type: "tween", // Changed to tween for more stability
+        duration: 0.15,
+        ease: "easeIn"
       }
     },
     minimized: {
       opacity: 0,
-      scale: 0.8,
-      y: 50,
+      scale: 0.9,
+      y: 25,
       transition: {
-        type: "spring",
-        damping: 25,
-        stiffness: 300,
-        duration: 0.3
+        type: "tween", // Changed to tween for more stability
+        duration: 0.15,
+        ease: "easeIn"
       }
     }
   };
 
-  // Window content animations
+  // Window content animations - simplified
   const contentVariants = {
     open: {
       opacity: 1,
       transition: {
-        delay: 0.1,
-        duration: 0.2
+        duration: 0.1,
+        delay: 0.05
       }
     },
     closed: {
-      opacity: 0
+      opacity: 0,
+      transition: {
+        duration: 0.1
+      }
     }
   };
 
   return (
     <MotionConfig transition={{ 
-      type: "spring", 
-      damping: 30, 
-      stiffness: 400,
-      duration: 0.4
+      type: "tween",
+      duration: 0.2,
+      ease: "easeOut"
     }}>
       <Rnd
         style={{
