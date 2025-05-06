@@ -8,6 +8,7 @@ import { initializeAgentRegistry } from '../state/agentStore';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
 import SettingsAgent from './agents/SettingsAgent';
+import MarketplaceAgent from './agents/MarketplaceAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
 import EmptyStateDashboard from './system/EmptyStateDashboard';
@@ -23,6 +24,8 @@ const renderAgentContent = (agentId: string) => {
       return <NotesAgent />;
     case 'settings':
       return <SettingsAgent />;
+    case 'marketplace':
+      return <MarketplaceAgent />;
     default:
       return <div>Unknown agent type: {agentId}</div>;
   }
