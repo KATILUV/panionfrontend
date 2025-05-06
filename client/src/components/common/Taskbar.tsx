@@ -2,8 +2,10 @@ import React, { useState, useRef } from 'react';
 import { useAgentStore, AgentId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
 import { useSystemLogStore } from '../../state/systemLogStore';
+import { useTaskbarStore } from '../../state/taskbarStore';
 import LayoutManager from './LayoutManager';
 import ClaraSystemLog from '../system/ClaraSystemLog';
+import TaskbarSettings from '../settings/TaskbarSettings';
 import { Button } from '@/components/ui/button';
 import { 
   LucideIcon, 
@@ -16,7 +18,8 @@ import {
   Plus,
   PlusCircle,
   FileText,
-  CheckCircle
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -25,6 +28,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogHeader,
+} from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -136,6 +145,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const { toast } = useToast();
   const [isQuickSaveOpen, setIsQuickSaveOpen] = useState(false);
   const [customLayoutName, setCustomLayoutName] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const inputRef = useRef<HTMLInputElement>(null);
   
   const registry = useAgentStore(state => state.registry);
@@ -146,6 +157,15 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const activeLayoutId = useAgentStore(state => state.activeLayoutId);
   const layouts = useAgentStore(state => state.layouts);
   const saveLayout = useAgentStore(state => state.saveLayout);
+  
+  // Taskbar settings store
+  const { 
+    visibleWidgets, 
+    position, 
+    enableBlur, 
+    showLabels,
+    autohide
+  } = useTaskbarStore();
   
   const handleIconClick = (id: AgentId) => {
     const window = windows[id];
@@ -244,125 +264,225 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     return <Moon size={18} />;
   };
   
-  // Determine background style based on theme - updated to match window design
+  // Update clock every minute
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    
+    return () => clearInterval(timer);
+  }, []);
+  
+  // Format time as HH:MM AM/PM
+  const formattedTime = currentTime.toLocaleTimeString([], { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  });
+  
+  // Determine background style based on theme and settings
   const getTaskbarBgClass = () => {
-    return getCurrentTheme() === 'dark'
+    const themeClass = getCurrentTheme() === 'dark'
       ? 'bg-black/20 border-white/10'
       : 'bg-white/60 border-gray-100 shadow-sm text-gray-800';
+    
+    const blurClass = enableBlur ? 'backdrop-blur-sm' : '';
+    return `${themeClass} ${blurClass}`;
+  };
+  
+  // Determine positioning/alignment classes
+  const getPositionClasses = () => {
+    let positionClass = '';
+    
+    // Position (top, bottom, left, right)
+    switch (position.location) {
+      case 'top':
+        positionClass += 'border-b ';
+        break;
+      case 'bottom':
+        positionClass += 'border-t ';
+        break;
+      case 'left':
+        positionClass += 'border-r flex-col h-full ';
+        break;
+      case 'right':
+        positionClass += 'border-l flex-col h-full ';
+        break;
+    }
+    
+    // Alignment (start, center, end, space-between)
+    switch (position.alignment) {
+      case 'start':
+        positionClass += 'justify-start ';
+        break;
+      case 'center':
+        positionClass += 'justify-center ';
+        break;
+      case 'end':
+        positionClass += 'justify-end ';
+        break;
+      case 'space-between':
+        positionClass += 'justify-between ';
+        break;
+    }
+    
+    return positionClass;
   };
   
   return (
-    <div className={`flex items-center ${getTaskbarBgClass()} backdrop-blur-sm border-t px-4 py-1.5 ${className}`}>
-      <div className="flex-1 flex items-center space-x-1">
-        {registry.map(agent => {
-          const isOpen = windows[agent.id]?.isOpen;
-          const isMinimized = windows[agent.id]?.isMinimized;
-          const isActive = isOpen && !isMinimized;
+    <>
+      <div 
+        className={`
+          flex items-center ${getTaskbarBgClass()} ${getPositionClasses()} px-4 py-1.5 
+          ${className} ${autohide ? 'hover:opacity-100 opacity-30 transition-opacity duration-300' : ''}
+        `}
+      >
+        <div className="flex-1 flex items-center space-x-1">
+          {registry.map(agent => {
+            const isOpen = windows[agent.id]?.isOpen;
+            const isMinimized = windows[agent.id]?.isMinimized;
+            const isActive = isOpen && !isMinimized;
+            
+            return (
+              <AgentIconButton
+                key={agent.id}
+                id={agent.id}
+                icon={agent.icon}
+                title={agent.title}
+                isActive={isActive}
+                onClick={handleIconClick}
+              />
+            );
+          })}
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          {/* Quick Save Button - conditionally rendered based on settings */}
+          {visibleWidgets.includes('quickSave') && (
+            <div className="relative flex items-center">
+              <TaskbarButton
+                icon={<Save size={16} />}
+                label="Quick Save"
+                isActive={false}
+                onClick={handleQuickSave}
+                className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
+              />
+              
+              <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
+                <PopoverTrigger asChild>
+                  <button
+                    className="ml-px h-8 w-5 flex items-center justify-center text-white/70 hover:text-white 
+                              bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10
+                              rounded-r-lg border-l border-white/5"
+                    title="Save Options"
+                  >
+                    <PlusCircle size={12} />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4" side="top">
+                  <div className="space-y-4">
+                    <h3 className="text-base font-medium">Save Current Layout</h3>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="layout-name">Layout Name</Label>
+                      <Input 
+                        id="layout-name"
+                        ref={inputRef}
+                        placeholder="e.g., My Workspace Layout"
+                        value={customLayoutName}
+                        onChange={(e) => setCustomLayoutName(e.target.value)}
+                        className="w-full"
+                        onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-primary/10
+                                  hover:bg-primary/20 text-sm text-primary-foreground transition-colors"
+                        onClick={handleQuickSave}
+                      >
+                        <Save size={14} /> Quick Save
+                      </button>
+                      
+                      <button
+                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-primary/80
+                                  hover:bg-primary text-sm text-white transition-colors disabled:opacity-50 
+                                  disabled:pointer-events-none"
+                        onClick={handleCustomSave}
+                        disabled={!customLayoutName.trim()}
+                      >
+                        <CheckCircle size={14} /> Save with Name
+                      </button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
           
-          return (
-            <AgentIconButton
-              key={agent.id}
-              id={agent.id}
-              icon={agent.icon}
-              title={agent.title}
-              isActive={isActive}
-              onClick={handleIconClick}
+          {/* System Console Button - conditionally rendered */}
+          {visibleWidgets.includes('systemConsole') && (
+            <TaskbarButton
+              icon={<Terminal size={16} />}
+              label="System Console"
+              isActive={isSystemLogVisible}
+              onClick={toggleSystemLog}
             />
-          );
-        })}
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        {/* Quick Save Button with Popover */}
-        <div className="relative flex items-center">
-          {/* Main Quick Save Button */}
-          <TaskbarButton
-            icon={<Save size={16} />}
-            label="Quick Save"
-            isActive={false}
-            onClick={handleQuickSave}
-            className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
-          />
+          )}
           
-          {/* Save Options Popover Trigger */}
-          <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
-            <PopoverTrigger asChild>
-              <button
-                className="ml-px h-8 w-5 flex items-center justify-center text-white/70 hover:text-white 
-                          bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10
-                          rounded-r-lg border-l border-white/5"
-                title="Save Options"
-              >
-                <PlusCircle size={12} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-4" side="top">
-              <div className="space-y-4">
-                <h3 className="text-base font-medium">Save Current Layout</h3>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="layout-name">Layout Name</Label>
-                  <Input 
-                    id="layout-name"
-                    ref={inputRef}
-                    placeholder="e.g., My Workspace Layout"
-                    value={customLayoutName}
-                    onChange={(e) => setCustomLayoutName(e.target.value)}
-                    className="w-full"
-                    onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between gap-2">
-                  <button
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-primary/10
-                              hover:bg-primary/20 text-sm text-primary-foreground transition-colors"
-                    onClick={handleQuickSave}
-                  >
-                    <Save size={14} /> Quick Save
-                  </button>
-                  
-                  <button
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-primary/80
-                              hover:bg-primary text-sm text-white transition-colors disabled:opacity-50 
-                              disabled:pointer-events-none"
-                    onClick={handleCustomSave}
-                    disabled={!customLayoutName.trim()}
-                  >
-                    <CheckCircle size={14} /> Save with Name
-                  </button>
-                </div>
+          {/* Layout Manager Button - conditionally rendered */}
+          {visibleWidgets.includes('layoutManager') && (
+            <LayoutManager>
+              <TaskbarButton
+                icon={<Layout size={16} />}
+                label={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
+                isActive={!!activeLayoutId}
+                onClick={() => {}}
+              />
+            </LayoutManager>
+          )}
+          
+          {/* Clock Widget - conditionally rendered */}
+          {visibleWidgets.includes('clock') && (
+            <div className="px-2.5 py-1 rounded-lg bg-black/20 text-white/80">
+              <div className="flex items-center space-x-1">
+                <Clock size={14} />
+                <span className="text-xs font-medium">{formattedTime}</span>
               </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-        
-        {/* System Log Button */}
-        <TaskbarButton
-          icon={<Terminal size={16} />}
-          label="System Console"
-          isActive={isSystemLogVisible}
-          onClick={toggleSystemLog}
-        />
-        
-        {/* Layout Manager Button */}
-        <LayoutManager>
+            </div>
+          )}
+          
+          {/* Version number - conditionally rendered */}
+          {visibleWidgets.includes('versionNumber') && (
+            <div className="text-xs px-2.5 py-1 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
+              v1.0
+            </div>
+          )}
+          
+          {/* Settings button - always visible */}
           <TaskbarButton
-            icon={<Layout size={16} />}
-            label={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
-            isActive={!!activeLayoutId}
-            onClick={() => {}}
+            icon={<Settings size={16} />}
+            label="Settings"
+            isActive={settingsOpen}
+            onClick={() => setSettingsOpen(true)}
           />
-        </LayoutManager>
-        
-        <div className="text-xs px-2.5 py-1 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
-          v1.0
         </div>
+        
+        {/* System Log Component */}
+        <ClaraSystemLog />
+        
+        {/* Taskbar Settings Dialog */}
+        <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Taskbar Settings</DialogTitle>
+            </DialogHeader>
+            <TaskbarSettings />
+          </DialogContent>
+        </Dialog>
       </div>
-      
-      {/* System Log Component */}
-      <ClaraSystemLog />
-    </div>
+    </>
   );
 };
 
