@@ -656,7 +656,7 @@ const MarketplacePage = () => {
   return (
     <div className="min-h-screen">
       {/* Hero section with Panion branding */}
-      <section className="relative overflow-hidden py-16 md:py-24 bg-gradient-to-br from-[#1c1056] via-[#1a1245] to-[#21115b]">
+      <section className="relative overflow-hidden py-10 md:py-16 bg-gradient-to-br from-[#1c1056] via-[#1a1245] to-[#21115b]">
         {/* Background stars/particles effect */}
         <div className="absolute inset-0 z-0 opacity-30">
           <div className="absolute h-1 w-1 bg-white rounded-full top-[15%] left-[10%] shadow-glow"></div>
@@ -689,37 +689,37 @@ const MarketplacePage = () => {
           />
           
           {/* Back to desktop link */}
-          <div className="mb-10">
-            <Link href="/desktop" className="inline-flex items-center text-white/70 hover:text-white transition-colors bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm border border-white/10">
+          <div className="mb-5">
+            <Link href="/desktop" className="inline-flex items-center text-white/70 hover:text-white transition-colors bg-black/20 px-4 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
               <ArrowLeft size={16} className="mr-2" />
               <span>Back to Desktop</span>
             </Link>
           </div>
           
-          {/* Page title with branding */}
+          {/* Page title with branding - more compact */}
           <div className="max-w-4xl">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7 }}
-              className="relative mb-6"
+              className="relative mb-4"
             >
               <motion.div 
-                className="absolute -top-10 -left-10 w-40 h-40 bg-purple-500/20 rounded-full blur-2xl"
+                className="absolute -top-6 -left-6 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl"
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               />
               <motion.div 
-                className="absolute -top-10 -right-10 w-40 h-40 bg-violet-500/20 rounded-full blur-2xl"
+                className="absolute -top-6 -right-6 w-32 h-32 bg-violet-500/20 rounded-full blur-2xl"
                 animate={{ scale: [1, 1.15, 1] }}
                 transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
               />
               
-              <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm relative z-30">
+              <h1 className="text-3xl md:text-5xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm relative z-30">
                 <span className="absolute inset-0 blur-xl bg-black/20 -z-10 rounded-3xl"></span>
                 <span className="text-violet-300">Panion</span> Agent Marketplace
               </h1>
-              <p className="text-xl text-purple-100 max-w-2xl">
+              <p className="text-lg text-purple-100 max-w-2xl">
                 Discover specialized agents to enhance your workspace and boost your productivity
               </p>
             </motion.div>
@@ -734,11 +734,11 @@ const MarketplacePage = () => {
               <input
                 type="text"
                 placeholder="Search agents..."
-                className="pl-12 pr-4 py-3.5 bg-black/40 backdrop-blur-sm border border-purple-500/30 rounded-full text-white w-full focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 relative z-10 shadow-[0_0_15px_rgba(147,51,234,0.1)]"
+                className="pl-10 pr-4 py-2.5 bg-black/40 backdrop-blur-sm border border-purple-500/30 rounded-full text-white w-full focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 relative z-10 shadow-[0_0_15px_rgba(147,51,234,0.1)]"
                 value={searchQuery}
                 onChange={(e) => searchAgents(e.target.value)}
               />
-              <Search size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-300 z-10" />
+              <Search size={16} className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-purple-300 z-10" />
             </div>
           </div>
         </div>
