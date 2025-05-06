@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { useMarketplaceStore } from '../../state/marketplaceStore';
 import { useThemeStore } from '../../state/themeStore';
 import { motion } from 'framer-motion';
-import { Search, Filter, Star, Download, Plus, Check, Tag, X, RefreshCw } from 'lucide-react';
+import { 
+  Search, Filter, Star, Download, Plus, Check, Tag, X, RefreshCw, 
+  Settings, ExternalLink, ShoppingBag, PlayCircle
+} from 'lucide-react';
 import * as Icons from 'lucide-react';
+import { useLocation } from 'wouter';
 
 // Dynamic icon rendering from string
 const DynamicIcon = ({ name, ...props }: { name: string; [key: string]: any }) => {
@@ -11,52 +15,25 @@ const DynamicIcon = ({ name, ...props }: { name: string; [key: string]: any }) =
   return <IconComponent {...props} />;
 };
 
-// This is the marketplace component that will be loaded in a window
+// This is now the Agent Manager component
 const MarketplaceAgent = () => {
-  console.log("MarketplaceAgent mounted");  // Add console log for debugging
+  console.log("MarketplaceAgent mounted"); // Add console log for debugging
+  const [_, navigate] = useLocation();
+  
   const { 
     agents, 
     categories, 
-    searchAgents, 
-    setCategory, 
-    toggleTag,
     installAgent,
     uninstallAgent,
-    getFilteredAgents,
-    getFeaturedAgents,
-    getPopularAgents,
-    getNewAgents,
     getInstalledAgents,
-    searchQuery,
-    selectedCategory,
-    selectedTags
+    searchAgents,
+    searchQuery
   } = useMarketplaceStore();
   
-  const [activeTab, setActiveTab] = useState<'featured' | 'all' | 'installed'>('featured');
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   
-  // Get agents based on active tab
-  const getDisplayedAgents = () => {
-    switch (activeTab) {
-      case 'featured':
-        return getFeaturedAgents();
-      case 'installed':
-        return getInstalledAgents();
-      case 'all':
-      default:
-        return getFilteredAgents();
-    }
-  };
-
-  // Get all unique tags from agents
-  const getAllTags = () => {
-    const tagSet = new Set<string>();
-    agents.forEach(agent => {
-      agent.tags.forEach(tag => tagSet.add(tag));
-    });
-    return Array.from(tagSet);
-  };
+  // We only want to display installed agents in this view
+  const installedAgents = getInstalledAgents();
   
   // Single agent card component
   const AgentCard = ({ agent }: { agent: any }) => {
@@ -242,142 +219,63 @@ const MarketplaceAgent = () => {
   // Main component render
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header and tabs */}
-      <div className="mb-4">
-        <h1 className="text-xl font-semibold mb-4">Agent Marketplace</h1>
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Agent Manager</h1>
         
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-1">
-            <button 
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'featured' ? 'bg-primary/20 text-primary' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
-              onClick={() => {
-                setActiveTab('featured');
-                setSelectedAgent(null);
-              }}
-            >
-              Featured
-            </button>
-            <button 
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'all' ? 'bg-primary/20 text-primary' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
-              onClick={() => {
-                setActiveTab('all');
-                setSelectedAgent(null);
-              }}
-            >
-              All Agents
-            </button>
-            <button 
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'installed' ? 'bg-primary/20 text-primary' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
-              onClick={() => {
-                setActiveTab('installed');
-                setSelectedAgent(null);
-              }}
-            >
-              Installed
-            </button>
+        <div className="flex items-center space-x-3">
+          {/* Search box */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search agents..."
+              className="pl-8 pr-3 py-1.5 bg-black/20 border border-white/10 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 w-48"
+              value={searchQuery}
+              onChange={(e) => searchAgents(e.target.value)}
+            />
+            <Search size={16} className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white/50" />
           </div>
           
-          <div className="flex items-center space-x-2">
-            {/* Search box */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search agents..."
-                className="pl-8 pr-3 py-1.5 bg-black/20 border border-white/10 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 w-48"
-                value={searchQuery}
-                onChange={(e) => searchAgents(e.target.value)}
-              />
-              <Search size={16} className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white/50" />
-            </div>
-            
-            {/* Filter button */}
-            <button 
-              className={`p-1.5 rounded-md transition-all ${showFilters || selectedCategory || selectedTags.length > 0 ? 'bg-primary/20 text-primary' : 'bg-black/20 border border-white/10 text-white/70 hover:text-white'}`}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter size={18} />
-            </button>
-            
-            {/* Reset filters button - only show when filters are active */}
-            {(selectedCategory || selectedTags.length > 0) && (
-              <button 
-                className="p-1.5 rounded-md bg-black/20 border border-white/10 text-white/70 hover:text-white transition-all"
-                onClick={() => {
-                  setCategory(null);
-                  selectedTags.forEach(tag => toggleTag(tag));
-                }}
-                title="Reset filters"
-              >
-                <RefreshCw size={18} />
-              </button>
-            )}
-          </div>
+          {/* Browse Marketplace button */}
+          <button 
+            className="px-4 py-1.5 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition-all flex items-center"
+            onClick={() => navigate('/marketplace')}
+          >
+            <ShoppingBag size={16} className="mr-2" />
+            Browse Marketplace
+          </button>
         </div>
       </div>
-      
-      {/* Filter panel */}
-      {showFilters && (
-        <div className="bg-black/30 border border-white/10 rounded-lg p-4 mb-4 theme-transition">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-sm font-medium mb-2">Categories</h3>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    className={`px-3 py-1.5 rounded-md text-sm flex items-center transition-all ${selectedCategory === category.id ? 'bg-primary/20 text-primary' : 'bg-black/20 hover:bg-black/30 text-white/70'}`}
-                    onClick={() => setCategory(selectedCategory === category.id ? null : category.id)}
-                  >
-                    <DynamicIcon name={category.icon} size={14} className="mr-1.5" />
-                    {category.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium mb-2">Tags</h3>
-              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                {getAllTags().map((tag) => (
-                  <button
-                    key={tag}
-                    className={`px-3 py-1 rounded-md text-xs flex items-center transition-all ${selectedTags.includes(tag) ? 'bg-primary/20 text-primary' : 'bg-black/20 hover:bg-black/30 text-white/70'}`}
-                    onClick={() => toggleTag(tag)}
-                  >
-                    <Tag size={12} className="mr-1" />
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       
       {/* Main content area */}
       <div className="flex-1 overflow-hidden">
         <div className="flex h-full space-x-4">
-          {/* Agent list */}
+          {/* Installed agent list */}
           <div className={`${selectedAgent ? 'w-1/2' : 'w-full'} overflow-y-auto pr-2`}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {getDisplayedAgents().map((agent) => (
-                <AgentCard key={agent.id} agent={agent} />
-              ))}
-              
-              {getDisplayedAgents().length === 0 && (
-                <div className="col-span-2 flex flex-col items-center justify-center py-16 text-center">
-                  <div className="bg-black/20 rounded-full p-4 mb-4">
-                    <Search size={32} className="text-white/40" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-1">No agents found</h3>
-                  <p className="text-white/60 max-w-md">
-                    {activeTab === 'installed' 
-                      ? "You haven't installed any agents yet" 
-                      : "Try adjusting your search or filters to find what you're looking for"}
-                  </p>
+            {installedAgents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {installedAgents.map((agent) => (
+                  <AgentCard key={agent.id} agent={agent} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="bg-black/20 rounded-full p-4 mb-4">
+                  <PlayCircle size={36} className="text-white/40" />
                 </div>
-              )}
-            </div>
+                <h3 className="text-lg font-medium mb-2">No agents installed</h3>
+                <p className="text-white/60 max-w-md mb-6">
+                  You haven't installed any agents yet. Visit the marketplace to discover and install new agents.
+                </p>
+                <button 
+                  className="px-5 py-2.5 rounded-md bg-primary hover:bg-primary/90 text-white transition-all flex items-center"
+                  onClick={() => navigate('/marketplace')}
+                >
+                  <ShoppingBag size={18} className="mr-2" />
+                  Browse Marketplace
+                </button>
+              </div>
+            )}
           </div>
           
           {/* Agent details */}

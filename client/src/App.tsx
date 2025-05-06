@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import DesktopPage from "./pages/desktop-page";
 import LandingPage from "./pages/landing-page";
 import AuthPage from "./pages/auth-page";
+import MarketplacePage from "./pages/marketplace-page";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
@@ -27,6 +28,9 @@ function Router() {
       
       {/* Desktop environment */}
       <Route path="/desktop" component={DesktopPage} />
+      
+      {/* Marketplace */}
+      <Route path="/marketplace" component={MarketplacePage} />
       
       {/* Redirect old root path to landing page */}
       <Route path="/desktop/old">
@@ -127,7 +131,7 @@ function App() {
     
     agentStore.registerAgent({
       id: 'marketplace',
-      title: 'Agent Marketplace',
+      title: 'Agent Manager',
       icon: marketplaceIcon,
       component: () => <MarketplaceAgent />,
       defaultPosition: { x: 300, y: 120 },
