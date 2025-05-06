@@ -7,21 +7,7 @@ import { useSettingsTabStore } from '../../state/settingsTabStore';
 import LayoutManager from './LayoutManager';
 import ClaraSystemLog from '../system/ClaraSystemLog';
 import { Button } from '@/components/ui/button';
-import { 
-  LucideIcon, 
-  Layout, 
-  Moon, 
-  Settings, 
-  Terminal, 
-  Store, 
-  Save,
-  Plus,
-  PlusCircle,
-  FileText,
-  CheckCircle,
-  Clock,
-  Search
-} from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import {
@@ -29,9 +15,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Icon, IconButton } from '@/components/ui/icon-provider';
+import { ICONS } from '@/lib/icon-map';
 
 // Reusable TaskbarButton component to reduce repetition
 interface TaskbarButtonProps {
@@ -311,7 +298,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
   const getThemeIcon = () => {
     const currentTheme = getCurrentTheme();
     // Since we only support dark mode, this is simplified
-    return <Moon size={18} />;
+    return <Icon name="Moon" size={18} />;
   };
   
   // Update clock every minute
@@ -540,7 +527,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
           {/* Simplified Search Button for vertical taskbars */}
           {visibleWidgets.includes('searchBar') && isVertical && (
             <TaskbarButton
-              icon={<Search size={16} />}
+              icon={<Icon name={ICONS.SEARCH} size={16} />}
               label="Search"
               isActive={false}
               onClick={() => toast({
