@@ -1,0 +1,147 @@
+/* Window component styling */
+.window {
+  transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform, opacity, box-shadow;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.window-focused {
+  box-shadow: 
+    0 10px 30px -5px rgba(0, 0, 0, 0.3),
+    0 2px 8px 0px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.window-blurred {
+  box-shadow: 
+    0 5px 15px -5px rgba(0, 0, 0, 0.15),
+    0 1px 4px 0px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0.95;
+}
+
+.window-titlebar {
+  cursor: move;
+  transition: background-color 0.2s ease;
+  height: 40px;
+}
+
+.window-titlebar-focused {
+  background-color: rgba(30, 15, 80, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.window-titlebar-blurred {
+  background-color: rgba(20, 10, 50, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.window-body {
+  transition: opacity 0.2s ease;
+}
+
+.window-body-focused {
+  opacity: 1;
+}
+
+.window-body-blurred {
+  opacity: 0.8;
+}
+
+.window-resize-handle {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.window:hover .window-resize-handle {
+  opacity: 0.5;
+}
+
+.window-button {
+  transition: all 0.15s ease;
+  transform-origin: center;
+}
+
+.window-button:hover {
+  transform: scale(1.15);
+}
+
+/* Subtle animations for window state changes */
+.window-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.window-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 200ms, transform 200ms;
+}
+
+.window-exit {
+  opacity: 1;
+}
+
+.window-exit-active {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 150ms, transform 150ms;
+}
+
+/* Grid overlay for window positioning */
+.grid-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.grid-overlay.visible {
+  opacity: 0.15;
+}
+
+.grid-overlay-line {
+  background-color: #ffffff;
+  position: absolute;
+}
+
+.grid-overlay-line.horizontal {
+  height: 1px;
+  left: 0;
+  right: 0;
+}
+
+.grid-overlay-line.vertical {
+  width: 1px;
+  top: 0;
+  bottom: 0;
+}
+
+/* Snapping guides */
+.snap-guide {
+  position: fixed;
+  background-color: rgba(97, 218, 251, 0.7);
+  z-index: 10000;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.snap-guide.horizontal {
+  height: 2px;
+  left: 0;
+  right: 0;
+}
+
+.snap-guide.vertical {
+  width: 2px;
+  top: 0;
+  bottom: 0;
+}
