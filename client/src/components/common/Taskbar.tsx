@@ -181,9 +181,12 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
   
   const registry = useAgentStore(state => state.registry);
   const windows = useAgentStore(state => state.windows);
+  const windowGroups = useAgentStore(state => state.windowGroups);
   const openAgent = useAgentStore(state => state.openAgent);
   const focusAgent = useAgentStore(state => state.focusAgent);
   const restoreAgent = useAgentStore(state => state.restoreAgent);
+  const focusWindowGroup = useAgentStore(state => state.focusWindowGroup);
+  const restoreWindowGroup = useAgentStore(state => state.restoreWindowGroup);
   const activeLayoutId = useAgentStore(state => state.activeLayoutId);
   const layouts = useAgentStore(state => state.layouts);
   const saveLayout = useAgentStore(state => state.saveLayout);

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Window from './common/Window';
+import GroupedWindow from './common/GroupedWindow';
 import Taskbar from './common/Taskbar';
 import { useAgentStore, AgentId, WindowLayout } from '../state/agentStore';
 import { useThemeStore } from '../state/themeStore';
@@ -103,6 +104,7 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
 
 const Desktop: React.FC = () => {
   const windows = useAgentStore(state => state.windows);
+  const windowGroups = useAgentStore(state => state.windowGroups);
   const focusedAgentId = useAgentStore(state => state.focusedAgentId);
   const closeAgent = useAgentStore(state => state.closeAgent);
   const minimizeAgent = useAgentStore(state => state.minimizeAgent);
@@ -192,8 +194,10 @@ const Desktop: React.FC = () => {
     }
   };
   
-  // Check if there are any visible windows (open and not minimized)
-  const hasVisibleWindows = Object.values(windows).some(window => window.isOpen && !window.isMinimized);
+  // Check if there are any visible windows (open and not minimized) or visible window groups
+  const hasVisibleWindows = 
+    Object.values(windows).some(window => window.isOpen && !window.isMinimized) ||
+    Object.values(windowGroups).some(group => !group.isMinimized);
 
   // Generate background gradient based on current theme and accent
   const getBackgroundGradient = () => {
@@ -243,13 +247,15 @@ const Desktop: React.FC = () => {
     <DesktopBackground>
       {/* Desktop Area - Adjusted for mobile responsiveness */}
       <div className={`flex-1 relative ${isMobile ? 'pt-2 pb-14' : ''}`}>
-        {/* Show empty state dashboard if no visible windows */}
-        {!hasVisibleWindows && <EmptyStateDashboard isMobile={isMobile} />}
+        {/* Show empty state dashboard if no visible windows and no window groups */}
+        {!hasVisibleWindows && Object.keys(windowGroups).length === 0 && (
+          <EmptyStateDashboard isMobile={isMobile} />
+        )}
         
-        {/* Render Windows */}
+        {/* Render Individual Windows */}
         <AnimatePresence>
           {Object.values(windows)
-            .filter(window => window.isOpen)
+            .filter(window => window.isOpen && !window.groupId) // Only show ungrouped windows
             .map(window => (
               <Window
                 key={window.id}
@@ -269,6 +275,15 @@ const Desktop: React.FC = () => {
               </Window>
             ))}
         </AnimatePresence>
+        
+        {/* Render Window Groups */}
+        {Object.entries(windowGroups).map(([groupId, group]) => (
+          <GroupedWindow
+            key={groupId}
+            groupId={groupId}
+            group={group}
+          />
+        ))}
       </div>
       
       {/* Clara's Context Panel - visible when Clara is active */}
