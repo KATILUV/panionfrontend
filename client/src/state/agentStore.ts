@@ -667,7 +667,427 @@ export const useAgentStore = create<AgentState>()(
         
         // If no layouts exist, just log a message
         log.info('No layouts available to restore');
-      }
+      },
+      
+      // Window Group Actions
+      createWindowGroup: (windowIds, title) => {
+        const defaultTitle = windowIds.length > 0 
+          ? `Group: ${get().windows[windowIds[0]]?.title || 'Windows'}` 
+          : 'Window Group';
+        
+        const groupId = `group-${generateId()}`;
+        const initialPosition = windowIds.length > 0 
+          ? get().windows[windowIds[0]]?.position 
+          : { x: 100, y: 100 };
+        const initialSize = windowIds.length > 0 
+          ? get().windows[windowIds[0]]?.size 
+          : { width: 700, height: 500 };
+          
+        const currentMaxZIndex = Object.values(get().windows).reduce(
+          (max, window) => window.isOpen && !window.isMinimized ? Math.max(max, window.zIndex) : max, 
+          0
+        );
+        
+        set(state => {
+          const updatedWindows = { ...state.windows };
+          
+          // Update all windows to be part of this group
+          windowIds.forEach((windowId, index) => {
+            if (updatedWindows[windowId]) {
+              updatedWindows[windowId] = {
+                ...updatedWindows[windowId],
+                groupId,
+                isActiveInGroup: index === 0 // First window is active by default
+              };
+            }
+          });
+          
+          // Create the window group
+          const newGroup: WindowGroup = {
+            id: groupId,
+            title: title || defaultTitle,
+            windows: [...windowIds],
+            activeWindowId: windowIds.length > 0 ? windowIds[0] : undefined,
+            position: initialPosition,
+            size: initialSize,
+            zIndex: currentMaxZIndex + 1,
+            isMinimized: false,
+            createdAt: Date.now()
+          };
+          
+          log.action(`Created window group: "${newGroup.title}" with ${windowIds.length} windows`);
+          
+          return {
+            windows: updatedWindows,
+            windowGroups: {
+              ...state.windowGroups,
+              [groupId]: newGroup
+            },
+            highestZIndex: currentMaxZIndex + 1
+          };
+        });
+        
+        return groupId;
+      },
+      
+      addToWindowGroup: (groupId, windowId) => set(state => {
+        const group = state.windowGroups[groupId];
+        const window = state.windows[windowId];
+        
+        if (!group || !window) return state;
+        
+        // Don't add if already in this group
+        if (window.groupId === groupId) return state;
+        
+        // If window is in another group, remove it first
+        if (window.groupId) {
+          const oldGroup = state.windowGroups[window.groupId];
+          if (oldGroup) {
+            state.windowGroups[window.groupId] = {
+              ...oldGroup,
+              windows: oldGroup.windows.filter(id => id !== windowId)
+            };
+          }
+        }
+        
+        log.action(`Added window "${window.title}" to group "${group.title}"`);
+        
+        return {
+          windows: {
+            ...state.windows,
+            [windowId]: {
+              ...window,
+              groupId,
+              isActiveInGroup: false
+            }
+          },
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: {
+              ...group,
+              windows: [...group.windows, windowId]
+            }
+          }
+        };
+      }),
+      
+      removeFromWindowGroup: (groupId, windowId) => set(state => {
+        const group = state.windowGroups[groupId];
+        const window = state.windows[windowId];
+        
+        if (!group || !window || window.groupId !== groupId) return state;
+        
+        const updatedWindows = group.windows.filter(id => id !== windowId);
+        
+        log.action(`Removed window "${window.title}" from group "${group.title}"`);
+        
+        // If this was the active window, set a new active window
+        let activeWindowId = group.activeWindowId;
+        if (activeWindowId === windowId && updatedWindows.length > 0) {
+          activeWindowId = updatedWindows[0];
+        }
+        
+        // Update the group
+        const updatedGroup = {
+          ...group,
+          windows: updatedWindows,
+          activeWindowId: updatedWindows.length > 0 ? activeWindowId : undefined
+        };
+        
+        // Update all windows
+        const updatedWindowsState = { ...state.windows };
+        
+        // Remove window from group
+        updatedWindowsState[windowId] = {
+          ...window,
+          groupId: undefined,
+          isActiveInGroup: false
+        };
+        
+        // If this was active, make another window active
+        if (window.isActiveInGroup && activeWindowId) {
+          updatedWindowsState[activeWindowId] = {
+            ...updatedWindowsState[activeWindowId],
+            isActiveInGroup: true
+          };
+        }
+        
+        // If the group is now empty, remove it
+        if (updatedWindows.length === 0) {
+          const { [groupId]: _, ...remainingGroups } = state.windowGroups;
+          
+          log.action(`Removed empty group "${group.title}"`);
+          
+          return {
+            windows: updatedWindowsState,
+            windowGroups: remainingGroups
+          };
+        }
+        
+        return {
+          windows: updatedWindowsState,
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: updatedGroup
+          }
+        };
+      }),
+      
+      setActiveGroupWindow: (groupId, windowId) => set(state => {
+        const group = state.windowGroups[groupId];
+        if (!group || !group.windows.includes(windowId)) return state;
+        
+        const updatedWindows = { ...state.windows };
+        
+        // Clear active state from all windows in the group
+        group.windows.forEach(id => {
+          if (updatedWindows[id]) {
+            updatedWindows[id] = {
+              ...updatedWindows[id],
+              isActiveInGroup: id === windowId
+            };
+          }
+        });
+        
+        log.action(`Set window "${updatedWindows[windowId]?.title}" as active in group "${group.title}"`);
+        
+        return {
+          windows: updatedWindows,
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: {
+              ...group,
+              activeWindowId: windowId
+            }
+          }
+        };
+      }),
+      
+      minimizeWindowGroup: (groupId) => set(state => {
+        const group = state.windowGroups[groupId];
+        if (!group) return state;
+        
+        log.action(`Minimized window group: "${group.title}"`);
+        
+        return {
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: {
+              ...group,
+              isMinimized: true
+            }
+          }
+        };
+      }),
+      
+      restoreWindowGroup: (groupId) => set(state => {
+        const group = state.windowGroups[groupId];
+        if (!group) return state;
+        
+        log.action(`Restored window group: "${group.title}"`);
+        
+        // Find the highest z-index among all open windows and groups
+        const windowsMaxZIndex = Object.values(state.windows).reduce(
+          (max, window) => window.isOpen && !window.isMinimized ? Math.max(max, window.zIndex) : max, 
+          0
+        );
+        
+        const groupsMaxZIndex = Object.values(state.windowGroups).reduce(
+          (max, group) => !group.isMinimized ? Math.max(max, group.zIndex) : max, 
+          0
+        );
+        
+        const currentMaxZIndex = Math.max(windowsMaxZIndex, groupsMaxZIndex, state.highestZIndex);
+        const newZIndex = currentMaxZIndex + 1;
+        
+        return {
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: {
+              ...group,
+              isMinimized: false,
+              zIndex: newZIndex
+            }
+          },
+          highestZIndex: newZIndex
+        };
+      }),
+      
+      closeWindowGroup: (groupId) => set(state => {
+        const group = state.windowGroups[groupId];
+        if (!group) return state;
+        
+        // Remove group reference from all windows
+        const updatedWindows = { ...state.windows };
+        group.windows.forEach(windowId => {
+          if (updatedWindows[windowId]) {
+            updatedWindows[windowId] = {
+              ...updatedWindows[windowId],
+              groupId: undefined,
+              isActiveInGroup: false
+            };
+          }
+        });
+        
+        log.action(`Closed window group: "${group.title}"`);
+        
+        // Remove the group
+        const { [groupId]: _, ...remainingGroups } = state.windowGroups;
+        
+        return {
+          windows: updatedWindows,
+          windowGroups: remainingGroups
+        };
+      }),
+      
+      focusWindowGroup: (groupId) => set(state => {
+        const group = state.windowGroups[groupId];
+        if (!group || group.isMinimized) return state;
+        
+        // Find the highest z-index
+        const windowsMaxZIndex = Object.values(state.windows).reduce(
+          (max, window) => window.isOpen && !window.isMinimized ? Math.max(max, window.zIndex) : max, 
+          0
+        );
+        
+        const groupsMaxZIndex = Object.values(state.windowGroups).reduce(
+          (max, g) => !g.isMinimized ? Math.max(max, g.zIndex) : max, 
+          0
+        );
+        
+        const currentMaxZIndex = Math.max(windowsMaxZIndex, groupsMaxZIndex, state.highestZIndex);
+        const newZIndex = currentMaxZIndex + 1;
+        
+        log.action(`Focused window group: "${group.title}"`);
+        
+        return {
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: {
+              ...group,
+              zIndex: newZIndex
+            }
+          },
+          highestZIndex: newZIndex
+        };
+      }),
+      
+      updateGroupPosition: (groupId, position) => set(state => {
+        const group = state.windowGroups[groupId];
+        if (!group) return state;
+        
+        return {
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: {
+              ...group,
+              position
+            }
+          }
+        };
+      }),
+      
+      updateGroupSize: (groupId, size) => set(state => {
+        const group = state.windowGroups[groupId];
+        if (!group) return state;
+        
+        return {
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: {
+              ...group,
+              size
+            }
+          }
+        };
+      }),
+      
+      updateGroupTitle: (groupId, title) => set(state => {
+        const group = state.windowGroups[groupId];
+        if (!group) return state;
+        
+        log.action(`Renamed window group from "${group.title}" to "${title}"`);
+        
+        return {
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: {
+              ...group,
+              title
+            }
+          }
+        };
+      }),
+      
+      ungroupWindow: (windowId) => set(state => {
+        const window = state.windows[windowId];
+        if (!window || !window.groupId) return state;
+        
+        const groupId = window.groupId;
+        const group = state.windowGroups[groupId];
+        
+        if (!group) {
+          // If group doesn't exist, just remove the reference from the window
+          return {
+            windows: {
+              ...state.windows,
+              [windowId]: {
+                ...window,
+                groupId: undefined,
+                isActiveInGroup: false
+              }
+            }
+          };
+        }
+        
+        // Remove window from group
+        const updatedWindows = { ...state.windows };
+        updatedWindows[windowId] = {
+          ...window,
+          groupId: undefined,
+          isActiveInGroup: false
+        };
+        
+        // Update group
+        const updatedGroupWindows = group.windows.filter(id => id !== windowId);
+        
+        log.action(`Removed window "${window.title}" from group "${group.title}"`);
+        
+        // If this was the active window, update the active window
+        let activeWindowId = group.activeWindowId;
+        if (activeWindowId === windowId && updatedGroupWindows.length > 0) {
+          activeWindowId = updatedGroupWindows[0];
+          updatedWindows[activeWindowId] = {
+            ...updatedWindows[activeWindowId],
+            isActiveInGroup: true
+          };
+        }
+        
+        // If the group is now empty, remove it
+        if (updatedGroupWindows.length === 0) {
+          const { [groupId]: _, ...remainingGroups } = state.windowGroups;
+          
+          log.action(`Removed empty group "${group.title}"`);
+          
+          return {
+            windows: updatedWindows,
+            windowGroups: remainingGroups
+          };
+        }
+        
+        // Otherwise update the group
+        return {
+          windows: updatedWindows,
+          windowGroups: {
+            ...state.windowGroups,
+            [groupId]: {
+              ...group,
+              windows: updatedGroupWindows,
+              activeWindowId: activeWindowId !== windowId ? activeWindowId : updatedGroupWindows[0]
+            }
+          }
+        };
+      })
     }),
     {
       name: 'panion-agent-store'
