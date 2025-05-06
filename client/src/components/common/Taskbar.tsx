@@ -106,6 +106,18 @@ interface AgentIconButtonProps {
   onClick: (id: AgentId) => void;
 }
 
+// Window group button for taskbar
+interface GroupIconButtonProps {
+  groupId: string;
+  group: {
+    id: string;
+    title: string;
+    windows: AgentId[];
+    isMinimized: boolean;
+  };
+  onClick: (groupId: string) => void;
+}
+
 const AgentIconButton = React.forwardRef<
   HTMLButtonElement,
   AgentIconButtonProps
@@ -167,6 +179,73 @@ const AgentIconButton = React.forwardRef<
 });
 AgentIconButton.displayName = "AgentIconButton";
 
+const GroupIconButton = React.forwardRef<
+  HTMLButtonElement,
+  GroupIconButtonProps
+>(({
+  groupId,
+  group,
+  onClick
+}, ref) => {
+  const showLabels = useTaskbarStore(state => state.showLabels);
+  const { position } = useTaskbarStore();
+  const isVertical = position.location === 'left' || position.location === 'right';
+  const isActive = !group.isMinimized;
+  
+  return (
+    <button
+      ref={ref}
+      onClick={() => onClick(groupId)}
+      className={`
+        p-2 rounded-lg transition-all duration-200 relative overflow-hidden
+        ${isActive 
+          ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
+          : 'bg-transparent hover:bg-white/10 text-white/70 hover:text-white hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+        }
+        group
+        ${isActive && !isVertical
+          ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:w-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+          : ''
+        }
+        ${isActive && isVertical && position.location === 'left'
+          ? 'after:absolute after:left-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+          : ''
+        }
+        ${isActive && isVertical && position.location === 'right'
+          ? 'after:absolute after:right-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+          : ''
+        }
+        before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+        hover:before:opacity-100 hover:scale-105
+      `}
+      title={group.title}
+    >
+      <div className={`
+        ${isVertical && showLabels ? 'flex flex-col items-center gap-1' : 'flex items-center space-x-2'}
+      `}>
+        <div className={`flex items-center justify-center w-7 h-7 transform transition-transform duration-200
+          ${isActive ? 'scale-110' : 'group-hover:scale-110'}
+        `}>
+          <div className={`relative transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8a1 1 0 011-1h8a1 1 0 011 1v8a1 1 0 01-1 1H8a1 1 0 01-1-1V8z" />
+            </svg>
+            <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+              {group.windows.length}
+            </span>
+          </div>
+        </div>
+        
+        {showLabels && (
+          <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>{group.title}</span>
+        )}
+      </div>
+    </button>
+  );
+});
+GroupIconButton.displayName = "GroupIconButton";
+
 interface TaskbarProps {
   className?: string;
   isMobile?: boolean;
@@ -221,6 +300,22 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
     // Otherwise, just focus it
     else {
       focusAgent(id);
+    }
+  };
+  
+  // Handle clicks on window group icons
+  const handleGroupClick = (groupId: string) => {
+    const group = windowGroups[groupId];
+    
+    if (!group) return;
+    
+    // If the group is minimized, restore it
+    if (group.isMinimized) {
+      restoreWindowGroup(groupId);
+    } 
+    // Otherwise, just focus it
+    else {
+      focusWindowGroup(groupId);
     }
   };
   
@@ -301,7 +396,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
   const getThemeIcon = () => {
     const currentTheme = getCurrentTheme();
     // Since we only support dark mode, this is simplified
-    return <Icon name="Moon" size={18} />;
+    return <Icon name="Moon" size="md" />;
   };
   
   // Update clock every minute
@@ -468,10 +563,15 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
           flex-1 flex ${isVertical && !isMobile ? 'flex-col space-y-1 py-2' : 'items-center space-x-1'}
           ${isMobile ? 'justify-center' : position.location === 'right' ? 'justify-center w-full' : ''}
         `}>
+          {/* Individual Agent Icons */}
           {registry.map(agent => {
-            const isOpen = windows[agent.id]?.isOpen;
-            const isMinimized = windows[agent.id]?.isMinimized;
+            const window = windows[agent.id];
+            const isOpen = window?.isOpen;
+            const isMinimized = window?.isMinimized;
             const isActive = isOpen && !isMinimized;
+            
+            // Skip windows that are part of a group
+            if (window?.groupId) return null;
             
             // For mobile, only show a limited set of agents to avoid clutter
             if (isMobile && !['clara', 'chat', 'notes', 'settings'].includes(agent.id)) {
@@ -489,6 +589,16 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
               />
             );
           })}
+          
+          {/* Window Group Icons */}
+          {Object.entries(windowGroups).map(([groupId, group]) => (
+            <GroupIconButton
+              key={groupId}
+              groupId={groupId}
+              group={group}
+              onClick={handleGroupClick}
+            />
+          ))}
         </div>
         
         {/* Widgets container - changes flex direction based on position orientation */}
@@ -530,7 +640,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
           {/* Simplified Search Button for vertical taskbars */}
           {visibleWidgets.includes('searchBar') && isVertical && (
             <TaskbarButton
-              icon={<Icon name={ICONS.SEARCH} size={16} />}
+              icon={<Icon name={ICONS.SEARCH} size="sm" />}
               label="Search"
               isActive={false}
               onClick={() => toast({
@@ -645,7 +755,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
               <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
                 <PopoverTrigger asChild>
                   <TaskbarButton
-                    icon={<Icon name={ICONS.ADD} size={16} />}
+                    icon={<Icon name={ICONS.ADD} size="sm" />}
                     label="Save Layout"
                     isActive={false}
                     onClick={() => {}}
@@ -680,7 +790,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                                   hover:bg-primary/20 text-sm text-white transition-colors"
                         onClick={handleQuickSave}
                       >
-                        <Icon name={ICONS.SAVE} size={14} /> Quick Save
+                        <Icon name={ICONS.SAVE} size="xs" /> Quick Save
                       </button>
                       
                       <button

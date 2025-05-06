@@ -29,7 +29,7 @@ export function Icon({ name, size = 'md', className, color }: IconProps) {
   // First check if the icon name exists in Lucide
   if (typeof name === 'string' && name in LucideIcons) {
     // If it does, use dynamic typing to render it
-    const IconComponent = LucideIcons[name as keyof typeof LucideIcons];
+    const IconComponent = LucideIcons[name as keyof typeof LucideIcons] as React.ComponentType<React.SVGProps<SVGSVGElement>>;
     return (
       <IconComponent 
         className={cn(sizeMap[size], color && `text-${color}`, className)} 
