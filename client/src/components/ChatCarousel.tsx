@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Message } from '../types/chat';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useThemeStore } from '../state/themeStore';
-import { windowTextStyles } from './ui/window-components';
+import { windowTextStyles } from './ui/window-components.ts';
 
 interface ChatCarouselProps {
   messages: Message[];

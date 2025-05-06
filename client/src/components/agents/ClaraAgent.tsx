@@ -8,7 +8,9 @@ import { useChat } from '../../hooks/useChat';
 import { log } from '../../state/systemLogStore';
 import { useThemeStore } from '../../state/themeStore';
 import { AgentStatusType } from '../ui/agent-status';
-import { WindowPanel, WindowContent, windowTextStyles } from '../ui/window-components';
+import { WindowPanel } from '../ui/window-panel';
+import { WindowContent } from '../ui/window-content';
+import { windowTextStyles } from '../ui/window-components.ts';
 import { motion } from 'framer-motion';
 
 const ClaraAgent: React.FC = () => {
