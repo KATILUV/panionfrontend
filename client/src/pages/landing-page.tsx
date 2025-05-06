@@ -334,9 +334,9 @@ const LandingPage: React.FC = () => {
         </motion.div>
         
         <motion.div 
-          className="absolute block md:hidden right-6 bottom-24 w-24 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 -rotate-3"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.7 }}
+          className="absolute block md:hidden left-6 top-12 w-28 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 rotate-1"
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 0.7 }}
           transition={{ duration: 1, delay: 0.9 }}
         >
           <div className="bg-black/40 h-5 border-b border-white/10 flex items-center px-2">
@@ -345,10 +345,17 @@ const LandingPage: React.FC = () => {
               <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
               <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
             </div>
-            <div className="ml-2 text-[10px] text-white/70">AI</div>
+            <div className="ml-2 text-[10px] text-white/70">Data</div>
           </div>
-          <div className="h-14 bg-black/20 flex items-center justify-center">
-            <div className="w-5 h-5 rounded-full bg-purple-500/40 animate-pulse"></div>
+          <div className="h-14 bg-black/20 p-2">
+            <div className="h-5 rounded bg-purple-600/20 flex items-end justify-center pb-1">
+              <div className="w-1/5 h-2/5 rounded-t bg-purple-500/70 mx-[1px]"></div>
+              <div className="w-1/5 h-4/5 rounded-t bg-purple-500/70 mx-[1px]"></div>
+              <div className="w-1/5 h-3/5 rounded-t bg-purple-500/70 mx-[1px]"></div>
+              <div className="w-1/5 h-full rounded-t bg-purple-500/70 mx-[1px]"></div>
+              <div className="w-1/5 h-1/5 rounded-t bg-purple-500/70 mx-[1px]"></div>
+            </div>
+            <div className="h-1.5 bg-white/10 rounded-full mt-2 mx-1 w-2/3"></div>
           </div>
         </motion.div>
         
