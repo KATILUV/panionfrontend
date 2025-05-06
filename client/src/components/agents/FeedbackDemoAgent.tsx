@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import { AIThinking } from '@/components/ui/ai-thinking';
+import Spinner from '@/components/ui/spinner';
+import AIThinkingIndicator from '@/components/ui/ai-thinking';
 import { ToastDemo } from '@/components/ui/toast-demo';
 import { ElementTransition } from '@/components/ui/page-transition';
 import ErrorBoundary from '@/components/ui/error-boundary';
@@ -138,18 +138,18 @@ export default function FeedbackDemoAgent() {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="flex flex-col items-center gap-3 p-6 bg-muted/20 rounded-md">
-                <AIThinking mode="minimal" message="Simple indicator" />
+                <AIThinkingIndicator isThinking={true} type="minimal" message="Simple indicator" />
                 <span className="text-xs mt-4">Minimal Mode</span>
               </div>
               
               <div className="flex flex-col items-center gap-3 p-6 bg-muted/20 rounded-md">
-                <AIThinking mode="standard" message="Standard indicator with more visual presence" />
-                <span className="text-xs mt-4">Standard Mode</span>
+                <AIThinkingIndicator isThinking={true} type="dots" message="Standard indicator with more visual presence" />
+                <span className="text-xs mt-4">Dots Mode</span>
               </div>
               
               <div className="flex flex-col items-center gap-3 p-6 bg-muted/20 rounded-md">
-                <AIThinking mode="detailed" message="Clara is analyzing your request..." />
-                <span className="text-xs mt-4">Detailed Mode</span>
+                <AIThinkingIndicator isThinking={true} type="full" message="Clara is analyzing your request..." />
+                <span className="text-xs mt-4">Full Mode</span>
               </div>
             </div>
           </div>
