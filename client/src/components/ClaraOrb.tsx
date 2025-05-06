@@ -1,128 +1,70 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
 import { cn } from '@/lib/utils';
-import { useAgentStore } from '@/state/agentStore';
-import { BrainCircuit } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ClaraOrbProps {
   isProcessing?: boolean;
 }
 
 export function ClaraOrb({ isProcessing = false }: ClaraOrbProps) {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [isPulsing, setIsPulsing] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const openAgent = useAgentStore((state) => state.openAgent);
-  const focusAgent = useAgentStore((state) => state.focusAgent);
-
-  // Position the orb in the bottom right of the screen by default
-  useEffect(() => {
-    const updatePosition = () => {
-      const posX = window.innerWidth - 100;
-      const posY = window.innerHeight - 100;
-      setPosition({ x: posX, y: posY });
-    };
-
-    updatePosition();
-    window.addEventListener('resize', updatePosition);
-    
-    return () => {
-      window.removeEventListener('resize', updatePosition);
-    };
-  }, []);
-
-  // Add occasional pulse animation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsPulsing(true);
-      setTimeout(() => setIsPulsing(false), 2000);
-    }, 15000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleOrbClick = () => {
-    if (!isDragging) {
-      openAgent('clara');
-      focusAgent('clara');
-    }
-  };
-
   return (
-    <motion.div
-      className="fixed z-50"
-      initial={position}
-      animate={position}
-      drag
-      dragMomentum={false}
-      onDragStart={() => setIsDragging(true)}
-      onDragEnd={(_, info) => {
-        setIsDragging(false);
-        setPosition({ x: position.x + info.offset.x, y: position.y + info.offset.y });
-      }}
-      whileDrag={{ scale: 1.1 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-    >
-      <div 
+    <div className="flex items-center justify-center py-8">
+      <motion.div
         className={cn(
           "relative flex items-center justify-center",
-          "cursor-pointer transition-all duration-300"
+          "w-32 h-32 rounded-full bg-gradient-to-br from-purple-600/80 to-indigo-600/80",
+          "shadow-lg shadow-indigo-900/30 border border-indigo-500/30",
+          "transition-all duration-500"
         )}
-        onClick={handleOrbClick}
+        initial={{ scale: 0.9, opacity: 0.5 }}
+        animate={{ 
+          scale: [0.98, 1.02, 0.98],
+          opacity: isProcessing ? [0.7, 0.9, 0.7] : 1
+        }}
+        transition={{ 
+          repeat: Infinity, 
+          duration: isProcessing ? 1.5 : 4, 
+          ease: "easeInOut" 
+        }}
       >
-        {/* Background glow effect */}
+        {/* Inner core */}
         <motion.div
-          className={cn(
-            "absolute rounded-full bg-primary/20",
-            "filter blur-md"
-          )}
-          animate={{
-            width: isPulsing || isHovered ? 70 : 50,
-            height: isPulsing || isHovered ? 70 : 50,
-            opacity: isPulsing ? 0.8 : isHovered ? 0.6 : 0.3
+          className="absolute w-20 h-20 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 opacity-80"
+          animate={{ 
+            scale: isProcessing ? [0.9, 1.1, 0.9] : [0.95, 1.05, 0.95]
           }}
           transition={{ 
-            duration: isPulsing ? 2 : 0.3,
-            ease: isPulsing ? "easeInOut" : "easeOut" 
+            repeat: Infinity, 
+            duration: isProcessing ? 1.2 : 3,
+            ease: "easeInOut" 
           }}
         />
         
-        {/* Main orb */}
-        <motion.div
-          className={cn(
-            "relative flex items-center justify-center",
-            "w-14 h-14 rounded-full bg-primary/60 backdrop-blur-md",
-            "shadow-lg border border-primary/30",
-            isProcessing ? "animate-pulse" : ""
-          )}
-          animate={{
-            scale: isPulsing ? 1.1 : isHovered ? 1.05 : 1,
-          }}
-          transition={{ 
-            duration: isPulsing ? 2 : 0.3,
-            ease: isPulsing ? "easeInOut" : "easeOut" 
-          }}
-        >
-          <BrainCircuit className="w-6 h-6 text-background" />
-        </motion.div>
+        {/* Outer glow */}
+        <div className="absolute w-40 h-40 rounded-full bg-indigo-500/20 blur-xl"></div>
         
-        {/* Hint tooltip */}
-        <AnimatePresence>
-          {isHovered && (
+        {/* Light reflections */}
+        <div className="absolute top-5 left-7 w-6 h-6 rounded-full bg-white/40 blur-sm"></div>
+        <div className="absolute bottom-8 right-8 w-4 h-4 rounded-full bg-white/30 blur-sm"></div>
+        
+        {/* Energy ripples (only when processing) */}
+        {isProcessing && (
+          <>
             <motion.div
-              className="absolute top-[-40px] bg-background/95 text-foreground rounded-md px-3 py-1 shadow-md whitespace-nowrap"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 5 }}
-              transition={{ duration: 0.2 }}
-            >
-              Open Clara AI
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
+              className="absolute w-full h-full rounded-full border border-indigo-400/50"
+              initial={{ scale: 0.6, opacity: 0.7 }}
+              animate={{ scale: 1.2, opacity: 0 }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
+            />
+            <motion.div
+              className="absolute w-full h-full rounded-full border border-purple-400/40"
+              initial={{ scale: 0.8, opacity: 0.5 }}
+              animate={{ scale: 1.3, opacity: 0 }}
+              transition={{ repeat: Infinity, duration: 2.5, delay: 0.2, ease: "easeOut" }}
+            />
+          </>
+        )}
+      </motion.div>
+    </div>
   );
 }
