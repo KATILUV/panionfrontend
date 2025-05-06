@@ -4,6 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Override for Shadcn popups and dropdowns to ensure they're on top */
+:root {
+  --radix-dropdown-menu-content-z-index: 9999;
+  --radix-select-content-z-index: 9999;
+  --radix-toast-z-index: 9999;
+}
+
+/* Custom styles for shadcn/ui components */
+.select-content {
+  z-index: 9999;
+  position: relative;
+}
+
 /* Custom utilities for the Panion marketplace */
 @layer utilities {
   .shadow-glow {

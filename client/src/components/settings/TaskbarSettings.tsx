@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTaskbarStore, TaskbarWidgetType } from '../../state/taskbarStore';
 import { Check, ChevronDown, ChevronUp, LayoutGrid, Minus, Plus, Settings } from 'lucide-react';
 import { Label } from '@/components/ui/label';
@@ -160,7 +160,12 @@ export function TaskbarSettings() {
                 <SelectTrigger id="position-location" className="w-full">
                   <SelectValue placeholder="Taskbar Position" />
                 </SelectTrigger>
-                <SelectContent position="popper" align="center" sideOffset={4}>
+                <SelectContent 
+                  position="popper" 
+                  align="center" 
+                  sideOffset={4}
+                  className="z-[9999]"
+                >
                   <SelectItem value="top">Top</SelectItem>
                   <SelectItem value="bottom">Bottom</SelectItem>
                   <SelectItem value="left">Left</SelectItem>
@@ -182,7 +187,12 @@ export function TaskbarSettings() {
                 <SelectTrigger id="position-alignment" className="w-full">
                   <SelectValue placeholder="Icon Alignment" />
                 </SelectTrigger>
-                <SelectContent position="popper" align="center" sideOffset={4}>
+                <SelectContent 
+                  position="popper" 
+                  align="center" 
+                  sideOffset={4}
+                  className="z-[9999]"
+                >
                   <SelectItem value="start">Start</SelectItem>
                   <SelectItem value="center">Center</SelectItem>
                   <SelectItem value="end">End</SelectItem>
