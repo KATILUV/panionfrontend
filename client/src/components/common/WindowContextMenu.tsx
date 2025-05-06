@@ -8,7 +8,8 @@ import {
   Copy, 
   ArrowUpToLine,
   Layout, 
-  PanelTop
+  PanelTop,
+  RotateCcw
 } from 'lucide-react';
 
 interface WindowContextMenuProps {
@@ -20,6 +21,7 @@ interface WindowContextMenuProps {
   onMoveToFront: () => void;
   onCenter: () => void;
   onSnapToSide: (position: 'left' | 'right' | 'top' | 'bottom') => void;
+  onRestoreDefault: () => void;
   onCloseMenu: () => void;
   isMaximized: boolean;
 }
@@ -33,6 +35,7 @@ const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
   onMoveToFront,
   onCenter,
   onSnapToSide,
+  onRestoreDefault,
   onCloseMenu,
   isMaximized,
 }) => {
@@ -135,6 +138,18 @@ const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
               >
                 <Copy size={16} />
                 <span>Center Window</span>
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestoreDefault();
+                  onCloseMenu();
+                }}
+                className={getMenuItemClass()}
+              >
+                <RotateCcw size={16} />
+                <span>Restore Default</span>
               </button>
 
               <hr className={getSeparatorClass()} />

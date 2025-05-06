@@ -43,6 +43,7 @@ const Window: React.FC<WindowProps> = ({
 }) => {
   const updateAgentPosition = useAgentStore(state => state.updateAgentPosition);
   const updateAgentSize = useAgentStore(state => state.updateAgentSize);
+  const registry = useAgentStore(state => state.registry);
   const [isMaximized, setIsMaximized] = useState(false);
   const [preMaximizeState, setPreMaximizeState] = useState({ position, size });
   const [currentSnapPosition, setCurrentSnapPosition] = useState<SnapPosition>('none');
@@ -253,6 +254,27 @@ const Window: React.FC<WindowProps> = ({
       y: (windowHeight - size.height) / 2
     };
     updateAgentPosition(id, newPosition);
+  };
+  
+  // Handle restore to default position and size
+  const handleRestoreDefault = () => {
+    const agent = registry.find(a => a.id === id);
+    if (agent) {
+      // Play snap sound for feedback
+      playSnapSound();
+      
+      const defaultPosition = agent.defaultPosition || { x: 100, y: 100 };
+      const defaultSize = agent.defaultSize || { width: 600, height: 500 };
+      
+      // Set position and size to defaults
+      updateAgentPosition(id, defaultPosition);
+      updateAgentSize(id, defaultSize);
+      
+      // If window was maximized, unmaximize it
+      if (isMaximized) {
+        setIsMaximized(false);
+      }
+    }
   };
 
   // Calculate content height (window height minus title bar)
