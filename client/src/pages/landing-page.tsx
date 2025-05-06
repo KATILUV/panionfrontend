@@ -386,7 +386,7 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-6 mt-2 sm:mt-0"
+              className="flex flex-row gap-4 mt-2 sm:mt-0"
             >
               <div className="relative">
                 <motion.div
@@ -397,7 +397,7 @@ const LandingPage: React.FC = () => {
                 <Button 
                   size="lg" 
                   onClick={() => setLocation('/desktop')}
-                  className="text-base sm:text-lg bg-purple-600 hover:bg-purple-500 text-white px-6 sm:px-8 py-4 sm:py-6 rounded-xl shadow-lg hover:shadow-purple-500/30 transition-all relative z-10 w-full sm:w-auto"
+                  className="text-base sm:text-lg bg-purple-600 hover:bg-purple-500 text-white px-4 sm:px-8 py-4 sm:py-6 rounded-xl shadow-lg hover:shadow-purple-500/30 transition-all relative z-10 flex-1 sm:flex-none"
                 >
                   Get Started
                 </Button>
@@ -406,7 +406,7 @@ const LandingPage: React.FC = () => {
                 size="lg" 
                 variant="outline" 
                 onClick={() => setLocation('/auth')}
-                className="text-base sm:text-lg border-2 border-violet-400 text-purple-200 hover:bg-violet-600/30 px-6 sm:px-8 py-4 sm:py-6 rounded-xl w-full sm:w-auto"
+                className="text-base sm:text-lg border-2 border-violet-400 text-purple-200 hover:bg-violet-600/30 px-4 sm:px-8 py-4 sm:py-6 rounded-xl flex-1 sm:flex-none"
               >
                 Sign In
               </Button>
