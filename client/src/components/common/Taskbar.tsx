@@ -164,6 +164,13 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const handleIconClick = (id: AgentId) => {
     const window = windows[id];
     
+    // Special handling for Settings agent
+    if (id === 'settings') {
+      // Set the active tab to taskbar when the settings agent is clicked
+      const setActiveTab = useSettingsTabStore.getState().setActiveTab;
+      setActiveTab('taskbar');
+    }
+    
     // If window doesn't exist or isn't open, open it
     if (!window || !window.isOpen) {
       openAgent(id);
@@ -444,32 +451,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
               v1.0
             </div>
           )}
-          
-          {/* Settings button - always visible */}
-          <TaskbarButton
-            icon={<Settings size={16} />}
-            label="Settings"
-            isActive={false}
-            onClick={() => {
-              // Set the active tab in the settings store to "taskbar"
-              const setActiveTab = useSettingsTabStore.getState().setActiveTab;
-              setActiveTab('taskbar');
-              
-              // Find the settings agent and open it
-              const settingsAgent = registry.find(agent => agent.title === "Settings");
-              if (settingsAgent) {
-                // Open the settings agent
-                const window = windows[settingsAgent.id];
-                if (!window || !window.isOpen) {
-                  openAgent(settingsAgent.id);
-                } else if (window.isMinimized) {
-                  restoreAgent(settingsAgent.id);
-                } else {
-                  focusAgent(settingsAgent.id);
-                }
-              }
-            }}
-          />
         </div>
         
         {/* System Log Component */}
