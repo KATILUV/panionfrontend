@@ -800,7 +800,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                         onClick={handleCustomSave}
                         disabled={!customLayoutName.trim()}
                       >
-                        <Icon name={ICONS.CHECK_CIRCLE} size={14} /> Save with Name
+                        <Icon name={ICONS.CHECK_CIRCLE} size="xs" /> Save with Name
                       </button>
                     </div>
                   </div>
@@ -839,7 +839,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
               title="System Console"
             >
               <span className={`transition-all duration-200 ${isSystemLogVisible ? 'text-primary' : 'group-hover:text-white'}`}>
-                <Icon name={ICONS.TERMINAL} size={16} />
+                <Icon name={ICONS.TERMINAL} size="sm" />
               </span>
               {showLabels ? (
                 <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>System</span>
@@ -879,7 +879,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                 title={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
               >
                 <span className={`transition-all duration-200 ${activeLayoutId ? 'text-primary' : 'group-hover:text-white'}`}>
-                  <Icon name={ICONS.LAYOUTS} size={16} />
+                  <Icon name={ICONS.LAYOUTS} size="sm" />
                 </span>
                 {showLabels ? (
                   <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>
@@ -896,7 +896,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
           {visibleWidgets.includes('clock') && !isVertical && (
             <div className="px-2.5 py-1 rounded-lg bg-black/20 text-white/80">
               <div className="flex items-center space-x-1">
-                <Icon name={ICONS.CLOCK} size={14} />
+                <Icon name={ICONS.CLOCK} size="xs" />
                 <span className="text-xs font-medium">{formattedTime}</span>
               </div>
             </div>
@@ -906,7 +906,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
           {visibleWidgets.includes('clock') && isVertical && (
             <div className="p-2 rounded-lg bg-black/20 text-white/80">
               <div className="flex flex-col items-center space-y-1">
-                <Icon name={ICONS.CLOCK} size={14} />
+                <Icon name={ICONS.CLOCK} size="xs" />
                 {showLabels && <span className="text-xs font-medium">{formattedTime}</span>}
               </div>
             </div>
