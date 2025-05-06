@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { log } from './systemLogStore';
+import { generateWindowStates, useTemplateStore } from './layoutTemplatesStore';
 
 export type AgentId = string;
 
@@ -44,6 +45,9 @@ interface AgentState {
   loadLayout: (id: string) => void;
   deleteLayout: (id: string) => void;
   setDefaultLayout: (id: string) => void;
+  
+  // Template Actions
+  createLayoutFromTemplate: (templateId: string) => void;
 }
 
 // Window layout profiles for quick switching
@@ -378,7 +382,66 @@ export const useAgentStore = create<AgentState>()(
         return {
           layouts: updatedLayouts
         };
-      })
+      }),
+      
+      // Create a new layout from template
+      createLayoutFromTemplate: (templateId) => {
+        set((state) => {
+          // Get the template from the template store
+          const template = useTemplateStore.getState().getTemplateById(templateId);
+          
+          if (!template) {
+            log.error(`Template not found: ${templateId}`);
+            return state;
+          }
+          
+          // Get agent IDs from registry
+          const agentIds = state.registry.map(agent => agent.id);
+          
+          // Generate window states based on template layout type
+          const windowStates = generateWindowStates(template, agentIds);
+          
+          // Create timestamp for ID and timestamps
+          const timestamp = Date.now();
+          
+          // Create a new layout
+          const newLayout: WindowLayout = {
+            id: timestamp.toString(),
+            name: template.name,
+            category: template.category,
+            tags: template.tags,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            windowStates
+          };
+          
+          // Log the action
+          log.action(`Created layout from template: "${template.name}"`);
+          
+          // Create a new windows state by applying template
+          const newWindows = { ...state.windows };
+          
+          // Apply template positions, sizes, and states to current windows
+          Object.entries(windowStates).forEach(([agentId, windowState]) => {
+            const id = agentId as AgentId;
+            if (newWindows[id]) {
+              newWindows[id] = {
+                ...newWindows[id],
+                position: windowState.position,
+                size: windowState.size,
+                isOpen: windowState.isOpen,
+                isMinimized: windowState.isMinimized
+              };
+            }
+          });
+          
+          return {
+            windows: newWindows,
+            layouts: [...state.layouts, newLayout],
+            activeLayoutId: newLayout.id
+          };
+        });
+      }
     }),
     {
       name: 'panion-agent-store'
