@@ -266,7 +266,9 @@ const WindowControlPanel = ({
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-7 text-xs justify-start text-red-500 hover:text-red-600 hover:bg-red-100/20"
+          className={`h-7 text-xs justify-start hover:bg-red-100/20 ${
+            isDark ? 'text-white hover:text-red-300' : 'text-red-600 hover:text-red-700'
+          }`}
           disabled={layoutAgents.length === 0}
           onClick={handleClearAll}
         >
@@ -341,7 +343,7 @@ const TemplatePreview = ({ template, onApply, isDark }) => {
             size="sm"
             variant="ghost"
             onClick={() => onApply(template.id)}
-            className="h-7 w-7 p-0 text-purple-500 hover:text-purple-400 hover:bg-purple-500/10"
+            className={`h-7 w-7 p-0 hover:bg-purple-500/10 ${isDark ? 'text-white hover:text-purple-300' : 'text-purple-700 hover:text-purple-600'}`}
             title="Use this template"
           >
             <Copy className="h-4 w-4" />
@@ -904,7 +906,7 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
                             variant="ghost"
                             onClick={() => handleLoadLayout(layout.id, layout.name)}
                             title="Load this layout"
-                            className="h-7 w-7 p-0 text-purple-600 hover:text-purple-500"
+                            className={`h-7 w-7 p-0 ${isDark ? 'text-white hover:text-purple-300' : 'text-purple-700 hover:text-purple-600'}`}
                           >
                             <Download className="h-4 w-4" />
                           </Button>
@@ -914,7 +916,7 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
                             variant="ghost"
                             onClick={() => handleDeleteLayout(layout.id, layout.name)}
                             title="Delete this layout"
-                            className="h-7 w-7 p-0 text-red-500 hover:text-red-400"
+                            className={`h-7 w-7 p-0 ${isDark ? 'text-white hover:text-red-300' : 'text-red-600 hover:text-red-500'}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
