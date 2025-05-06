@@ -357,27 +357,18 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         </div>
         
         <div className="flex items-center space-x-2">
-          {/* Quick Save Button - conditionally rendered based on settings */}
+          {/* Quick Save Button - just the plus icon */}
           {visibleWidgets.includes('quickSave') && (
-            <div className="relative flex items-center">
-              <TaskbarButton
-                icon={<Save size={16} />}
-                label="Quick Save"
-                isActive={false}
-                onClick={handleQuickSave}
-                className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
-              />
-              
+            <div className="relative">
               <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
                 <PopoverTrigger asChild>
-                  <button
-                    className="ml-px h-8 w-5 flex items-center justify-center text-white/70 hover:text-white 
-                              bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10
-                              rounded-r-lg border-l border-white/5"
-                    title="Save Options"
-                  >
-                    <PlusCircle size={12} />
-                  </button>
+                  <TaskbarButton
+                    icon={<Plus size={16} />}
+                    label="Save Layout"
+                    isActive={false}
+                    onClick={() => {}}
+                    className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
+                  />
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-4" side="top">
                   <div className="space-y-4">
@@ -477,6 +468,9 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Taskbar Settings</DialogTitle>
+              <div className="text-sm text-muted-foreground">
+                Customize your taskbar appearance, widgets, and behavior
+              </div>
             </DialogHeader>
             <TaskbarSettings />
           </DialogContent>
