@@ -499,6 +499,7 @@ const Window: React.FC<WindowProps> = ({
       onMaximize={toggleMaximize}
       onMoveToFront={handleMoveToFront}
       onCenter={handleCenterWindow}
+      onRestoreDefault={handleRestoreDefault}
       onSnapToSide={(side) => {
         const snapMap: Record<string, SnapPosition> = {
           'left': 'left',
