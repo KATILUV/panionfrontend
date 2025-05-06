@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useMarketplaceStore } from '@/state/marketplaceStore';
 import { useThemeStore } from '@/state/themeStore';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Filter, Star, Download, Plus, Check, Tag, X, 
   RefreshCw, ShoppingBag, ArrowLeft, Zap, MessageCircle, 
-  ArrowUpRight, Sparkles 
+  ArrowUpRight, Sparkles, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Link, useLocation } from 'wouter';
@@ -453,87 +453,201 @@ const MarketplacePage = () => {
 
   // Featured spotlight for the top of the page
   const FeaturedSpotlight = () => {
-    const featuredAgents = getFeaturedAgents().slice(0, 1);
+    // Use all featured agents for the carousel, not just the first one
+    const featuredAgents = getFeaturedAgents();
     if (!featuredAgents.length) return null;
     
-    const agent = featuredAgents[0];
+    // State for carousel
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const agent = featuredAgents[currentIndex];
+    
+    // Navigation functions
+    const goToPrev = () => {
+      setCurrentIndex((prev) => 
+        prev === 0 ? featuredAgents.length - 1 : prev - 1
+      );
+    };
+    
+    const goToNext = () => {
+      setCurrentIndex((prev) => 
+        prev === featuredAgents.length - 1 ? 0 : prev + 1
+      );
+    };
+    
+    const goToSlide = (index: number) => {
+      setCurrentIndex(index);
+    };
+    
+    // Auto-advance the carousel (optional)
+    useEffect(() => {
+      if (featuredAgents.length <= 1) return; // Don't auto-advance if only one agent
+      
+      const interval = setInterval(() => {
+        goToNext();
+      }, 10000); // Change slide every 10 seconds
+      
+      return () => clearInterval(interval);
+    }, [currentIndex, featuredAgents.length]);
     
     return (
-      <div className="mb-8 relative overflow-hidden rounded-xl">
-        <div className="relative h-[400px] flex overflow-hidden">
-          {/* Background image with overlay */}
-          {agent.previewImage ? (
-            <>
-              <div 
-                className="absolute inset-0 bg-center bg-cover" 
-                style={{ backgroundImage: `url(${agent.previewImage})` }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
-            </>
-          ) : (
-            // Fallback gradient if no image
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-700/80 to-purple-500/20" />
-          )}
-          
-          {/* Content */}
-          <div className="relative flex flex-col justify-center p-8 md:p-12 md:max-w-[60%]">
-            <div className="mb-4 flex items-center space-x-2">
-              <div className="bg-purple-600/20 backdrop-blur-sm p-2 rounded-full">
-                <DynamicIcon name={agent.icon} size={28} className="text-purple-300" />
-              </div>
-              <div className="bg-purple-600 rounded-full px-3 py-1 text-xs text-white font-bold flex items-center">
-                <Sparkles size={10} className="mr-1" />
-                FEATURED AGENT
-              </div>
-            </div>
-            
-            <h2 className="text-3xl md:text-4xl font-bold mb-3 text-white">{agent.title}</h2>
-            <p className="text-lg text-white/80 mb-6 line-clamp-3">{agent.description}</p>
-            
-            <div className="flex flex-wrap gap-2 mb-6">
-              {agent.categories.map((catId) => {
-                const category = categories.find(c => c.id === catId);
-                return category ? (
-                  <div key={catId} className="bg-black/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm flex items-center">
-                    <DynamicIcon name={category.icon} size={14} className="mr-1.5" />
-                    {category.name}
-                  </div>
-                ) : null;
-              })}
-            </div>
-            
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={() => setSelectedAgent(agent.id)}
-                className="bg-white text-black px-6 py-2.5 rounded-full font-medium flex items-center space-x-2 hover:bg-white/90 transition-all"
-              >
-                <span>Learn More</span>
-                <ArrowUpRight size={18} />
-              </button>
+      <div className="mb-8 relative overflow-hidden rounded-xl shadow-xl border border-purple-500/20">
+        {/* Navigation arrows - only show if more than one agent */}
+        {featuredAgents.length > 1 && (
+          <>
+            <button 
+              onClick={goToPrev}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition-all backdrop-blur-sm shadow-lg"
+              aria-label="Previous agent"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button 
+              onClick={goToNext}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition-all backdrop-blur-sm shadow-lg"
+              aria-label="Next agent"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        )}
+        
+        <div className="relative h-[400px] overflow-hidden">
+          {/* Carousel slide with animation */}
+          <AnimatePresence initial={false} mode="wait">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ type: "spring", stiffness: 250, damping: 30 }}
+              className="absolute inset-0 flex"
+            >
+              {/* Background image with overlay */}
+              {agent.previewImage ? (
+                <>
+                  <motion.div 
+                    className="absolute inset-0 bg-center bg-cover" 
+                    style={{ backgroundImage: `url(${agent.previewImage})` }}
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 8, ease: "easeOut" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
+                </>
+              ) : (
+                // Fallback gradient if no image
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-700/80 to-purple-500/20" />
+              )}
               
-              <button
-                onClick={() => agent.isInstalled ? uninstallAgent(agent.id) : installAgent(agent.id)}
-                className={`px-6 py-2.5 rounded-full flex items-center space-x-2 transition-all
-                  ${agent.isInstalled 
-                    ? 'bg-red-500 text-white hover:bg-red-600' 
-                    : 'bg-purple-600 text-white hover:bg-purple-500'}
-                `}
-              >
-                {agent.isInstalled ? (
-                  <>
-                    <Check size={18} />
-                    <span>Installed</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus size={18} />
-                    <span>Install Now</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+              {/* Content with animations */}
+              <div className="relative flex flex-col justify-center p-8 md:p-12 md:max-w-[60%]">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.4 }}
+                  className="mb-4 flex items-center space-x-2"
+                >
+                  <div className="bg-purple-600/20 backdrop-blur-sm p-2 rounded-full">
+                    <DynamicIcon name={agent.icon} size={28} className="text-purple-300" />
+                  </div>
+                  <div className="bg-purple-600 rounded-full px-3 py-1 text-xs text-white font-bold flex items-center">
+                    <Sparkles size={10} className="mr-1" />
+                    FEATURED AGENT
+                  </div>
+                </motion.div>
+                
+                <motion.h2 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                  className="text-3xl md:text-4xl font-bold mb-3 text-white"
+                >
+                  {agent.title}
+                </motion.h2>
+                
+                <motion.p 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.4 }}
+                  className="text-lg text-white/80 mb-6 line-clamp-3"
+                >
+                  {agent.description}
+                </motion.p>
+                
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.4 }}
+                  className="flex flex-wrap gap-2 mb-6"
+                >
+                  {agent.categories.map((catId) => {
+                    const category = categories.find(c => c.id === catId);
+                    return category ? (
+                      <div key={catId} className="bg-black/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm flex items-center">
+                        <DynamicIcon name={category.icon} size={14} className="mr-1.5" />
+                        {category.name}
+                      </div>
+                    ) : null;
+                  })}
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="flex flex-wrap gap-4"
+                >
+                  <button
+                    onClick={() => setSelectedAgent(agent.id)}
+                    className="bg-white text-black px-6 py-2.5 rounded-full font-medium flex items-center space-x-2 hover:bg-white/90 transition-all shadow-lg"
+                  >
+                    <span>Learn More</span>
+                    <ArrowUpRight size={18} />
+                  </button>
+                  
+                  <button
+                    onClick={() => agent.isInstalled ? uninstallAgent(agent.id) : installAgent(agent.id)}
+                    className={`px-6 py-2.5 rounded-full flex items-center space-x-2 transition-all shadow-lg
+                      ${agent.isInstalled 
+                        ? 'bg-red-500 text-white hover:bg-red-600' 
+                        : 'bg-purple-600 text-white hover:bg-purple-500'}
+                    `}
+                  >
+                    {agent.isInstalled ? (
+                      <>
+                        <Check size={18} />
+                        <span>Installed</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={18} />
+                        <span>Install Now</span>
+                      </>
+                    )}
+                  </button>
+                </motion.div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
+        
+        {/* Pagination indicators - only show if more than one agent */}
+        {featuredAgents.length > 1 && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-10">
+            {featuredAgents.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  index === currentIndex
+                    ? 'bg-purple-500 scale-125 shadow-glow'
+                    : 'bg-white/30 hover:bg-white/50'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   };
