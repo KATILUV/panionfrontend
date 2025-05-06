@@ -16,13 +16,13 @@ const SettingsAgent = () => {
   // Track agent status
   const [status, setStatus] = useState<AgentStatusType>("active");
   
-  // Define available accent colors
+  // Define available accent colors with semantic CSS classes
   const accentColors: Array<{ id: ThemeAccent, name: string, color: string }> = [
-    { id: 'purple', name: 'Purple', color: 'bg-purple-500' },
-    { id: 'blue', name: 'Blue', color: 'bg-blue-500' },
-    { id: 'green', name: 'Green', color: 'bg-green-500' },
-    { id: 'orange', name: 'Black', color: 'bg-black' },
-    { id: 'pink', name: 'Pink', color: 'bg-fuchsia-400' }
+    { id: 'purple', name: 'Purple', color: 'bg-primary data-[accent=purple]:bg-purple-500' },
+    { id: 'blue', name: 'Blue', color: 'bg-primary data-[accent=blue]:bg-blue-500' },
+    { id: 'green', name: 'Green', color: 'bg-primary data-[accent=green]:bg-green-500' },
+    { id: 'orange', name: 'Black', color: 'bg-primary data-[accent=orange]:bg-black' },
+    { id: 'pink', name: 'Pink', color: 'bg-primary data-[accent=pink]:bg-fuchsia-400' }
   ];
 
   const handleAccentChange = (newAccent: ThemeAccent) => {
