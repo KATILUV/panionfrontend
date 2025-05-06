@@ -201,10 +201,10 @@ const Desktop: React.FC = () => {
       autoSaveCurrentLayout(); // Start the auto-save cycle
     }
     
-    // Demo for window grouping - create a demo group after a short delay
-    setTimeout(() => {
-      createDemoWindowGroup();
-    }, 2000);
+    // Uncomment the following to create a demo window group
+    // setTimeout(() => {
+    //   createDemoWindowGroup();
+    // }, 2000);
     
     log.action('System ready for user interaction');
     

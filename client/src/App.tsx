@@ -163,9 +163,6 @@ function App() {
       defaultSize: { width: 700, height: 550 }
     });
     
-    // Auto-open Clara window by default
-    agentStore.openAgent('clara');
-    
     // Register Feedback Demo Agent
     const feedbackIcon = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -184,12 +181,6 @@ function App() {
       defaultPosition: { x: 400, y: 150 },
       defaultSize: { width: 650, height: 600 }
     });
-    
-    // Also open Marketplace window for testing
-    agentStore.openAgent('marketplace');
-    
-    // Open the Feedback Demo agent
-    agentStore.openAgent('feedback');
   }, []);
   
   return (
