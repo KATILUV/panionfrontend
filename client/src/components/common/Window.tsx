@@ -307,24 +307,41 @@ const Window: React.FC<WindowProps> = ({
   };
 
   // Calculate content height (window height minus title bar)
-  const contentHeight = size.height - 24; // 6px height for title bar
+  const titleBarHeight = isMobile ? 32 : 24; // 8px height for mobile title bar, 6px for desktop
+  const contentHeight = size.height - titleBarHeight;
   
   // Handle mobile-specific adjustments
   useEffect(() => {
-    if (isMobile && !isMaximized) {
-      // Automatically maximize windows on mobile
-      const maximizedWidth = windowWidth * 0.98; // 98% of screen width
-      const maximizedHeight = windowHeight * 0.95; // 95% of screen height
+    if (isMobile) {
+      // Automatically maximize and position windows on mobile
+      let maximizedWidth, maximizedHeight, x, y;
       
-      // Center the window
-      const x = (windowWidth - maximizedWidth) / 2;
-      const y = (windowHeight - maximizedHeight) / 2;
+      if (windowWidth < 640) { // Small mobile screens
+        // Take up nearly the full screen on small mobile devices
+        maximizedWidth = windowWidth * 0.98;
+        maximizedHeight = windowHeight * 0.7; // Don't take the full height to leave space for the taskbar
+        
+        // Position near the top to give more room at the bottom for taskbar
+        x = windowWidth * 0.01; // 1% margin
+        y = windowHeight * 0.05; // 5% from top
+      } else { // Larger mobile screens / tablets
+        maximizedWidth = windowWidth * 0.95;
+        maximizedHeight = windowHeight * 0.8;
+        
+        // Center the window
+        x = (windowWidth - maximizedWidth) / 2;
+        y = (windowHeight - maximizedHeight) / 8; // Position toward top third
+      }
       
       updateAgentPosition(id, { x, y });
       updateAgentSize(id, { width: maximizedWidth, height: maximizedHeight });
-      setIsMaximized(true);
+      
+      // Only set maximized if not already set to avoid re-renders
+      if (!isMaximized) {
+        setIsMaximized(true);
+      }
     }
-  }, [isMobile, windowWidth, windowHeight, id, isMaximized]);
+  }, [isMobile, windowWidth, windowHeight, id, isMaximized, updateAgentPosition, updateAgentSize]);
 
   // Create CSS classes based on snap position for visual feedback
   const getSnapIndicatorClass = () => {
@@ -448,8 +465,8 @@ const Window: React.FC<WindowProps> = ({
         enableResizing={!isMaximized && !isMobile} // Disable resizing on mobile or when maximized
         dragHandleClassName="window-drag-handle"
         bounds="parent"
-        minWidth={isMobile ? windowWidth * 0.9 : 300} // Larger minimum width on mobile
-        minHeight={isMobile ? windowHeight * 0.6 : 200} // Larger minimum height on mobile
+        minWidth={isMobile ? windowWidth * 0.95 : 300} // Adjusted width for mobile
+        minHeight={isMobile ? windowHeight * 0.7 : 200} // Adjusted height for mobile
         cancel=".window-control-button, .window-control-button *, button" // Prevent drag when clicking buttons
         resizeHandleStyles={{
           bottomRight: { zIndex: 2, display: isMobile ? 'none' : 'block' }, // Hide resize handles on mobile
@@ -479,7 +496,7 @@ const Window: React.FC<WindowProps> = ({
             backfaceVisibility: 'hidden',
             perspective: 1000
           }}
-          onContextMenu={handleContextMenu}
+          onContextMenu={isMobile ? undefined : handleContextMenu}
         >
         {/* Snap Overlay Indicators */}
         <AnimatePresence>
@@ -497,7 +514,7 @@ const Window: React.FC<WindowProps> = ({
         </AnimatePresence>
         
         <div 
-          className={`window-drag-handle flex items-center justify-between px-3 h-6 cursor-move transition-all duration-200 theme-transition
+          className={`window-drag-handle flex items-center justify-between px-3 ${isMobile ? 'h-8' : 'h-6'} cursor-move transition-all duration-200 theme-transition
             ${isActive 
               ? 'bg-primary/20 border-b border-primary/30' 
               : 'bg-black/40 border-b border-white/10'
@@ -509,7 +526,7 @@ const Window: React.FC<WindowProps> = ({
               <div className="flex items-center space-x-1.5 mr-3">
                 {/* Improved window control buttons with larger hit areas */}
                 <motion.button 
-                  className="window-control-button w-4 h-4 rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center"
+                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center`}
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.9 }}
                   title="Close"
@@ -520,7 +537,7 @@ const Window: React.FC<WindowProps> = ({
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
                 <motion.button 
-                  className="window-control-button w-4 h-4 rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center" 
+                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center`}
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.9 }}
                   title="Minimize"
@@ -531,7 +548,7 @@ const Window: React.FC<WindowProps> = ({
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
                 <motion.button 
-                  className="window-control-button w-4 h-4 rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center"
+                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center`}
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.9 }}
                   title={isMaximized ? "Restore" : "Maximize"}
@@ -542,14 +559,14 @@ const Window: React.FC<WindowProps> = ({
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
               </div>
-              <div className={`text-xs font-medium truncate transition-all duration-200 theme-transition ${isActive ? 'text-primary font-semibold' : 'text-white/70'}`}>
+              <div className={`${isMobile ? 'text-sm' : 'text-xs'} font-medium truncate transition-all duration-200 theme-transition ${isActive ? 'text-primary font-semibold' : 'text-white/70'}`}>
                 {title}
               </div>
             </div>
           </div>
         </div>
         <motion.div 
-          className="flex-1 overflow-auto p-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
+          className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-3'} scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent`}
           style={{ 
             height: contentHeight,
             willChange: 'transform, opacity',
@@ -559,35 +576,37 @@ const Window: React.FC<WindowProps> = ({
           initial="closed"
           animate={isMinimized ? "closed" : "open"}
         >
-          <div className="h-full">
+          <div className={`h-full ${isMobile ? 'touch-manipulation' : ''}`}>
             {children}
           </div>
         </motion.div>
       </motion.div>
     </Rnd>
     
-    {/* Context Menu */}
-    <WindowContextMenu
-      isVisible={contextMenu.isVisible}
-      position={contextMenu.position}
-      onClose={onClose}
-      onMinimize={onMinimize}
-      onMaximize={toggleMaximize}
-      onMoveToFront={handleMoveToFront}
-      onCenter={handleCenterWindow}
-      onRestoreDefault={handleRestoreDefault}
-      onSnapToSide={(side) => {
-        const snapMap: Record<string, SnapPosition> = {
-          'left': 'left',
-          'right': 'right',
-          'top': 'top',
-          'bottom': 'bottom'
-        };
-        applySnapPosition(snapMap[side]);
-      }}
-      onCloseMenu={handleCloseContextMenu}
-      isMaximized={isMaximized}
-    />
+    {/* Context Menu - Hide on mobile devices */}
+    {!isMobile && (
+      <WindowContextMenu
+        isVisible={contextMenu.isVisible}
+        position={contextMenu.position}
+        onClose={onClose}
+        onMinimize={onMinimize}
+        onMaximize={toggleMaximize}
+        onMoveToFront={handleMoveToFront}
+        onCenter={handleCenterWindow}
+        onRestoreDefault={handleRestoreDefault}
+        onSnapToSide={(side) => {
+          const snapMap: Record<string, SnapPosition> = {
+            'left': 'left',
+            'right': 'right',
+            'top': 'top',
+            'bottom': 'bottom'
+          };
+          applySnapPosition(snapMap[side]);
+        }}
+        onCloseMenu={handleCloseContextMenu}
+        isMaximized={isMaximized}
+      />
+    )}
     </MotionConfig>
   );
 };
