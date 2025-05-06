@@ -53,9 +53,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
   };
 
   return (
-    <div className="relative mb-4">
+    <div className="relative mx-auto w-full max-w-[700px]">
       {imagePreview && (
-        <div className="relative max-w-[180px] mb-2 self-end ml-auto">
+        <div className="relative max-w-[180px] mb-2 ml-auto">
           <img 
             src={imagePreview} 
             alt="Upload preview"
@@ -86,19 +86,23 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                 ? 'bg-white/60 border border-gray-200/30'
                 : 'bg-indigo-50/30 border border-indigo-200/30')
         }`}
+        style={{ 
+          transform: 'translateZ(0)', // Hardware acceleration
+          willChange: 'transform' // Signal to browser to optimize
+        }}
       >
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Message Clara..."
-          className={`flex-grow py-3 px-4 bg-transparent border-none outline-none ${
+          className={`flex-grow py-3 px-4 bg-transparent border-none outline-none min-w-0 ${
             isDarkMode ? 'text-white placeholder:text-white/50' : 'text-gray-800 placeholder:text-gray-500'
           }`}
           disabled={isLoading}
         />
         
-        <div className="flex items-center px-2">
+        <div className="flex items-center px-2 shrink-0">
           <button
             type="button"
             onClick={handleImageClick}
@@ -129,11 +133,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           
           <button
             type="submit"
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all ${
               isDarkMode || accent !== 'light'
                 ? 'bg-gradient-to-r from-purple-700 to-pink-600 hover:from-purple-600 hover:to-pink-500'
                 : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600'
-            }`}
+            } ${isLoading || (!message.trim() && !imageFile) ? 'opacity-50' : 'opacity-100'}`}
             disabled={isLoading || (!message.trim() && !imageFile)}
             aria-label="Send message"
           >

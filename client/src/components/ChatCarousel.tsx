@@ -68,10 +68,10 @@ const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
   const currentMessage = messages[currentIndex];
 
   return (
-    <div className="relative flex-1 h-full">
-      {/* Main carousel area */}
-      <div className="overflow-hidden h-full">
-        <div className="flex h-full relative">
+    <div className="relative flex-1 h-full flex flex-col">
+      {/* Main carousel area - takes most of the space */}
+      <div className="overflow-hidden flex-1 flex items-center justify-center">
+        <div className="flex h-full w-full relative items-center justify-center">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -80,10 +80,14 @@ const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.3 }}
               className="w-full h-full flex flex-col items-center justify-center p-4"
+              style={{ 
+                transform: 'translateZ(0)',
+                willChange: 'transform, opacity'
+              }}
             >
               <div 
                 className={`
-                  max-w-[85%] min-h-[150px] px-6 py-4 rounded-2xl shadow-lg
+                  max-w-[85%] w-full min-h-[150px] px-6 py-4 rounded-2xl shadow-lg
                   ${currentMessage.isUser 
                     ? 'bg-gradient-to-br from-purple-700/90 to-purple-900/90 border-2 border-purple-400/20' 
                     : 'bg-gradient-to-br from-gray-900/80 to-black/80 backdrop-blur-md border-2 border-white/10'
@@ -99,8 +103,8 @@ const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
                   {currentMessage.isUser ? 'You' : 'Clara'}
                 </div>
                 
-                {/* Message content */}
-                <div className="flex-grow flex flex-col">
+                {/* Message content with better overflow handling */}
+                <div className="flex-grow flex flex-col overflow-auto">
                   {currentMessage.imageUrl && (
                     <div className="relative max-w-[240px] mx-auto mb-4">
                       <img 
@@ -131,8 +135,8 @@ const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
         </div>
       </div>
       
-      {/* Navigation controls */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-between items-center px-4">
+      {/* Navigation controls - fixed at bottom with proper spacing */}
+      <div className="py-2 mt-auto left-0 right-0 flex justify-between items-center px-4 bg-gradient-to-t from-black/20 to-transparent">
         <button 
           onClick={goToPrev} 
           disabled={currentIndex === 0}
@@ -141,13 +145,13 @@ const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
           <ChevronLeft size={24} />
         </button>
         
-        {/* Pagination dots */}
-        <div className="flex space-x-1.5">
+        {/* Pagination dots - with horizontal scroll for many items */}
+        <div className="flex space-x-1.5 overflow-x-auto max-w-[60%] justify-center">
           {messages.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-2.5 h-2.5 rounded-full transition-all ${
+              className={`w-2.5 h-2.5 rounded-full transition-all flex-shrink-0 ${
                 index === currentIndex
                   ? getDotColor(index)
                   : 'bg-gray-500/30 hover:bg-gray-500/50'
