@@ -42,18 +42,23 @@ interface TaskbarButtonProps {
   hasIndicator?: boolean;
 }
 
-const TaskbarButton: React.FC<TaskbarButtonProps> = ({
+const TaskbarButton = React.forwardRef<
+  HTMLButtonElement,
+  TaskbarButtonProps
+>(({
   icon,
   label,
   isActive,
   onClick,
   className = '',
   hasIndicator = true
-}) => {
+}, ref) => {
   const isHtmlIcon = typeof icon === 'string';
+  const showLabels = useTaskbarStore(state => state.showLabels);
   
   return (
     <button
+      ref={ref}
       onClick={onClick}
       className={`
         h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
@@ -82,14 +87,15 @@ const TaskbarButton: React.FC<TaskbarButtonProps> = ({
           {icon}
         </span>
       )}
-      {useTaskbarStore(state => state.showLabels) ? (
+      {showLabels ? (
         <span className="text-sm">{label}</span>
       ) : (
         <span className="hidden sm:inline text-sm">{label}</span>
       )}
     </button>
   );
-};
+});
+TaskbarButton.displayName = "TaskbarButton";
 
 // Agent icon button with slightly different styling
 interface AgentIconButtonProps {
@@ -100,15 +106,21 @@ interface AgentIconButtonProps {
   onClick: (id: AgentId) => void;
 }
 
-const AgentIconButton: React.FC<AgentIconButtonProps> = ({
+const AgentIconButton = React.forwardRef<
+  HTMLButtonElement,
+  AgentIconButtonProps
+>(({
   id,
   icon,
   title,
   isActive,
   onClick
-}) => {
+}, ref) => {
+  const showLabels = useTaskbarStore(state => state.showLabels);
+  
   return (
     <button
+      ref={ref}
       onClick={() => onClick(id)}
       className={`
         p-2 rounded-lg transition-all duration-200 relative overflow-hidden
@@ -134,13 +146,13 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
             className={`transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`} />
         </div>
         
-        {useTaskbarStore(state => state.showLabels) && (
+        {showLabels && (
           <span className="text-sm">{title}</span>
         )}
       </div>
     </button>
   );
-};
+});
 
 interface TaskbarProps {
   className?: string;
