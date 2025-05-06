@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 // Define variants for the window panel using class-variance-authority
 const windowPanelVariants = cva(
-  "rounded-md border shadow-sm backdrop-blur-sm",
+  "rounded-md border shadow-sm backdrop-blur-sm text-white/90",
   {
     variants: {
       variant: {
@@ -24,10 +24,17 @@ const windowPanelVariants = cva(
         xl: "p-8",
         none: "p-0",
       },
+      textColor: {
+        default: "text-white/90",
+        muted: "text-white/70",
+        bright: "text-white",
+        primary: "text-primary-foreground",
+      }
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      textColor: "default",
     },
   }
 );
@@ -54,6 +61,7 @@ const WindowPanel = React.forwardRef<HTMLDivElement, WindowPanelProps>(
       className,
       variant,
       size,
+      textColor,
       status,
       statusLabel,
       title,
@@ -76,7 +84,7 @@ const WindowPanel = React.forwardRef<HTMLDivElement, WindowPanelProps>(
       <Card
         ref={ref}
         className={cn(
-          windowPanelVariants({ variant, size }),
+          windowPanelVariants({ variant, size, textColor }),
           fullHeight && "h-full",
           fullHeight && withScroll && "flex flex-col",
           className
