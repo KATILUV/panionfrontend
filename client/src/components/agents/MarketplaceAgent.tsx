@@ -42,7 +42,7 @@ const MarketplaceAgent = () => {
     
     return (
       <motion.div 
-        className={`relative rounded-lg p-4 cursor-pointer theme-transition
+        className={`relative rounded-lg p-3 md:p-4 cursor-pointer theme-transition
           ${isSelected 
             ? 'bg-purple-600/20 border border-purple-400/40 shadow-lg' 
             : 'bg-black/20 hover:bg-black/30 border border-white/10'}
@@ -52,38 +52,40 @@ const MarketplaceAgent = () => {
         whileTap={{ scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 300, damping: 15 }}
       >
-        {/* New badge */}
+        {/* New badge - smaller on mobile */}
         {agent.isNew && (
-          <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+          <div className="absolute top-1 right-1 md:top-2 md:right-2 bg-green-500 text-white text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full">
             NEW
           </div>
         )}
         
-        <div className="flex items-center mb-3">
-          <div className={`p-2 rounded-full mr-3 ${isSelected ? 'bg-purple-600/30' : 'bg-purple-500/10'}`}>
-            <DynamicIcon name={agent.icon} size={24} className={isSelected ? 'text-purple-300' : 'text-white/70'} />
+        <div className="flex items-center mb-2 md:mb-3">
+          <div className={`p-1.5 md:p-2 rounded-full mr-2 md:mr-3 ${isSelected ? 'bg-purple-600/30' : 'bg-purple-500/10'}`}>
+            <DynamicIcon name={agent.icon} size={20} className={isSelected ? 'text-purple-300' : 'text-white/70'} />
           </div>
           <div>
-            <h3 className="text-lg font-medium">{agent.title}</h3>
-            <div className="flex items-center text-xs text-white/60">
-              <span>{agent.author}</span>
+            <h3 className="text-base md:text-lg font-medium leading-tight">{agent.title}</h3>
+            <div className="flex items-center text-[10px] md:text-xs text-white/60">
+              <span className="truncate max-w-[80px]">{agent.author}</span>
               <span className="mx-1">•</span>
               <span>v{agent.version}</span>
             </div>
           </div>
         </div>
         
-        <p className="text-sm text-white/80 mb-3 line-clamp-2">{agent.description}</p>
+        <p className="text-xs md:text-sm text-white/80 mb-2 md:mb-3 line-clamp-2">{agent.description}</p>
         
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 touch-manipulation">
             <div className="flex items-center">
-              <Star size={14} className="text-yellow-400 mr-1" />
-              <span className="text-xs">{agent.rating}</span>
+              <Star size={12} className="text-yellow-400 mr-0.5 md:mr-1" />
+              <span className="text-[10px] md:text-xs">{agent.rating}</span>
             </div>
             <div className="flex items-center">
-              <Download size={14} className="text-white/60 mr-1" />
-              <span className="text-xs">{agent.downloads}</span>
+              <Download size={12} className="text-white/60 mr-0.5 md:mr-1" />
+              <span className="text-[10px] md:text-xs">{typeof agent.downloads === 'number' && agent.downloads > 1000 
+                ? `${(agent.downloads/1000).toFixed(1)}k` 
+                : agent.downloads}</span>
             </div>
           </div>
           
@@ -92,13 +94,13 @@ const MarketplaceAgent = () => {
               e.stopPropagation();
               isInstalled ? uninstallAgent(agent.id) : installAgent(agent.id);
             }}
-            className={`p-1.5 rounded-full transition-all
+            className={`p-1 md:p-1.5 rounded-full transition-all touch-manipulation
               ${isInstalled 
                 ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400' 
                 : 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-300'}
             `}
           >
-            {isInstalled ? <Check size={16} /> : <Plus size={16} />}
+            {isInstalled ? <Check size={14} className="md:w-4 md:h-4" /> : <Plus size={14} className="md:w-4 md:h-4" />}
           </button>
         </div>
       </motion.div>
@@ -114,19 +116,19 @@ const MarketplaceAgent = () => {
     
     return (
       <motion.div 
-        className="bg-black/30 border border-white/10 rounded-lg p-6 h-full"
+        className="bg-black/30 border border-white/10 rounded-lg p-4 md:p-6 h-full"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', damping: 20 }}
       >
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-3 sm:gap-0">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-purple-600/20 mr-4">
-              <DynamicIcon name={agent.icon} size={32} className="text-purple-300" />
+            <div className="p-2 md:p-3 rounded-full bg-purple-600/20 mr-3 md:mr-4">
+              <DynamicIcon name={agent.icon} size={24} className="text-purple-300 md:w-8 md:h-8" />
             </div>
             <div>
-              <h2 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">{agent.title}</h2>
-              <div className="flex items-center text-sm text-white/60">
+              <h2 className="text-xl md:text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">{agent.title}</h2>
+              <div className="flex items-center text-xs md:text-sm text-white/60">
                 <span>{agent.author}</span>
                 <span className="mx-1">•</span>
                 <span>v{agent.version}</span>
@@ -136,7 +138,7 @@ const MarketplaceAgent = () => {
           
           <button
             onClick={() => agent.isInstalled ? uninstallAgent(agent.id) : installAgent(agent.id)}
-            className={`px-4 py-2 rounded-full flex items-center space-x-2 transition-all shadow-md
+            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full flex items-center space-x-1 md:space-x-2 transition-all shadow-md text-sm md:text-base whitespace-nowrap touch-manipulation
               ${agent.isInstalled 
                 ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' 
                 : 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-300'}
@@ -144,56 +146,56 @@ const MarketplaceAgent = () => {
           >
             {agent.isInstalled ? (
               <>
-                <X size={18} />
+                <X size={16} className="md:w-5 md:h-5" />
                 <span>Uninstall</span>
               </>
             ) : (
               <>
-                <Plus size={18} />
+                <Plus size={16} className="md:w-5 md:h-5" />
                 <span>Install</span>
               </>
             )}
           </button>
         </div>
         
-        <p className="text-white/80 mb-6">{agent.description}</p>
+        <p className="text-sm md:text-base text-white/80 mb-4 md:mb-6">{agent.description}</p>
         
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-black/20 rounded-lg p-4">
-            <div className="flex items-center mb-2">
-              <Star size={18} className="text-yellow-400 mr-2" />
-              <h3 className="font-medium">Rating</h3>
+        <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
+          <div className="bg-black/20 rounded-lg p-3 md:p-4">
+            <div className="flex items-center mb-1 md:mb-2">
+              <Star size={14} className="text-yellow-400 mr-1 md:mr-2 md:w-5 md:h-5" />
+              <h3 className="text-sm md:text-base font-medium">Rating</h3>
             </div>
             <div className="flex items-center">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Star 
                   key={i} 
-                  size={16} 
-                  className={i <= Math.floor(agent.rating) ? "text-yellow-400" : "text-gray-500"}
+                  size={14} 
+                  className={`md:w-4 md:h-4 ${i <= Math.floor(agent.rating) ? "text-yellow-400" : "text-gray-500"}`}
                   fill={i <= Math.floor(agent.rating) ? "#FBBF24" : "none"}
                 />
               ))}
-              <span className="ml-2 text-sm">{agent.rating} / 5</span>
+              <span className="ml-1 md:ml-2 text-xs md:text-sm">{agent.rating} / 5</span>
             </div>
           </div>
           
-          <div className="bg-black/20 rounded-lg p-4">
-            <div className="flex items-center mb-2">
-              <Download size={18} className="text-white/60 mr-2" />
-              <h3 className="font-medium">Downloads</h3>
+          <div className="bg-black/20 rounded-lg p-3 md:p-4">
+            <div className="flex items-center mb-1 md:mb-2">
+              <Download size={14} className="text-white/60 mr-1 md:mr-2 md:w-5 md:h-5" />
+              <h3 className="text-sm md:text-base font-medium">Downloads</h3>
             </div>
-            <p className="text-lg">{agent.downloads.toLocaleString()}</p>
+            <p className="text-base md:text-lg">{agent.downloads.toLocaleString()}</p>
           </div>
         </div>
         
-        <div className="mb-6">
-          <h3 className="font-medium mb-2">Categories</h3>
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-4 md:mb-6">
+          <h3 className="text-sm md:text-base font-medium mb-1 md:mb-2">Categories</h3>
+          <div className="flex flex-wrap gap-1.5 md:gap-2">
             {agent.categories.map((catId) => {
               const category = categories.find(c => c.id === catId);
               return category ? (
-                <div key={catId} className="bg-purple-600/10 text-purple-300 px-3 py-1 rounded-full text-sm flex items-center">
-                  <DynamicIcon name={category.icon} size={14} className="mr-1" />
+                <div key={catId} className="bg-purple-600/10 text-purple-300 px-2 py-1 rounded-full text-xs md:text-sm flex items-center">
+                  <DynamicIcon name={category.icon} size={12} className="mr-1 md:w-3.5 md:h-3.5" />
                   {category.name}
                 </div>
               ) : null;
@@ -202,11 +204,11 @@ const MarketplaceAgent = () => {
         </div>
         
         <div>
-          <h3 className="font-medium mb-2">Tags</h3>
-          <div className="flex flex-wrap gap-2">
+          <h3 className="text-sm md:text-base font-medium mb-1 md:mb-2">Tags</h3>
+          <div className="flex flex-wrap gap-1.5 md:gap-2">
             {agent.tags.map((tag) => (
-              <div key={tag} className="bg-black/20 border border-purple-500/20 text-white/80 px-3 py-1 rounded-full text-sm flex items-center">
-                <Tag size={14} className="mr-1 text-purple-400/80" />
+              <div key={tag} className="bg-black/20 border border-purple-500/20 text-white/80 px-2 py-0.5 md:py-1 rounded-full text-xs md:text-sm flex items-center">
+                <Tag size={12} className="mr-1 text-purple-400/80 md:w-3.5 md:h-3.5" />
                 {tag}
               </div>
             ))}
