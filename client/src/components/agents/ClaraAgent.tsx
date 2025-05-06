@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ClaraOrb } from '../ClaraOrb';
+import ClaraOrb from '../ClaraOrb';
 import ChatInput from '../ChatInput';
 import TypingIndicator from '../TypingIndicator';
 import ChatCarousel from '../ChatCarousel';

@@ -12,8 +12,6 @@ import MarketplaceAgent from './agents/MarketplaceAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
 import EmptyStateDashboard from './system/EmptyStateDashboard';
-import { ClaraOrb } from './ClaraOrb';
-import { FloatingClaraOrb } from './FloatingClaraOrb';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence } from 'framer-motion';
 
@@ -280,9 +278,6 @@ const Desktop: React.FC = () => {
       
       {/* Command Palette */}
       <CommandPalette />
-      
-      {/* Floating Clara Orb */}
-      <FloatingClaraOrb isProcessing={focusedAgentId === 'clara'} />
       
       {/* Taskbar - position is handled via the useTaskbarStore */}
       <Taskbar isMobile={isMobile} />
