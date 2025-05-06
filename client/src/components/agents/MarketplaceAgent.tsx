@@ -220,36 +220,36 @@ const MarketplaceAgent = () => {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header with Panion branding */}
-      <div className="mb-4 md:mb-6 px-2 py-3 md:py-4 bg-black/20 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+      <div className="mb-3 md:mb-6 px-2 py-2 md:py-4 bg-black/20 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-600/20 rounded-full mr-3">
-              <ShoppingBag size={20} className="text-purple-300" />
+            <div className="p-1.5 md:p-2 bg-purple-600/20 rounded-full mr-2 md:mr-3">
+              <ShoppingBag size={18} className="text-purple-300" />
             </div>
-            <h1 className="text-lg md:text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">Agent Manager</h1>
+            <h1 className="text-base md:text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">Agent Manager</h1>
           </div>
           
           <div className="flex items-center space-x-2 md:space-x-3">
-            {/* Search box - Smaller on mobile */}
+            {/* Search box - Even smaller on small mobile */}
             <div className="relative flex-1 md:flex-none">
               <input
                 type="text"
                 placeholder="Search agents..."
-                className="w-full md:w-48 pl-8 pr-3 py-1.5 bg-black/30 border border-white/10 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500/50"
+                className="w-full md:w-48 pl-7 md:pl-8 pr-2 md:pr-3 py-1 md:py-1.5 bg-black/30 border border-white/10 rounded-md text-xs md:text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500/50"
                 value={searchQuery}
                 onChange={(e) => searchAgents(e.target.value)}
               />
-              <Search size={16} className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-purple-300/80" />
+              <Search size={14} className="absolute left-2 md:left-2.5 top-1/2 transform -translate-y-1/2 text-purple-300/80" />
             </div>
             
-            {/* Browse Marketplace button - Smaller on mobile */}
+            {/* Browse Marketplace button - Even smaller on very small screens */}
             <button 
-              className="whitespace-nowrap px-3 md:px-4 py-1.5 rounded-md bg-purple-600/80 hover:bg-purple-500/90 text-white transition-all flex items-center shadow-md text-xs md:text-sm"
+              className="whitespace-nowrap px-2 md:px-4 py-1 md:py-1.5 rounded-md bg-purple-600/80 hover:bg-purple-500/90 text-white transition-all flex items-center shadow-md text-xs md:text-sm"
               onClick={() => navigate('/marketplace')}
             >
-              <ShoppingBag size={14} className="mr-1 md:mr-2" />
-              <span className="hidden xs:inline">Browse Marketplace</span>
-              <span className="xs:hidden">Browse</span>
+              <ShoppingBag size={12} className="mr-1 md:mr-2" />
+              <span className="hidden xs:inline">Browse</span>
+              <span className="xs:hidden">+</span>
             </button>
           </div>
         </div>

@@ -310,29 +310,59 @@ const Window: React.FC<WindowProps> = ({
   const titleBarHeight = isMobile ? 32 : 24; // 8px height for mobile title bar, 6px for desktop
   const contentHeight = size.height - titleBarHeight;
   
-  // Handle mobile-specific adjustments
+  // Handle mobile-specific adjustments with agent-specific customization
   useEffect(() => {
     if (isMobile) {
       // Automatically maximize and position windows on mobile
       let maximizedWidth, maximizedHeight, x, y;
       
+      // Base sizes for different mobile screen sizes
       if (windowWidth < 640) { // Small mobile screens
-        // Take up nearly the full screen on small mobile devices
-        maximizedWidth = windowWidth * 0.98;
-        maximizedHeight = windowHeight * 0.7; // Don't take the full height to leave space for the taskbar
+        // Different handling based on agent type
+        if (id === 'marketplace' || id === 'agent-manager') {
+          // Make marketplace agent windows smaller on small screens
+          maximizedWidth = windowWidth * 0.95;
+          maximizedHeight = windowHeight * 0.65; // Shorter for easier browsing
+        } else {
+          // Default behavior for most agents
+          maximizedWidth = windowWidth * 0.98;
+          maximizedHeight = windowHeight * 0.7;
+        }
         
         // Position near the top to give more room at the bottom for taskbar
         x = windowWidth * 0.01; // 1% margin
         y = windowHeight * 0.05; // 5% from top
+      } else if (windowWidth < 768) { // Medium mobile screens
+        if (id === 'marketplace' || id === 'agent-manager') {
+          // Better size for medium-sized screens
+          maximizedWidth = windowWidth * 0.9;
+          maximizedHeight = windowHeight * 0.7;
+          x = windowWidth * 0.05; // 5% margin
+          y = windowHeight * 0.05; // Position toward top
+        } else {
+          // Default behavior
+          maximizedWidth = windowWidth * 0.95;
+          maximizedHeight = windowHeight * 0.75;
+          x = windowWidth * 0.025; // 2.5% margin
+          y = windowHeight * 0.05; // Position toward top
+        }
       } else { // Larger mobile screens / tablets
-        maximizedWidth = windowWidth * 0.95;
-        maximizedHeight = windowHeight * 0.8;
+        if (id === 'marketplace' || id === 'agent-manager') {
+          // Even more comfortable size for tablet-sized screens
+          maximizedWidth = windowWidth * 0.85;
+          maximizedHeight = windowHeight * 0.75;
+        } else {
+          // Default behavior for most agents
+          maximizedWidth = windowWidth * 0.92;
+          maximizedHeight = windowHeight * 0.8;
+        }
         
         // Center the window
         x = (windowWidth - maximizedWidth) / 2;
         y = (windowHeight - maximizedHeight) / 8; // Position toward top third
       }
       
+      // Apply the calculated position and size
       updateAgentPosition(id, { x, y });
       updateAgentSize(id, { width: maximizedWidth, height: maximizedHeight });
       
