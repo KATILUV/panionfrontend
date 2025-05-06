@@ -11,6 +11,7 @@ import AuthPage from "./pages/auth-page";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
+import MarketplaceAgent from "./components/agents/MarketplaceAgent";
 import { StatusExample } from "./components/agents/StatusExample";
 import { useAgentStore } from "./state/agentStore";
 import ThemeProvider from "./components/common/ThemeProvider";
@@ -113,6 +114,24 @@ function App() {
       component: () => <StatusExample />,
       defaultPosition: { x: 500, y: 100 },
       defaultSize: { width: 600, height: 550 }
+    });
+    
+    // Marketplace Agent
+    const marketplaceIcon = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 3L2 7V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H20C20.5304 22 21.0391 21.7893 21.4142 21.4142C21.7893 21.0391 22 20.5304 22 20V7L19 3H5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M2 7H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16 11C16 12.0609 15.5786 13.0783 14.8284 13.8284C14.0783 14.5786 13.0609 15 12 15C10.9391 15 9.92172 14.5786 9.17157 13.8284C8.42143 13.0783 8 12.0609 8 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    
+    agentStore.registerAgent({
+      id: 'marketplace',
+      title: 'Agent Marketplace',
+      icon: marketplaceIcon,
+      component: () => <MarketplaceAgent />,
+      defaultPosition: { x: 300, y: 120 },
+      defaultSize: { width: 900, height: 600 }
     });
     
     // Auto-open Clara window by default
