@@ -125,7 +125,9 @@ h4, .h4 {
     --primary-hover: 265 83.3% 60%;
     --secondary: 265 50% 18%;
     --secondary-hover: 265 50% 22%;
+    --secondary-foreground: 265 83.3% 85%;
     --accent: 265 83.3% 55.1%;
+    --accent-foreground: 0 0% 100%;
 }
 
 /* Accent Color: Blue */
@@ -223,9 +225,11 @@ h4, .h4 {
 .dark[data-accent="pink"] {
     --primary: 330 80% 70%;
     --primary-hover: 330 80% 75%;
-    --secondary: 332 65% 40%;
-    --secondary-hover: 332 65% 45%;
+    --secondary: 332 65% 25%;
+    --secondary-hover: 332 65% 30%;
+    --secondary-foreground: 330 80% 95%;
     --accent: 330 80% 70%;
+    --accent-foreground: 0 0% 100%;
 }
 
 @layer base {
