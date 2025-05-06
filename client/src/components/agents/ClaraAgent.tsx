@@ -75,8 +75,8 @@ const ClaraAgent: React.FC = () => {
       className="flex flex-col h-full"
     >
       <div className="w-full max-w-full flex flex-col h-full relative overflow-hidden">
-        {/* Header with tagline */}
-        <div className="sticky top-0 z-10 mb-2 flex justify-center items-center px-2 bg-black/20 backdrop-blur-sm py-1 rounded-b-md">
+        {/* Header with tagline - Hidden on very small mobile screens */}
+        <div className="sticky top-0 z-10 mb-2 hidden xs:flex justify-center items-center px-2 bg-black/20 backdrop-blur-sm py-1 rounded-b-md">
           <div className="overflow-hidden">
             <RotatingTagline 
               phrases={[
@@ -99,7 +99,7 @@ const ClaraAgent: React.FC = () => {
           {/* Error display */}
           <ErrorDisplay />
           
-          {/* Orb */}
+          {/* Orb - Smaller on mobile */}
           <div className="flex-shrink-0">
             <ClaraOrb isProcessing={isLoading} />
           </div>
@@ -118,14 +118,14 @@ const ClaraAgent: React.FC = () => {
             
             {/* Loading indicator */}
             {isLoading && (
-              <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
+              <div className="absolute bottom-16 md:bottom-20 left-1/2 transform -translate-x-1/2">
                 <TypingIndicator />
               </div>
             )}
           </motion.div>
           
-          {/* Chat Input - Fixed at bottom */}
-          <div className="sticky bottom-0 pt-2 mt-auto px-4 bg-gradient-to-t from-black/10 to-transparent">
+          {/* Chat Input - Fixed at bottom, adjusted padding for mobile */}
+          <div className="sticky bottom-0 pt-1 md:pt-2 mt-auto px-2 md:px-4 bg-gradient-to-t from-black/10 to-transparent">
             <ChatInput 
               onSendMessage={handleSendMessage}
               isLoading={isLoading}

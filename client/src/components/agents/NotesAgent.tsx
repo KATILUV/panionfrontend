@@ -72,8 +72,9 @@ const NotesAgent: React.FC = () => {
                 <p className={`pr-6 ${windowTextStyles.default}`}>{note}</p>
                 <button
                   onClick={() => handleDeleteNote(index)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-red-400"
+                  className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-white/70 hover:text-red-400 touch-manipulation"
                   aria-label="Delete note"
+                  style={{ fontSize: '1.25rem' }}
                 >
                   ×
                 </button>
@@ -89,14 +90,15 @@ const NotesAgent: React.FC = () => {
           onChange={(e) => setCurrentNote(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a new note..."
-          className={`w-full p-3 bg-transparent border-none outline-none resize-none focus:ring-0 ${windowTextStyles.bright}`}
+          className={`w-full p-3 bg-transparent border-none outline-none resize-none focus:ring-0 ${windowTextStyles.bright} touch-manipulation`}
           rows={3}
+          style={{ fontSize: window.matchMedia('(max-width: 640px)').matches ? '16px' : 'inherit' }}
         />
         <div className="flex justify-end p-2 border-t border-white/10">
           <button
             onClick={handleAddNote}
             disabled={!currentNote.trim()}
-            className={`px-4 py-1.5 rounded-md transition-colors text-sm shadow-sm ${
+            className={`px-4 py-2 md:py-1.5 rounded-md transition-colors text-sm shadow-sm ${
               currentNote.trim() 
                 ? 'bg-primary hover:bg-primary-hover text-primary-foreground' 
                 : 'bg-white/10 text-white/30'

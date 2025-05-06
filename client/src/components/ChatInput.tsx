@@ -55,11 +55,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
   return (
     <div className="relative mx-auto w-full max-w-[700px]">
       {imagePreview && (
-        <div className="relative max-w-[180px] mb-2 ml-auto">
+        <div className="relative max-w-[120px] md:max-w-[180px] mb-2 ml-auto">
           <img 
             src={imagePreview} 
             alt="Upload preview"
-            className={`max-w-full max-h-[180px] rounded-xl shadow-lg ${
+            className={`max-w-full max-h-[120px] md:max-h-[180px] rounded-xl shadow-lg ${
               isDarkMode
                 ? 'border border-white/20'
                 : (accent === 'light' 
@@ -69,7 +69,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           />
           <button 
             onClick={removeImage}
-            className="absolute -top-2 -right-2 w-6 h-6 bg-white/90 text-gray-800 rounded-full flex items-center justify-center shadow-md"
+            className="absolute -top-2 -right-2 w-6 h-6 bg-white/90 text-gray-800 rounded-full flex items-center justify-center shadow-md touch-manipulation"
             aria-label="Remove image"
           >
             ×
@@ -96,17 +96,18 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Message Clara..."
-          className={`flex-grow py-3 px-4 bg-transparent border-none outline-none min-w-0 ${
+          className={`flex-grow py-3 px-3 md:px-4 bg-transparent border-none outline-none min-w-0 text-sm md:text-base ${
             isDarkMode ? 'text-white placeholder:text-white/50' : 'text-gray-800 placeholder:text-gray-500'
           }`}
           disabled={isLoading}
+          style={{ fontSize: window.matchMedia('(max-width: 640px)').matches ? '16px' : 'inherit' }}
         />
         
-        <div className="flex items-center px-2 shrink-0">
+        <div className="flex items-center px-1 md:px-2 shrink-0">
           <button
             type="button"
             onClick={handleImageClick}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors mr-2 ${
+            className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors mr-1 md:mr-2 touch-manipulation ${
               isDarkMode 
                 ? 'bg-white/20 text-white hover:bg-white/30' 
                 : (accent === 'light'
@@ -116,7 +117,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             disabled={isLoading}
             aria-label="Upload image"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
               <polyline points="21 15 16 10 5 21" />
@@ -133,7 +134,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           
           <button
             type="submit"
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all ${
+            className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white transition-all touch-manipulation ${
               isDarkMode || accent !== 'light'
                 ? 'bg-gradient-to-r from-purple-700 to-pink-600 hover:from-purple-600 hover:to-pink-500'
                 : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600'
@@ -148,7 +149,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                 <div className="w-1.5 h-1.5 rounded-full bg-white/70 animate-typing-dot-3"></div>
               </div>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>

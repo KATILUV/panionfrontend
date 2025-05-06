@@ -9,16 +9,17 @@ import { Card } from "@/components/ui/card";
  */
 export const StatusExample: React.FC = () => {
   return (
-    <div className="w-full h-full flex flex-col gap-6 p-6 overflow-auto">
+    <div className="w-full h-full flex flex-col gap-4 md:gap-6 p-3 md:p-6 overflow-auto touch-manipulation">
       <div>
-        <h1>Typography & Status Indicators</h1>
-        <p className="text-caption mb-4">
+        <h1 className="text-xl md:text-2xl">Typography & Status Indicators</h1>
+        <p className="text-caption mb-3 md:mb-4 text-sm">
           Inspired by Frame.io's consistent visual hierarchy and color coding
         </p>
       </div>
 
-      <Card className="p-6">
-        <h2>Typography Hierarchy</h2>
+      {/* Typography section - hidden on mobile to focus on status indicators */}
+      <Card className="p-4 md:p-6 hidden md:block">
+        <h2 className="text-lg">Typography Hierarchy</h2>
         <div className="flex flex-col gap-4 mt-2">
           <div className="border-b pb-2">
             <h1>Heading 1 - Primary Titles</h1>
@@ -62,15 +63,15 @@ export const StatusExample: React.FC = () => {
         </div>
       </Card>
 
-      <Card className="p-6">
-        <h2>Agent Status Indicators</h2>
-        <p className="text-caption mb-4">
+      <Card className="p-3 md:p-6">
+        <h2 className="text-base md:text-lg font-medium">Agent Status Indicators</h2>
+        <p className="text-caption text-xs md:text-sm mb-3 md:mb-4">
           Consistent visual indicators for agent states inspired by Frame.io's status system
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           <div className="flex flex-col gap-2">
-            <h3>Standard Size</h3>
+            <h3 className="text-sm font-medium">Standard Size</h3>
             <div className="flex flex-wrap gap-2">
               <AgentStatus status="idle" />
               <AgentStatus status="thinking" pulsingAnimation={false} />
@@ -78,13 +79,16 @@ export const StatusExample: React.FC = () => {
               <AgentStatus status="paused" />
               <AgentStatus status="error" />
               <AgentStatus status="success" />
-              <AgentStatus status="waiting" pulsingAnimation={false} />
-              <AgentStatus status="learning" pulsingAnimation={false} />
+              {/* Hide less common statuses on mobile */}
+              <span className="hidden md:inline">
+                <AgentStatus status="waiting" pulsingAnimation={false} />
+                <AgentStatus status="learning" pulsingAnimation={false} />
+              </span>
             </div>
           </div>
           
           <div className="flex flex-col gap-2">
-            <h3>Small Size</h3>
+            <h3 className="text-sm font-medium">Small Size</h3>
             <div className="flex flex-wrap gap-2">
               <AgentStatus status="idle" size="sm" />
               <AgentStatus status="thinking" size="sm" pulsingAnimation={false} />
@@ -92,13 +96,17 @@ export const StatusExample: React.FC = () => {
               <AgentStatus status="paused" size="sm" />
               <AgentStatus status="error" size="sm" />
               <AgentStatus status="success" size="sm" />
-              <AgentStatus status="waiting" size="sm" pulsingAnimation={false} />
-              <AgentStatus status="learning" size="sm" pulsingAnimation={false} />
+              {/* Hide less common statuses on mobile */}
+              <span className="hidden md:inline">
+                <AgentStatus status="waiting" size="sm" pulsingAnimation={false} />
+                <AgentStatus status="learning" size="sm" pulsingAnimation={false} />
+              </span>
             </div>
           </div>
           
-          <div className="flex flex-col gap-2">
-            <h3>Large Size</h3>
+          {/* Hide on mobile for simplicity */}
+          <div className="hidden md:flex flex-col gap-2">
+            <h3 className="text-sm font-medium">Large Size</h3>
             <div className="flex flex-wrap gap-2">
               <AgentStatus status="idle" size="lg" />
               <AgentStatus status="thinking" size="lg" pulsingAnimation={false} />
@@ -111,8 +119,9 @@ export const StatusExample: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex flex-col gap-2">
-            <h3>Icon Only</h3>
+          {/* Hide on mobile for simplicity */}
+          <div className="hidden md:flex flex-col gap-2">
+            <h3 className="text-sm font-medium">Icon Only</h3>
             <div className="flex flex-wrap gap-2">
               <AgentStatus status="idle" showLabel={false} />
               <AgentStatus status="thinking" showLabel={false} pulsingAnimation={false} />
@@ -126,56 +135,61 @@ export const StatusExample: React.FC = () => {
           </div>
         </div>
         
-        <div className="mt-6">
-          <h3>Usage Context Examples</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            <Card className="p-4 relative">
+        <div className="mt-4 md:mt-6">
+          <h3 className="text-sm md:text-base font-medium">Usage Context Examples</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mt-2">
+            <Card className="p-3 md:p-4 relative">
               <div className="absolute top-2 right-2">
                 <AgentStatus status="active" showLabel={false} size="sm" pulsingAnimation={false} />
               </div>
-              <h4>Clara Agent</h4>
-              <p className="text-content">Main conversational agent with access to short and long-term memory.</p>
+              <h4 className="text-sm md:text-base font-medium">Clara Agent</h4>
+              <p className="text-content text-xs md:text-sm">Main conversational agent with access to short and long-term memory.</p>
               <div className="flex items-center mt-2">
-                <span className="text-small mr-2">Last activity:</span>
-                <span className="text-caption">2 minutes ago</span>
+                <span className="text-small mr-2 text-xs">Last activity:</span>
+                <span className="text-caption text-xs">2 minutes ago</span>
               </div>
             </Card>
             
-            <Card className="p-4 relative">
+            <Card className="p-3 md:p-4 relative">
               <div className="absolute top-2 right-2">
                 <AgentStatus status="thinking" showLabel={false} size="sm" pulsingAnimation={false} />
               </div>
-              <h4>Research Agent</h4>
-              <p className="text-content">Specialized agent for data analysis and information retrieval.</p>
+              <h4 className="text-sm md:text-base font-medium">Research Agent</h4>
+              <p className="text-content text-xs md:text-sm">Specialized agent for data analysis and information retrieval.</p>
               <div className="flex items-center mt-2">
-                <span className="text-small mr-2">Processing:</span>
-                <span className="text-caption">Analyzing market trends</span>
+                <span className="text-small mr-2 text-xs">Processing:</span>
+                <span className="text-caption text-xs">Analyzing market trends</span>
               </div>
             </Card>
             
-            <Card className="p-4 relative">
-              <div className="absolute top-2 right-2">
-                <AgentStatus status="waiting" showLabel={false} size="sm" pulsingAnimation={false} />
-              </div>
-              <h4>Code Assistant</h4>
-              <p className="text-content">Specialized agent for code generation and review.</p>
-              <div className="flex items-center mt-2">
-                <span className="text-small mr-2">Waiting for:</span>
-                <span className="text-caption">File selection</span>
-              </div>
-            </Card>
+            {/* Hide these on mobile screens for simplicity */}
+            <div className="hidden md:block">
+              <Card className="p-3 md:p-4 relative">
+                <div className="absolute top-2 right-2">
+                  <AgentStatus status="waiting" showLabel={false} size="sm" pulsingAnimation={false} />
+                </div>
+                <h4 className="text-sm md:text-base font-medium">Code Assistant</h4>
+                <p className="text-content text-xs md:text-sm">Specialized agent for code generation and review.</p>
+                <div className="flex items-center mt-2">
+                  <span className="text-small mr-2 text-xs">Waiting for:</span>
+                  <span className="text-caption text-xs">File selection</span>
+                </div>
+              </Card>
+            </div>
             
-            <Card className="p-4 relative">
-              <div className="absolute top-2 right-2">
-                <AgentStatus status="paused" showLabel={false} size="sm" />
-              </div>
-              <h4>Media Agent</h4>
-              <p className="text-content">Image analysis and generation assistant.</p>
-              <div className="flex items-center mt-2">
-                <span className="text-small mr-2">Status:</span>
-                <span className="text-caption">Paused by user</span>
-              </div>
-            </Card>
+            <div className="hidden md:block">
+              <Card className="p-3 md:p-4 relative">
+                <div className="absolute top-2 right-2">
+                  <AgentStatus status="paused" showLabel={false} size="sm" />
+                </div>
+                <h4 className="text-sm md:text-base font-medium">Media Agent</h4>
+                <p className="text-content text-xs md:text-sm">Image analysis and generation assistant.</p>
+                <div className="flex items-center mt-2">
+                  <span className="text-small mr-2 text-xs">Status:</span>
+                  <span className="text-caption text-xs">Paused by user</span>
+                </div>
+              </Card>
+            </div>
           </div>
         </div>
       </Card>
