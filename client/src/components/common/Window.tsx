@@ -73,6 +73,33 @@ const Window: React.FC<WindowProps> = ({
       setPreMaximizeState({ position, size });
     }
   }, [isMaximized]);
+  
+  // Handle responsive scaling based on window size changes
+  useEffect(() => {
+    // Only apply responsive adjustments if window isn't already being controlled
+    if (!isMaximized && !isDragging) {
+      // Ensure windows stay visible if screen size changes
+      let newPosition = { ...position };
+      let needsUpdate = false;
+      
+      // Check if window is off screen horizontally
+      if (position.x + size.width > windowWidth) {
+        newPosition.x = Math.max(0, windowWidth - size.width);
+        needsUpdate = true;
+      }
+      
+      // Check if window is off screen vertically
+      if (position.y + size.height > windowHeight) {
+        newPosition.y = Math.max(0, windowHeight - size.height);
+        needsUpdate = true;
+      }
+      
+      // Update position if needed
+      if (needsUpdate) {
+        updateAgentPosition(id, newPosition);
+      }
+    }
+  }, [windowWidth, windowHeight, isMaximized, isDragging]);
 
   const toggleMaximize = () => {
     if (isMaximized) {
@@ -437,7 +464,7 @@ const Window: React.FC<WindowProps> = ({
   const titleBarHeight = isMobile ? 32 : 24; // 8px height for mobile title bar, 6px for desktop
   const contentHeight = size.height - titleBarHeight;
   
-  // Handle mobile-specific adjustments with agent-specific customization
+  // Handle mobile-specific adjustments with agent-specific customization and improved transitions
   useEffect(() => {
     if (isMobile) {
       // Automatically maximize and position windows on mobile
@@ -450,6 +477,14 @@ const Window: React.FC<WindowProps> = ({
           // Make marketplace agent windows smaller on small screens
           maximizedWidth = windowWidth * 0.95;
           maximizedHeight = windowHeight * 0.65; // Shorter for easier browsing
+        } else if (id === 'clara') { 
+          // Clara agent needs more vertical space for chat history
+          maximizedWidth = windowWidth * 0.98;
+          maximizedHeight = windowHeight * 0.78;
+        } else if (id === 'settings') {
+          // Settings panel can be more compact
+          maximizedWidth = windowWidth * 0.92;
+          maximizedHeight = windowHeight * 0.68;
         } else {
           // Default behavior for most agents
           maximizedWidth = windowWidth * 0.98;
@@ -571,24 +606,36 @@ const Window: React.FC<WindowProps> = ({
     }
   };
 
-  // High-performance window content animations
-  // Using hardware-accelerated properties and simpler transitions
+  // Enhanced high-performance window content animations with screen-size awareness
+  // Using hardware-accelerated properties and optimized transitions
   const contentVariants = {
     open: {
       opacity: 1,
       y: 0,
+      scale: 1,
       transition: {
-        duration: 0.25, // Slightly faster
-        delay: 0.05,    // Less delay for more responsive feel
-        ease: [0.33, 1, 0.68, 1] // Optimized cubic-bezier for smoother feel
+        duration: isMobile ? 0.2 : 0.25, // Slightly faster on mobile
+        delay: isMobile ? 0.02 : 0.05,   // Less delay on mobile for more responsive feel
+        ease: [0.33, 1, 0.68, 1],        // Optimized cubic-bezier for smoother feel
+        scale: { 
+          type: "spring", 
+          stiffness: 400, 
+          damping: 30 
+        } // Spring physics for scale
       }
     },
     closed: {
       opacity: 0,
-      y: 5, // Smaller transform distance for smoother animation
+      y: isMobile ? 3 : 5,              // Smaller transform distance on mobile
+      scale: 0.98,                       // Subtle scale effect
       transition: {
-        duration: 0.15, // Faster exit
-        ease: [0.4, 0, 1, 1]
+        duration: isMobile ? 0.12 : 0.15, // Faster exit on mobile
+        ease: [0.4, 0, 1, 1],
+        scale: {
+          type: "spring",
+          stiffness: 500,
+          damping: 35
+        }
       }
     }
   };
