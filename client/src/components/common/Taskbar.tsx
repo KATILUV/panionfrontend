@@ -358,6 +358,117 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         </div>
         
         <div className="flex items-center space-x-2">
+          {/* Search Bar Widget */}
+          {visibleWidgets.includes('searchBar') && (
+            <div className="relative w-40 lg:w-48">
+              <Input
+                className="h-8 bg-black/40 border-primary/20 text-white placeholder:text-white/50 pr-8"
+                placeholder="Search..."
+                onClick={() => toast({
+                  title: "Search Feature",
+                  description: "Global search will be implemented in a future update",
+                  variant: "default",
+                })}
+              />
+              <div className="absolute right-2 top-2">
+                <svg 
+                  className="w-4 h-4 text-white/50" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24" 
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                  />
+                </svg>
+              </div>
+            </div>
+          )}
+
+          {/* Notifications Widget */}
+          {visibleWidgets.includes('notifications') && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <TaskbarButton
+                  icon={<div className="relative">
+                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                      3
+                    </span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                  </div>}
+                  label="Notifications"
+                  isActive={false}
+                  onClick={() => {}}
+                />
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" side="top">
+                <div className="bg-black/60 backdrop-blur-md rounded-md overflow-hidden border border-primary/20">
+                  <div className="p-3 border-b border-primary/10 flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-white">Notifications</h3>
+                    <button className="text-xs text-primary hover:text-primary/80 transition-colors">Mark all as read</button>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="p-3 border-b border-primary/10 hover:bg-primary/10 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                            {i === 1 ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                            ) : i === 2 ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-white">
+                              {i === 1 ? "New agent available in Marketplace" : 
+                               i === 2 ? "System update available" : 
+                               "Layout 'Productivity Setup' created"}
+                            </p>
+                            <p className="text-xs text-white/60 mt-1">
+                              {i === 1 ? "2 minutes ago" : 
+                               i === 2 ? "10 minutes ago" : 
+                               "15 minutes ago"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-2 border-t border-primary/10 flex justify-center">
+                    <button className="text-xs text-primary hover:text-primary/80 transition-colors">
+                      View all notifications
+                    </button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          
+          {/* AI Status Widget */}
+          {visibleWidgets.includes('aiStatus') && (
+            <div className="px-2.5 py-1 rounded-lg bg-black/20 text-white/80 flex items-center space-x-2">
+              <div className="relative">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full absolute inset-0 animate-ping opacity-75"></div>
+              </div>
+              <span className="text-xs font-medium">AI Active</span>
+            </div>
+          )}
+
           {/* Quick Save Button - just the plus icon */}
           {visibleWidgets.includes('quickSave') && (
             <div className="relative">
@@ -371,19 +482,19 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                     className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
                   />
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-4" side="top">
+                <PopoverContent className="w-80 p-4 bg-black/60 backdrop-blur-md border border-primary/20 rounded-md" side="top">
                   <div className="space-y-4">
-                    <h3 className="text-base font-medium">Save Current Layout</h3>
+                    <h3 className="text-base font-medium text-white">Save Current Layout</h3>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="layout-name">Layout Name</Label>
+                      <Label htmlFor="layout-name" className="text-white">Layout Name</Label>
                       <Input 
                         id="layout-name"
                         ref={inputRef}
                         placeholder="e.g., My Workspace Layout"
                         value={customLayoutName}
                         onChange={(e) => setCustomLayoutName(e.target.value)}
-                        className="w-full"
+                        className="w-full bg-black/40 border-primary/20 text-white"
                         onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
                       />
                     </div>
@@ -391,7 +502,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                     <div className="flex items-center justify-between gap-2">
                       <button
                         className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-primary/10
-                                  hover:bg-primary/20 text-sm text-primary-foreground transition-colors"
+                                  hover:bg-primary/20 text-sm text-white transition-colors"
                         onClick={handleQuickSave}
                       >
                         <Save size={14} /> Quick Save
