@@ -292,30 +292,10 @@ const LandingPage: React.FC = () => {
         
         {/* Floating window mockups for mobile version */}
         <motion.div 
-          className="absolute block md:hidden left-2 top-32 w-28 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 rotate-2"
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 0.7 }}
-          transition={{ duration: 1, delay: 0.5 }}
-        >
-          <div className="bg-black/40 h-5 border-b border-white/10 flex items-center px-2">
-            <div className="flex items-center space-x-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-            </div>
-            <div className="ml-2 text-[10px] text-white/70">Window</div>
-          </div>
-          <div className="h-16 bg-black/20">
-            <div className="h-2 bg-white/20 rounded-full mt-3 mx-2"></div>
-            <div className="h-2 bg-white/10 rounded-full mt-2 mx-2 w-3/4"></div>
-          </div>
-        </motion.div>
-        
-        <motion.div 
-          className="absolute block md:hidden right-0 top-20 w-32 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 -rotate-2"
+          className="absolute block md:hidden right-3 top-24 w-32 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 -rotate-2"
           initial={{ x: 20, opacity: 0 }}
           animate={{ x: 0, opacity: 0.7 }}
-          transition={{ duration: 1, delay: 0.7 }}
+          transition={{ duration: 1, delay: 0.5 }}
         >
           <div className="bg-black/40 h-5 border-b border-white/10 flex items-center px-2">
             <div className="flex items-center space-x-1">
@@ -333,10 +313,10 @@ const LandingPage: React.FC = () => {
         </motion.div>
         
         <motion.div 
-          className="absolute block md:hidden right-8 bottom-48 w-24 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 rotate-1"
+          className="absolute block md:hidden left-4 bottom-36 w-28 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 rotate-2"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 0.7 }}
-          transition={{ duration: 1, delay: 0.9 }}
+          transition={{ duration: 1, delay: 0.7 }}
         >
           <div className="bg-black/40 h-5 border-b border-white/10 flex items-center px-2">
             <div className="flex items-center space-x-1">
@@ -354,10 +334,10 @@ const LandingPage: React.FC = () => {
         </motion.div>
         
         <motion.div 
-          className="absolute block md:hidden left-4 bottom-28 w-20 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 -rotate-2"
+          className="absolute block md:hidden right-6 bottom-24 w-24 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 -rotate-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.7 }}
-          transition={{ duration: 1, delay: 1.1 }}
+          transition={{ duration: 1, delay: 0.9 }}
         >
           <div className="bg-black/40 h-5 border-b border-white/10 flex items-center px-2">
             <div className="flex items-center space-x-1">
