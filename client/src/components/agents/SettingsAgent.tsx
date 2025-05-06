@@ -47,12 +47,12 @@ const SettingsAgent = () => {
           {accentColors.map((color) => (
             <Button
               key={color.id}
-              variant="outline"
+              variant={accent === color.id ? 'secondary' : 'outline'}
               size="sm"
-              className={`flex items-center gap-2 ${accent === color.id ? 'bg-primary/10 border-primary/30' : ''}`}
+              className="flex items-center gap-2"
               onClick={() => handleAccentChange(color.id)}
             >
-              <div className={`h-4 w-4 rounded-full ${color.color}`} />
+              <div className={`h-4 w-4 rounded-full ${color.color}`} data-accent={color.id} />
               <span>{color.name}</span>
               {accent === color.id && <CheckCircle2 className="h-4 w-4 ml-1 text-green-500" />}
             </Button>
@@ -67,8 +67,8 @@ const SettingsAgent = () => {
         <div className="flex gap-4">
           <Button variant="outline" className="flex-1">Compact</Button>
           <Button 
-            variant="outline" 
-            className="flex-1 bg-primary/10 border-primary/30"
+            variant="secondary" 
+            className="flex-1"
           >Standard</Button>
           <Button variant="outline" className="flex-1">Comfortable</Button>
         </div>
@@ -190,8 +190,8 @@ const SettingsAgent = () => {
           <div className="p-3">
             <div className="flex flex-col space-y-1.5">
               <Button 
-                variant="ghost" 
-                className={`justify-start ${activeTab === 'appearance' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
+                variant={activeTab === 'appearance' ? 'secondary' : 'ghost'} 
+                className="justify-start px-2 py-1.5 h-auto text-sm"
                 onClick={() => setActiveTab('appearance')}
               >
                 <Palette className="h-4 w-4 mr-2" />
@@ -199,8 +199,8 @@ const SettingsAgent = () => {
               </Button>
               
               <Button 
-                variant="ghost" 
-                className={`justify-start ${activeTab === 'system' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
+                variant={activeTab === 'system' ? 'secondary' : 'ghost'} 
+                className="justify-start px-2 py-1.5 h-auto text-sm"
                 onClick={() => setActiveTab('system')}
               >
                 <Monitor className="h-4 w-4 mr-2" />
@@ -208,8 +208,8 @@ const SettingsAgent = () => {
               </Button>
               
               <Button 
-                variant="ghost" 
-                className={`justify-start ${activeTab === 'notifications' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
+                variant={activeTab === 'notifications' ? 'secondary' : 'ghost'} 
+                className="justify-start px-2 py-1.5 h-auto text-sm"
                 onClick={() => setActiveTab('notifications')}
               >
                 <Bell className="h-4 w-4 mr-2" />
@@ -217,8 +217,8 @@ const SettingsAgent = () => {
               </Button>
               
               <Button 
-                variant="ghost" 
-                className={`justify-start ${activeTab === 'privacy' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
+                variant={activeTab === 'privacy' ? 'secondary' : 'ghost'} 
+                className="justify-start px-2 py-1.5 h-auto text-sm"
                 onClick={() => setActiveTab('privacy')}
               >
                 <Shield className="h-4 w-4 mr-2" />
@@ -228,8 +228,8 @@ const SettingsAgent = () => {
               <Separator className="my-2 bg-white/10" />
               
               <Button 
-                variant="ghost" 
-                className={`justify-start ${activeTab === 'about' ? 'bg-primary/10 text-primary-foreground' : 'hover:bg-white/5'} px-2 py-1.5 h-auto text-sm`}
+                variant={activeTab === 'about' ? 'secondary' : 'ghost'} 
+                className="justify-start px-2 py-1.5 h-auto text-sm"
                 onClick={() => setActiveTab('about')}
               >
                 <Info className="h-4 w-4 mr-2" />
