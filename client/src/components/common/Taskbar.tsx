@@ -341,97 +341,110 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     return `${themeClass} ${blurClass}`;
   };
   
-  // Determine layout orientation
+  // Simplified approach: The taskbar's base styles
+  const getTaskbarBaseStyles = () => {
+    // Basic styles that apply to all taskbar positions
+    const baseStyles = {
+      position: 'fixed' as const,
+      display: 'flex' as const,
+      zIndex: 100,
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+      backdropFilter: enableBlur ? 'blur(4px)' : 'none',
+    };
+    
+    // Position specific styling
+    switch (position.location) {
+      case 'top':
+        return {
+          ...baseStyles,
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3.5rem',
+          width: '100%',
+          flexDirection: 'row' as const,
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          justifyContent: position.alignment === 'center' 
+            ? 'center' : position.alignment === 'end' 
+            ? 'flex-end' : position.alignment === 'space-between'
+            ? 'space-between' : 'flex-start',
+          padding: '0.5rem 1rem'
+        };
+        
+      case 'bottom':
+        return {
+          ...baseStyles,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '3.5rem',
+          width: '100%',
+          flexDirection: 'row' as const,
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          justifyContent: position.alignment === 'center' 
+            ? 'center' : position.alignment === 'end' 
+            ? 'flex-end' : position.alignment === 'space-between'
+            ? 'space-between' : 'flex-start',
+          padding: '0.5rem 1rem'
+        };
+        
+      case 'left':
+        return {
+          ...baseStyles,
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: showLabels ? '5rem' : '3.5rem',
+          maxWidth: '80px',
+          height: '100%',
+          flexDirection: 'column' as const,
+          borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+          alignItems: position.alignment === 'center' 
+            ? 'center' : position.alignment === 'end' 
+            ? 'flex-end' : position.alignment === 'space-between'
+            ? 'stretch' : 'flex-start',
+          justifyContent: position.alignment === 'space-between' ? 'space-between' : 'flex-start',
+          padding: '1rem 0.5rem'
+        };
+        
+      case 'right':
+        return {
+          ...baseStyles,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: showLabels ? '5rem' : '3.5rem',
+          maxWidth: '80px',
+          height: '100%',
+          flexDirection: 'column' as const,
+          borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+          alignItems: position.alignment === 'center' 
+            ? 'center' : position.alignment === 'end' 
+            ? 'flex-end' : position.alignment === 'space-between'
+            ? 'stretch' : 'flex-start',
+          justifyContent: position.alignment === 'space-between' ? 'space-between' : 'flex-start',
+          padding: '1rem 0.5rem'
+        };
+        
+      default:
+        return baseStyles;
+    }
+  };
+  
+  // Determine if we're using a vertical layout
   const isVertical = position.location === 'left' || position.location === 'right';
   
-  // Determine border classes
-  const getBorderClasses = () => {
-    switch (position.location) {
-      case 'top':
-        return 'border-b';
-      case 'bottom':
-        return 'border-t';
-      case 'left':
-        return 'border-r';
-      case 'right':
-        return 'border-l';
-      default:
-        return '';
-    }
-  };
+  // Get the base styles for the taskbar
+  const baseStyles = getTaskbarBaseStyles();
   
-  // Determine alignment classes
-  const getAlignmentClasses = () => {
-    // For vertical taskbars, we need different alignment classes
-    if (isVertical) {
-      switch (position.alignment) {
-        case 'start':
-          return 'items-start';
-        case 'center':
-          return 'items-center';
-        case 'end':
-          return 'items-end';
-        case 'space-between':
-          return 'justify-between';
-        default:
-          return 'items-center';
-      }
-    } else {
-      // For horizontal taskbars
-      switch (position.alignment) {
-        case 'start':
-          return 'justify-start';
-        case 'center':
-          return 'justify-center';
-        case 'end':
-          return 'justify-end';
-        case 'space-between':
-          return 'justify-between';
-        default:
-          return 'justify-between';
-      }
-    }
-  };
-  
-  // Determine the fixed positioning based on position.location
-  const getFixedPositionStyle = () => {
+  // Get the side for popovers based on taskbar position
+  const getPopoverSide = () => {
     switch (position.location) {
-      case 'top':
-        return {
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '3.5rem', // h-14
-          width: '100%'
-        };
-      case 'bottom':
-        return {
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '3.5rem', // h-14
-          width: '100%'
-        };
-      case 'left':
-        return {
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: showLabels ? '5rem' : '3.5rem', // Wider when showing labels
-          height: '100vh', // Full viewport height
-          maxWidth: '20%' // Responsive - never take more than 20% of screen width
-        };
-      case 'right':
-        return {
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: showLabels ? '5rem' : '3.5rem', // Wider when showing labels
-          height: '100vh', // Full viewport height
-          maxWidth: '20%' // Responsive - never take more than 20% of screen width
-        };
-      default:
-        return {};
+      case 'top': return 'bottom';
+      case 'bottom': return 'top';
+      case 'left': return 'right';
+      case 'right': return 'left';
+      default: return 'top';
     }
   };
 
@@ -443,13 +456,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   return (
     <>
       <div 
-        style={getFixedPositionStyle()}
-        className={`
-          fixed ${isVertical ? 'flex-col' : 'flex'} ${getAlignmentClasses()} ${getTaskbarBgClass()} ${getBorderClasses()}
-          ${isVertical ? 'py-3 px-1.5' : 'px-3 py-1.5'} ${className} 
-          ${autohide ? 'hover:opacity-100 opacity-30 transition-opacity duration-300' : ''}
-          z-10
-        `}
+        style={baseStyles}
+        className={`taskbar ${className} ${autohide ? 'opacity-30 hover:opacity-100 transition-opacity duration-300' : ''}`}
       >
         {/* Agent icons - changes flex direction based on position orientation */}
         <div className={`
