@@ -659,7 +659,7 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
         {children}
       </DialogTrigger>
       <DialogContent 
-        className={`sm:max-w-[800px] backdrop-blur-xl shadow-lg shadow-black/20 overflow-hidden ${
+        className={`sm:max-w-[800px] backdrop-blur-xl shadow-lg shadow-black/20 overflow-hidden z-[999] ${
           isDark
             ? 'bg-gray-900/90 border border-purple-600/50 text-white' 
             : 'bg-white/95 border border-purple-300 text-gray-900'

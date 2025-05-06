@@ -711,23 +711,84 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
           
           {/* System Console Button - conditionally rendered */}
           {visibleWidgets.includes('systemConsole') && (
-            <TaskbarButton
-              icon={<Terminal size={16} />}
-              label="System Console"
-              isActive={isSystemLogVisible}
+            <button
               onClick={toggleSystemLog}
-            />
+              className={`
+                ${isVertical ? 'w-auto px-2 py-1.5 flex flex-col items-center gap-1' : 'h-8 px-2.5 flex items-center space-x-2'} 
+                rounded-lg transition-all duration-200 overflow-hidden relative touch-manipulation
+                group
+                ${isSystemLogVisible
+                  ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
+                  : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+                }
+                ${isSystemLogVisible && !isVertical
+                  ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all' 
+                  : ''
+                }
+                ${isSystemLogVisible && isVertical && position.location === 'left'
+                  ? 'after:absolute after:left-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+                  : ''
+                }
+                ${isSystemLogVisible && isVertical && position.location === 'right'
+                  ? 'after:absolute after:right-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+                  : ''
+                }
+                before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+                hover:before:opacity-100 hover:scale-105
+              `}
+              title="System Console"
+            >
+              <span className={`transition-all duration-200 ${isSystemLogVisible ? 'text-primary' : 'group-hover:text-white'}`}>
+                <Terminal size={16} />
+              </span>
+              {showLabels ? (
+                <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>System</span>
+              ) : (
+                <span className="hidden sm:inline text-sm">System</span>
+              )}
+            </button>
           )}
           
           {/* Layout Manager Button - conditionally rendered */}
           {visibleWidgets.includes('layoutManager') && (
             <LayoutManager>
-              <TaskbarButton
-                icon={<Layout size={16} />}
-                label={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
-                isActive={!!activeLayoutId}
-                onClick={() => {}}
-              />
+              <button
+                className={`
+                  ${isVertical ? 'w-auto px-2 py-1.5 flex flex-col items-center gap-1' : 'h-8 px-2.5 flex items-center space-x-2'} 
+                  rounded-lg transition-all duration-200 overflow-hidden relative touch-manipulation
+                  group
+                  ${activeLayoutId
+                    ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
+                    : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+                  }
+                  ${activeLayoutId && !isVertical
+                    ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all' 
+                    : ''
+                  }
+                  ${activeLayoutId && isVertical && position.location === 'left'
+                    ? 'after:absolute after:left-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+                    : ''
+                  }
+                  ${activeLayoutId && isVertical && position.location === 'right'
+                    ? 'after:absolute after:right-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+                    : ''
+                  }
+                  before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+                  hover:before:opacity-100 hover:scale-105
+                `}
+                title={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
+              >
+                <span className={`transition-all duration-200 ${activeLayoutId ? 'text-primary' : 'group-hover:text-white'}`}>
+                  <Layout size={16} />
+                </span>
+                {showLabels ? (
+                  <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>
+                    {getActiveLayoutName() ? getActiveLayoutName() : 'Layouts'}
+                  </span>
+                ) : (
+                  <span className="hidden sm:inline text-sm">Layouts</span>
+                )}
+              </button>
             </LayoutManager>
           )}
           
