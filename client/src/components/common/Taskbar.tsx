@@ -435,10 +435,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
           height: '100%',
           flexDirection: 'column' as const,
           borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
-          alignItems: position.alignment === 'center' 
-            ? 'center' : position.alignment === 'end' 
-            ? 'flex-end' : position.alignment === 'space-between'
-            ? 'stretch' : 'flex-start',
+          alignItems: 'center', // Always center align items for right taskbar
           justifyContent: position.alignment === 'space-between' ? 'space-between' : 'flex-start',
           padding: '1rem 0.5rem'
         };
@@ -479,7 +476,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
         {/* Agent icons - changes flex direction based on position orientation */}
         <div className={`
           flex-1 flex ${isVertical && !isMobile ? 'flex-col space-y-1 py-2' : 'items-center space-x-1'}
-          ${isMobile ? 'justify-center' : ''}
+          ${isMobile ? 'justify-center' : position.location === 'right' ? 'justify-center w-full' : ''}
         `}>
           {registry.map(agent => {
             const isOpen = windows[agent.id]?.isOpen;
