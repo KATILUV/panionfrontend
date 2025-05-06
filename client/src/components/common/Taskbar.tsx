@@ -88,29 +88,26 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
               key={agent.id}
               onClick={() => handleIconClick(agent.id)}
               className={`
-                p-2 rounded-lg transition-all duration-200 relative
+                p-2 rounded-lg transition-all duration-200 relative overflow-hidden
                 ${isOpen && !isMinimized 
-                  ? getCurrentTheme() === 'dark' 
-                    ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
-                    : 'bg-primary/10 shadow-sm text-primary-foreground' 
-                  : getCurrentTheme() === 'dark'
-                    ? 'bg-transparent hover:bg-white/10 text-white/70 hover:text-white hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
-                    : 'bg-transparent hover:bg-black/5 hover:shadow-sm text-gray-600 hover:text-gray-900'
+                  ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
+                  : 'bg-transparent hover:bg-white/10 text-white/70 hover:text-white hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
                 }
+                group
                 ${isOpen 
-                  ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-0.5 ' + 
-                    (getCurrentTheme() === 'dark' 
-                      ? 'after:bg-primary after:opacity-90' 
-                      : 'after:bg-primary after:opacity-80'
-                    ) + 
-                    ' after:rounded-full after:transition-all' 
+                  ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all taskbar-active-indicator' 
                   : ''
                 }
+                before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+                hover:before:opacity-100 hover:scale-105
               `}
               title={agent.title}
             >
-              <div className="flex items-center justify-center w-7 h-7">
-                <div dangerouslySetInnerHTML={{ __html: agent.icon }} />
+              <div className={`flex items-center justify-center w-7 h-7 transform transition-transform duration-200
+                ${isOpen ? 'scale-110' : 'group-hover:scale-110'}
+              `}>
+                <div dangerouslySetInnerHTML={{ __html: agent.icon }} 
+                  className={`transition-all duration-200 ${isOpen ? 'text-primary' : 'group-hover:text-white'}`} />
               </div>
             </button>
           );
@@ -123,11 +120,15 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           variant="ghost" 
           size="sm"
           onClick={toggleSystemLog}
-          className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 ${
-            isSystemLogVisible 
-              ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+          className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
+            group
+            ${isSystemLogVisible 
+              ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)] after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all'
               : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
-          }`}
+            }
+            before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+            hover:before:opacity-100 hover:scale-105
+          `}
         >
           <Terminal size={16} />
           <span className="hidden sm:inline text-sm">System Console</span>
@@ -137,12 +138,20 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         <Button 
           variant="ghost" 
           size="sm"
-          className="h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+          className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
+            group
+            ${windows['settings']?.isOpen && !windows['settings']?.isMinimized
+              ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)] after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all'
+              : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+            }
+            before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+            hover:before:opacity-100 hover:scale-105
+          `}
           onClick={() => {
             handleIconClick('settings');
           }}
         >
-          <Settings size={16} />
+          <Settings size={16} className={`transition-all duration-200 ${windows['settings']?.isOpen ? 'text-primary' : 'group-hover:text-white'}`} />
           <span className="hidden sm:inline text-sm">Settings</span>
         </Button>
         
@@ -151,9 +160,17 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           <Button 
             variant="ghost" 
             size="sm"
-            className="h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+            className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
+              group
+              ${activeLayoutId
+                ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)] after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all'
+                : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+              }
+              before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+              hover:before:opacity-100 hover:scale-105
+            `}
           >
-            <Layout size={16} />
+            <Layout size={16} className={`transition-all duration-200 ${activeLayoutId ? 'text-primary' : 'group-hover:text-white'}`} />
             <span className="hidden sm:inline text-sm">
               {getActiveLayoutName() ? 
                 `Layout: ${getActiveLayoutName()}` : 

@@ -623,6 +623,22 @@ h4, .h4 {
   animation: window-focus-glow 3s infinite ease-in-out;
 }
 
+/* Taskbar active indicator animation */
+@keyframes taskbar-indicator-pulse {
+  0%, 100% {
+    width: 14px;
+    opacity: 0.8;
+  }
+  50% {
+    width: 20px;
+    opacity: 1;
+  }
+}
+
+.taskbar-active-indicator {
+  animation: taskbar-indicator-pulse 2s infinite ease-in-out;
+}
+
 /* Custom Scrollbar Styling */
 /* For Webkit browsers */
 ::-webkit-scrollbar {
