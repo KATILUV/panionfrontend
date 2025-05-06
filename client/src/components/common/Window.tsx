@@ -368,13 +368,9 @@ const Window: React.FC<WindowProps> = ({
       >
         <motion.div 
           className={`flex flex-col rounded-lg backdrop-blur-xl h-full overflow-hidden
-            ${getCurrentTheme() === 'dark'
-              ? isActive 
-                ? 'border border-white/20 bg-black/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]' 
-                : 'border border-white/10 bg-black/30 shadow-[0_10px_30px_rgba(0,0,0,0.4)]'
-              : isActive 
-                ? 'border border-primary/30 bg-white/90 shadow-[0_10px_25px_rgba(0,0,0,0.1)]' 
-                : 'border border-gray-200/70 bg-white/80 shadow-[0_5px_15px_rgba(0,0,0,0.05)]'
+            ${isActive 
+              ? 'border border-white/20 bg-black/40 shadow-xl shadow-black/30' 
+              : 'border border-white/10 bg-black/30 shadow-lg shadow-black/20'
             }
           `}
           initial="closed"
@@ -400,11 +396,7 @@ const Window: React.FC<WindowProps> = ({
         </AnimatePresence>
         
         <div 
-          className={`window-drag-handle flex items-center justify-between px-3 h-6 cursor-move ${
-            getCurrentTheme() === 'dark'
-              ? 'bg-black/40 border-b border-white/10'
-              : 'bg-gray-100 border-b border-gray-200'
-          }`}
+          className="window-drag-handle flex items-center justify-between px-3 h-6 cursor-move bg-black/40 border-b border-white/10"
           onDoubleClick={toggleMaximize}
         >
           <div className="flex items-center justify-between flex-1">
@@ -439,11 +431,7 @@ const Window: React.FC<WindowProps> = ({
                   style={{ zIndex: 9999 }}
                 />
               </div>
-              <div className={`text-xs font-medium truncate ${
-                getCurrentTheme() === 'dark' 
-                  ? 'text-white/70'
-                  : 'text-gray-700'
-              }`}>
+              <div className="text-xs font-medium truncate text-white/70">
                 {title}
               </div>
             </div>
