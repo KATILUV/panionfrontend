@@ -155,19 +155,23 @@ export default function FeedbackDemoAgent() {
           </div>
           
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">AI Thinking Sizes</h3>
+            <h3 className="text-lg font-medium">AI Thinking Styles</h3>
             <div className="flex flex-col md:flex-row items-start gap-6 py-4">
               <div className="flex flex-col items-center gap-2">
-                <AIThinking size="sm" mode="detailed" message="Small" />
-                <span className="text-xs">Small</span>
+                <div className="transform scale-75">
+                  <AIThinkingIndicator isThinking={true} type="full" message="Compact size" />
+                </div>
+                <span className="text-xs">Compact</span>
               </div>
               <div className="flex flex-col items-center gap-2">
-                <AIThinking size="md" mode="detailed" message="Medium" />
-                <span className="text-xs">Medium</span>
+                <AIThinkingIndicator isThinking={true} type="dots" message="Medium" />
+                <span className="text-xs">Dots</span>
               </div>
               <div className="flex flex-col items-center gap-2">
-                <AIThinking size="lg" mode="detailed" message="Large" />
-                <span className="text-xs">Large</span>
+                <div className="transform scale-125">
+                  <AIThinkingIndicator isThinking={true} type="minimal" />
+                </div>
+                <span className="text-xs">Minimal</span>
               </div>
             </div>
           </div>

@@ -6,6 +6,8 @@ interface SpinnerProps {
   color?: 'primary' | 'white' | 'gray' | 'indigo' | 'purple';
   thickness?: 'thin' | 'regular' | 'thick';
   label?: string;
+  variant?: 'default' | 'dots' | 'pulse';
+  className?: string;
 }
 
 /**
@@ -15,7 +17,9 @@ const Spinner: React.FC<SpinnerProps> = ({
   size = 'md',
   color = 'primary',
   thickness = 'regular',
-  label
+  label,
+  variant = 'default',
+  className = ''
 }) => {
   // Map size to dimensions
   const sizeMap = {
@@ -57,8 +61,116 @@ const Spinner: React.FC<SpinnerProps> = ({
     },
   };
 
+  // Dots variant
+  if (variant === 'dots') {
+    const dotVariants = {
+      initial: { y: 0, opacity: 0.4 },
+      animate: (i: number) => ({
+        y: [0, -5, 0],
+        opacity: [0.4, 1, 0.4],
+        transition: {
+          delay: i * 0.1,
+          duration: 0.6,
+          repeat: Infinity,
+          repeatType: "loop" as const
+        }
+      })
+    };
+    
+    const dotBaseSize = {
+      xs: 'w-1 h-1',
+      sm: 'w-1.5 h-1.5',
+      md: 'w-2 h-2',
+      lg: 'w-2.5 h-2.5',
+      xl: 'w-3 h-3'
+    };
+    
+    const dotColor = {
+      primary: 'bg-primary',
+      white: 'bg-white',
+      gray: 'bg-gray-300',
+      indigo: 'bg-indigo-500',
+      purple: 'bg-purple-500'
+    };
+    
+    return (
+      <div className={`flex items-center justify-center space-x-1.5 ${className}`}>
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className={`${dotBaseSize[size]} rounded-full ${dotColor[color]}`}
+            variants={dotVariants}
+            initial="initial"
+            animate="animate"
+            custom={i}
+          />
+        ))}
+        
+        {label && (
+          <span className="text-sm text-gray-300 ml-2">{label}</span>
+        )}
+      </div>
+    );
+  }
+  
+  // Pulse variant
+  if (variant === 'pulse') {
+    const pulseSize = {
+      xs: 'w-2 h-2',
+      sm: 'w-3 h-3',
+      md: 'w-4 h-4',
+      lg: 'w-5 h-5',
+      xl: 'w-6 h-6'
+    };
+    
+    const pulseColor = {
+      primary: 'bg-primary',
+      white: 'bg-white',
+      gray: 'bg-gray-300',
+      indigo: 'bg-indigo-500',
+      purple: 'bg-purple-500'
+    };
+    
+    return (
+      <div className={`flex items-center justify-center space-x-2 ${className}`}>
+        <div className="relative">
+          <motion.div
+            className={`${pulseSize[size]} rounded-full ${pulseColor[color]}`}
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.6, 1, 0.6]
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          
+          <motion.div
+            className={`absolute inset-0 ${pulseSize[size]} rounded-full ${pulseColor[color]} opacity-30`}
+            animate={{
+              scale: [1, 2],
+              opacity: [0.3, 0]
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeOut"
+            }}
+          />
+        </div>
+        
+        {label && (
+          <span className="text-sm text-gray-300">{label}</span>
+        )}
+      </div>
+    );
+  }
+  
+  // Default spinner variant
   return (
-    <div className="flex items-center justify-center space-x-2">
+    <div className={`flex items-center justify-center space-x-2 ${className}`}>
       <div className="relative">
         {/* Background track */}
         <div 

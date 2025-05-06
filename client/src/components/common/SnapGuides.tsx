@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface SnapGuidesProps {
   isVisible: boolean;
@@ -18,138 +18,128 @@ const SnapGuides: React.FC<SnapGuidesProps> = ({
   windowWidth,
   windowHeight
 }) => {
-  if (!isVisible || snapPosition === 'none') return null;
-  
-  // Calculate positions based on screen dimensions
-  const halfWidth = windowWidth / 2;
-  const halfHeight = windowHeight / 2;
-  
-  const getGuideStyles = () => {
-    // Base positioning for different snap areas
+  if (!isVisible) return null;
+
+  // Styles for different snap positions
+  const getHighlightStyles = () => {
+    const baseStyle = "absolute rounded-lg border-2 border-indigo-500/80 bg-indigo-500/10 pointer-events-none z-50";
+    
     switch (snapPosition) {
       case 'left':
-        return {
-          left: 0,
-          top: 0,
-          width: halfWidth,
-          height: windowHeight,
-          borderRight: '2px solid rgba(97, 218, 251, 0.7)'
-        };
+        return `${baseStyle} left-0 top-0 bottom-0 w-1/2`;
       case 'right':
-        return {
-          left: halfWidth,
-          top: 0,
-          width: halfWidth,
-          height: windowHeight,
-          borderLeft: '2px solid rgba(97, 218, 251, 0.7)'
-        };
+        return `${baseStyle} right-0 top-0 bottom-0 w-1/2`;
       case 'top':
-        return {
-          left: 0,
-          top: 0,
-          width: windowWidth,
-          height: halfHeight,
-          borderBottom: '2px solid rgba(97, 218, 251, 0.7)'
-        };
+        return `${baseStyle} left-0 top-0 right-0 h-1/2`;
       case 'bottom':
-        return {
-          left: 0,
-          top: halfHeight,
-          width: windowWidth,
-          height: halfHeight,
-          borderTop: '2px solid rgba(97, 218, 251, 0.7)'
-        };
+        return `${baseStyle} left-0 bottom-0 right-0 h-1/2`;
       case 'top-left':
-        return {
-          left: 0,
-          top: 0,
-          width: halfWidth,
-          height: halfHeight,
-          borderRight: '2px solid rgba(97, 218, 251, 0.7)',
-          borderBottom: '2px solid rgba(97, 218, 251, 0.7)'
-        };
+        return `${baseStyle} left-0 top-0 w-1/2 h-1/2`;
       case 'top-right':
-        return {
-          left: halfWidth,
-          top: 0,
-          width: halfWidth,
-          height: halfHeight,
-          borderLeft: '2px solid rgba(97, 218, 251, 0.7)',
-          borderBottom: '2px solid rgba(97, 218, 251, 0.7)'
-        };
+        return `${baseStyle} right-0 top-0 w-1/2 h-1/2`;
       case 'bottom-left':
-        return {
-          left: 0,
-          top: halfHeight,
-          width: halfWidth,
-          height: halfHeight,
-          borderRight: '2px solid rgba(97, 218, 251, 0.7)',
-          borderTop: '2px solid rgba(97, 218, 251, 0.7)'
-        };
+        return `${baseStyle} left-0 bottom-0 w-1/2 h-1/2`;
       case 'bottom-right':
-        return {
-          left: halfWidth,
-          top: halfHeight,
-          width: halfWidth,
-          height: halfHeight,
-          borderLeft: '2px solid rgba(97, 218, 251, 0.7)',
-          borderTop: '2px solid rgba(97, 218, 251, 0.7)'
-        };
+        return `${baseStyle} right-0 bottom-0 w-1/2 h-1/2`;
       case 'center':
-        const centerWidth = windowWidth * 0.5;
-        const centerHeight = windowHeight * 0.5;
-        const centerLeft = (windowWidth - centerWidth) / 2;
-        const centerTop = (windowHeight - centerHeight) / 2;
-        
-        return {
-          left: centerLeft,
-          top: centerTop,
-          width: centerWidth,
-          height: centerHeight,
-          border: '2px solid rgba(97, 218, 251, 0.7)'
-        };
+        // Calculate a centered box that's 70% of the screen
+        return `${baseStyle} left-[15%] right-[15%] top-[15%] bottom-[15%] w-[70%] h-[70%] m-auto`;
       default:
-        return {};
+        return '';
     }
   };
-  
+
+  const guideAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.2 }
+  };
+
+  // Get edge guides (lines at edges of screen)
+  const getEdgeGuides = () => {
+    const edgeGuideStyle = "absolute bg-indigo-400 pointer-events-none";
+    const edgeGuides = [];
+    
+    // Only show edge guides for relevant snap positions
+    if (['left', 'top-left', 'bottom-left'].includes(snapPosition)) {
+      // Left edge
+      edgeGuides.push(
+        <div key="left" className={`${edgeGuideStyle} left-0 top-0 bottom-0 w-0.5`} />
+      );
+    }
+    
+    if (['right', 'top-right', 'bottom-right'].includes(snapPosition)) {
+      // Right edge
+      edgeGuides.push(
+        <div key="right" className={`${edgeGuideStyle} right-0 top-0 bottom-0 w-0.5`} />
+      );
+    }
+    
+    if (['top', 'top-left', 'top-right'].includes(snapPosition)) {
+      // Top edge
+      edgeGuides.push(
+        <div key="top" className={`${edgeGuideStyle} top-0 left-0 right-0 h-0.5`} />
+      );
+    }
+    
+    if (['bottom', 'bottom-left', 'bottom-right'].includes(snapPosition)) {
+      // Bottom edge
+      edgeGuides.push(
+        <div key="bottom" className={`${edgeGuideStyle} bottom-0 left-0 right-0 h-0.5`} />
+      );
+    }
+    
+    return edgeGuides;
+  };
+
+  // Get center guides (lines at center of screen)
+  const getCenterGuides = () => {
+    const centerGuideStyle = "absolute bg-indigo-400/60 pointer-events-none";
+    const centerGuides = [];
+    
+    // Only show center guides for certain snap positions
+    if (['center', 'left', 'right'].includes(snapPosition)) {
+      // Vertical center line
+      centerGuides.push(
+        <div key="vertical-center" className={`${centerGuideStyle} left-1/2 -ml-px top-0 bottom-0 w-0.5`} />
+      );
+    }
+    
+    if (['center', 'top', 'bottom'].includes(snapPosition)) {
+      // Horizontal center line
+      centerGuides.push(
+        <div key="horizontal-center" className={`${centerGuideStyle} top-1/2 -mt-px left-0 right-0 h-0.5`} />
+      );
+    }
+    
+    return centerGuides;
+  };
+
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          className="fixed inset-0 pointer-events-none z-[9998]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-        >
-          <motion.div
-            className="absolute"
-            style={{
-              ...getGuideStyles(),
-              backgroundColor: 'rgba(97, 218, 251, 0.1)',
-              backdropFilter: 'blur(1px)',
-              zIndex: 9999
-            }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          />
-          
-          {/* Display snap position label */}
-          <motion.div
-            className="absolute left-1/2 bottom-8 transform -translate-x-1/2 bg-blue-900/80 text-blue-100 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm border border-blue-500/30"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.2 }}
-          >
-            {snapPosition.charAt(0).toUpperCase() + snapPosition.slice(1).replace('-', ' ')}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <motion.div 
+      className="absolute inset-0 z-40 pointer-events-none overflow-hidden"
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={guideAnimation}
+    >
+      {/* Highlight area */}
+      <div className={getHighlightStyles()} />
+      
+      {/* Edge guides */}
+      {getEdgeGuides()}
+      
+      {/* Center guides */}
+      {getCenterGuides()}
+      
+      {/* Position label */}
+      <div className="absolute left-1/2 bottom-8 transform -translate-x-1/2 z-50">
+        <div className="bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
+          {snapPosition.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
