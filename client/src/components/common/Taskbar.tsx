@@ -316,43 +316,56 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     return `${themeClass} ${blurClass}`;
   };
   
-  // Determine positioning/alignment classes
-  const getPositionClasses = () => {
-    let positionClass = '';
-    
-    // Position (top, bottom, left, right)
+  // Determine layout orientation
+  const isVertical = position.location === 'left' || position.location === 'right';
+  
+  // Determine border classes
+  const getBorderClasses = () => {
     switch (position.location) {
       case 'top':
-        positionClass += 'border-b ';
-        break;
+        return 'border-b';
       case 'bottom':
-        positionClass += 'border-t ';
-        break;
+        return 'border-t';
       case 'left':
-        positionClass += 'border-r flex-col h-full ';
-        break;
+        return 'border-r';
       case 'right':
-        positionClass += 'border-l flex-col h-full ';
-        break;
+        return 'border-l';
+      default:
+        return '';
     }
-    
-    // Alignment (start, center, end, space-between)
-    switch (position.alignment) {
-      case 'start':
-        positionClass += 'justify-start ';
-        break;
-      case 'center':
-        positionClass += 'justify-center ';
-        break;
-      case 'end':
-        positionClass += 'justify-end ';
-        break;
-      case 'space-between':
-        positionClass += 'justify-between ';
-        break;
+  };
+  
+  // Determine alignment classes
+  const getAlignmentClasses = () => {
+    // For vertical taskbars, we need different alignment classes
+    if (isVertical) {
+      switch (position.alignment) {
+        case 'start':
+          return 'items-start';
+        case 'center':
+          return 'items-center';
+        case 'end':
+          return 'items-end';
+        case 'space-between':
+          return 'justify-between';
+        default:
+          return 'items-center';
+      }
+    } else {
+      // For horizontal taskbars
+      switch (position.alignment) {
+        case 'start':
+          return 'justify-start';
+        case 'center':
+          return 'justify-center';
+        case 'end':
+          return 'justify-end';
+        case 'space-between':
+          return 'justify-between';
+        default:
+          return 'justify-between';
+      }
     }
-    
-    return positionClass;
   };
   
   // Determine the fixed positioning based on position.location
@@ -379,16 +392,16 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           top: 0,
           left: 0,
           bottom: 0,
-          width: '3.5rem', // h-14
-          height: '100%'
+          width: '3.5rem', // w-14
+          height: '100vh' // Full viewport height
         };
       case 'right':
         return {
           top: 0,
           right: 0,
           bottom: 0,
-          width: '3.5rem', // h-14
-          height: '100%'
+          width: '3.5rem', // w-14
+          height: '100vh' // Full viewport height
         };
       default:
         return {};
@@ -405,8 +418,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       <div 
         style={getFixedPositionStyle()}
         className={`
-          fixed flex items-center ${getTaskbarBgClass()} ${getPositionClasses()} px-4 py-1.5 
-          ${className} ${autohide ? 'hover:opacity-100 opacity-30 transition-opacity duration-300' : ''}
+          fixed ${isVertical ? 'flex-col' : 'flex'} ${getAlignmentClasses()} ${getTaskbarBgClass()} ${getBorderClasses()}
+          px-3 py-1.5 ${className} ${autohide ? 'hover:opacity-100 opacity-30 transition-opacity duration-300' : ''}
           z-10
         `}
       >
