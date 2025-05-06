@@ -124,6 +124,24 @@ const Desktop: React.FC = () => {
     log.info('Panion OS initialized');
     log.thinking('Loading user preferences and system settings');
     log.memory('Retrieving saved window layouts and theme settings');
+    
+    // Check for default layout and load it if found
+    const allLayouts = useAgentStore.getState().layouts;
+    const defaultLayout = allLayouts.find(layout => layout.isDefault);
+    
+    if (defaultLayout) {
+      log.action(`Loading default layout: ${defaultLayout.name}`);
+      setTimeout(() => {
+        loadLayout(defaultLayout.id);
+        toast({
+          title: "Default layout applied",
+          description: `Layout "${defaultLayout.name}" has been loaded automatically`,
+        });
+      }, 500); // Small delay to ensure everything is initialized
+    } else {
+      log.action('No default layout found, using standard configuration');
+    }
+    
     log.action('System ready for user interaction');
     
     // Show the system log by default on first run

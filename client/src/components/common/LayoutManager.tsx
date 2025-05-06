@@ -341,14 +341,14 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
               
               {/* Category filter */}
               <Select 
-                value={filterCategory || ''} 
-                onValueChange={val => setFilterCategory(val === '' ? null : val)}
+                value={filterCategory || 'all'} 
+                onValueChange={val => setFilterCategory(val === 'all' ? null : val)}
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
