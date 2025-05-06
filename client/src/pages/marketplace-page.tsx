@@ -18,6 +18,14 @@ const DynamicIcon = ({ name, ...props }: { name: string; [key: string]: any }) =
 };
 
 const MarketplacePage = () => {
+  // Explicitly set the theme accent to purple when this page loads
+  const setAccent = useThemeStore(state => state.setAccent);
+  
+  useEffect(() => {
+    // Force the accent to purple for marketplace
+    setAccent('purple');
+  }, [setAccent]);
+  
   const { 
     agents, 
     categories, 
