@@ -355,12 +355,59 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     return positionClass;
   };
   
+  // Determine the fixed positioning based on position.location
+  const getFixedPositionStyle = () => {
+    switch (position.location) {
+      case 'top':
+        return {
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3.5rem', // h-14
+          width: '100%'
+        };
+      case 'bottom':
+        return {
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '3.5rem', // h-14
+          width: '100%'
+        };
+      case 'left':
+        return {
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: '3.5rem', // h-14
+          height: '100%'
+        };
+      case 'right':
+        return {
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: '3.5rem', // h-14
+          height: '100%'
+        };
+      default:
+        return {};
+    }
+  };
+
+  // Log position change for debugging
+  React.useEffect(() => {
+    console.log("Setting taskbar position to:", position.location);
+  }, [position.location]);
+
   return (
     <>
       <div 
+        style={getFixedPositionStyle()}
         className={`
-          flex items-center ${getTaskbarBgClass()} ${getPositionClasses()} px-4 py-1.5 
+          fixed flex items-center ${getTaskbarBgClass()} ${getPositionClasses()} px-4 py-1.5 
           ${className} ${autohide ? 'hover:opacity-100 opacity-30 transition-opacity duration-300' : ''}
+          z-10
         `}
       >
         <div className="flex-1 flex items-center space-x-1">

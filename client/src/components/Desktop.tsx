@@ -247,8 +247,8 @@ const Desktop: React.FC = () => {
       {/* Command Palette */}
       <CommandPalette />
       
-      {/* Taskbar */}
-      <Taskbar className="h-14" />
+      {/* Taskbar - position is handled via the useTaskbarStore */}
+      <Taskbar />
     </DesktopBackground>
   );
 };
