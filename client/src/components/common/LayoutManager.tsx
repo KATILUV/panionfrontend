@@ -683,7 +683,7 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
         </DialogHeader>
         
         <Tabs defaultValue="templates" className="mt-2" value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="w-full grid grid-cols-3 p-1 gap-1 bg-gray-900/30 dark:bg-black/30 rounded-lg">
+          <TabsList className="w-full grid grid-cols-4 p-1 gap-1 bg-gray-900/30 dark:bg-black/30 rounded-lg">
             <TabsTrigger 
               value="templates" 
               className="flex items-center gap-1.5 data-[state=active]:bg-purple-700/90 data-[state=active]:text-white data-[state=active]:shadow-md"
