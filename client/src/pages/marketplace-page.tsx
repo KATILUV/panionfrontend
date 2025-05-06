@@ -113,7 +113,7 @@ const MarketplacePage = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />
             <div className="absolute bottom-0 left-0 p-4 text-white w-full">
               <div className="flex items-center">
-                <div className="p-2 rounded-full bg-primary/20 backdrop-blur-sm mr-3">
+                <div className="p-2 rounded-full bg-purple-600/20 backdrop-blur-sm mr-3">
                   <DynamicIcon name={agent.icon} size={20} className="text-white" />
                 </div>
                 <h3 className="text-xl font-semibold">{agent.title}</h3>
@@ -148,7 +148,7 @@ const MarketplacePage = () => {
             {agent.categories.slice(0, 3).map((catId: string) => {
               const category = categories.find(c => c.id === catId);
               return category ? (
-                <div key={catId} className="bg-primary/10 text-primary-foreground px-2 py-0.5 rounded-full text-xs flex items-center">
+                <div key={catId} className="bg-purple-500/10 text-purple-200 px-2 py-0.5 rounded-full text-xs flex items-center">
                   <DynamicIcon name={category.icon} size={10} className="mr-1" />
                   {category.name}
                 </div>
@@ -236,8 +236,8 @@ const MarketplacePage = () => {
             
             <div className="absolute bottom-0 left-0 p-6 text-white">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-primary/20 backdrop-blur-sm mr-4">
-                  <DynamicIcon name={agent.icon} size={32} className="text-primary" />
+                <div className="p-3 rounded-full bg-purple-600/20 backdrop-blur-sm mr-4">
+                  <DynamicIcon name={agent.icon} size={32} className="text-purple-300" />
                 </div>
                 <div>
                   <h2 className="text-3xl font-bold">{agent.title}</h2>
@@ -268,8 +268,8 @@ const MarketplacePage = () => {
                 >
                   <ArrowLeft size={20} />
                 </button>
-                <div className="p-3 rounded-full bg-primary/20 mr-4">
-                  <DynamicIcon name={agent.icon} size={32} className="text-primary" />
+                <div className="p-3 rounded-full bg-purple-600/20 mr-4">
+                  <DynamicIcon name={agent.icon} size={32} className="text-purple-300" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-semibold">{agent.title}</h2>
@@ -349,7 +349,7 @@ const MarketplacePage = () => {
                 {agent.categories.map((catId) => {
                   const category = categories.find(c => c.id === catId);
                   return category ? (
-                    <div key={catId} className="bg-primary/10 text-primary-foreground px-3 py-1.5 rounded-full text-sm flex items-center">
+                    <div key={catId} className="bg-purple-500/10 text-purple-200 px-3 py-1.5 rounded-full text-sm flex items-center">
                       <DynamicIcon name={category.icon} size={14} className="mr-1.5" />
                       {category.name}
                     </div>
@@ -377,8 +377,8 @@ const MarketplacePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-black/20 rounded-lg p-5 border border-white/10">
                 <div className="flex items-center mb-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 mr-3 flex items-center justify-center">
-                    <span className="text-primary font-bold">JD</span>
+                  <div className="w-10 h-10 rounded-full bg-purple-500/20 mr-3 flex items-center justify-center">
+                    <span className="text-purple-300 font-bold">JD</span>
                   </div>
                   <div>
                     <h4 className="font-medium">John Doe</h4>
@@ -396,8 +396,8 @@ const MarketplacePage = () => {
               
               <div className="bg-black/20 rounded-lg p-5 border border-white/10">
                 <div className="flex items-center mb-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 mr-3 flex items-center justify-center">
-                    <span className="text-primary font-bold">AS</span>
+                  <div className="w-10 h-10 rounded-full bg-purple-500/20 mr-3 flex items-center justify-center">
+                    <span className="text-purple-300 font-bold">AS</span>
                   </div>
                   <div>
                     <h4 className="font-medium">Alice Smith</h4>
@@ -464,16 +464,16 @@ const MarketplacePage = () => {
             </>
           ) : (
             // Fallback gradient if no image
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-primary/20" />
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-700/80 to-purple-500/20" />
           )}
           
           {/* Content */}
           <div className="relative flex flex-col justify-center p-8 md:p-12 md:max-w-[60%]">
             <div className="mb-4 flex items-center space-x-2">
-              <div className="bg-primary/20 backdrop-blur-sm p-2 rounded-full">
-                <DynamicIcon name={agent.icon} size={28} className="text-primary" />
+              <div className="bg-purple-600/20 backdrop-blur-sm p-2 rounded-full">
+                <DynamicIcon name={agent.icon} size={28} className="text-purple-300" />
               </div>
-              <div className="bg-primary rounded-full px-3 py-1 text-xs text-white font-bold flex items-center">
+              <div className="bg-purple-600 rounded-full px-3 py-1 text-xs text-white font-bold flex items-center">
                 <Sparkles size={10} className="mr-1" />
                 FEATURED AGENT
               </div>
@@ -508,7 +508,7 @@ const MarketplacePage = () => {
                 className={`px-6 py-2.5 rounded-full flex items-center space-x-2 transition-all
                   ${agent.isInstalled 
                     ? 'bg-red-500 text-white hover:bg-red-600' 
-                    : 'bg-primary text-white hover:bg-primary/90'}
+                    : 'bg-purple-600 text-white hover:bg-purple-500'}
                 `}
               >
                 {agent.isInstalled ? (
