@@ -542,23 +542,41 @@ const MarketplacePage = () => {
   return (
     <div className="min-h-screen">
       {/* Hero section with Panion branding */}
-      <section className="relative overflow-hidden py-16 md:py-24 bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]">
+      <section className="relative overflow-hidden py-16 md:py-24 bg-gradient-to-br from-[#1c1056] via-[#1a1245] to-[#21115b]">
+        {/* Background stars/particles effect */}
+        <div className="absolute inset-0 z-0 opacity-30">
+          <div className="absolute h-1 w-1 bg-white rounded-full top-[15%] left-[10%] shadow-glow"></div>
+          <div className="absolute h-1 w-1 bg-white rounded-full top-[35%] left-[25%] shadow-glow"></div>
+          <div className="absolute h-1 w-1 bg-white rounded-full top-[65%] left-[15%] shadow-glow"></div>
+          <div className="absolute h-1 w-1 bg-white rounded-full top-[25%] right-[18%] shadow-glow"></div>
+          <div className="absolute h-1 w-1 bg-white rounded-full top-[55%] right-[25%] shadow-glow"></div>
+          <div className="absolute h-0.5 w-0.5 bg-white rounded-full top-[40%] left-[40%] shadow-glow"></div>
+          <div className="absolute h-0.5 w-0.5 bg-white rounded-full top-[70%] left-[50%] shadow-glow"></div>
+          <div className="absolute h-0.5 w-0.5 bg-white rounded-full top-[20%] right-[40%] shadow-glow"></div>
+          <div className="absolute h-0.5 w-0.5 bg-white rounded-full top-[60%] right-[35%] shadow-glow"></div>
+        </div>
+        
         <div className="container mx-auto px-6 relative z-20">
-          {/* Animated background elements */}
+          {/* Animated background elements - larger, more subtle */}
           <motion.div 
-            className="absolute -top-20 -left-10 w-40 h-40 bg-purple-500/30 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-40 -left-20 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.3, 0.2] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div 
-            className="absolute top-20 right-10 w-60 h-60 bg-violet-500/20 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            className="absolute top-20 right-0 w-96 h-96 bg-violet-500/15 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.25, 0.15] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+          <motion.div 
+            className="absolute bottom-0 left-1/4 w-72 h-72 bg-indigo-600/10 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.2, 0.1] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
           />
           
           {/* Back to desktop link */}
           <div className="mb-10">
-            <Link href="/desktop" className="inline-flex items-center text-white/70 hover:text-white transition-all bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm border border-white/10">
+            <Link href="/desktop" className="inline-flex items-center text-white/70 hover:text-white transition-colors bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm border border-white/10">
               <ArrowLeft size={16} className="mr-2" />
               <span>Back to Desktop</span>
             </Link>
@@ -573,16 +591,17 @@ const MarketplacePage = () => {
               className="relative mb-6"
             >
               <motion.div 
-                className="absolute -top-5 -left-10 w-20 h-20 bg-purple-500/40 rounded-full blur-2xl"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-10 -left-10 w-40 h-40 bg-purple-500/20 rounded-full blur-2xl"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               />
               <motion.div 
-                className="absolute -top-5 -right-10 w-20 h-20 bg-violet-500/40 rounded-full blur-2xl"
-                animate={{ scale: [1, 1.3, 1] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                className="absolute -top-10 -right-10 w-40 h-40 bg-violet-500/20 rounded-full blur-2xl"
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
               />
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm relative z-30">
+              
+              <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm relative z-30">
                 <span className="absolute inset-0 blur-xl bg-black/20 -z-10 rounded-3xl"></span>
                 <span className="text-violet-300">Panion</span> Agent Marketplace
               </h1>
@@ -591,7 +610,7 @@ const MarketplacePage = () => {
               </p>
             </motion.div>
             
-            {/* Search box */}
+            {/* Search box - enhanced with glow effect */}
             <div className="relative max-w-lg">
               <motion.div
                 className="absolute inset-0 rounded-full bg-violet-500/20 blur-md z-0"
@@ -601,7 +620,7 @@ const MarketplacePage = () => {
               <input
                 type="text"
                 placeholder="Search agents..."
-                className="pl-12 pr-4 py-3.5 bg-black/40 backdrop-blur-sm border border-white/20 rounded-full text-white w-full focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent relative z-10 shadow-lg"
+                className="pl-12 pr-4 py-3.5 bg-black/40 backdrop-blur-sm border border-purple-500/30 rounded-full text-white w-full focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 relative z-10 shadow-[0_0_15px_rgba(147,51,234,0.1)]"
                 value={searchQuery}
                 onChange={(e) => searchAgents(e.target.value)}
               />
@@ -610,12 +629,12 @@ const MarketplacePage = () => {
           </div>
         </div>
         
-        {/* Bottom gradient overlay - smoother transition */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
+        {/* Bottom gradient overlay - extended and more gradual for better blend */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0c0a1f] via-[#110b2b]/90 to-transparent z-10"></div>
       </section>
       
-      {/* Content Section */}
-      <section className="container mx-auto px-6 pb-20 relative">
+      {/* Content Section - with improved gradient background */}
+      <section className="container mx-auto px-6 pb-20 relative bg-gradient-to-b from-[#0c0a1f] to-[#080619]">
         {/* Only show featured spotlight when on the featured tab */}
         {activeTab === 'featured' && <FeaturedSpotlight />}
         
