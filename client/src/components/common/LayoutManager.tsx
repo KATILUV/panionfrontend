@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAgentStore, WindowLayout } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
 import { 
@@ -12,7 +12,26 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Save, Trash2, Download, Plus } from 'lucide-react';
+import { 
+  Save, 
+  Trash2, 
+  Download, 
+  Plus, 
+  Tag, 
+  Star, 
+  LayoutGrid,
+  Folder,
+  Filter,
+  SlidersHorizontal
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 interface LayoutManagerProps {
@@ -20,11 +39,75 @@ interface LayoutManagerProps {
 }
 
 const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
-  const { layouts, activeLayoutId, saveLayout, loadLayout, deleteLayout } = useAgentStore();
+  const { layouts, activeLayoutId, saveLayout, loadLayout, deleteLayout, setDefaultLayout } = useAgentStore();
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
   const [newLayoutName, setNewLayoutName] = useState('');
+  const [newLayoutCategory, setNewLayoutCategory] = useState('General');
+  const [newLayoutTags, setNewLayoutTags] = useState<string[]>([]);
+  const [isNewLayoutDefault, setIsNewLayoutDefault] = useState(false);
+  const [tagInput, setTagInput] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [filteredLayouts, setFilteredLayouts] = useState<WindowLayout[]>([]);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const { toast } = useToast();
+
+  // Available categories
+  const categories = [
+    'General',
+    'Work',
+    'Development',
+    'Communication',
+    'Personal'
+  ];
+
+  // Suggested tags
+  const suggestedTags = [
+    'Focused',
+    'Spacious',
+    'Compact',
+    'Presentation',
+    'Coding',
+    'Research',
+    'Writing',
+    'Meeting'
+  ];
+
+  // Prepare filtered layouts whenever filters change
+  useEffect(() => {
+    let filtered = [...layouts];
+    
+    // Apply category filter if set
+    if (filterCategory) {
+      filtered = filtered.filter(layout => layout.category === filterCategory);
+    }
+    
+    // Sort layouts - default first, then by most recently updated
+    filtered.sort((a, b) => {
+      // First sort by default status
+      if (a.isDefault && !b.isDefault) return -1;
+      if (!a.isDefault && b.isDefault) return 1;
+      
+      // Then by updated timestamp (newest first)
+      return (b.updatedAt || 0) - (a.updatedAt || 0);
+    });
+    
+    setFilteredLayouts(filtered);
+  }, [layouts, filterCategory]);
+
+  // Add a tag to the new layout
+  const addTag = (tag: string) => {
+    const cleanTag = tag.trim();
+    if (cleanTag && !newLayoutTags.includes(cleanTag)) {
+      setNewLayoutTags([...newLayoutTags, cleanTag]);
+      setTagInput('');
+    }
+  };
+
+  // Remove a tag
+  const removeTag = (tag: string) => {
+    setNewLayoutTags(newLayoutTags.filter(t => t !== tag));
+  };
 
   // Create a new layout
   const handleSaveLayout = () => {
@@ -37,12 +120,28 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
       return;
     }
 
-    saveLayout(newLayoutName);
+    saveLayout(newLayoutName, newLayoutCategory, newLayoutTags, isNewLayoutDefault);
+    
+    // Reset form
     setNewLayoutName('');
+    setNewLayoutCategory('General');
+    setNewLayoutTags([]);
+    setIsNewLayoutDefault(false);
+    setShowAdvancedOptions(false);
     
     toast({
       title: 'Layout saved',
       description: `Layout "${newLayoutName}" has been saved`,
+    });
+  };
+  
+  // Set a layout as default
+  const handleSetDefaultLayout = (id: string, name: string) => {
+    setDefaultLayout(id);
+    
+    toast({
+      title: 'Default layout set',
+      description: `"${name}" will be used as the default layout`,
     });
   };
 

@@ -40,15 +40,21 @@ interface AgentState {
   updateAgentSize: (id: AgentId, size: { width: number, height: number }) => void;
   
   // Layout Actions
-  saveLayout: (name: string) => void;
+  saveLayout: (name: string, category?: string, tags?: string[], isDefault?: boolean) => void;
   loadLayout: (id: string) => void;
   deleteLayout: (id: string) => void;
+  setDefaultLayout: (id: string) => void;
 }
 
 // Window layout profiles for quick switching
 export interface WindowLayout {
   id: string;
   name: string;
+  category?: string; // Optional category like 'Work', 'Personal', 'Development'
+  tags?: string[]; // Optional tags for filtering
+  isDefault?: boolean; // Whether this layout should be used as default on startup
+  createdAt: number; // Timestamp when the layout was created
+  updatedAt: number; // Timestamp when the layout was last updated
   windowStates: Record<AgentId, {
     position: { x: number, y: number };
     size: { width: number, height: number };
@@ -255,7 +261,7 @@ export const useAgentStore = create<AgentState>()(
       }),
       
       // Save the current window layout with a given name
-      saveLayout: (name) => set((state) => {
+      saveLayout: (name, category?: string, tags?: string[], isDefault?: boolean) => set((state) => {
         // Create a snapshot of current window states
         const windowStates: Record<AgentId, {
           position: { x: number, y: number };
@@ -274,10 +280,17 @@ export const useAgentStore = create<AgentState>()(
           };
         });
         
+        const timestamp = Date.now();
+        
         // Create a new layout object with unique ID
         const newLayout: WindowLayout = {
-          id: Date.now().toString(), // Simple unique ID
+          id: timestamp.toString(), // Simple unique ID
           name,
+          category: category || 'General',
+          tags: tags || [],
+          isDefault: isDefault || false,
+          createdAt: timestamp,
+          updatedAt: timestamp,
           windowStates
         };
         
@@ -333,6 +346,37 @@ export const useAgentStore = create<AgentState>()(
         return {
           layouts: state.layouts.filter(layout => layout.id !== id),
           activeLayoutId: state.activeLayoutId === id ? null : state.activeLayoutId
+        };
+      }),
+      
+      // Set a layout as the default
+      setDefaultLayout: (id) => set((state) => {
+        // First, find the layout to set as default
+        const targetLayout = state.layouts.find(l => l.id === id);
+        if (!targetLayout) return state;
+        
+        // Update all layouts, removing default flag from others and setting it on the target
+        const updatedLayouts = state.layouts.map(layout => {
+          if (layout.id === id) {
+            // Set this layout as default
+            return {
+              ...layout,
+              isDefault: true,
+              updatedAt: Date.now()
+            };
+          } else {
+            // Remove default flag from other layouts if present
+            return layout.isDefault 
+              ? { ...layout, isDefault: false, updatedAt: Date.now() } 
+              : layout;
+          }
+        });
+        
+        // Log the action
+        log.action(`Set "${targetLayout.name}" as default layout`);
+        
+        return {
+          layouts: updatedLayouts
         };
       })
     }),
