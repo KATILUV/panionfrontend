@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Filter, Star, Download, Plus, Check, Tag, X, 
   RefreshCw, ShoppingBag, ArrowLeft, Zap, MessageCircle, 
-  ArrowUpRight, Sparkles, ChevronLeft, ChevronRight
+  ArrowUpRight, Sparkles, ChevronLeft, ChevronRight,
+  Folder as FolderIcon
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Link, useLocation } from 'wouter';
@@ -752,14 +753,14 @@ const MarketplacePage = () => {
         {/* Only show featured spotlight when on the featured tab */}
         {activeTab === 'featured' && <FeaturedSpotlight />}
         
-        {/* Main tabs */}
-        <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 flex justify-between items-center mb-8 mt-10 shadow-lg">
-          <div className="flex space-x-2">
+        {/* Main tabs - Enhanced toolbar */}
+        <div className="bg-black/30 backdrop-blur-md border border-purple-500/20 rounded-xl px-3 py-2 flex justify-between items-center mb-6 mt-8 shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all">
+          <div className="flex space-x-1">
             <button 
               className={cn(
-                "px-4 py-2 rounded-lg text-base font-medium transition-all",
+                "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
                 activeTab === 'featured' 
-                  ? 'bg-purple-600/80 text-white shadow-md' 
+                  ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white shadow-[0_2px_8px_rgba(146,64,249,0.25)]' 
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               )}
               onClick={() => {
@@ -767,14 +768,14 @@ const MarketplacePage = () => {
                 setSelectedAgent(null);
               }}
             >
-              <Sparkles className="inline-block mr-2 h-4 w-4" />
+              <Sparkles className="inline-block mr-1.5 h-3.5 w-3.5" />
               Featured
             </button>
             <button 
               className={cn(
-                "px-4 py-2 rounded-lg text-base font-medium transition-all",
+                "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
                 activeTab === 'popular' 
-                  ? 'bg-purple-600/80 text-white shadow-md' 
+                  ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white shadow-[0_2px_8px_rgba(146,64,249,0.25)]' 
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               )}
               onClick={() => {
@@ -782,14 +783,14 @@ const MarketplacePage = () => {
                 setSelectedAgent(null);
               }}
             >
-              <Zap className="inline-block mr-2 h-4 w-4" />
+              <Zap className="inline-block mr-1.5 h-3.5 w-3.5" />
               Popular
             </button>
             <button 
               className={cn(
-                "px-4 py-2 rounded-lg text-base font-medium transition-all",
+                "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
                 activeTab === 'new' 
-                  ? 'bg-purple-600/80 text-white shadow-md' 
+                  ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white shadow-[0_2px_8px_rgba(146,64,249,0.25)]' 
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               )}
               onClick={() => {
@@ -797,14 +798,14 @@ const MarketplacePage = () => {
                 setSelectedAgent(null);
               }}
             >
-              <Plus className="inline-block mr-2 h-4 w-4" />
+              <Plus className="inline-block mr-1.5 h-3.5 w-3.5" />
               New
             </button>
             <button 
               className={cn(
-                "px-4 py-2 rounded-lg text-base font-medium transition-all",
+                "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
                 activeTab === 'browse' 
-                  ? 'bg-purple-600/80 text-white shadow-md' 
+                  ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white shadow-[0_2px_8px_rgba(146,64,249,0.25)]' 
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               )}
               onClick={() => {
@@ -812,39 +813,51 @@ const MarketplacePage = () => {
                 setSelectedAgent(null);
               }}
             >
-              <Search className="inline-block mr-2 h-4 w-4" />
-              Browse All
+              <Search className="inline-block mr-1.5 h-3.5 w-3.5" />
+              Browse
             </button>
           </div>
           
-          {/* Filter button */}
+          {/* Filter button - enhanced */}
           <button 
-            className={`py-2 px-4 rounded-lg transition-all flex items-center ${
+            className={`py-1.5 px-3 rounded-lg transition-all flex items-center ${
               showFilters || selectedCategory || selectedTags.length > 0 
-                ? 'bg-purple-600/80 text-white shadow-md' 
+                ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white shadow-[0_2px_8px_rgba(146,64,249,0.25)]' 
                 : 'bg-black/20 border border-white/10 text-white/70 hover:text-white hover:bg-white/10'
             }`}
             onClick={() => setShowFilters(!showFilters)}
           >
-            <Filter size={18} className="mr-2" />
-            <span>Filter</span>
+            <Filter size={16} className="mr-1.5" />
+            <span className="text-sm">Filter</span>
           </button>
         </div>
         
-        {/* Filter panel */}
+        {/* Filter panel - Enhanced to match toolbar */}
         {showFilters && (
-        <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-lg p-6 mb-6 theme-transition">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="bg-black/30 backdrop-blur-md border border-purple-500/20 rounded-xl p-5 mb-6 shadow-[0_4px_15px_rgba(0,0,0,0.15)] transition-all"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <h3 className="text-base font-medium mb-3">Categories</h3>
-              <div className="flex flex-wrap gap-2">
+              <h3 className="text-sm font-medium mb-2.5 text-purple-200 flex items-center">
+                <Icons.Folder size={14} className="mr-1.5 opacity-80" />
+                Categories
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
                 {categories.map((category) => (
                   <button
                     key={category.id}
-                    className={`px-3 py-1.5 rounded-lg text-sm flex items-center transition-all ${selectedCategory === category.id ? 'bg-purple-600/30 text-purple-300' : 'bg-black/30 hover:bg-black/40 text-white/70'}`}
+                    className={`px-2.5 py-1 rounded-lg text-xs flex items-center transition-all ${
+                      selectedCategory === category.id 
+                        ? 'bg-gradient-to-r from-purple-600/80 to-purple-500/80 text-white shadow-[0_2px_6px_rgba(146,64,249,0.2)]' 
+                        : 'bg-black/40 hover:bg-black/50 text-white/70 border border-white/5'
+                    }`}
                     onClick={() => setCategory(selectedCategory === category.id ? null : category.id)}
                   >
-                    <DynamicIcon name={category.icon} size={14} className="mr-1.5" />
+                    <DynamicIcon name={category.icon} size={12} className="mr-1" />
                     {category.name}
                   </button>
                 ))}
@@ -852,15 +865,22 @@ const MarketplacePage = () => {
             </div>
             
             <div>
-              <h3 className="text-base font-medium mb-3">Tags</h3>
-              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+              <h3 className="text-sm font-medium mb-2.5 text-purple-200 flex items-center">
+                <Icons.Tag size={14} className="mr-1.5 opacity-80" />
+                Tags
+              </h3>
+              <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1 thin-scrollbar">
                 {getAllTags().map((tag) => (
                   <button
                     key={tag}
-                    className={`px-3 py-1.5 rounded-lg text-xs flex items-center transition-all ${selectedTags.includes(tag) ? 'bg-purple-600/30 text-purple-300' : 'bg-black/30 hover:bg-black/40 text-white/70'}`}
+                    className={`px-2.5 py-1 rounded-lg text-xs flex items-center transition-all ${
+                      selectedTags.includes(tag) 
+                        ? 'bg-gradient-to-r from-purple-600/80 to-purple-500/80 text-white shadow-[0_2px_6px_rgba(146,64,249,0.2)]' 
+                        : 'bg-black/40 hover:bg-black/50 text-white/70 border border-white/5'
+                    }`}
                     onClick={() => toggleTag(tag)}
                   >
-                    <Tag size={12} className="mr-1.5" />
+                    <Tag size={10} className="mr-1" />
                     {tag}
                   </button>
                 ))}
@@ -868,22 +888,22 @@ const MarketplacePage = () => {
             </div>
           </div>
           
-          {/* Reset filters button - only show when filters are active */}
+          {/* Reset filters button - enhanced */}
           {(selectedCategory || selectedTags.length > 0) && (
             <div className="mt-4 flex justify-end">
               <button 
-                className="px-3 py-1.5 rounded-lg bg-purple-600/30 text-purple-300 hover:text-white transition-all flex items-center shadow-md"
+                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600/50 to-purple-500/50 text-white hover:from-purple-600/70 hover:to-purple-500/70 transition-all flex items-center shadow-[0_2px_6px_rgba(146,64,249,0.15)]"
                 onClick={() => {
                   setCategory(null);
                   selectedTags.forEach(tag => toggleTag(tag));
                 }}
               >
-                <RefreshCw size={14} className="mr-1.5" />
-                Reset filters
+                <RefreshCw size={12} className="mr-1.5" />
+                <span className="text-xs">Reset Filters</span>
               </button>
             </div>
           )}
-        </div>
+        </motion.div>
         )}
         
         {/* Main content area */}
