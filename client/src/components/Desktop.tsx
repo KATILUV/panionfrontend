@@ -174,10 +174,9 @@ const Desktop: React.FC = () => {
     
     // Cleanup auto-save when component unmounts
     return () => {
-      // Clear any existing auto-save timeout
-      if (window.autoSaveTimeout) {
-        clearTimeout(window.autoSaveTimeout);
-      }
+      // We don't need explicit cleanup here since the timeout is handled
+      // in the autoSaveCurrentLayout function in the store
+      log.info('Desktop component unmounted, auto-save will be stopped');
     };
   }, []);
   

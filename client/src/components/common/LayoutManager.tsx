@@ -40,7 +40,9 @@ import {
   X,
   Paintbrush,
   Info,
-  Eye
+  Eye,
+  Settings,
+  Clock
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -377,7 +379,12 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
     loadLayout, 
     deleteLayout, 
     setDefaultLayout, 
-    createLayoutFromTemplate 
+    createLayoutFromTemplate,
+    autoSaveEnabled,
+    autoSaveInterval,
+    setAutoSaveEnabled,
+    setAutoSaveInterval,
+    restoreDefaultLayout
   } = useAgentStore();
   
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
@@ -695,6 +702,12 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
             >
               <LayoutGrid className="h-4 w-4" /> Saved Layouts
             </TabsTrigger>
+            <TabsTrigger 
+              value="settings" 
+              className="flex items-center gap-1.5 data-[state=active]:bg-purple-700/90 data-[state=active]:text-white data-[state=active]:shadow-md"
+            >
+              <Settings className="h-4 w-4" /> Settings
+            </TabsTrigger>
           </TabsList>
           
           {/* Templates Tab */}
@@ -843,6 +856,119 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
             </div>
           </TabsContent>
           
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="py-3">
+            <div className={`rounded-lg p-5 border ${
+              isDark ? 'bg-gray-900/50 border-gray-700/30' : 'bg-white/90 border-gray-200'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <Settings className="h-6 w-6 text-purple-500" />
+                <h3 className="text-lg font-medium">Layout Settings</h3>
+              </div>
+              
+              <div className="space-y-5">
+                {/* Auto-save settings */}
+                <div className="space-y-3">
+                  <h4 className="font-medium">Auto-save</h4>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="font-medium">Auto-save window layouts</div>
+                      <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Automatically save your current window arrangement
+                      </div>
+                    </div>
+                    <Switch 
+                      checked={autoSaveEnabled}
+                      onCheckedChange={(checked) => {
+                        setAutoSaveEnabled(checked);
+                        toast({
+                          title: checked ? "Auto-save enabled" : "Auto-save disabled",
+                          description: checked 
+                            ? "Your window layouts will be saved automatically" 
+                            : "Automatic window layout saving has been turned off",
+                        });
+                      }}
+                    />
+                  </div>
+                  
+                  {autoSaveEnabled && (
+                    <div className={`rounded-lg p-3 border ${
+                      isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <div className="mb-3">
+                        <Label htmlFor="auto-save-interval" className="text-sm mb-1.5 block">
+                          Auto-save interval
+                        </Label>
+                        <Select
+                          value={String(autoSaveInterval / 1000)}
+                          onValueChange={(value) => {
+                            const interval = parseInt(value) * 1000;
+                            setAutoSaveInterval(interval);
+                            toast({
+                              title: "Auto-save interval updated",
+                              description: `Window layouts will now auto-save every ${parseInt(value)} seconds`,
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select interval" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="30">Every 30 seconds</SelectItem>
+                            <SelectItem value="60">Every minute</SelectItem>
+                            <SelectItem value="300">Every 5 minutes</SelectItem>
+                            <SelectItem value="600">Every 10 minutes</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="flex items-start gap-2 text-sm">
+                        <Clock className={`h-4 w-4 mt-0.5 ${isDark ? 'text-purple-400' : 'text-purple-500'}`} />
+                        <div className={isDark ? 'text-gray-300' : 'text-gray-600'}>
+                          Auto-saved layouts are stored for the current session and will be available
+                          in the Saved Layouts tab.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="pt-2">
+                  <h4 className="font-medium mb-3">Default Layout</h4>
+                  
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        restoreDefaultLayout();
+                        toast({
+                          title: "Default layout restored",
+                          description: "Your default window layout has been applied",
+                        });
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Restore Default Layout
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedTab('saved');
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Star className="h-4 w-4" />
+                      Manage Default Layout
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        
           {/* Saved Layouts Tab */}
           <TabsContent value="saved" className="py-3">
             {layouts.length === 0 ? (
