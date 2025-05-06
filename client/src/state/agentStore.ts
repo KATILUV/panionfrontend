@@ -14,12 +14,28 @@ export interface Agent {
   defaultSize?: { width: number, height: number };
 }
 
+export type WindowGroupId = string;
+
 export interface AgentWindow extends Agent {
   isOpen: boolean;
   isMinimized: boolean;
   position: { x: number, y: number };
   size: { width: number, height: number };
   zIndex: number;
+  groupId?: WindowGroupId; // Optional group ID if window is part of a group
+  isActiveInGroup?: boolean; // Whether this window is active in its group
+}
+
+export interface WindowGroup {
+  id: WindowGroupId;
+  title: string;
+  windows: AgentId[];
+  activeWindowId?: AgentId;
+  position: { x: number, y: number };
+  size: { width: number, height: number };
+  zIndex: number;
+  isMinimized: boolean;
+  createdAt: number;
 }
 
 interface AgentState {
@@ -29,6 +45,9 @@ interface AgentState {
   highestZIndex: number;
   layouts: WindowLayout[];
   activeLayoutId: string | null;
+  
+  // Window Groups
+  windowGroups: Record<WindowGroupId, WindowGroup>;
   
   // Auto-save settings
   autoSaveEnabled: boolean; 
@@ -44,6 +63,20 @@ interface AgentState {
   focusAgent: (id: AgentId) => void;
   updateAgentPosition: (id: AgentId, position: { x: number, y: number }) => void;
   updateAgentSize: (id: AgentId, size: { width: number, height: number }) => void;
+  
+  // Window Group Actions
+  createWindowGroup: (windowIds: AgentId[], title?: string) => WindowGroupId;
+  addToWindowGroup: (groupId: WindowGroupId, windowId: AgentId) => void;
+  removeFromWindowGroup: (groupId: WindowGroupId, windowId: AgentId) => void;
+  setActiveGroupWindow: (groupId: WindowGroupId, windowId: AgentId) => void;
+  minimizeWindowGroup: (groupId: WindowGroupId) => void;
+  restoreWindowGroup: (groupId: WindowGroupId) => void;
+  closeWindowGroup: (groupId: WindowGroupId) => void;
+  focusWindowGroup: (groupId: WindowGroupId) => void;
+  updateGroupPosition: (groupId: WindowGroupId, position: { x: number, y: number }) => void;
+  updateGroupSize: (groupId: WindowGroupId, size: { width: number, height: number }) => void;
+  updateGroupTitle: (groupId: WindowGroupId, title: string) => void;
+  ungroupWindow: (windowId: AgentId) => void;
   
   // Layout Actions
   saveLayout: (name: string, category?: string, tags?: string[], isDefault?: boolean) => void;
@@ -84,6 +117,9 @@ const getCurrentTimestamp = () => Date.now();
 // Auto-save debounce timeout
 let autoSaveTimeout: number | null = null;
 
+// Helper to generate unique IDs
+const generateId = () => Math.random().toString(36).substring(2, 9);
+
 export const useAgentStore = create<AgentState>()(
   persist(
     (set, get) => ({
@@ -93,6 +129,7 @@ export const useAgentStore = create<AgentState>()(
       highestZIndex: 0,
       layouts: [], // Stored window layouts
       activeLayoutId: null, // Currently active layout
+      windowGroups: {}, // Window groups storage
       
       // Auto-save settings
       autoSaveEnabled: true, // Enable auto-save by default
