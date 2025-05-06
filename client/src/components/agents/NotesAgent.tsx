@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { WindowPanel, WindowContent, WindowSection } from '../ui/window-components';
+import { WindowPanel, WindowContent, WindowSection, windowTextStyles } from '../ui/window-components';
 
 const NotesAgent: React.FC = () => {
   const [notes, setNotes] = useState<string[]>([]);
@@ -56,9 +56,10 @@ const NotesAgent: React.FC = () => {
       >
         {notes.length === 0 ? (
           <WindowContent
-            className="flex items-center justify-center py-8 text-white/50 text-center"
+            className="flex items-center justify-center py-8 text-center"
+            textColor="muted"
           >
-            No notes yet. Add one below!
+            <p className={windowTextStyles.muted}>No notes yet. Add one below!</p>
           </WindowContent>
         ) : (
           <>
@@ -68,7 +69,7 @@ const NotesAgent: React.FC = () => {
                 variant="default"
                 className="break-words relative group hover:bg-white/[0.15] transition-colors duration-200"
               >
-                <p className="pr-6 text-content">{note}</p>
+                <p className={`pr-6 ${windowTextStyles.default}`}>{note}</p>
                 <button
                   onClick={() => handleDeleteNote(index)}
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-red-400"
@@ -88,7 +89,7 @@ const NotesAgent: React.FC = () => {
           onChange={(e) => setCurrentNote(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a new note..."
-          className="w-full p-3 bg-transparent text-white border-none outline-none resize-none focus:ring-0"
+          className={`w-full p-3 bg-transparent border-none outline-none resize-none focus:ring-0 ${windowTextStyles.bright}`}
           rows={3}
         />
         <div className="flex justify-end p-2 border-t border-white/10">

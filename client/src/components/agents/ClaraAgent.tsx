@@ -9,7 +9,7 @@ import { Message } from '../../types/chat';
 import { log } from '../../state/systemLogStore';
 import { useThemeStore } from '../../state/themeStore';
 import { AgentStatusType } from '../ui/agent-status';
-import { WindowPanel, WindowContent } from '../ui/window-components';
+import { WindowPanel, WindowContent, windowTextStyles } from '../ui/window-components';
 
 const ClaraAgent: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
@@ -81,7 +81,7 @@ const ClaraAgent: React.FC = () => {
               "Dream bigger. Build together."
             ]}
             interval={7000}
-            className="text-sm font-light text-white/80"
+            className={`text-sm font-light ${windowTextStyles.muted}`}
           />
         </div>
 
@@ -101,8 +101,8 @@ const ClaraAgent: React.FC = () => {
               variant="default"
               className="flex flex-col items-center justify-center h-full text-center space-y-4"
             >
-              <p className="text-content">Welcome to Clara! How can I assist you today?</p>
-              <p className="text-caption">Ask me anything or share an image with me.</p>
+              <p className={windowTextStyles.bright}>Welcome to Clara! How can I assist you today?</p>
+              <p className={windowTextStyles.caption}>Ask me anything or share an image with me.</p>
             </WindowContent>
           ) : (
             <>
@@ -119,9 +119,9 @@ const ClaraAgent: React.FC = () => {
           {error && (
             <WindowContent 
               variant="primary"
-              className="bg-red-900/10 text-red-400 text-center"
+              className="bg-red-900/10 text-center"
             >
-              {error}
+              <p className={windowTextStyles.error}>{error}</p>
             </WindowContent>
           )}
         </WindowContent>
