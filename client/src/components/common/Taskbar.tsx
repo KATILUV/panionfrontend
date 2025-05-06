@@ -348,7 +348,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
     const baseStyles = {
       position: 'fixed' as const,
       display: 'flex' as const,
-      zIndex: 100,
+      zIndex: 200,
       backgroundColor: 'rgba(0, 0, 0, 0.2)',
       backdropFilter: enableBlur ? 'blur(4px)' : 'none',
     };
@@ -569,8 +569,13 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                   onClick={() => {}}
                 />
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" side={isVertical ? (position.location === 'left' ? 'right' : 'left') : 'top'}>
-                <div className="bg-black/60 backdrop-blur-md rounded-md overflow-hidden border border-primary/20">
+              <PopoverContent 
+                className="w-80 p-0 z-[999]" 
+                side={isVertical ? (position.location === 'left' ? 'right' : 'left') : 'top'}
+                sideOffset={16}
+                align="center"
+              >
+                <div className="bg-black/80 backdrop-blur-md rounded-md overflow-hidden border border-primary/20">
                   <div className="p-3 border-b border-primary/10 flex items-center justify-between">
                     <h3 className="text-sm font-medium text-white">Notifications</h3>
                     <button className="text-xs text-primary hover:text-primary/80 transition-colors">Mark all as read</button>
@@ -657,7 +662,12 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                     className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
                   />
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-4 bg-black/60 backdrop-blur-md border border-primary/20 rounded-md" side={isVertical ? (position.location === 'left' ? 'right' : 'left') : 'top'}>
+                <PopoverContent 
+                  className="w-80 p-4 bg-black/80 backdrop-blur-md border border-primary/20 rounded-md z-[999]" 
+                  side={isVertical ? (position.location === 'left' ? 'right' : 'left') : 'top'}
+                  sideOffset={16}
+                  align="center"
+                >
                   <div className="space-y-4">
                     <h3 className="text-base font-medium text-white">Save Current Layout</h3>
                     
