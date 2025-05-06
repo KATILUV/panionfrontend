@@ -205,14 +205,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           onClick={() => handleIconClick('marketplace')}
         />
         
-        {/* Settings Button */}
-        <TaskbarButton
-          icon={<Settings size={16} />}
-          label="Settings"
-          isActive={windows['settings']?.isOpen && !windows['settings']?.isMinimized}
-          onClick={() => handleIconClick('settings')}
-        />
-        
         {/* Layout Manager Button */}
         <LayoutManager>
           <TaskbarButton
