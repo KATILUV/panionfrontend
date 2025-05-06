@@ -200,25 +200,135 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
           <div className={`p-4 rounded-lg ${
             getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
           }`}>
-            <h3 className="text-lg font-medium mb-2">Save Current Layout</h3>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Layout name"
-                value={newLayoutName}
-                onChange={e => setNewLayoutName(e.target.value)}
-                className={`${
-                  getCurrentTheme() === 'dark' 
-                    ? 'bg-white/10 border-white/20 text-white placeholder:text-white/50' 
-                    : 'bg-white border-purple-200 text-gray-900 placeholder:text-gray-500'
-                }`}
-              />
-              <Button 
-                onClick={handleSaveLayout}
-                className="bg-purple-700 hover:bg-purple-600"
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-medium">Save Current Layout</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                className="text-xs flex items-center gap-1 px-2"
               >
-                <Save className="mr-2 h-4 w-4" />
-                Save
+                <SlidersHorizontal className="h-3 w-3" />
+                {showAdvancedOptions ? 'Hide' : 'Show'} Options
               </Button>
+            </div>
+            
+            <div className="space-y-3">
+              {/* Basic layout info */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Layout name"
+                  value={newLayoutName}
+                  onChange={e => setNewLayoutName(e.target.value)}
+                  className={`${
+                    getCurrentTheme() === 'dark' 
+                      ? 'bg-white/10 border-white/20 text-white placeholder:text-white/50' 
+                      : 'bg-white border-purple-200 text-gray-900 placeholder:text-gray-500'
+                  }`}
+                />
+                <Button 
+                  onClick={handleSaveLayout}
+                  className="bg-purple-700 hover:bg-purple-600"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Save
+                </Button>
+              </div>
+              
+              {/* Advanced options */}
+              {showAdvancedOptions && (
+                <div className="space-y-3 pt-2 border-t border-purple-500/20">
+                  {/* Category selection */}
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select 
+                      value={newLayoutCategory} 
+                      onValueChange={setNewLayoutCategory}
+                    >
+                      <SelectTrigger className="w-full mt-1">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(category => (
+                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Tags */}
+                  <div>
+                    <Label htmlFor="tags">Tags</Label>
+                    <div className="flex gap-2 mt-1">
+                      <Input
+                        id="tags"
+                        placeholder="Add a tag"
+                        value={tagInput}
+                        onChange={e => setTagInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addTag(tagInput);
+                          }
+                        }}
+                        className={`${
+                          getCurrentTheme() === 'dark' 
+                            ? 'bg-white/10 border-white/20 text-white placeholder:text-white/50' 
+                            : 'bg-white border-purple-200 text-gray-900 placeholder:text-gray-500'
+                        }`}
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => addTag(tagInput)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    {/* Tag chips */}
+                    {newLayoutTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {newLayoutTags.map(tag => (
+                          <Badge key={tag} variant="secondary" className="flex items-center gap-1 cursor-pointer hover:bg-purple-400/20" onClick={() => removeTag(tag)}>
+                            {tag}
+                            <span className="text-xs">×</span>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Suggested tags */}
+                    <div className="mt-2">
+                      <p className="text-xs text-slate-400 mb-1">Suggested tags:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {suggestedTags.map(tag => (
+                          <Badge 
+                            key={tag} 
+                            variant="outline" 
+                            className="text-xs cursor-pointer hover:bg-purple-400/20"
+                            onClick={() => addTag(tag)}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Default layout option */}
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="defaultLayout"
+                      checked={isNewLayoutDefault}
+                      onChange={e => setIsNewLayoutDefault(e.target.checked)}
+                      className="rounded text-purple-600 focus:ring-purple-500 h-4 w-4"
+                    />
+                    <Label htmlFor="defaultLayout" className="text-sm">Set as default layout</Label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -226,7 +336,26 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
           <div className={`p-4 rounded-lg ${
             getCurrentTheme() === 'dark' ? 'bg-black/20' : 'bg-purple-50/50'
           }`}>
-            <h3 className="text-lg font-medium mb-2">Saved Layouts</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-medium">Saved Layouts</h3>
+              
+              {/* Category filter */}
+              <Select 
+                value={filterCategory || ''} 
+                onValueChange={val => setFilterCategory(val === '' ? null : val)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             {layouts.length === 0 ? (
               <div className={`text-center py-4 ${
                 getCurrentTheme() === 'dark' ? 'text-white/50' : 'text-gray-500'
@@ -234,46 +363,82 @@ const LayoutManager: React.FC<LayoutManagerProps> = ({ children }) => {
                 No saved layouts yet
               </div>
             ) : (
-              <ul className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
-                {layouts.map(layout => (
+              <ul className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                {filteredLayouts.map(layout => (
                   <li 
                     key={layout.id}
-                    className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                    className={`rounded-lg transition-colors overflow-hidden ${
                       activeLayoutId === layout.id 
                         ? getCurrentTheme() === 'dark'
                           ? 'bg-purple-800/50 border border-purple-500/50' 
                           : 'bg-purple-100 border border-purple-300'
                         : getCurrentTheme() === 'dark'
-                          ? 'bg-black/20 hover:bg-black/30'
+                          ? 'bg-black/20 hover:bg-black/30 border border-purple-500/20'
                           : 'bg-white/80 hover:bg-purple-50 border border-purple-100/50'
                     }`}
                   >
-                    <span className="font-medium">{layout.name}</span>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleLoadLayout(layout.id, layout.name)}
-                        className={`${
-                          getCurrentTheme() === 'dark' 
-                            ? 'border-white/20 hover:bg-purple-800/50' 
-                            : 'border-purple-200 hover:bg-purple-100'
-                        }`}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteLayout(layout.id, layout.name)}
-                        className={`${
-                          getCurrentTheme() === 'dark' 
-                            ? 'border-white/20 hover:bg-red-900/50' 
-                            : 'border-red-200 hover:bg-red-50'
-                        }`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{layout.name}</span>
+                          {layout.isDefault && (
+                            <Badge variant="secondary" className="bg-purple-500/30 text-xs">
+                              <Star className="h-3 w-3 mr-1 fill-current" />
+                              Default
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="flex gap-1">
+                          {!layout.isDefault && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleSetDefaultLayout(layout.id, layout.name)}
+                              title="Set as default"
+                              className="h-7 w-7 p-0"
+                            >
+                              <Star className="h-4 w-4" />
+                            </Button>
+                          )}
+                          
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleLoadLayout(layout.id, layout.name)}
+                            title="Load this layout"
+                            className="h-7 w-7 p-0"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteLayout(layout.id, layout.name)}
+                            title="Delete this layout"
+                            className="h-7 w-7 p-0 text-red-500 hover:text-red-400"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Category & tags */}
+                      <div className="flex flex-wrap items-center gap-1 text-xs">
+                        {layout.category && (
+                          <Badge variant="outline" className="flex items-center gap-1 border-purple-500/30">
+                            <Folder className="h-3 w-3" />
+                            {layout.category}
+                          </Badge>
+                        )}
+                        
+                        {layout.tags && layout.tags.length > 0 && layout.tags.map(tag => (
+                          <Badge key={tag} variant="outline" className="text-xs border-purple-500/20">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </li>
                 ))}
