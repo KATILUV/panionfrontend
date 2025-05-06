@@ -10,9 +10,16 @@ import WindowContextMenu from './WindowContextMenu';
 
 // Snap threshold in pixels
 const SNAP_THRESHOLD = 20;
+const GRID_SIZE = 20; // Grid size for snap-to-grid feature
 
 // Edge positions
 type SnapPosition = 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'none';
+
+// Grid position for snap-to-grid
+interface GridPosition {
+  x: number;
+  y: number;
+}
 
 interface WindowProps {
   id: AgentId;
@@ -190,6 +197,41 @@ const Window: React.FC<WindowProps> = ({
     onFocus();
   };
   
+  // Snap position to grid
+  const snapToGrid = (position: { x: number, y: number }): GridPosition => {
+    // Snap to the nearest grid position
+    return {
+      x: Math.round(position.x / GRID_SIZE) * GRID_SIZE,
+      y: Math.round(position.y / GRID_SIZE) * GRID_SIZE
+    };
+  };
+
+  // Check if Shift key is pressed to enable snap-to-grid
+  const [isShiftKeyPressed, setIsShiftKeyPressed] = useState(false);
+  
+  // Setup key listeners for shift key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift' && !isShiftKeyPressed) {
+        setIsShiftKeyPressed(true);
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        setIsShiftKeyPressed(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isShiftKeyPressed]);
+  
   // Handle drag during dragging with optimized performance
   const handleDrag = (_e: any, d: { x: number, y: number }) => {
     if (!isDragging) return;
@@ -219,16 +261,16 @@ const Window: React.FC<WindowProps> = ({
   const handleDragStop = (_e: any, d: { x: number, y: number }) => {
     setIsDragging(false);
     
-    // Check if we should snap
+    // Check if we should snap to screen edges/corners
     const snapPosition = detectSnapPosition(d.x, d.y);
     
     if (snapPosition !== 'none') {
-      // Apply the snap position
+      // Apply the snap position to screen edges
       applySnapPosition(snapPosition);
       return;
     }
     
-    // If not snapping, apply normal bounds
+    // Apply normal bounds
     // Ensure at least 20% of the window remains within the viewport
     const minVisibleX = -size.width * 0.8;
     const minVisibleY = 0; // Don't allow dragging above the viewport
@@ -238,7 +280,15 @@ const Window: React.FC<WindowProps> = ({
     const boundedX = Math.max(minVisibleX, Math.min(d.x, maxVisibleX));
     const boundedY = Math.max(minVisibleY, Math.min(d.y, maxVisibleY));
 
-    const newPosition = { x: boundedX, y: boundedY };
+    let newPosition = { x: boundedX, y: boundedY };
+    
+    // Apply snap-to-grid if shift key is pressed
+    if (isShiftKeyPressed) {
+      newPosition = snapToGrid(newPosition);
+      // Play snap sound for feedback
+      playSnapSound();
+    }
+    
     updateAgentPosition(id, newPosition);
     setCurrentSnapPosition('none');
   };
@@ -466,6 +516,38 @@ const Window: React.FC<WindowProps> = ({
     }
   };
 
+  // Create a visual grid overlay when shift is pressed
+  const renderGridOverlay = () => {
+    if (!isShiftKeyPressed || !isDragging) return null;
+    
+    return (
+      <motion.div 
+        className="fixed inset-0 pointer-events-none z-0"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.4 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)
+          `,
+          backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+          zIndex: 9990
+        }}
+      />
+    );
+  };
+
+  // Create depth-based shadow effect based on z-index
+  const getShadowDepth = () => {
+    // Map z-index to shadow values - higher z-index = deeper shadow
+    const baseDepth = Math.min(10, Math.max(1, Math.floor(zIndex / 50)));
+    return isActive 
+      ? `0 ${baseDepth * 2}px ${baseDepth * 6}px rgba(0,0,0,0.15), 0 ${baseDepth}px ${baseDepth * 2}px rgba(var(--color-primary-rgb), 0.${baseDepth + 1})` 
+      : `0 ${baseDepth}px ${baseDepth * 3}px rgba(0,0,0,0.1)`;
+  };
+
   return (
     <MotionConfig transition={{ 
       type: "spring",
@@ -473,6 +555,11 @@ const Window: React.FC<WindowProps> = ({
       damping: 30,
       mass: 0.8
     }}>
+      {/* Grid overlay when shift is pressed */}
+      <AnimatePresence>
+        {renderGridOverlay()}
+      </AnimatePresence>
+      
       <Rnd
         style={{
           zIndex,
@@ -510,8 +597,8 @@ const Window: React.FC<WindowProps> = ({
           className={`flex flex-col rounded-lg backdrop-blur-xl h-full overflow-hidden
             transition-all duration-200 theme-transition
             ${isActive 
-              ? 'border border-primary/30 bg-black/40 shadow-xl shadow-primary/10 window-focus-glow' 
-              : 'border border-white/10 bg-black/30 shadow-lg shadow-black/20'
+              ? 'border border-primary/30 bg-black/40 window-focus-glow' 
+              : 'border border-white/10 bg-black/30'
             }
           `}
           initial="closed"
@@ -524,7 +611,8 @@ const Window: React.FC<WindowProps> = ({
             willChange: 'transform, opacity',
             transform: 'translateZ(0)',
             backfaceVisibility: 'hidden',
-            perspective: 1000
+            perspective: 1000,
+            boxShadow: getShadowDepth()
           }}
           onContextMenu={isMobile ? undefined : handleContextMenu}
         >
