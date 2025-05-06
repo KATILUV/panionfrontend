@@ -638,5 +638,19 @@ export const useAgentStore = create<AgentState>()(
   )
 );
 
-// This is a no-op function now since we're registering agents in App.tsx
-export const initializeAgentRegistry = () => {};
+// This function registers all our default agents in the agent registry
+export const initializeAgentRegistry = () => {
+  const { registerAgent } = useAgentStore.getState();
+  
+  // Register Clara Agent (for access from ClaraOrb)
+  registerAgent({
+    id: 'clara',
+    title: 'Clara AI',
+    icon: 'brain-circuit',
+    component: () => null, // Component will be rendered through Desktop.tsx
+    defaultPosition: { x: window.innerWidth / 2 - 250, y: window.innerHeight / 2 - 250 },
+    defaultSize: { width: 500, height: 500 },
+  });
+
+  // Register other agents here as needed
+};
