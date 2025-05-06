@@ -29,6 +29,11 @@ interface AgentState {
   highestZIndex: number;
   layouts: WindowLayout[];
   activeLayoutId: string | null;
+  
+  // Auto-save settings
+  autoSaveEnabled: boolean; 
+  autoSaveInterval: number;
+  lastAutoSave: number | null;
 
   // Window Actions
   registerAgent: (agent: Agent) => void;
@@ -45,6 +50,12 @@ interface AgentState {
   loadLayout: (id: string) => void;
   deleteLayout: (id: string) => void;
   setDefaultLayout: (id: string) => void;
+  
+  // Auto-save Actions
+  autoSaveCurrentLayout: () => void;
+  setAutoSaveEnabled: (enabled: boolean) => void;
+  setAutoSaveInterval: (interval: number) => void;
+  restoreDefaultLayout: () => void;
   
   // Template Actions
   createLayoutFromTemplate: (templateId: string) => void;
