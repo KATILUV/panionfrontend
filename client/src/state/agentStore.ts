@@ -124,10 +124,19 @@ export const useAgentStore = create<AgentState>()(
           // Ensure new windows always appear on top, with a higher z-index than any existing window
           const effectiveHighestZIndex = Math.max(currentMaxZIndex, state.highestZIndex);
           
-          // For the design agent, keep z-index lower to prevent glitching
-          const newZIndex = id === 'design'
-            ? Math.min(effectiveHighestZIndex, 5) // Keep it lower than other windows
-            : effectiveHighestZIndex + 1;
+          // Give layout manager a higher priority to always be on top when opened
+          // This ensures proper stacking order for key UI elements
+          let newZIndex;
+          if (id === 'design') {
+            // For the design agent, keep z-index lower to prevent glitching
+            newZIndex = Math.min(effectiveHighestZIndex, 5);
+          } else if (id === 'layout') {
+            // For layout manager, ensure it's always on top when opened
+            newZIndex = effectiveHighestZIndex + 50; // Much higher z-index
+          } else {
+            // Regular z-index increment for other windows
+            newZIndex = effectiveHighestZIndex + 1;
+          }
   
           return {
             windows: {
@@ -204,10 +213,18 @@ export const useAgentStore = create<AgentState>()(
           // Ensure restored windows always appear on top, with a higher z-index than any existing window
           const effectiveHighestZIndex = Math.max(currentMaxZIndex, state.highestZIndex);
   
-          // Consistent handling of z-index for design agent
-          const newZIndex = id === 'design'
-            ? Math.min(effectiveHighestZIndex, 5) // Keep it lower than other windows
-            : effectiveHighestZIndex + 1;
+          // Different z-index handling for special windows
+          let newZIndex;
+          if (id === 'design') {
+            // Design agent stays lower
+            newZIndex = Math.min(effectiveHighestZIndex, 5);
+          } else if (id === 'layout') {
+            // Layout manager gets priority
+            newZIndex = effectiveHighestZIndex + 50;
+          } else {
+            // Regular z-index increment for other windows
+            newZIndex = effectiveHighestZIndex + 1;
+          }
   
           return {
             windows: {
@@ -236,11 +253,18 @@ export const useAgentStore = create<AgentState>()(
         // Ensure focused windows always appear on top, with a higher z-index than any existing window
         const effectiveHighestZIndex = Math.max(currentMaxZIndex, state.highestZIndex);
         
-        // If this is the 'design' agent, keep its z-index lower to prevent it from appearing on top of everything
-        // This prevents it from becoming glitchy when interacting with animations
-        const newZIndex = id === 'design' 
-          ? Math.min(effectiveHighestZIndex, 10) // Cap at 10 to keep it from rising too high
-          : effectiveHighestZIndex + 1;
+        // Different z-index handling for special windows
+        let newZIndex;
+        if (id === 'design') {
+          // Design agent stays lower
+          newZIndex = Math.min(effectiveHighestZIndex, 10); // Cap at 10 to keep it from rising too high
+        } else if (id === 'layout') {
+          // Layout manager gets priority to remain on top when focused
+          newZIndex = effectiveHighestZIndex + 50;
+        } else {
+          // Regular z-index increment for other windows
+          newZIndex = effectiveHighestZIndex + 1;
+        }
         
         // Log the focus change
         log.info(`Focused window: ${agent.title} with z-index ${newZIndex}`);
