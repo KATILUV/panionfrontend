@@ -2,6 +2,7 @@ import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconName, ICONS } from '@/lib/icon-map';
+import { Button, ButtonProps } from '@/components/ui/button';
 
 interface IconProps {
   name: IconName | string;
@@ -24,12 +25,22 @@ export function Icon({ name, size = 'md', className, color }: IconProps) {
     xl: 'h-8 w-8',
   };
 
-  // Get the icon component from Lucide
-  const iconName = name as keyof typeof LucideIcons;
-  const LucideIcon = LucideIcons[iconName] || LucideIcons.HelpCircle;
-
+  // Get the icon component from Lucide - this is type-safe
+  // First check if the icon name exists in Lucide
+  if (typeof name === 'string' && name in LucideIcons) {
+    // If it does, use dynamic typing to render it
+    const IconComponent = LucideIcons[name as keyof typeof LucideIcons];
+    return (
+      <IconComponent 
+        className={cn(sizeMap[size], color && `text-${color}`, className)} 
+        aria-hidden="true" 
+      />
+    );
+  }
+  
+  // Fallback to HelpCircle if icon not found
   return (
-    <LucideIcon 
+    <LucideIcons.HelpCircle 
       className={cn(sizeMap[size], color && `text-${color}`, className)} 
       aria-hidden="true" 
     />
@@ -55,5 +66,34 @@ export function renderSvgIcon(svgString: string, className?: string, size?: 'xs'
       className={cn('inline-block', sizeClass, className)} 
       dangerouslySetInnerHTML={{ __html: svgString }} 
     />
+  );
+}
+
+/**
+ * Button with an icon for consistent UI patterns
+ */
+interface IconButtonProps extends ButtonProps {
+  icon: IconName | string;
+  iconSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  iconClassName?: string;
+  children?: React.ReactNode;
+}
+
+export function IconButton({ 
+  icon, 
+  iconSize = 'sm', 
+  iconClassName, 
+  children, 
+  className, 
+  ...props 
+}: IconButtonProps) {
+  return (
+    <Button 
+      className={cn("flex items-center gap-2", className)} 
+      {...props}
+    >
+      <Icon name={icon} size={iconSize} className={iconClassName} />
+      {children}
+    </Button>
   );
 }

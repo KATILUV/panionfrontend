@@ -1,91 +1,65 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon-provider';
-import { ICONS } from '@/lib/icon-map';
-import { motion } from 'framer-motion';
+import { AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AgentErrorFallbackProps {
-  error: Error | null;
-  resetError: () => void;
-  title?: string;
-  showError?: boolean;
+  error?: Error;
+  resetErrorBoundary?: () => void;
   agentName?: string;
+  className?: string;
 }
 
-/**
- * Error fallback component specifically designed for agent windows
- */
-export function AgentErrorFallback({
-  error,
-  resetError,
-  title = "Something went wrong",
-  showError = true,
-  agentName,
+export function AgentErrorFallback({ 
+  error, 
+  resetErrorBoundary,
+  agentName = 'Agent',
+  className 
 }: AgentErrorFallbackProps) {
   return (
-    <motion.div 
-      className="flex flex-col items-center justify-center w-full h-full p-6 bg-zinc-900/50 text-center"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="flex flex-col items-center max-w-md space-y-4">
-        <motion.div 
-          className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-red-500/20"
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 15 }}
-        >
-          <Icon name={ICONS.ALERT_TRIANGLE} size="lg" className="text-red-500" />
-        </motion.div>
-        
-        <motion.h2 
-          className="text-xl font-bold text-primary-foreground"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          {title}
-        </motion.h2>
-        
-        <motion.p 
-          className="text-sm text-primary-foreground/70"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {agentName ? `The ${agentName} agent` : 'This component'} encountered an unexpected error.
-          <br />
-          Try reloading the agent or contact support if the issue persists.
-        </motion.p>
-        
-        {showError && error && (
-          <motion.div 
-            className="p-3 mt-2 overflow-auto text-xs text-left bg-black/30 rounded max-h-32 text-white/60 font-mono w-full"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            {error.toString()}
-          </motion.div>
-        )}
-        
-        <motion.div 
-          className="flex gap-3 mt-4"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Button 
-            variant="outline" 
-            onClick={resetError}
-            className="gap-2"
-          >
-            <Icon name={ICONS.REFRESH_CW} size="sm" />
-            Reload Agent
-          </Button>
-        </motion.div>
+    <div className={cn(
+      "flex flex-col items-center justify-center h-full p-6 bg-muted/30",
+      "text-center rounded-md",
+      className
+    )}>
+      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 text-red-500 mb-4">
+        <AlertTriangle className="h-6 w-6" />
       </div>
-    </motion.div>
+      
+      <h3 className="text-lg font-medium mb-2">
+        {agentName} encountered an error
+      </h3>
+      
+      <p className="text-sm text-muted-foreground mb-4 max-w-md">
+        The agent has crashed. This could be due to a temporary issue or a bug in the agent's code.
+      </p>
+      
+      <div className="flex gap-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={resetErrorBoundary}
+        >
+          Restart Agent
+        </Button>
+        
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => window.location.reload()}
+        >
+          Reload Page
+        </Button>
+      </div>
+      
+      {error && process.env.NODE_ENV === 'development' && (
+        <div className="mt-6 p-4 bg-muted rounded-md text-left w-full max-w-md overflow-auto">
+          <h4 className="text-sm font-medium mb-2">Error Details</h4>
+          <pre className="text-xs text-muted-foreground whitespace-pre-wrap">
+            {error.message}
+          </pre>
+        </div>
+      )}
+    </div>
   );
 }
