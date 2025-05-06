@@ -255,7 +255,7 @@ const LandingPage: React.FC = () => {
           <div className="absolute top-3/4 left-1/3 w-64 h-64 rounded-full bg-purple-500/20 blur-3xl"></div>
         </div>
         
-        {/* Floating window mockup in background */}
+        {/* Floating window mockup in background - desktop version */}
         <motion.div 
           className="absolute hidden md:block right-10 lg:right-20 top-20 w-56 lg:w-72 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-20"
           initial={{ y: 20, opacity: 0 }}
@@ -288,6 +288,60 @@ const LandingPage: React.FC = () => {
             <div className="ml-3 text-xs text-white/70">Agent</div>
           </div>
           <div className="h-28 bg-black/20"></div>
+        </motion.div>
+        
+        {/* Floating window mockups for mobile version */}
+        <motion.div 
+          className="absolute block md:hidden right-5 top-10 w-32 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-20"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 0.6 }}
+          transition={{ duration: 1, delay: 0.5 }}
+        >
+          <div className="bg-black/40 h-5 border-b border-white/10 flex items-center px-2">
+            <div className="flex items-center space-x-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+            </div>
+            <div className="ml-2 text-[10px] text-white/70">Window</div>
+          </div>
+          <div className="h-20 bg-black/20"></div>
+        </motion.div>
+        
+        <motion.div 
+          className="absolute block md:hidden left-4 bottom-16 w-28 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-20 rotate-3"
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 0.6 }}
+          transition={{ duration: 1, delay: 0.7 }}
+        >
+          <div className="bg-black/40 h-5 border-b border-white/10 flex items-center px-2">
+            <div className="flex items-center space-x-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+            </div>
+            <div className="ml-2 text-[10px] text-white/70">Agent</div>
+          </div>
+          <div className="h-16 bg-black/20"></div>
+        </motion.div>
+        
+        <motion.div 
+          className="absolute block md:hidden right-12 bottom-32 w-36 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-60 z-20 -rotate-2"
+          initial={{ y: 15, opacity: 0 }}
+          animate={{ y: 0, opacity: 0.6 }}
+          transition={{ duration: 1, delay: 0.9 }}
+        >
+          <div className="bg-black/40 h-5 border-b border-white/10 flex items-center px-2">
+            <div className="flex items-center space-x-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+            </div>
+            <div className="ml-2 text-[10px] text-white/70">Assistant</div>
+          </div>
+          <div className="h-24 bg-black/20 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-purple-500/40 animate-pulse"></div>
+          </div>
         </motion.div>
         
         {/* Main content */}
