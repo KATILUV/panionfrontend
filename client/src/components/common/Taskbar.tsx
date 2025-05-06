@@ -417,16 +417,18 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           top: 0,
           left: 0,
           bottom: 0,
-          width: '3.5rem', // w-14
-          height: '100vh' // Full viewport height
+          width: showLabels ? '5rem' : '3.5rem', // Wider when showing labels
+          height: '100vh', // Full viewport height
+          maxWidth: '20%' // Responsive - never take more than 20% of screen width
         };
       case 'right':
         return {
           top: 0,
           right: 0,
           bottom: 0,
-          width: '3.5rem', // w-14
-          height: '100vh' // Full viewport height
+          width: showLabels ? '5rem' : '3.5rem', // Wider when showing labels
+          height: '100vh', // Full viewport height
+          maxWidth: '20%' // Responsive - never take more than 20% of screen width
         };
       default:
         return {};
@@ -538,7 +540,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                   onClick={() => {}}
                 />
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" side="top">
+              <PopoverContent className="w-80 p-0" side={isVertical ? (position.location === 'left' ? 'right' : 'left') : 'top'}>
                 <div className="bg-black/60 backdrop-blur-md rounded-md overflow-hidden border border-primary/20">
                   <div className="p-3 border-b border-primary/10 flex items-center justify-between">
                     <h3 className="text-sm font-medium text-white">Notifications</h3>
@@ -626,7 +628,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                     className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
                   />
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-4 bg-black/60 backdrop-blur-md border border-primary/20 rounded-md" side="top">
+                <PopoverContent className="w-80 p-4 bg-black/60 backdrop-blur-md border border-primary/20 rounded-md" side={isVertical ? (position.location === 'left' ? 'right' : 'left') : 'top'}>
                   <div className="space-y-4">
                     <h3 className="text-base font-medium text-white">Save Current Layout</h3>
                     
@@ -690,8 +692,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
             </LayoutManager>
           )}
           
-          {/* Clock Widget - conditionally rendered */}
-          {visibleWidgets.includes('clock') && (
+          {/* Clock Widget - horizontal version */}
+          {visibleWidgets.includes('clock') && !isVertical && (
             <div className="px-2.5 py-1 rounded-lg bg-black/20 text-white/80">
               <div className="flex items-center space-x-1">
                 <Clock size={14} />
@@ -700,9 +702,26 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
             </div>
           )}
           
-          {/* Version number - conditionally rendered */}
-          {visibleWidgets.includes('versionNumber') && (
+          {/* Clock Widget - vertical version */}
+          {visibleWidgets.includes('clock') && isVertical && (
+            <div className="p-2 rounded-lg bg-black/20 text-white/80">
+              <div className="flex flex-col items-center space-y-1">
+                <Clock size={14} />
+                {showLabels && <span className="text-xs font-medium">{formattedTime}</span>}
+              </div>
+            </div>
+          )}
+          
+          {/* Version number - horizontal */}
+          {visibleWidgets.includes('versionNumber') && !isVertical && (
             <div className="text-xs px-2.5 py-1 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
+              v1.0
+            </div>
+          )}
+          
+          {/* Version number - vertical */}
+          {visibleWidgets.includes('versionNumber') && isVertical && (
+            <div className="text-xs p-1.5 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
               v1.0
             </div>
           )}
