@@ -456,12 +456,12 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   return (
     <>
       <div 
-        style={baseStyles}
+        style={getTaskbarBaseStyles()}
         className={`taskbar ${className} ${autohide ? 'opacity-30 hover:opacity-100 transition-opacity duration-300' : ''}`}
       >
         {/* Agent icons - changes flex direction based on position orientation */}
         <div className={`
-          flex-1 ${isVertical ? 'flex-col space-y-1 py-2' : 'flex items-center space-x-1'}
+          flex-1 flex ${isVertical ? 'flex-col space-y-1 py-2' : 'items-center space-x-1'}
         `}>
           {registry.map(agent => {
             const isOpen = windows[agent.id]?.isOpen;
@@ -483,7 +483,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         
         {/* Widgets container - changes flex direction based on position orientation */}
         <div className={`
-          ${isVertical ? 'flex-col space-y-2 items-center' : 'flex items-center space-x-2'}
+          flex ${isVertical ? 'flex-col space-y-2 items-center' : 'items-center space-x-2'}
         `}>
           {/* Search Bar Widget - hide on vertical taskbars */}
           {visibleWidgets.includes('searchBar') && !isVertical && (

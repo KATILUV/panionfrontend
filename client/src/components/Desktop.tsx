@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Window from './common/Window';
-import Taskbar from './common/TaskbarFixed';
+import Taskbar from './common/Taskbar';
 import { useAgentStore, AgentId, WindowLayout } from '../state/agentStore';
 import { useThemeStore } from '../state/themeStore';
 import { useSystemLogStore, log } from '../state/systemLogStore';
