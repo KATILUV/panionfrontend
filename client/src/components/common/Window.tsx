@@ -26,6 +26,7 @@ interface WindowProps {
   onMinimize: () => void;
   onFocus: () => void;
   isMinimized?: boolean;
+  isMobile?: boolean;
 }
 
 const Window: React.FC<WindowProps> = ({
@@ -40,6 +41,7 @@ const Window: React.FC<WindowProps> = ({
   onMinimize,
   onFocus,
   isMinimized = false,
+  isMobile = false,
 }) => {
   const updateAgentPosition = useAgentStore(state => state.updateAgentPosition);
   const updateAgentSize = useAgentStore(state => state.updateAgentSize);
@@ -306,6 +308,23 @@ const Window: React.FC<WindowProps> = ({
 
   // Calculate content height (window height minus title bar)
   const contentHeight = size.height - 24; // 6px height for title bar
+  
+  // Handle mobile-specific adjustments
+  useEffect(() => {
+    if (isMobile && !isMaximized) {
+      // Automatically maximize windows on mobile
+      const maximizedWidth = windowWidth * 0.98; // 98% of screen width
+      const maximizedHeight = windowHeight * 0.95; // 95% of screen height
+      
+      // Center the window
+      const x = (windowWidth - maximizedWidth) / 2;
+      const y = (windowHeight - maximizedHeight) / 2;
+      
+      updateAgentPosition(id, { x, y });
+      updateAgentSize(id, { width: maximizedWidth, height: maximizedHeight });
+      setIsMaximized(true);
+    }
+  }, [isMobile, windowWidth, windowHeight, id, isMaximized]);
 
   // Create CSS classes based on snap position for visual feedback
   const getSnapIndicatorClass = () => {
@@ -425,18 +444,18 @@ const Window: React.FC<WindowProps> = ({
         onDragStop={handleDragStop}
         onResizeStop={handleResizeStop}
         onMouseDown={onFocus}
-        disableDragging={isMaximized}
-        enableResizing={!isMaximized}
+        disableDragging={isMaximized || isMobile} // Disable dragging on mobile or when maximized
+        enableResizing={!isMaximized && !isMobile} // Disable resizing on mobile or when maximized
         dragHandleClassName="window-drag-handle"
         bounds="parent"
-        minWidth={300}
-        minHeight={200}
+        minWidth={isMobile ? windowWidth * 0.9 : 300} // Larger minimum width on mobile
+        minHeight={isMobile ? windowHeight * 0.6 : 200} // Larger minimum height on mobile
         cancel=".window-control-button, .window-control-button *, button" // Prevent drag when clicking buttons
         resizeHandleStyles={{
-          bottomRight: { zIndex: 2 }, // Make resize handles easier to grab
-          bottomLeft: { zIndex: 2 },
-          topRight: { zIndex: 2 },
-          topLeft: { zIndex: 2 }
+          bottomRight: { zIndex: 2, display: isMobile ? 'none' : 'block' }, // Hide resize handles on mobile
+          bottomLeft: { zIndex: 2, display: isMobile ? 'none' : 'block' },
+          topRight: { zIndex: 2, display: isMobile ? 'none' : 'block' },
+          topLeft: { zIndex: 2, display: isMobile ? 'none' : 'block' }
         }}
         className={getSnapIndicatorClass()}
       >

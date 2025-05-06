@@ -114,7 +114,24 @@ const Desktop: React.FC = () => {
   const deleteLayout = useAgentStore(state => state.deleteLayout);
   const [showLayoutPrompt, setShowLayoutPrompt] = useState(false);
   const [newLayoutName, setNewLayoutName] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
+  
+  // Detect mobile devices on mount and window resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Setup resize listener
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Initialize agent registry and system logs when component mounts
   useEffect(() => {
@@ -210,10 +227,10 @@ const Desktop: React.FC = () => {
 
   return (
     <DesktopBackground>
-      {/* Desktop Area */}
-      <div className="flex-1 relative">
+      {/* Desktop Area - Adjusted for mobile responsiveness */}
+      <div className={`flex-1 relative ${isMobile ? 'pt-2 pb-14' : ''}`}>
         {/* Show empty state dashboard if no visible windows */}
-        {!hasVisibleWindows && <EmptyStateDashboard />}
+        {!hasVisibleWindows && <EmptyStateDashboard isMobile={isMobile} />}
         
         {/* Render Windows */}
         <AnimatePresence>
@@ -232,6 +249,7 @@ const Desktop: React.FC = () => {
                 onMinimize={() => minimizeAgent(window.id)}
                 onFocus={() => focusAgent(window.id)}
                 isMinimized={window.isMinimized}
+                isMobile={isMobile}
               >
                 {renderAgentContent(window.id)}
               </Window>
