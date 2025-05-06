@@ -1,13 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAgentStore, AgentId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
 import { useSystemLogStore } from '../../state/systemLogStore';
 import LayoutManager from './LayoutManager';
 import ClaraSystemLog from '../system/ClaraSystemLog';
 import { Button } from '@/components/ui/button';
-import { LucideIcon, Layout, Moon, Settings, Terminal, Store, Save } from 'lucide-react';
+import { 
+  LucideIcon, 
+  Layout, 
+  Moon, 
+  Settings, 
+  Terminal, 
+  Store, 
+  Save,
+  Plus,
+  PlusCircle,
+  FileText,
+  CheckCircle
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // Reusable TaskbarButton component to reduce repetition
 interface TaskbarButtonProps {
@@ -115,6 +134,10 @@ interface TaskbarProps {
 
 const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const { toast } = useToast();
+  const [isQuickSaveOpen, setIsQuickSaveOpen] = useState(false);
+  const [customLayoutName, setCustomLayoutName] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  
   const registry = useAgentStore(state => state.registry);
   const windows = useAgentStore(state => state.windows);
   const openAgent = useAgentStore(state => state.openAgent);
@@ -148,7 +171,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     return activeLayout ? activeLayout.name : null;
   };
   
-  // Function to handle quick save of the current layout
+  // Function to handle quick save of the current layout with auto-generated name
   const handleQuickSave = () => {
     const timestamp = format(new Date(), "MMM d, h:mm a");
     const layoutName = `Quick Layout - ${timestamp}`;
@@ -162,6 +185,47 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       description: `Current layout saved as "${layoutName}"`,
       variant: "default",
     });
+  };
+  
+  // Function to save with custom name
+  const handleCustomSave = () => {
+    if (!customLayoutName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter a name for your layout",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Use the saveLayout function from the store with custom name
+    saveLayout(customLayoutName, 'Quick Saves');
+    
+    // Show a success toast
+    toast({
+      title: "Layout Saved",
+      description: `Current layout saved as "${customLayoutName}"`,
+      variant: "default",
+    });
+    
+    // Reset form and close popover
+    setCustomLayoutName('');
+    setIsQuickSaveOpen(false);
+  };
+  
+  // Focus the input when popover opens
+  const handlePopoverOpenChange = (open: boolean) => {
+    setIsQuickSaveOpen(open);
+    
+    if (open) {
+      // Focus the input after popover animation completes
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    } else {
+      // Clear the input when popover closes
+      setCustomLayoutName('');
+    }
   };
   
   // Get theme information
@@ -209,14 +273,69 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       </div>
       
       <div className="flex items-center space-x-2">
-        {/* Quick Save Button */}
-        <TaskbarButton
-          icon={<Save size={16} />}
-          label="Quick Save"
-          isActive={false}
-          onClick={handleQuickSave}
-          className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
-        />
+        {/* Quick Save Button with Popover */}
+        <div className="relative flex items-center">
+          {/* Main Quick Save Button */}
+          <TaskbarButton
+            icon={<Save size={16} />}
+            label="Quick Save"
+            isActive={false}
+            onClick={handleQuickSave}
+            className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
+          />
+          
+          {/* Save Options Popover Trigger */}
+          <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
+            <PopoverTrigger asChild>
+              <button
+                className="ml-px h-8 w-5 flex items-center justify-center text-white/70 hover:text-white 
+                          bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10
+                          rounded-r-lg border-l border-white/5"
+                title="Save Options"
+              >
+                <PlusCircle size={12} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4" side="top">
+              <div className="space-y-4">
+                <h3 className="text-base font-medium">Save Current Layout</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="layout-name">Layout Name</Label>
+                  <Input 
+                    id="layout-name"
+                    ref={inputRef}
+                    placeholder="e.g., My Workspace Layout"
+                    value={customLayoutName}
+                    onChange={(e) => setCustomLayoutName(e.target.value)}
+                    className="w-full"
+                    onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-primary/10
+                              hover:bg-primary/20 text-sm text-primary-foreground transition-colors"
+                    onClick={handleQuickSave}
+                  >
+                    <Save size={14} /> Quick Save
+                  </button>
+                  
+                  <button
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-primary/80
+                              hover:bg-primary text-sm text-white transition-colors disabled:opacity-50 
+                              disabled:pointer-events-none"
+                    onClick={handleCustomSave}
+                    disabled={!customLayoutName.trim()}
+                  >
+                    <CheckCircle size={14} /> Save with Name
+                  </button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
         
         {/* System Log Button */}
         <TaskbarButton
