@@ -531,115 +531,166 @@ const MarketplacePage = () => {
   
   // Main component render
   return (
-    <div className="max-w-[1600px] mx-auto px-4 py-8">
-      {/* Back to desktop link */}
-      <div className="mb-6">
-        <Link href="/desktop" className="inline-flex items-center text-white/70 hover:text-white transition-all">
-          <ArrowLeft size={16} className="mr-1" />
-          <span>Back to Desktop</span>
-        </Link>
-      </div>
-      
-      {/* Page title */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center">
-          <ShoppingBag size={28} className="text-primary mr-3" />
-          <h1 className="text-3xl font-bold">Agent Marketplace</h1>
-        </div>
-        
-        {/* Search box */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search agents..."
-            className="pl-10 pr-4 py-2.5 bg-black/30 backdrop-blur-sm border border-white/10 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 w-64"
-            value={searchQuery}
-            onChange={(e) => searchAgents(e.target.value)}
+    <div className="min-h-screen">
+      {/* Hero section with Panion branding */}
+      <section className="relative overflow-hidden py-16 md:py-24 bg-gradient-to-br from-purple-950 via-[#1a1245] to-[#150d38]">
+        <div className="container mx-auto px-6 relative z-20">
+          {/* Animated background elements */}
+          <motion.div 
+            className="absolute -top-20 -left-10 w-40 h-40 bg-purple-500/30 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           />
-          <Search size={18} className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-white/50" />
+          <motion.div 
+            className="absolute top-20 right-10 w-60 h-60 bg-violet-500/20 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+          
+          {/* Back to desktop link */}
+          <div className="mb-10">
+            <Link href="/desktop" className="inline-flex items-center text-white/70 hover:text-white transition-all bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm border border-white/10">
+              <ArrowLeft size={16} className="mr-2" />
+              <span>Back to Desktop</span>
+            </Link>
+          </div>
+          
+          {/* Page title with branding */}
+          <div className="max-w-4xl">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="relative mb-6"
+            >
+              <motion.div 
+                className="absolute -top-5 -left-10 w-20 h-20 bg-purple-500/40 rounded-full blur-2xl"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div 
+                className="absolute -top-5 -right-10 w-20 h-20 bg-violet-500/40 rounded-full blur-2xl"
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              />
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm relative z-30">
+                <span className="absolute inset-0 blur-xl bg-black/20 -z-10 rounded-3xl"></span>
+                <span className="text-violet-300">Panion</span> Agent Marketplace
+              </h1>
+              <p className="text-xl text-purple-100 max-w-2xl">
+                Discover specialized agents to enhance your workspace and boost your productivity
+              </p>
+            </motion.div>
+            
+            {/* Search box */}
+            <div className="relative max-w-lg">
+              <motion.div
+                className="absolute inset-0 rounded-full bg-violet-500/20 blur-md z-0"
+                animate={{ scale: [1, 1.05, 1], opacity: [0.2, 0.3, 0.2] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <input
+                type="text"
+                placeholder="Search agents..."
+                className="pl-12 pr-4 py-3.5 bg-black/40 backdrop-blur-sm border border-white/20 rounded-full text-white w-full focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent relative z-10 shadow-lg"
+                value={searchQuery}
+                onChange={(e) => searchAgents(e.target.value)}
+              />
+              <Search size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-300 z-10" />
+            </div>
+          </div>
         </div>
-      </div>
+        
+        {/* Bottom gradient overlay - smoother transition */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
+      </section>
       
-      {/* Only show featured spotlight when on the featured tab */}
-      {activeTab === 'featured' && <FeaturedSpotlight />}
-      
-      {/* Main tabs */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex space-x-1">
+      {/* Content Section */}
+      <section className="container mx-auto px-6 pb-20 relative">
+        {/* Only show featured spotlight when on the featured tab */}
+        {activeTab === 'featured' && <FeaturedSpotlight />}
+        
+        {/* Main tabs */}
+        <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 flex justify-between items-center mb-8 mt-10 shadow-lg">
+          <div className="flex space-x-2">
+            <button 
+              className={cn(
+                "px-4 py-2 rounded-lg text-base font-medium transition-all",
+                activeTab === 'featured' 
+                  ? 'bg-purple-600/80 text-white shadow-md' 
+                  : 'text-white/70 hover:text-white hover:bg-white/5'
+              )}
+              onClick={() => {
+                setActiveTab('featured');
+                setSelectedAgent(null);
+              }}
+            >
+              <Sparkles className="inline-block mr-2 h-4 w-4" />
+              Featured
+            </button>
+            <button 
+              className={cn(
+                "px-4 py-2 rounded-lg text-base font-medium transition-all",
+                activeTab === 'popular' 
+                  ? 'bg-purple-600/80 text-white shadow-md' 
+                  : 'text-white/70 hover:text-white hover:bg-white/5'
+              )}
+              onClick={() => {
+                setActiveTab('popular');
+                setSelectedAgent(null);
+              }}
+            >
+              <Zap className="inline-block mr-2 h-4 w-4" />
+              Popular
+            </button>
+            <button 
+              className={cn(
+                "px-4 py-2 rounded-lg text-base font-medium transition-all",
+                activeTab === 'new' 
+                  ? 'bg-purple-600/80 text-white shadow-md' 
+                  : 'text-white/70 hover:text-white hover:bg-white/5'
+              )}
+              onClick={() => {
+                setActiveTab('new');
+                setSelectedAgent(null);
+              }}
+            >
+              <Plus className="inline-block mr-2 h-4 w-4" />
+              New
+            </button>
+            <button 
+              className={cn(
+                "px-4 py-2 rounded-lg text-base font-medium transition-all",
+                activeTab === 'browse' 
+                  ? 'bg-purple-600/80 text-white shadow-md' 
+                  : 'text-white/70 hover:text-white hover:bg-white/5'
+              )}
+              onClick={() => {
+                setActiveTab('browse');
+                setSelectedAgent(null);
+              }}
+            >
+              <Search className="inline-block mr-2 h-4 w-4" />
+              Browse All
+            </button>
+          </div>
+          
+          {/* Filter button */}
           <button 
-            className={cn(
-              "px-4 py-2 rounded-lg text-base font-medium transition-all",
-              activeTab === 'featured' 
-                ? 'bg-primary/20 text-primary' 
-                : 'text-white/70 hover:text-white hover:bg-white/5'
-            )}
-            onClick={() => {
-              setActiveTab('featured');
-              setSelectedAgent(null);
-            }}
+            className={`py-2 px-4 rounded-lg transition-all flex items-center ${
+              showFilters || selectedCategory || selectedTags.length > 0 
+                ? 'bg-purple-600/80 text-white shadow-md' 
+                : 'bg-black/20 border border-white/10 text-white/70 hover:text-white hover:bg-white/10'
+            }`}
+            onClick={() => setShowFilters(!showFilters)}
           >
-            <Sparkles className="inline-block mr-2 h-4 w-4" />
-            Featured
-          </button>
-          <button 
-            className={cn(
-              "px-4 py-2 rounded-lg text-base font-medium transition-all",
-              activeTab === 'popular' 
-                ? 'bg-primary/20 text-primary' 
-                : 'text-white/70 hover:text-white hover:bg-white/5'
-            )}
-            onClick={() => {
-              setActiveTab('popular');
-              setSelectedAgent(null);
-            }}
-          >
-            <Zap className="inline-block mr-2 h-4 w-4" />
-            Popular
-          </button>
-          <button 
-            className={cn(
-              "px-4 py-2 rounded-lg text-base font-medium transition-all",
-              activeTab === 'new' 
-                ? 'bg-primary/20 text-primary' 
-                : 'text-white/70 hover:text-white hover:bg-white/5'
-            )}
-            onClick={() => {
-              setActiveTab('new');
-              setSelectedAgent(null);
-            }}
-          >
-            <Plus className="inline-block mr-2 h-4 w-4" />
-            New
-          </button>
-          <button 
-            className={cn(
-              "px-4 py-2 rounded-lg text-base font-medium transition-all",
-              activeTab === 'browse' 
-                ? 'bg-primary/20 text-primary' 
-                : 'text-white/70 hover:text-white hover:bg-white/5'
-            )}
-            onClick={() => {
-              setActiveTab('browse');
-              setSelectedAgent(null);
-            }}
-          >
-            <Search className="inline-block mr-2 h-4 w-4" />
-            Browse All
+            <Filter size={18} className="mr-2" />
+            <span>Filter</span>
           </button>
         </div>
         
-        {/* Filter button */}
-        <button 
-          className={`p-2 rounded-lg transition-all flex items-center ${showFilters || selectedCategory || selectedTags.length > 0 ? 'bg-primary/20 text-primary' : 'bg-black/20 border border-white/10 text-white/70 hover:text-white'}`}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter size={18} className="mr-2" />
-          <span>Filter</span>
-        </button>
-      </div>
-      
-      {/* Filter panel */}
-      {showFilters && (
+        {/* Filter panel */}
+        {showFilters && (
         <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-lg p-6 mb-6 theme-transition">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -648,7 +699,7 @@ const MarketplacePage = () => {
                 {categories.map((category) => (
                   <button
                     key={category.id}
-                    className={`px-3 py-1.5 rounded-lg text-sm flex items-center transition-all ${selectedCategory === category.id ? 'bg-primary/20 text-primary' : 'bg-black/30 hover:bg-black/40 text-white/70'}`}
+                    className={`px-3 py-1.5 rounded-lg text-sm flex items-center transition-all ${selectedCategory === category.id ? 'bg-purple-600/30 text-purple-300' : 'bg-black/30 hover:bg-black/40 text-white/70'}`}
                     onClick={() => setCategory(selectedCategory === category.id ? null : category.id)}
                   >
                     <DynamicIcon name={category.icon} size={14} className="mr-1.5" />
@@ -664,7 +715,7 @@ const MarketplacePage = () => {
                 {getAllTags().map((tag) => (
                   <button
                     key={tag}
-                    className={`px-3 py-1.5 rounded-lg text-xs flex items-center transition-all ${selectedTags.includes(tag) ? 'bg-primary/20 text-primary' : 'bg-black/30 hover:bg-black/40 text-white/70'}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs flex items-center transition-all ${selectedTags.includes(tag) ? 'bg-purple-600/30 text-purple-300' : 'bg-black/30 hover:bg-black/40 text-white/70'}`}
                     onClick={() => toggleTag(tag)}
                   >
                     <Tag size={12} className="mr-1.5" />
@@ -679,7 +730,7 @@ const MarketplacePage = () => {
           {(selectedCategory || selectedTags.length > 0) && (
             <div className="mt-4 flex justify-end">
               <button 
-                className="px-3 py-1.5 rounded-lg bg-black/20 border border-white/10 text-white/70 hover:text-white transition-all flex items-center"
+                className="px-3 py-1.5 rounded-lg bg-purple-600/30 text-purple-300 hover:text-white transition-all flex items-center shadow-md"
                 onClick={() => {
                   setCategory(null);
                   selectedTags.forEach(tag => toggleTag(tag));
@@ -691,45 +742,46 @@ const MarketplacePage = () => {
             </div>
           )}
         </div>
-      )}
-      
-      {/* Main content area */}
-      {selectedAgent ? (
-        <AgentDetail />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {getDisplayedAgents().map((agent) => (
-            <AgentCard key={agent.id} agent={agent} />
-          ))}
-          
-          {getDisplayedAgents().length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-              <div className="bg-black/20 rounded-full p-6 mb-6">
-                <Search size={40} className="text-white/40" />
+        )}
+        
+        {/* Main content area */}
+        {selectedAgent ? (
+          <AgentDetail />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {getDisplayedAgents().map((agent) => (
+              <AgentCard key={agent.id} agent={agent} />
+            ))}
+            
+            {getDisplayedAgents().length === 0 && (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                <div className="bg-black/20 rounded-full p-6 mb-6">
+                  <Search size={40} className="text-white/40" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">No agents found</h3>
+                <p className="text-white/60 max-w-lg">
+                  {activeTab === 'installed' 
+                    ? "You haven't installed any agents yet. Browse the marketplace to find new agents!" 
+                    : "Try adjusting your search or filters to find what you're looking for"}
+                </p>
+                {activeTab === 'browse' && (
+                  <button 
+                    className="mt-6 px-4 py-2 bg-purple-600/80 text-white rounded-lg flex items-center"
+                    onClick={() => {
+                      setCategory(null);
+                      selectedTags.forEach(tag => toggleTag(tag));
+                      searchAgents('');
+                    }}
+                  >
+                    <RefreshCw size={16} className="mr-2" />
+                    Clear all filters
+                  </button>
+                )}
               </div>
-              <h3 className="text-xl font-medium mb-2">No agents found</h3>
-              <p className="text-white/60 max-w-lg">
-                {activeTab === 'installed' 
-                  ? "You haven't installed any agents yet. Browse the marketplace to find new agents!" 
-                  : "Try adjusting your search or filters to find what you're looking for"}
-              </p>
-              {activeTab === 'browse' && (
-                <button 
-                  className="mt-6 px-4 py-2 bg-primary/20 text-primary rounded-lg flex items-center"
-                  onClick={() => {
-                    setCategory(null);
-                    selectedTags.forEach(tag => toggleTag(tag));
-                    searchAgents('');
-                  }}
-                >
-                  <RefreshCw size={16} className="mr-2" />
-                  Clear all filters
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </section>
     </div>
   );
 };
