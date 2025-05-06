@@ -5,18 +5,107 @@ import { useSystemLogStore } from '../../state/systemLogStore';
 import LayoutManager from './LayoutManager';
 import ClaraSystemLog from '../system/ClaraSystemLog';
 import { Button } from '@/components/ui/button';
-import { 
-  Layout, 
-  Moon,
-  Sun,
-  Paintbrush, 
-  Settings, 
-  Monitor, 
-  SplitSquareVertical,
-  Terminal,
-  Store,
-  ShoppingBag
-} from 'lucide-react';
+import { LucideIcon, Layout, Moon, Settings, Terminal, Store } from 'lucide-react';
+
+// Reusable TaskbarButton component to reduce repetition
+interface TaskbarButtonProps {
+  icon: React.ReactNode | string;
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+  className?: string;
+  hasIndicator?: boolean;
+}
+
+const TaskbarButton: React.FC<TaskbarButtonProps> = ({
+  icon,
+  label,
+  isActive,
+  onClick,
+  className = '',
+  hasIndicator = true
+}) => {
+  const isHtmlIcon = typeof icon === 'string';
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
+        group
+        ${isActive 
+          ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
+          : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+        }
+        ${hasIndicator && isActive 
+          ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all' 
+          : ''
+        }
+        before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+        hover:before:opacity-100 hover:scale-105
+        ${className}
+      `}
+      title={label}
+    >
+      {isHtmlIcon ? (
+        <div 
+          dangerouslySetInnerHTML={{ __html: icon as string }} 
+          className={`transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`} 
+        />
+      ) : (
+        <span className={`transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`}>
+          {icon}
+        </span>
+      )}
+      <span className="hidden sm:inline text-sm">{label}</span>
+    </button>
+  );
+};
+
+// Agent icon button with slightly different styling
+interface AgentIconButtonProps {
+  id: AgentId;
+  icon: string;
+  title: string;
+  isActive: boolean;
+  onClick: (id: AgentId) => void;
+}
+
+const AgentIconButton: React.FC<AgentIconButtonProps> = ({
+  id,
+  icon,
+  title,
+  isActive,
+  onClick
+}) => {
+  return (
+    <button
+      onClick={() => onClick(id)}
+      className={`
+        p-2 rounded-lg transition-all duration-200 relative overflow-hidden
+        ${isActive 
+          ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
+          : 'bg-transparent hover:bg-white/10 text-white/70 hover:text-white hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+        }
+        group
+        ${isActive 
+          ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all taskbar-active-indicator' 
+          : ''
+        }
+        before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+        hover:before:opacity-100 hover:scale-105
+      `}
+      title={title}
+    >
+      <div className={`flex items-center justify-center w-7 h-7 transform transition-transform duration-200
+        ${isActive ? 'scale-110' : 'group-hover:scale-110'}
+      `}>
+        <div dangerouslySetInnerHTML={{ __html: icon }} 
+          className={`transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`} />
+      </div>
+    </button>
+  );
+};
 
 interface TaskbarProps {
   className?: string;
@@ -84,123 +173,54 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         {registry.map(agent => {
           const isOpen = windows[agent.id]?.isOpen;
           const isMinimized = windows[agent.id]?.isMinimized;
+          const isActive = isOpen && !isMinimized;
           
           return (
-            <button
+            <AgentIconButton
               key={agent.id}
-              onClick={() => handleIconClick(agent.id)}
-              className={`
-                p-2 rounded-lg transition-all duration-200 relative overflow-hidden
-                ${isOpen && !isMinimized 
-                  ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
-                  : 'bg-transparent hover:bg-white/10 text-white/70 hover:text-white hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
-                }
-                group
-                ${isOpen 
-                  ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all taskbar-active-indicator' 
-                  : ''
-                }
-                before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
-                hover:before:opacity-100 hover:scale-105
-              `}
+              id={agent.id}
+              icon={agent.icon}
               title={agent.title}
-            >
-              <div className={`flex items-center justify-center w-7 h-7 transform transition-transform duration-200
-                ${isOpen ? 'scale-110' : 'group-hover:scale-110'}
-              `}>
-                <div dangerouslySetInnerHTML={{ __html: agent.icon }} 
-                  className={`transition-all duration-200 ${isOpen ? 'text-primary' : 'group-hover:text-white'}`} />
-              </div>
-            </button>
+              isActive={isActive}
+              onClick={handleIconClick}
+            />
           );
         })}
       </div>
       
       <div className="flex items-center space-x-2">
         {/* System Log Button */}
-        <Button 
-          variant="ghost" 
-          size="sm"
+        <TaskbarButton
+          icon={<Terminal size={16} />}
+          label="System Console"
+          isActive={isSystemLogVisible}
           onClick={toggleSystemLog}
-          className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
-            group
-            ${isSystemLogVisible 
-              ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)] after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all'
-              : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
-            }
-            before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
-            hover:before:opacity-100 hover:scale-105
-          `}
-        >
-          <Terminal size={16} />
-          <span className="hidden sm:inline text-sm">System Console</span>
-        </Button>
+        />
 
         {/* Marketplace Button */}
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
-            group
-            ${windows['marketplace']?.isOpen && !windows['marketplace']?.isMinimized
-              ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)] after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all'
-              : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
-            }
-            before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
-            hover:before:opacity-100 hover:scale-105
-          `}
-          onClick={() => {
-            handleIconClick('marketplace');
-          }}
-        >
-          <Store size={16} className={`transition-all duration-200 ${windows['marketplace']?.isOpen ? 'text-primary' : 'group-hover:text-white'}`} />
-          <span className="hidden sm:inline text-sm">Marketplace</span>
-        </Button>
+        <TaskbarButton
+          icon={<Store size={16} />}
+          label="Marketplace"
+          isActive={windows['marketplace']?.isOpen && !windows['marketplace']?.isMinimized}
+          onClick={() => handleIconClick('marketplace')}
+        />
         
         {/* Settings Button */}
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
-            group
-            ${windows['settings']?.isOpen && !windows['settings']?.isMinimized
-              ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)] after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all'
-              : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
-            }
-            before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
-            hover:before:opacity-100 hover:scale-105
-          `}
-          onClick={() => {
-            handleIconClick('settings');
-          }}
-        >
-          <Settings size={16} className={`transition-all duration-200 ${windows['settings']?.isOpen ? 'text-primary' : 'group-hover:text-white'}`} />
-          <span className="hidden sm:inline text-sm">Settings</span>
-        </Button>
+        <TaskbarButton
+          icon={<Settings size={16} />}
+          label="Settings"
+          isActive={windows['settings']?.isOpen && !windows['settings']?.isMinimized}
+          onClick={() => handleIconClick('settings')}
+        />
         
         {/* Layout Manager Button */}
         <LayoutManager>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
-              group
-              ${activeLayoutId
-                ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)] after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all'
-                : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
-              }
-              before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
-              hover:before:opacity-100 hover:scale-105
-            `}
-          >
-            <Layout size={16} className={`transition-all duration-200 ${activeLayoutId ? 'text-primary' : 'group-hover:text-white'}`} />
-            <span className="hidden sm:inline text-sm">
-              {getActiveLayoutName() ? 
-                `Layout: ${getActiveLayoutName()}` : 
-                'Layouts'
-              }
-            </span>
-          </Button>
+          <TaskbarButton
+            icon={<Layout size={16} />}
+            label={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
+            isActive={!!activeLayoutId}
+            onClick={() => {}}
+          />
         </LayoutManager>
         
         <div className="text-xs px-2.5 py-1 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
