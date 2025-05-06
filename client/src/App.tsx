@@ -136,6 +136,9 @@ function App() {
     
     // Auto-open Clara window by default
     agentStore.openAgent('clara');
+    
+    // Also open Marketplace window for testing
+    agentStore.openAgent('marketplace');
   }, []);
   
   return (
