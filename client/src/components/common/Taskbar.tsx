@@ -642,7 +642,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
               <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
                 <PopoverTrigger asChild>
                   <TaskbarButton
-                    icon={<Plus size={16} />}
+                    icon={<Icon name={ICONS.ADD} size={16} />}
                     label="Save Layout"
                     isActive={false}
                     onClick={() => {}}
@@ -677,7 +677,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                                   hover:bg-primary/20 text-sm text-white transition-colors"
                         onClick={handleQuickSave}
                       >
-                        <Save size={14} /> Quick Save
+                        <Icon name={ICONS.SAVE} size={14} /> Quick Save
                       </button>
                       
                       <button
@@ -687,7 +687,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                         onClick={handleCustomSave}
                         disabled={!customLayoutName.trim()}
                       >
-                        <CheckCircle size={14} /> Save with Name
+                        <Icon name={ICONS.CHECK_CIRCLE} size={14} /> Save with Name
                       </button>
                     </div>
                   </div>
@@ -726,7 +726,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
               title="System Console"
             >
               <span className={`transition-all duration-200 ${isSystemLogVisible ? 'text-primary' : 'group-hover:text-white'}`}>
-                <Terminal size={16} />
+                <Icon name={ICONS.TERMINAL} size={16} />
               </span>
               {showLabels ? (
                 <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>System</span>
@@ -766,7 +766,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                 title={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
               >
                 <span className={`transition-all duration-200 ${activeLayoutId ? 'text-primary' : 'group-hover:text-white'}`}>
-                  <Layout size={16} />
+                  <Icon name={ICONS.LAYOUTS} size={16} />
                 </span>
                 {showLabels ? (
                   <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>
@@ -783,7 +783,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
           {visibleWidgets.includes('clock') && !isVertical && (
             <div className="px-2.5 py-1 rounded-lg bg-black/20 text-white/80">
               <div className="flex items-center space-x-1">
-                <Clock size={14} />
+                <Icon name={ICONS.CLOCK} size={14} />
                 <span className="text-xs font-medium">{formattedTime}</span>
               </div>
             </div>
@@ -793,7 +793,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
           {visibleWidgets.includes('clock') && isVertical && (
             <div className="p-2 rounded-lg bg-black/20 text-white/80">
               <div className="flex flex-col items-center space-y-1">
-                <Clock size={14} />
+                <Icon name={ICONS.CLOCK} size={14} />
                 {showLabels && <span className="text-xs font-medium">{formattedTime}</span>}
               </div>
             </div>
