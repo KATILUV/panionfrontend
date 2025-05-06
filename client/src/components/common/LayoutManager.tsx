@@ -132,11 +132,12 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
         {children}
       </DialogTrigger>
       <DialogContent 
-        className={`sm:max-w-[650px] backdrop-blur-xl ${
+        className={`sm:max-w-[650px] backdrop-blur-xl shadow-lg shadow-black/20 ${
           getCurrentTheme() === 'dark' 
-            ? 'bg-black/70 border border-purple-500/30 text-white' 
-            : 'bg-white/95 border border-purple-200 text-gray-900'
+            ? 'bg-gray-900/90 border border-purple-600/50 text-white' 
+            : 'bg-white/95 border border-purple-300 text-gray-900'
         }`}
+        aria-describedby="layout-manager-description"
       >
         <DialogHeader>
           <DialogTitle className="text-xl">Window Layouts</DialogTitle>
@@ -148,14 +149,23 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
         </DialogHeader>
         
         <Tabs defaultValue="layouts" className="mt-4" value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="layouts" className="flex items-center gap-1.5">
+          <TabsList className="w-full grid grid-cols-3 p-1 gap-1 bg-gray-900/30 dark:bg-black/30 rounded-lg">
+            <TabsTrigger 
+              value="layouts" 
+              className="flex items-center gap-1.5 data-[state=active]:bg-purple-700/90 data-[state=active]:text-white data-[state=active]:shadow-md"
+            >
               <LayoutGrid className="h-4 w-4" /> My Layouts
             </TabsTrigger>
-            <TabsTrigger value="templates" className="flex items-center gap-1.5">
+            <TabsTrigger 
+              value="templates" 
+              className="flex items-center gap-1.5 data-[state=active]:bg-purple-700/90 data-[state=active]:text-white data-[state=active]:shadow-md"
+            >
               <SquareLibrary className="h-4 w-4" /> Templates
             </TabsTrigger>
-            <TabsTrigger value="create" className="flex items-center gap-1.5">
+            <TabsTrigger 
+              value="create" 
+              className="flex items-center gap-1.5 data-[state=active]:bg-purple-700/90 data-[state=active]:text-white data-[state=active]:shadow-md"
+            >
               <Plus className="h-4 w-4" /> Create New
             </TabsTrigger>
           </TabsList>
@@ -173,14 +183,14 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
                 {filteredLayouts.map(layout => (
                   <div 
                     key={layout.id}
-                    className={`rounded-lg transition-colors overflow-hidden ${
+                    className={`rounded-lg transition-all duration-200 overflow-hidden shadow-sm hover:shadow-md ${
                       activeLayoutId === layout.id 
                         ? getCurrentTheme() === 'dark'
-                          ? 'bg-purple-800/50 border border-purple-500/50' 
-                          : 'bg-purple-100 border border-purple-300'
+                          ? 'bg-purple-900/60 border-2 border-purple-500/70 shadow-purple-500/20' 
+                          : 'bg-purple-100 border-2 border-purple-400 shadow-purple-300/20'
                         : getCurrentTheme() === 'dark'
-                          ? 'bg-black/20 hover:bg-black/30 border border-purple-500/20'
-                          : 'bg-white/80 hover:bg-purple-50 border border-purple-100/50'
+                          ? 'bg-gray-900/50 hover:bg-gray-900/70 border border-purple-600/30 hover:border-purple-500/50'
+                          : 'bg-white/90 hover:bg-purple-50/90 border border-purple-200 hover:border-purple-300/70'
                     }`}
                   >
                     <div className="p-3">
@@ -275,10 +285,10 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
                 {templates.map(template => (
                   <div 
                     key={template.id}
-                    className={`rounded-lg transition-colors overflow-hidden ${
+                    className={`rounded-lg transition-all duration-200 overflow-hidden shadow-sm hover:shadow-md ${
                       getCurrentTheme() === 'dark'
-                        ? 'bg-black/30 hover:bg-black/40 border border-purple-500/20'
-                        : 'bg-white/80 hover:bg-purple-50 border border-purple-100/50'
+                        ? 'bg-gray-900/50 hover:bg-gray-900/70 border border-purple-600/30 hover:border-purple-500/50'
+                        : 'bg-white/90 hover:bg-purple-50/90 border border-purple-200 hover:border-purple-300/70'
                     }`}
                   >
                     <div className="p-3">
@@ -288,9 +298,9 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
                           size="sm"
                           variant="default"
                           onClick={() => handleApplyTemplate(template.id, template.name)}
-                          className="bg-purple-700 hover:bg-purple-600 text-xs h-7 px-2"
+                          className="bg-purple-700 hover:bg-purple-600 shadow-sm hover:shadow-md text-xs h-7 px-3 transition-all hover:scale-105"
                         >
-                          <Layout className="h-3 w-3 mr-1" />
+                          <Layout className="h-3 w-3 mr-1.5" />
                           Apply
                         </Button>
                       </div>
@@ -324,32 +334,45 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
           
           {/* Create Layout Tab Content */}
           <TabsContent value="create" className="py-4">
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Layout name"
-                  value={newLayoutName}
-                  onChange={e => setNewLayoutName(e.target.value)}
-                  className={`${
-                    getCurrentTheme() === 'dark' 
-                      ? 'bg-white/10 border-white/20 text-white placeholder:text-white/50' 
-                      : 'bg-white border-purple-200 text-gray-900 placeholder:text-gray-500'
-                  }`}
-                />
-                <Button 
-                  onClick={handleSaveLayout}
-                  className="bg-purple-700 hover:bg-purple-600"
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  Save
-                </Button>
-              </div>
+            <div className={`p-4 rounded-lg ${
+              getCurrentTheme() === 'dark' ? 'bg-gray-900/50' : 'bg-purple-50/50'
+            } shadow-inner border border-purple-500/20`}>
+              <h3 className="text-lg font-medium mb-4">Save Current Layout</h3>
               
-              <p className={`text-sm mt-4 ${
-                getCurrentTheme() === 'dark' ? 'text-white/70' : 'text-gray-600'
-              }`}>
-                This will save your current window arrangement as a layout that you can apply later.
-              </p>
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Layout name"
+                    value={newLayoutName}
+                    onChange={e => setNewLayoutName(e.target.value)}
+                    className={`${
+                      getCurrentTheme() === 'dark' 
+                        ? 'bg-white/10 border-white/20 text-white placeholder:text-white/50' 
+                        : 'bg-white border-purple-200 text-gray-900 placeholder:text-gray-500'
+                    }`}
+                  />
+                  <Button 
+                    onClick={handleSaveLayout}
+                    className="bg-purple-700 hover:bg-purple-600 shadow transition-all hover:shadow-md hover:scale-105"
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    Save
+                  </Button>
+                </div>
+                
+                <div className={`bg-opacity-20 rounded-lg p-3 mt-3 ${
+                  getCurrentTheme() === 'dark' ? 'bg-purple-900/20 text-white/70' : 'bg-purple-100/50 text-gray-600'
+                }`}>
+                  <p className="text-sm">
+                    This will save your current window arrangement as a layout that you can apply later.
+                  </p>
+                  <ul className="text-sm mt-2 space-y-1 list-disc ml-4">
+                    <li>All open windows and their positions will be saved</li>
+                    <li>You can access your saved layouts from the Taskbar</li>
+                    <li>Apply different layouts for different tasks</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
