@@ -74,11 +74,21 @@ export function TaskbarSettings() {
 
   // Handle position changes
   const handleLocationChange = (location: string) => {
-    setPosition({ ...position, location: location as 'top' | 'bottom' | 'left' | 'right' });
+    const newLocation = location as 'top' | 'bottom' | 'left' | 'right';
+    console.log("Updating taskbar location to:", newLocation);
+    setPosition({ 
+      ...position, 
+      location: newLocation
+    });
   };
 
   const handleAlignmentChange = (alignment: string) => {
-    setPosition({ ...position, alignment: alignment as 'start' | 'end' | 'center' | 'space-between' });
+    const newAlignment = alignment as 'start' | 'end' | 'center' | 'space-between';
+    console.log("Updating taskbar alignment to:", newAlignment);
+    setPosition({ 
+      ...position, 
+      alignment: newAlignment
+    });
   };
 
   return (
@@ -140,13 +150,17 @@ export function TaskbarSettings() {
             <div className="space-y-2">
               <Label htmlFor="position-location">Taskbar Position</Label>
               <Select 
+                defaultValue={position.location}
                 value={position.location} 
-                onValueChange={handleLocationChange}
+                onValueChange={(value) => {
+                  console.log("Setting taskbar position to:", value);
+                  handleLocationChange(value);
+                }}
               >
-                <SelectTrigger id="position-location">
+                <SelectTrigger id="position-location" className="w-full">
                   <SelectValue placeholder="Taskbar Position" />
                 </SelectTrigger>
-                <SelectContent position="popper" sideOffset={4}>
+                <SelectContent position="popper" align="center" sideOffset={4}>
                   <SelectItem value="top">Top</SelectItem>
                   <SelectItem value="bottom">Bottom</SelectItem>
                   <SelectItem value="left">Left</SelectItem>
@@ -158,13 +172,17 @@ export function TaskbarSettings() {
             <div className="space-y-2">
               <Label htmlFor="position-alignment">Icon Alignment</Label>
               <Select 
+                defaultValue={position.alignment}
                 value={position.alignment} 
-                onValueChange={handleAlignmentChange}
+                onValueChange={(value) => {
+                  console.log("Setting alignment to:", value);
+                  handleAlignmentChange(value);
+                }}
               >
-                <SelectTrigger id="position-alignment">
+                <SelectTrigger id="position-alignment" className="w-full">
                   <SelectValue placeholder="Icon Alignment" />
                 </SelectTrigger>
-                <SelectContent position="popper" sideOffset={4}>
+                <SelectContent position="popper" align="center" sideOffset={4}>
                   <SelectItem value="start">Start</SelectItem>
                   <SelectItem value="center">Center</SelectItem>
                   <SelectItem value="end">End</SelectItem>
