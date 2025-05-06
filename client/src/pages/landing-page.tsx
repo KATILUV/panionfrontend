@@ -373,7 +373,7 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="text-base sm:text-xl md:text-2xl text-purple-200 mb-6 sm:mb-10 min-h-[80px] sm:min-h-16 backdrop-blur-sm py-2 px-2 sm:px-4 rounded-lg bg-white/5 border border-purple-500/20 w-full max-w-xl"
+              className="hidden sm:block text-base sm:text-xl md:text-2xl text-purple-200 mb-6 sm:mb-10 min-h-[80px] sm:min-h-16 backdrop-blur-sm py-2 px-2 sm:px-4 rounded-lg bg-white/5 border border-purple-500/20 w-full max-w-xl"
             >
               <RotatingTagline 
                 phrases={taglinePhrases} 
@@ -386,7 +386,7 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-6"
+              className="flex flex-col sm:flex-row gap-6 mt-2 sm:mt-0"
             >
               <div className="relative">
                 <motion.div
