@@ -259,9 +259,7 @@ const SettingsAgent = () => {
           {activeTab === 'taskbar' && (
             <div>
               <h3 className="h3 mb-6">Taskbar Settings</h3>
-              <WindowSection>
-                <TaskbarSettings />
-              </WindowSection>
+              <TaskbarSettings />
             </div>
           )}
           {activeTab === 'notifications' && renderNotificationsTab()}
