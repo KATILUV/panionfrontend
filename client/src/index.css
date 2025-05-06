@@ -248,7 +248,7 @@ h4, .h4 {
   }
 
   body {
-    @apply font-sans antialiased text-foreground gradient-bg;
+    @apply font-sans antialiased text-foreground gradient-bg theme-transition;
     font-family: 'Inter', sans-serif;
     background: linear-gradient(to bottom, var(--theme-gradient-start), var(--theme-gradient-end));
     min-height: 100vh;
@@ -283,7 +283,8 @@ h4, .h4 {
     radial-gradient(circle at 80% 80%, var(--theme-accent-glow), transparent 40%),
     radial-gradient(circle at 50% 50%, var(--theme-accent-glow), transparent 70%);
   z-index: -1;
-  transition: background 0.5s ease;
+  transition: all 0.5s ease;
+  @apply theme-transition;
 }
 
 /* Floating particles in background */
