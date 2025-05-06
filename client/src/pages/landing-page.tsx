@@ -334,7 +334,7 @@ const LandingPage: React.FC = () => {
         </motion.div>
         
         <motion.div 
-          className="absolute block md:hidden right-4 top-80 w-28 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 -rotate-2"
+          className="absolute block md:hidden right-4 top-48 w-28 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/20 shadow-2xl opacity-70 z-20 -rotate-2"
           initial={{ x: 10, opacity: 0 }}
           animate={{ x: 0, opacity: 0.7 }}
           transition={{ duration: 1, delay: 0.9 }}
