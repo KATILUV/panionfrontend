@@ -76,7 +76,7 @@ const MarketplacePage = () => {
       <motion.div 
         className={`relative rounded-lg overflow-hidden cursor-pointer transition-all
           ${isSelected 
-            ? 'ring-2 ring-primary/50 bg-black/30' 
+            ? 'ring-2 ring-purple-500/50 bg-black/30' 
             : 'hover:bg-black/30 bg-black/20'}
         `}
         onClick={() => setSelectedAgent(isSelected ? null : agent.id)}
@@ -93,7 +93,7 @@ const MarketplacePage = () => {
         
         {/* Featured badge */}
         {agent.isFeatured && (
-          <div className="absolute top-3 left-3 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full z-10 flex items-center">
+          <div className="absolute top-3 left-3 bg-purple-600 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10 flex items-center">
             <Sparkles size={10} className="mr-1" />
             FEATURED
           </div>
@@ -127,8 +127,8 @@ const MarketplacePage = () => {
           {/* Only show icon and title if there's no preview image */}
           {!agent.previewImage && (
             <div className="flex items-center mb-3">
-              <div className={`p-2 rounded-full mr-3 ${isSelected ? 'bg-primary/30' : 'bg-primary/10'}`}>
-                <DynamicIcon name={agent.icon} size={24} className={isSelected ? 'text-primary' : 'text-white/80'} />
+              <div className={`p-2 rounded-full mr-3 ${isSelected ? 'bg-purple-600/30' : 'bg-purple-500/10'}`}>
+                <DynamicIcon name={agent.icon} size={24} className={isSelected ? 'text-purple-300' : 'text-white/80'} />
               </div>
               <div>
                 <h3 className="text-lg font-medium">{agent.title}</h3>
@@ -181,7 +181,7 @@ const MarketplacePage = () => {
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center space-x-1
                 ${isInstalled 
                   ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400' 
-                  : 'bg-primary/20 hover:bg-primary/30 text-primary-foreground'}
+                  : 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-300'}
               `}
             >
               {isInstalled ? (
@@ -290,7 +290,7 @@ const MarketplacePage = () => {
               className={`px-5 py-2.5 rounded-full flex items-center space-x-2 transition-all shadow-lg
                 ${agent.isInstalled 
                   ? 'bg-red-500 text-white hover:bg-red-600' 
-                  : 'bg-primary hover:bg-primary/90 text-white'}
+                  : 'bg-purple-600 hover:bg-purple-500 text-white'}
               `}
             >
               {agent.isInstalled ? (
@@ -422,7 +422,7 @@ const MarketplacePage = () => {
               className={`px-8 py-3 rounded-full flex items-center space-x-3 transition-all text-white font-medium
                 ${agent.isInstalled 
                   ? 'bg-red-500 hover:bg-red-600' 
-                  : 'bg-primary hover:bg-primary/90'}
+                  : 'bg-purple-600 hover:bg-purple-500'}
               `}
             >
               {agent.isInstalled ? (
