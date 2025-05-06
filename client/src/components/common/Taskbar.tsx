@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAgentStore, AgentId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
 import { useSystemLogStore } from '../../state/systemLogStore';
 import LayoutManager from './LayoutManager';
 import ClaraSystemLog from '../system/ClaraSystemLog';
 import { Button } from '@/components/ui/button';
-import { LucideIcon, Layout, Moon, Settings, Terminal, Store } from 'lucide-react';
+import { LucideIcon, Layout, Moon, Settings, Terminal, Store, Save } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 // Reusable TaskbarButton component to reduce repetition
 interface TaskbarButtonProps {
@@ -112,6 +114,7 @@ interface TaskbarProps {
 }
 
 const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
+  const { toast } = useToast();
   const registry = useAgentStore(state => state.registry);
   const windows = useAgentStore(state => state.windows);
   const openAgent = useAgentStore(state => state.openAgent);
@@ -119,6 +122,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const restoreAgent = useAgentStore(state => state.restoreAgent);
   const activeLayoutId = useAgentStore(state => state.activeLayoutId);
   const layouts = useAgentStore(state => state.layouts);
+  const saveLayout = useAgentStore(state => state.saveLayout);
   
   const handleIconClick = (id: AgentId) => {
     const window = windows[id];
@@ -142,6 +146,22 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     if (!activeLayoutId) return null;
     const activeLayout = layouts.find(layout => layout.id === activeLayoutId);
     return activeLayout ? activeLayout.name : null;
+  };
+  
+  // Function to handle quick save of the current layout
+  const handleQuickSave = () => {
+    const timestamp = format(new Date(), "MMM d, h:mm a");
+    const layoutName = `Quick Layout - ${timestamp}`;
+    
+    // Use the saveLayout function from the store
+    saveLayout(layoutName, 'Quick Saves');
+    
+    // Show a success toast
+    toast({
+      title: "Layout Saved",
+      description: `Current layout saved as "${layoutName}"`,
+      variant: "default",
+    });
   };
   
   // Get theme information
@@ -189,6 +209,15 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       </div>
       
       <div className="flex items-center space-x-2">
+        {/* Quick Save Button */}
+        <TaskbarButton
+          icon={<Save size={16} />}
+          label="Quick Save"
+          isActive={false}
+          onClick={handleQuickSave}
+          className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
+        />
+        
         {/* System Log Button */}
         <TaskbarButton
           icon={<Terminal size={16} />}
