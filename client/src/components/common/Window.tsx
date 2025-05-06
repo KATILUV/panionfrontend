@@ -65,18 +65,30 @@ const Window: React.FC<WindowProps> = ({
   }, [isMaximized]);
 
   const toggleMaximize = () => {
-    setIsMaximized(!isMaximized);
-    
     if (isMaximized) {
       // Restore to pre-maximized state
       updateAgentPosition(id, preMaximizeState.position);
       updateAgentSize(id, preMaximizeState.size);
+      setIsMaximized(false);
     } else {
       // Save current state and maximize
       setPreMaximizeState({ position, size });
-      updateAgentPosition(id, { x: 0, y: 0 });
-      updateAgentSize(id, { width: windowWidth, height: windowHeight });
+      
+      // Add margins to the maximized window to make it easier to access desktop elements
+      const maximizedWidth = windowWidth * 0.95; // 95% of screen width
+      const maximizedHeight = windowHeight * 0.85; // 85% of screen height
+      
+      // Center the window
+      const x = (windowWidth - maximizedWidth) / 2;
+      const y = (windowHeight - maximizedHeight) / 2;
+      
+      updateAgentPosition(id, { x, y });
+      updateAgentSize(id, { width: maximizedWidth, height: maximizedHeight });
+      setIsMaximized(true);
     }
+    
+    // Play sound for feedback
+    playSnapSound();
   };
   
   // Detect which edge/corner we are near
@@ -385,8 +397,8 @@ const Window: React.FC<WindowProps> = ({
           ...position,
           ...size,
         }}
-        position={isMaximized ? { x: 0, y: 0 } : position}
-        size={isMaximized ? { width: windowWidth, height: windowHeight } : size}
+        position={position}
+        size={size}
         onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragStop={handleDragStop}
@@ -441,33 +453,39 @@ const Window: React.FC<WindowProps> = ({
           <div className="flex items-center justify-between flex-1">
             <div className="flex items-center">
               <div className="flex items-center space-x-1.5 mr-3">
-                {/* Increase button size for better clickability and ensure proper z-index */}
+                {/* Improved window control buttons with larger hit areas */}
                 <motion.button 
-                  className="w-3 h-3 rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center"
+                  className="w-4 h-4 rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center"
                   whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Close"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent event propagation
                     onClose();
                   }}
-                  style={{ zIndex: 9999 }}
+                  style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
                 <motion.button 
-                  className="w-3 h-3 rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center" 
+                  className="w-4 h-4 rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center" 
                   whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Minimize"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent event propagation
                     onMinimize();
                   }}
-                  style={{ zIndex: 9999 }}
+                  style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
                 <motion.button 
-                  className="w-3 h-3 rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center"
+                  className="w-4 h-4 rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center"
                   whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
+                  title={isMaximized ? "Restore" : "Maximize"}
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent event propagation
                     toggleMaximize();
                   }}
-                  style={{ zIndex: 9999 }}
+                  style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
               </div>
               <div className={`text-xs font-medium truncate transition-all duration-200 theme-transition ${isActive ? 'text-primary font-semibold' : 'text-white/70'}`}>
