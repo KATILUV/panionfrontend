@@ -146,7 +146,7 @@ export function TaskbarSettings() {
                 <SelectTrigger id="position-location">
                   <SelectValue placeholder="Taskbar Position" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" sideOffset={4}>
                   <SelectItem value="top">Top</SelectItem>
                   <SelectItem value="bottom">Bottom</SelectItem>
                   <SelectItem value="left">Left</SelectItem>
@@ -164,7 +164,7 @@ export function TaskbarSettings() {
                 <SelectTrigger id="position-alignment">
                   <SelectValue placeholder="Icon Alignment" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" sideOffset={4}>
                   <SelectItem value="start">Start</SelectItem>
                   <SelectItem value="center">Center</SelectItem>
                   <SelectItem value="end">End</SelectItem>
