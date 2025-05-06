@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useMarketplaceStore } from '@/state/marketplaceStore';
-import { useThemeStore } from '@/state/themeStore';
+import { useMarketplaceStore } from '../../state/marketplaceStore';
+import { useThemeStore } from '../../state/themeStore';
 import { motion } from 'framer-motion';
 import { Search, Filter, Star, Download, Plus, Check, Tag, X, RefreshCw } from 'lucide-react';
 import * as Icons from 'lucide-react';
