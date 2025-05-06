@@ -196,14 +196,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           isActive={isSystemLogVisible}
           onClick={toggleSystemLog}
         />
-
-        {/* Marketplace Button */}
-        <TaskbarButton
-          icon={<Store size={16} />}
-          label="Marketplace"
-          isActive={windows['marketplace']?.isOpen && !windows['marketplace']?.isMinimized}
-          onClick={() => handleIconClick('marketplace')}
-        />
         
         {/* Layout Manager Button */}
         <LayoutManager>
