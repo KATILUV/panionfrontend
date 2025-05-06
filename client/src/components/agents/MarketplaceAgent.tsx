@@ -96,7 +96,7 @@ const MarketplaceAgent = () => {
           </div>
         </div>
         
-        <p className="text-sm text-white/80 mb-3 overflow-hidden text-ellipsis" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{agent.description}</p>
+        <p className="text-sm text-white/80 mb-3 line-clamp-2">{agent.description}</p>
         
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">

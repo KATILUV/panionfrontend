@@ -125,7 +125,6 @@ export default {
   plugins: [
     require("tailwindcss-animate"), 
     require("@tailwindcss/typography"),
-    // Enable line-clamp utilities
-    require('@tailwindcss/line-clamp')
+    // Note: line-clamp is now built-in to Tailwind CSS v3.3+ and no longer needs a plugin
   ],
 } satisfies Config;
