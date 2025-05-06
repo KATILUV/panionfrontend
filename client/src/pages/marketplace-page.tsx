@@ -496,14 +496,14 @@ const MarketplacePage = () => {
           <>
             <button 
               onClick={goToPrev}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition-all backdrop-blur-sm shadow-lg"
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm shadow-lg"
               aria-label="Previous agent"
             >
               <ChevronLeft size={24} />
             </button>
             <button 
               onClick={goToNext}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition-all backdrop-blur-sm shadow-lg"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm shadow-lg"
               aria-label="Next agent"
             >
               <ChevronRight size={24} />
@@ -540,7 +540,7 @@ const MarketplacePage = () => {
               )}
               
               {/* Content with animations */}
-              <div className="relative flex flex-col justify-center p-8 md:p-12 md:max-w-[60%]">
+              <div className="relative flex flex-col justify-center p-8 md:pl-16 md:max-w-[55%]">
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
