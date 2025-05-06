@@ -188,9 +188,68 @@ const SettingsAgent = () => {
       fullHeight 
       className="flex flex-col overflow-hidden"
     >
+      {/* For mobile - Top tabs */}
+      <div className="md:hidden overflow-x-auto pb-2 pt-1 px-2 border-b border-white/10">
+        <div className="flex space-x-1 min-w-max">
+          <Button 
+            variant={activeTab === 'appearance' ? 'secondary' : 'ghost'} 
+            className="px-2 py-1 h-auto text-xs"
+            onClick={() => setActiveTab('appearance')}
+          >
+            <Palette className="h-3 w-3 mr-1" />
+            Appearance
+          </Button>
+          
+          <Button 
+            variant={activeTab === 'system' ? 'secondary' : 'ghost'} 
+            className="px-2 py-1 h-auto text-xs"
+            onClick={() => setActiveTab('system')}
+          >
+            <Monitor className="h-3 w-3 mr-1" />
+            System
+          </Button>
+          
+          <Button 
+            variant={activeTab === 'taskbar' ? 'secondary' : 'ghost'} 
+            className="px-2 py-1 h-auto text-xs"
+            onClick={() => setActiveTab('taskbar')}
+          >
+            <Layout className="h-3 w-3 mr-1" />
+            Taskbar
+          </Button>
+
+          <Button 
+            variant={activeTab === 'notifications' ? 'secondary' : 'ghost'} 
+            className="px-2 py-1 h-auto text-xs"
+            onClick={() => setActiveTab('notifications')}
+          >
+            <Bell className="h-3 w-3 mr-1" />
+            Notifications
+          </Button>
+          
+          <Button 
+            variant={activeTab === 'privacy' ? 'secondary' : 'ghost'} 
+            className="px-2 py-1 h-auto text-xs"
+            onClick={() => setActiveTab('privacy')}
+          >
+            <Shield className="h-3 w-3 mr-1" />
+            Privacy
+          </Button>
+          
+          <Button 
+            variant={activeTab === 'about' ? 'secondary' : 'ghost'} 
+            className="px-2 py-1 h-auto text-xs"
+            onClick={() => setActiveTab('about')}
+          >
+            <Info className="h-3 w-3 mr-1" />
+            About
+          </Button>
+        </div>
+      </div>
+
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-48 shrink-0 bg-black/10 backdrop-blur-sm border-r border-white/10">
+        {/* Sidebar - Hidden on mobile */}
+        <div className="hidden md:block w-48 shrink-0 bg-black/10 backdrop-blur-sm border-r border-white/10">
           <div className="p-3">
             <div className="flex flex-col space-y-1.5">
               <Button 
@@ -252,8 +311,8 @@ const SettingsAgent = () => {
           </div>
         </div>
         
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto p-6 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+        {/* Main Content - Adjusted padding for mobile */}
+        <div className="flex-1 overflow-auto p-3 md:p-6 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
           {activeTab === 'appearance' && renderAppearanceTab()}
           {activeTab === 'system' && renderSystemTab()}
           {activeTab === 'taskbar' && (

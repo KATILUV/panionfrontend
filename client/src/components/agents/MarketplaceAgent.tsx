@@ -220,35 +220,36 @@ const MarketplaceAgent = () => {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header with Panion branding */}
-      <div className="mb-6 px-2 py-4 bg-black/20 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg">
-        <div className="flex items-center justify-between">
+      <div className="mb-4 md:mb-6 px-2 py-3 md:py-4 bg-black/20 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
           <div className="flex items-center">
             <div className="p-2 bg-purple-600/20 rounded-full mr-3">
               <ShoppingBag size={20} className="text-purple-300" />
             </div>
-            <h1 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">Agent Manager</h1>
+            <h1 className="text-lg md:text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">Agent Manager</h1>
           </div>
           
-          <div className="flex items-center space-x-3">
-            {/* Search box */}
-            <div className="relative">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            {/* Search box - Smaller on mobile */}
+            <div className="relative flex-1 md:flex-none">
               <input
                 type="text"
                 placeholder="Search agents..."
-                className="pl-8 pr-3 py-1.5 bg-black/30 border border-white/10 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500/50 w-48"
+                className="w-full md:w-48 pl-8 pr-3 py-1.5 bg-black/30 border border-white/10 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500/50"
                 value={searchQuery}
                 onChange={(e) => searchAgents(e.target.value)}
               />
               <Search size={16} className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-purple-300/80" />
             </div>
             
-            {/* Browse Marketplace button */}
+            {/* Browse Marketplace button - Smaller on mobile */}
             <button 
-              className="px-4 py-1.5 rounded-md bg-purple-600/80 hover:bg-purple-500/90 text-white transition-all flex items-center shadow-md"
+              className="whitespace-nowrap px-3 md:px-4 py-1.5 rounded-md bg-purple-600/80 hover:bg-purple-500/90 text-white transition-all flex items-center shadow-md text-xs md:text-sm"
               onClick={() => navigate('/marketplace')}
             >
-              <ShoppingBag size={16} className="mr-2" />
-              Browse Marketplace
+              <ShoppingBag size={14} className="mr-1 md:mr-2" />
+              <span className="hidden xs:inline">Browse Marketplace</span>
+              <span className="xs:hidden">Browse</span>
             </button>
           </div>
         </div>
@@ -256,29 +257,29 @@ const MarketplaceAgent = () => {
       
       {/* Main content area */}
       <div className="flex-1 overflow-hidden">
-        <div className="flex h-full space-x-4">
+        <div className="flex flex-col md:flex-row h-full md:space-x-4">
           {/* Installed agent list */}
-          <div className={`${selectedAgent ? 'w-1/2' : 'w-full'} overflow-y-auto pr-2`}>
+          <div className={`${selectedAgent && !window.matchMedia('(max-width: 768px)').matches ? 'md:w-1/2' : 'w-full'} ${selectedAgent && window.matchMedia('(max-width: 768px)').matches ? 'hidden' : ''} overflow-y-auto pr-2`}>
             {installedAgents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 {installedAgents.map((agent) => (
                   <AgentCard key={agent.id} agent={agent} />
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="flex flex-col items-center justify-center py-10 md:py-16 text-center">
                 <div className="bg-gradient-to-br from-purple-600/20 to-indigo-600/20 rounded-full p-5 mb-4 shadow-inner border border-white/5">
-                  <ShoppingBag size={36} className="text-purple-300/80" />
+                  <ShoppingBag size={32} className="text-purple-300/80" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">No Agents Installed</h3>
-                <p className="text-white/70 max-w-md mb-6">
+                <h3 className="text-lg md:text-xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">No Agents Installed</h3>
+                <p className="text-white/70 max-w-md mb-4 md:mb-6 px-4 text-sm md:text-base">
                   You haven't installed any agents yet. Visit the marketplace to discover and add powerful agents to enhance your Panion workspace.
                 </p>
                 <button 
-                  className="px-5 py-2.5 rounded-md bg-purple-600/80 hover:bg-purple-500/90 text-white transition-all flex items-center shadow-md"
+                  className="px-4 md:px-5 py-2 md:py-2.5 rounded-md bg-purple-600/80 hover:bg-purple-500/90 text-white transition-all flex items-center shadow-md"
                   onClick={() => navigate('/marketplace')}
                 >
-                  <ShoppingBag size={18} className="mr-2" />
+                  <ShoppingBag size={16} className="mr-2" />
                   Browse Marketplace
                 </button>
               </div>
@@ -287,7 +288,18 @@ const MarketplaceAgent = () => {
           
           {/* Agent details */}
           {selectedAgent && (
-            <div className="w-1/2 overflow-y-auto pr-2">
+            <div className="w-full md:w-1/2 overflow-y-auto pr-2">
+              <div className="flex md:hidden mb-3">
+                <button 
+                  className="flex items-center text-sm text-white/70 hover:text-white/90 px-2 py-1 rounded bg-black/20"
+                  onClick={() => setSelectedAgent(null)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Back to list
+                </button>
+              </div>
               <AgentDetail />
             </div>
           )}
