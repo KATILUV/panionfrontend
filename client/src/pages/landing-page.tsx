@@ -352,7 +352,7 @@ const LandingPage: React.FC = () => {
                 size="lg" 
                 variant="outline" 
                 onClick={() => setLocation('/auth')}
-                className="text-lg border-2 border-violet-400 text-purple-200 hover:bg-violet-600/30 px-8 py-6 rounded-xl"
+                className="text-base sm:text-lg border-2 border-violet-400 text-purple-200 hover:bg-violet-600/30 px-6 sm:px-8 py-4 sm:py-6 rounded-xl w-full sm:w-auto"
               >
                 Sign In
               </Button>
