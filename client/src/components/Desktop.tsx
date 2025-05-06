@@ -159,11 +159,26 @@ const Desktop: React.FC = () => {
       log.action('No default layout found, using standard configuration');
     }
     
+    // Initialize window layout auto-save
+    const { autoSaveCurrentLayout, autoSaveEnabled, autoSaveInterval } = useAgentStore.getState();
+    if (autoSaveEnabled) {
+      log.info(`Auto-save enabled with interval: ${autoSaveInterval/1000} seconds`);
+      autoSaveCurrentLayout(); // Start the auto-save cycle
+    }
+    
     log.action('System ready for user interaction');
     
     // Show the system log by default on first run
     const setVisibility = useSystemLogStore.getState().setVisibility;
     setVisibility(true);
+    
+    // Cleanup auto-save when component unmounts
+    return () => {
+      // Clear any existing auto-save timeout
+      if (window.autoSaveTimeout) {
+        clearTimeout(window.autoSaveTimeout);
+      }
+    };
   }, []);
   
   // Load layout handler

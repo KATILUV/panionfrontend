@@ -511,6 +511,125 @@ export const useAgentStore = create<AgentState>()(
             activeLayoutId: newLayout.id
           };
         });
+      },
+      
+      // Auto-save related methods
+      autoSaveCurrentLayout: () => {
+        // Clear any existing timeout to prevent multiple auto-saves
+        if (autoSaveTimeout !== null) {
+          clearTimeout(autoSaveTimeout);
+          autoSaveTimeout = null;
+        }
+        
+        const state = get();
+        if (!state.autoSaveEnabled) return;
+        
+        // Get the current time
+        const now = getCurrentTimestamp();
+        
+        // Check if we need to auto-save based on the interval
+        const shouldSave = state.lastAutoSave === null || 
+                          (now - state.lastAutoSave) >= state.autoSaveInterval;
+                          
+        if (shouldSave) {
+          // Create a snapshot of current window states
+          const windowStates: Record<AgentId, {
+            position: { x: number, y: number };
+            size: { width: number, height: number };
+            isOpen: boolean;
+            isMinimized: boolean;
+          }> = {};
+          
+          // Only save windows that are open
+          const hasOpenWindows = Object.values(state.windows).some(w => w.isOpen);
+          
+          if (!hasOpenWindows) {
+            // Don't auto-save if no windows are open
+            return;
+          }
+          
+          // Capture current state of all windows
+          Object.entries(state.windows).forEach(([id, window]) => {
+            windowStates[id as AgentId] = {
+              position: window.position,
+              size: window.size,
+              isOpen: window.isOpen,
+              isMinimized: window.isMinimized
+            };
+          });
+          
+          // Find existing auto-save layout or create a new ID
+          const autoSaveLayoutId = "auto-save-layout";
+          const existingAutoSaveIndex = state.layouts.findIndex(l => l.name === 'Auto-saved Layout');
+          
+          const timestamp = getCurrentTimestamp();
+          
+          // Create or update auto-save layout
+          const autoSaveLayout: WindowLayout = {
+            id: autoSaveLayoutId,
+            name: 'Auto-saved Layout',
+            category: 'System',
+            tags: ['auto-save'],
+            isDefault: false, // Don't make auto-save the default layout
+            createdAt: existingAutoSaveIndex >= 0 
+              ? state.layouts[existingAutoSaveIndex].createdAt 
+              : timestamp,
+            updatedAt: timestamp,
+            windowStates
+          };
+          
+          // Update layouts - replace existing or add new
+          let newLayouts = [...state.layouts];
+          if (existingAutoSaveIndex >= 0) {
+            newLayouts[existingAutoSaveIndex] = autoSaveLayout;
+          } else {
+            newLayouts.push(autoSaveLayout);
+          }
+          
+          // Log quiet auto-save
+          log.info(`Auto-saved window layout at ${new Date(timestamp).toLocaleTimeString()}`);
+          
+          // Set the new state
+          set({
+            layouts: newLayouts,
+            lastAutoSave: timestamp
+          });
+        }
+        
+        // Schedule next auto-save
+        autoSaveTimeout = window.setTimeout(() => {
+          get().autoSaveCurrentLayout();
+        }, state.autoSaveInterval);
+      },
+      
+      setAutoSaveEnabled: (enabled) => set({
+        autoSaveEnabled: enabled
+      }),
+      
+      setAutoSaveInterval: (interval) => set({
+        autoSaveInterval: interval
+      }),
+      
+      restoreDefaultLayout: () => {
+        const state = get();
+        // Find the default layout
+        const defaultLayout = state.layouts.find(l => l.isDefault === true);
+        
+        if (defaultLayout) {
+          // Load the default layout
+          get().loadLayout(defaultLayout.id);
+          return;
+        } 
+        
+        // If no default is set but layouts exist, use the most recent one
+        if (state.layouts.length > 0) {
+          const mostRecentLayout = [...state.layouts].sort((a, b) => b.updatedAt - a.updatedAt)[0];
+          get().loadLayout(mostRecentLayout.id);
+          return;
+        }
+        
+        // If no layouts exist, just log a message
+        log.info('No layouts available to restore');
       }
     }),
     {
