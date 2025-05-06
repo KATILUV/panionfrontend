@@ -286,62 +286,74 @@ const Window: React.FC<WindowProps> = ({
     }
   };
 
-  // Animation variants for different window states - simplified for stability
+  // Enhanced animation variants for different window states
   const windowVariants = {
     open: {
       opacity: 1,
       scale: 1,
       y: 0,
+      filter: "blur(0px)",
       transition: {
-        type: "tween", // Changed to tween for more stability
-        duration: 0.2,
-        ease: "easeOut"
+        type: "spring",
+        stiffness: 300,
+        damping: 25,
+        mass: 0.5,
+        velocity: 5
       }
     },
     closed: {
       opacity: 0,
       scale: 0.95,
       y: 10,
+      filter: "blur(4px)",
       transition: {
-        type: "tween", // Changed to tween for more stability
-        duration: 0.15,
-        ease: "easeIn"
+        type: "spring",
+        stiffness: 400,
+        damping: 40,
+        mass: 0.5
       }
     },
     minimized: {
       opacity: 0,
       scale: 0.9,
       y: 25,
+      filter: "blur(4px)",
       transition: {
-        type: "tween", // Changed to tween for more stability
-        duration: 0.15,
-        ease: "easeIn"
+        type: "spring",
+        stiffness: 400,
+        damping: 40,
+        mass: 0.5
       }
     }
   };
 
-  // Window content animations - simplified
+  // Improved window content animations
   const contentVariants = {
     open: {
       opacity: 1,
+      y: 0,
       transition: {
-        duration: 0.1,
-        delay: 0.05
+        duration: 0.3,
+        delay: 0.1,
+        ease: [0.4, 0, 0.2, 1] // cubic-bezier easing
       }
     },
     closed: {
       opacity: 0,
+      y: 10,
       transition: {
-        duration: 0.1
+        duration: 0.2,
+        ease: [0.4, 0, 1, 1]
       }
     }
   };
 
   return (
     <MotionConfig transition={{ 
-      type: "tween",
-      duration: 0.2,
-      ease: "easeOut"
+      type: "spring",
+      stiffness: 350,
+      damping: 30,
+      mass: 0.8
     }}>
       <Rnd
         style={{

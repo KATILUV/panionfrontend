@@ -20,6 +20,9 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     document.documentElement.classList.add('dark');
     document.documentElement.style.colorScheme = 'dark';
     
+    // Apply transition class before changing theme
+    document.documentElement.classList.add('theme-transition');
+    
     // Set accent color
     document.documentElement.setAttribute('data-accent', accent);
     
@@ -29,6 +32,12 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       metaThemeColor.setAttribute('content', '#1a1245');
     }
     
+    // Remove transition class after a delay to prevent transition on initial load
+    const timer = setTimeout(() => {
+      document.documentElement.classList.remove('theme-transition');
+    }, 400);
+    
+    return () => clearTimeout(timer);
   }, [accent, isDesktop]);
   
   // For desktop pages, wrap children in special data attributes for theming

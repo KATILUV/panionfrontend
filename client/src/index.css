@@ -4,6 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme transition effects */
+.theme-transition,
+.theme-transition *,
+.theme-transition *:before,
+.theme-transition *:after {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Typography hierarchy system inspired by Frame.io */
 h1, .h1 {
   @apply text-2xl font-semibold tracking-tight mb-2;
