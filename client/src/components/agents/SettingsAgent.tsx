@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Settings, Palette, Monitor, Bell, Shield, Info, Lock, CheckCircle2 } from 'lucide-react';
+import { Settings, Palette, Monitor, Bell, Shield, Info, Lock, CheckCircle2, Layout } from 'lucide-react';
 import { useThemeStore, ThemeAccent } from '@/state/themeStore';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { AgentStatusType } from '@/components/ui/agent-status';
 import { WindowPanel, WindowContent, WindowSection } from '@/components/ui/window-components';
+import TaskbarSettings from '../settings/TaskbarSettings';
 
 const SettingsAgent = () => {
   const [activeTab, setActiveTab] = useState('appearance');
@@ -207,6 +208,15 @@ const SettingsAgent = () => {
                 System
               </Button>
               
+              <Button 
+                variant={activeTab === 'taskbar' ? 'secondary' : 'ghost'} 
+                className="justify-start px-2 py-1.5 h-auto text-sm"
+                onClick={() => setActiveTab('taskbar')}
+              >
+                <Layout className="h-4 w-4 mr-2" />
+                Taskbar
+              </Button>
+
               <Button 
                 variant={activeTab === 'notifications' ? 'secondary' : 'ghost'} 
                 className="justify-start px-2 py-1.5 h-auto text-sm"
