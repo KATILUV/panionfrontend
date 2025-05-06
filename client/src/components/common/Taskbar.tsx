@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useAgentStore, AgentId } from '../../state/agentStore';
+import { useAgentStore, AgentId, WindowGroupId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
 import { useSystemLogStore } from '../../state/systemLogStore';
 import { useTaskbarStore } from '../../state/taskbarStore';
@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Icon, IconButton } from '@/components/ui/icon-provider';
 import { ICONS } from '@/lib/icon-map';
+import { playOpenSound, playCloseSound } from '@/lib/audioEffects';
 
 // Reusable TaskbarButton component to reduce repetition
 interface TaskbarButtonProps {
@@ -264,8 +265,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
   const openAgent = useAgentStore(state => state.openAgent);
   const focusAgent = useAgentStore(state => state.focusAgent);
   const restoreAgent = useAgentStore(state => state.restoreAgent);
+  const minimizeAgent = useAgentStore(state => state.minimizeAgent);
   const focusWindowGroup = useAgentStore(state => state.focusWindowGroup);
   const restoreWindowGroup = useAgentStore(state => state.restoreWindowGroup);
+  const minimizeWindowGroup = useAgentStore(state => state.minimizeWindowGroup);
   const activeLayoutId = useAgentStore(state => state.activeLayoutId);
   const layouts = useAgentStore(state => state.layouts);
   const saveLayout = useAgentStore(state => state.saveLayout);
@@ -292,14 +295,22 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
     // If window doesn't exist or isn't open, open it
     if (!window || !window.isOpen) {
       openAgent(id);
+      playOpenSound();
     } 
     // If window is minimized, restore it
     else if (window.isMinimized) {
       restoreAgent(id);
+      playOpenSound();
     } 
+    // If already open and focused, minimize it
+    else if (window.zIndex === useAgentStore.getState().highestZIndex) {
+      minimizeAgent(id);
+      playCloseSound();
+    }
     // Otherwise, just focus it
     else {
       focusAgent(id);
+      playOpenSound();
     }
   };
   
@@ -312,10 +323,18 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
     // If the group is minimized, restore it
     if (group.isMinimized) {
       restoreWindowGroup(groupId);
+      focusWindowGroup(groupId);
+      playOpenSound();
     } 
+    // If already open and focused, minimize it
+    else if (group.zIndex === useAgentStore.getState().highestZIndex) {
+      minimizeWindowGroup(groupId);
+      playCloseSound();
+    }
     // Otherwise, just focus it
     else {
       focusWindowGroup(groupId);
+      playOpenSound();
     }
   };
   

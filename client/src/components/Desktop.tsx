@@ -135,6 +135,39 @@ const Desktop: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   
+  // Create a demo window group for testing
+  const createDemoWindowGroup = () => {
+    const { 
+      openAgent, 
+      createWindowGroup,
+      updateGroupPosition,
+      updateGroupSize
+    } = useAgentStore.getState();
+    
+    // First, make sure we have some agents open
+    openAgent('notes');
+    openAgent('marketplace');
+    
+    // Small delay to ensure windows are created
+    setTimeout(() => {
+      // Create a window group with these agents
+      const groupId = createWindowGroup(['notes', 'marketplace'], 'Productivity Suite');
+      
+      // Position the group in a good spot
+      updateGroupPosition(groupId, { x: 200, y: 100 });
+      updateGroupSize(groupId, { width: 800, height: 600 });
+      
+      // Add a toast notification
+      toast({
+        title: "Window Group Created",
+        description: "Demo window group 'Productivity Suite' has been created with Notes and Marketplace agents",
+      });
+      
+      // Log the action
+      log.action("Created demo window group: Productivity Suite");
+    }, 300);
+  };
+  
   // Initialize agent registry and system logs when component mounts
   useEffect(() => {
     initializeAgentRegistry();
@@ -167,6 +200,11 @@ const Desktop: React.FC = () => {
       log.info(`Auto-save enabled with interval: ${autoSaveInterval/1000} seconds`);
       autoSaveCurrentLayout(); // Start the auto-save cycle
     }
+    
+    // Demo for window grouping - create a demo group after a short delay
+    setTimeout(() => {
+      createDemoWindowGroup();
+    }, 2000);
     
     log.action('System ready for user interaction');
     
