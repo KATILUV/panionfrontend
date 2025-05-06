@@ -7,6 +7,7 @@ import { useWindowSize } from 'react-use';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { playSnapSound, playOpenSound, playCloseSound } from '../../lib/audioEffects';
 import WindowContextMenu from './WindowContextMenu';
+import './Window.css';
 
 // Snap threshold in pixels
 const SNAP_THRESHOLD = 20;
@@ -718,11 +719,10 @@ const Window: React.FC<WindowProps> = ({
         className={getSnapIndicatorClass()}
       >
         <motion.div 
-          className={`flex flex-col rounded-lg backdrop-blur-xl h-full overflow-hidden
-            transition-all duration-200 theme-transition
+          className={`window flex flex-col rounded-lg h-full overflow-hidden
             ${isActive 
-              ? 'border border-primary/30 bg-black/40 window-focus-glow' 
-              : 'border border-white/10 bg-black/30'
+              ? 'window-focused' 
+              : 'window-blurred'
             }
           `}
           initial="closed"
@@ -732,11 +732,10 @@ const Window: React.FC<WindowProps> = ({
           layout="position"
           layoutRoot
           style={{ 
-            willChange: 'transform, opacity',
+            willChange: 'transform, opacity, box-shadow',
             transform: 'translateZ(0)',
             backfaceVisibility: 'hidden',
-            perspective: 1000,
-            boxShadow: getShadowDepth()
+            perspective: 1000
           }}
           onContextMenu={isMobile ? undefined : handleContextMenu}
         >
@@ -756,10 +755,10 @@ const Window: React.FC<WindowProps> = ({
         </AnimatePresence>
         
         <div 
-          className={`window-drag-handle flex items-center justify-between px-3 ${isMobile ? 'h-8' : 'h-6'} cursor-move transition-all duration-200 theme-transition
+          className={`window-drag-handle window-titlebar flex items-center justify-between px-3 ${isMobile ? 'h-8' : 'h-6'} cursor-move
             ${isActive 
-              ? 'bg-primary/20 border-b border-primary/30' 
-              : 'bg-black/40 border-b border-white/10'
+              ? 'window-titlebar-focused' 
+              : 'window-titlebar-blurred'
             }`}
           onDoubleClick={toggleMaximize}
         >
@@ -768,31 +767,33 @@ const Window: React.FC<WindowProps> = ({
               <div className="flex items-center space-x-1.5 mr-3">
                 {/* Improved window control buttons with larger hit areas */}
                 <motion.button 
-                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center`}
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.9 }}
+                  className={`window-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center`}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.95 }}
                   title="Close"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent event propagation
+                    playCloseSound();
                     onClose();
                   }}
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
                 <motion.button 
-                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center`}
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.9 }}
+                  className={`window-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center`}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.95 }}
                   title="Minimize"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent event propagation
+                    playSnapSound();
                     onMinimize();
                   }}
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
                 <motion.button 
-                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center`}
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.9 }}
+                  className={`window-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center`}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.95 }}
                   title={isMaximized ? "Restore" : "Maximize"}
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent event propagation
@@ -808,7 +809,8 @@ const Window: React.FC<WindowProps> = ({
           </div>
         </div>
         <motion.div 
-          className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-3'} scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent`}
+          className={`window-body flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-3'} scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent
+            ${isActive ? 'window-body-focused' : 'window-body-blurred'}`}
           style={{ 
             height: contentHeight,
             willChange: 'transform, opacity',
