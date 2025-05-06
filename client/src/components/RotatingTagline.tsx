@@ -46,8 +46,8 @@ const RotatingTagline: React.FC<RotatingTaglineProps> = ({
   };
 
   return (
-    <div className="h-[60px] flex items-center justify-center overflow-hidden whitespace-nowrap"> {/* Fixed height container with centering */}
-      <p className={`${getAnimationClasses()} ${getStateClasses()} ${className} text-center max-w-full px-4 absolute whitespace-nowrap overflow-hidden text-ellipsis`}>
+    <div className="h-[60px] md:h-[70px] flex items-center justify-center overflow-hidden relative"> {/* Fixed height container with centering */}
+      <p className={`${getAnimationClasses()} ${getStateClasses()} ${className} text-center max-w-full px-2 absolute whitespace-normal md:whitespace-nowrap overflow-hidden text-ellipsis`}>
         {currentPhrase}
       </p>
     </div>

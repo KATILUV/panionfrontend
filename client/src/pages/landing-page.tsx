@@ -195,7 +195,7 @@ const LandingPage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
       {/* Hero Section with Dynamic Theme */}
-      <section className={`relative py-28 md:py-40 bg-gradient-to-br ${getHeroGradient()} ${currentTheme === 'dark' ? 'text-white' : 'text-white'} overflow-hidden`}>
+      <section className={`relative py-16 sm:py-24 md:py-40 bg-gradient-to-br ${getHeroGradient()} ${currentTheme === 'dark' ? 'text-white' : 'text-white'} overflow-hidden`}>
         {/* Particle effect background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           {/* Animated particles */}
@@ -292,7 +292,7 @@ const LandingPage: React.FC = () => {
         
         {/* Main content */}
         <div className="container mx-auto px-4 relative z-30">
-          <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
+          <div className="flex flex-col items-center text-center max-w-3xl mx-auto px-2 sm:px-4">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -309,7 +309,7 @@ const LandingPage: React.FC = () => {
                 animate={{ scale: [1, 1.3, 1] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
               />
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm relative z-30">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-4 md:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm relative z-30 px-2">
                 <span className="absolute inset-0 blur-xl bg-black/20 -z-10 rounded-3xl"></span>
                 This is <span className="text-violet-300">Panion</span>
               </h1>
@@ -319,7 +319,7 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="text-xl md:text-2xl text-purple-200 mb-10 min-h-16 backdrop-blur-sm py-2 px-4 rounded-lg bg-white/5 border border-purple-500/20 w-full max-w-xl"
+              className="text-base sm:text-xl md:text-2xl text-purple-200 mb-6 sm:mb-10 min-h-[80px] sm:min-h-16 backdrop-blur-sm py-2 px-2 sm:px-4 rounded-lg bg-white/5 border border-purple-500/20 w-full max-w-xl"
             >
               <RotatingTagline 
                 phrases={taglinePhrases} 
@@ -343,7 +343,7 @@ const LandingPage: React.FC = () => {
                 <Button 
                   size="lg" 
                   onClick={() => setLocation('/desktop')}
-                  className="text-lg bg-purple-600 hover:bg-purple-500 text-white px-8 py-6 rounded-xl shadow-lg hover:shadow-purple-500/30 transition-all relative z-10"
+                  className="text-base sm:text-lg bg-purple-600 hover:bg-purple-500 text-white px-6 sm:px-8 py-4 sm:py-6 rounded-xl shadow-lg hover:shadow-purple-500/30 transition-all relative z-10 w-full sm:w-auto"
                 >
                   Get Started
                 </Button>
