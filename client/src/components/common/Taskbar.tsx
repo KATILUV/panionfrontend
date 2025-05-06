@@ -82,7 +82,11 @@ const TaskbarButton: React.FC<TaskbarButtonProps> = ({
           {icon}
         </span>
       )}
-      <span className="hidden sm:inline text-sm">{label}</span>
+      {useTaskbarStore(state => state.showLabels) ? (
+        <span className="text-sm">{label}</span>
+      ) : (
+        <span className="hidden sm:inline text-sm">{label}</span>
+      )}
     </button>
   );
 };
@@ -122,11 +126,17 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
       `}
       title={title}
     >
-      <div className={`flex items-center justify-center w-7 h-7 transform transition-transform duration-200
-        ${isActive ? 'scale-110' : 'group-hover:scale-110'}
-      `}>
-        <div dangerouslySetInnerHTML={{ __html: icon }} 
-          className={`transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`} />
+      <div className="flex items-center space-x-2">
+        <div className={`flex items-center justify-center w-7 h-7 transform transition-transform duration-200
+          ${isActive ? 'scale-110' : 'group-hover:scale-110'}
+        `}>
+          <div dangerouslySetInnerHTML={{ __html: icon }} 
+            className={`transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`} />
+        </div>
+        
+        {useTaskbarStore(state => state.showLabels) && (
+          <span className="text-sm">{title}</span>
+        )}
       </div>
     </button>
   );
@@ -283,11 +293,13 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   
   // Determine background style based on theme and settings
   const getTaskbarBgClass = () => {
-    const themeClass = getCurrentTheme() === 'dark'
-      ? 'bg-black/20 border-white/10'
-      : 'bg-white/60 border-gray-100 shadow-sm text-gray-800';
+    // Since we're focusing on dark theme for now
+    const themeClass = 'bg-black/20 border-white/10';
     
+    // Apply backdrop blur when enableBlur is true
     const blurClass = enableBlur ? 'backdrop-blur-sm' : '';
+    
+    console.log("Taskbar blur enabled:", enableBlur);
     return `${themeClass} ${blurClass}`;
   };
   
