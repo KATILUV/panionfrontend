@@ -206,20 +206,97 @@ const Window: React.FC<WindowProps> = ({
     };
   };
 
-  // Check if Shift key is pressed to enable snap-to-grid
-  const [isShiftKeyPressed, setIsShiftKeyPressed] = useState(false);
+  // State for keyboard modifiers
+  const [keyModifiers, setKeyModifiers] = useState({
+    shift: false,
+    ctrl: false,
+    alt: false
+  });
   
-  // Setup key listeners for shift key
+  // Setup key listeners for modifier keys and shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Shift' && !isShiftKeyPressed) {
-        setIsShiftKeyPressed(true);
+      // Update modifier key states
+      if (e.key === 'Shift' && !keyModifiers.shift) {
+        setKeyModifiers(prev => ({ ...prev, shift: true }));
+      }
+      if ((e.key === 'Control' || e.key === 'Meta') && !keyModifiers.ctrl) {
+        setKeyModifiers(prev => ({ ...prev, ctrl: true }));
+      }
+      if (e.key === 'Alt' && !keyModifiers.alt) {
+        setKeyModifiers(prev => ({ ...prev, alt: true }));
+      }
+      
+      // Only process keyboard shortcuts when this window is active
+      if (!isActive) return;
+
+      // Shift + Arrow keys for half-screen positioning
+      if (keyModifiers.shift && !keyModifiers.ctrl && !e.altKey) {
+        let snapPosition: SnapPosition = 'none';
+        
+        switch (e.key) {
+          case 'ArrowLeft':
+            snapPosition = 'left';
+            break;
+          case 'ArrowRight':
+            snapPosition = 'right';
+            break;
+          case 'ArrowUp':
+            snapPosition = 'top';
+            break;
+          case 'ArrowDown':
+            snapPosition = 'bottom';
+            break;
+        }
+        
+        if (snapPosition !== 'none') {
+          e.preventDefault(); // Prevent default scrolling behavior
+          applySnapPosition(snapPosition);
+        }
+      }
+      
+      // Ctrl + Arrow keys for quarter-screen positioning
+      if (keyModifiers.ctrl && !keyModifiers.shift && !e.altKey) {
+        let snapPosition: SnapPosition = 'none';
+        
+        switch (e.key) {
+          case 'ArrowLeft':
+            snapPosition = 'bottom-left'; // Bottom left quadrant
+            break;
+          case 'ArrowRight':
+            snapPosition = 'bottom-right'; // Bottom right quadrant 
+            break;
+          case 'ArrowDown':
+            snapPosition = 'bottom'; // Bottom half screen
+            break;
+          case 'ArrowUp':
+            snapPosition = 'center'; // Center window
+            break;
+        }
+        
+        if (snapPosition !== 'none') {
+          e.preventDefault();
+          applySnapPosition(snapPosition);
+        }
+      }
+      
+      // Ctrl + Shift + Enter for maximizing
+      if (keyModifiers.ctrl && keyModifiers.shift && e.key === 'Enter') {
+        e.preventDefault();
+        toggleMaximize();
       }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
+      // Update modifier key states on key up
       if (e.key === 'Shift') {
-        setIsShiftKeyPressed(false);
+        setKeyModifiers(prev => ({ ...prev, shift: false }));
+      }
+      if (e.key === 'Control' || e.key === 'Meta') {
+        setKeyModifiers(prev => ({ ...prev, ctrl: false }));
+      }
+      if (e.key === 'Alt') {
+        setKeyModifiers(prev => ({ ...prev, alt: false }));
       }
     };
     
@@ -230,7 +307,7 @@ const Window: React.FC<WindowProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isShiftKeyPressed]);
+  }, [isActive, keyModifiers, applySnapPosition, toggleMaximize]);
   
   // Handle drag during dragging with optimized performance
   const handleDrag = (_e: any, d: { x: number, y: number }) => {
@@ -283,7 +360,7 @@ const Window: React.FC<WindowProps> = ({
     let newPosition = { x: boundedX, y: boundedY };
     
     // Apply snap-to-grid if shift key is pressed
-    if (isShiftKeyPressed) {
+    if (keyModifiers.shift) {
       newPosition = snapToGrid(newPosition);
       // Play snap sound for feedback
       playSnapSound();
@@ -518,7 +595,7 @@ const Window: React.FC<WindowProps> = ({
 
   // Create a visual grid overlay when shift is pressed
   const renderGridOverlay = () => {
-    if (!isShiftKeyPressed || !isDragging) return null;
+    if (!keyModifiers.shift || !isDragging) return null;
     
     return (
       <motion.div 
