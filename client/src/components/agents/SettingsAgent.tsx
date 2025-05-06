@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings, Palette, Monitor, Bell, Shield, Info, Lock, CheckCircle2, Layout } from 'lucide-react';
 import { useThemeStore, ThemeAccent } from '@/state/themeStore';
+import { useSettingsTabStore } from '@/state/settingsTabStore';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +10,9 @@ import { WindowPanel, WindowContent, WindowSection } from '@/components/ui/windo
 import TaskbarSettings from '../settings/TaskbarSettings';
 
 const SettingsAgent = () => {
-  const [activeTab, setActiveTab] = useState('appearance');
+  // Use the settings tab store to manage the active tab
+  const activeTab = useSettingsTabStore(state => state.activeTab);
+  const setActiveTab = useSettingsTabStore(state => state.setActiveTab);
   const accent = useThemeStore(state => state.accent);
   const setAccent = useThemeStore(state => state.setAccent);
   const { toast } = useToast();
@@ -253,6 +256,14 @@ const SettingsAgent = () => {
         <div className="flex-1 overflow-auto p-6 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
           {activeTab === 'appearance' && renderAppearanceTab()}
           {activeTab === 'system' && renderSystemTab()}
+          {activeTab === 'taskbar' && (
+            <div>
+              <h3 className="h3 mb-6">Taskbar Settings</h3>
+              <WindowSection>
+                <TaskbarSettings />
+              </WindowSection>
+            </div>
+          )}
           {activeTab === 'notifications' && renderNotificationsTab()}
           {activeTab === 'privacy' && renderPrivacyTab()}
           {activeTab === 'about' && renderAboutTab()}

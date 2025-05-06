@@ -82,10 +82,9 @@ export function TaskbarSettings() {
   };
 
   return (
-    <div className="p-4 max-w-md max-h-[80vh] overflow-y-auto">
+    <div className="max-w-full">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Taskbar Settings</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 ml-auto">
           <Button variant="outline" size="sm" onClick={applyMinimalPreset} title="Minimal Preset">
             <Minus className="h-4 w-4 mr-1" />
             Minimal

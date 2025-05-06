@@ -5,7 +5,6 @@ import { useSystemLogStore } from '../../state/systemLogStore';
 import { useTaskbarStore } from '../../state/taskbarStore';
 import LayoutManager from './LayoutManager';
 import ClaraSystemLog from '../system/ClaraSystemLog';
-import TaskbarSettings from '../settings/TaskbarSettings';
 import { Button } from '@/components/ui/button';
 import { 
   LucideIcon, 
@@ -28,12 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogHeader,
-} from "@/components/ui/dialog";
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -145,7 +139,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const { toast } = useToast();
   const [isQuickSaveOpen, setIsQuickSaveOpen] = useState(false);
   const [customLayoutName, setCustomLayoutName] = useState('');
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -455,26 +448,31 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           <TaskbarButton
             icon={<Settings size={16} />}
             label="Settings"
-            isActive={settingsOpen}
-            onClick={() => setSettingsOpen(true)}
+            isActive={false}
+            onClick={() => {
+              // Find the settings agent and open it
+              const settingsAgent = registry.find(agent => agent.title === "Settings");
+              if (settingsAgent) {
+                // Open the settings agent
+                const window = windows[settingsAgent.id];
+                if (!window || !window.isOpen) {
+                  openAgent(settingsAgent.id);
+                } else if (window.isMinimized) {
+                  restoreAgent(settingsAgent.id);
+                } else {
+                  focusAgent(settingsAgent.id);
+                }
+                
+                // Set the taskbar tab as active via an event or global state
+                // We could use a custom event or context to communicate this
+                // For now, this will be handled through props
+              }
+            }}
           />
         </div>
         
         {/* System Log Component */}
         <ClaraSystemLog />
-        
-        {/* Taskbar Settings Dialog */}
-        <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Taskbar Settings</DialogTitle>
-              <div className="text-sm text-muted-foreground">
-                Customize your taskbar appearance, widgets, and behavior
-              </div>
-            </DialogHeader>
-            <TaskbarSettings />
-          </DialogContent>
-        </Dialog>
       </div>
     </>
   );
