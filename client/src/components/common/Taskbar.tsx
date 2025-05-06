@@ -3,6 +3,7 @@ import { useAgentStore, AgentId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
 import { useSystemLogStore } from '../../state/systemLogStore';
 import { useTaskbarStore } from '../../state/taskbarStore';
+import { useSettingsTabStore } from '../../state/settingsTabStore';
 import LayoutManager from './LayoutManager';
 import ClaraSystemLog from '../system/ClaraSystemLog';
 import { Button } from '@/components/ui/button';
@@ -450,6 +451,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
             label="Settings"
             isActive={false}
             onClick={() => {
+              // Set the active tab in the settings store to "taskbar"
+              const setActiveTab = useSettingsTabStore.getState().setActiveTab;
+              setActiveTab('taskbar');
+              
               // Find the settings agent and open it
               const settingsAgent = registry.find(agent => agent.title === "Settings");
               if (settingsAgent) {
@@ -462,10 +467,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                 } else {
                   focusAgent(settingsAgent.id);
                 }
-                
-                // Set the taskbar tab as active via an event or global state
-                // We could use a custom event or context to communicate this
-                // For now, this will be handled through props
               }
             }}
           />
