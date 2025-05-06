@@ -116,10 +116,18 @@ export const useAgentStore = create<AgentState>()(
           // Log the action
           log.action(`Opening agent window: ${agent.title}`);
   
+          // Find the highest z-index among all open windows
+          const currentMaxZIndex = Object.values(state.windows).reduce((max, window) => {
+            return window.isOpen && !window.isMinimized ? Math.max(max, window.zIndex) : max;
+          }, 0);
+          
+          // Ensure new windows always appear on top, with a higher z-index than any existing window
+          const effectiveHighestZIndex = Math.max(currentMaxZIndex, state.highestZIndex);
+          
           // For the design agent, keep z-index lower to prevent glitching
           const newZIndex = id === 'design'
-            ? Math.min(state.highestZIndex, 5) // Keep it lower than other windows
-            : state.highestZIndex + 1;
+            ? Math.min(effectiveHighestZIndex, 5) // Keep it lower than other windows
+            : effectiveHighestZIndex + 1;
   
           return {
             windows: {
@@ -132,7 +140,7 @@ export const useAgentStore = create<AgentState>()(
               }
             },
             focusedAgentId: id,
-            highestZIndex: id === 'design' ? state.highestZIndex : newZIndex
+            highestZIndex: id === 'design' ? effectiveHighestZIndex : newZIndex
           };
         });
       },
@@ -187,11 +195,19 @@ export const useAgentStore = create<AgentState>()(
         set((state) => {
           const agent = state.windows[id];
           if (!agent) return state;
+          
+          // Find the highest z-index among all open windows
+          const currentMaxZIndex = Object.values(state.windows).reduce((max, window) => {
+            return window.isOpen && !window.isMinimized ? Math.max(max, window.zIndex) : max;
+          }, 0);
+          
+          // Ensure restored windows always appear on top, with a higher z-index than any existing window
+          const effectiveHighestZIndex = Math.max(currentMaxZIndex, state.highestZIndex);
   
           // Consistent handling of z-index for design agent
           const newZIndex = id === 'design'
-            ? Math.min(state.highestZIndex, 5) // Keep it lower than other windows
-            : state.highestZIndex + 1;
+            ? Math.min(effectiveHighestZIndex, 5) // Keep it lower than other windows
+            : effectiveHighestZIndex + 1;
   
           return {
             windows: {
@@ -203,7 +219,7 @@ export const useAgentStore = create<AgentState>()(
               }
             },
             focusedAgentId: id,
-            highestZIndex: id === 'design' ? state.highestZIndex : newZIndex
+            highestZIndex: id === 'design' ? effectiveHighestZIndex : newZIndex
           };
         });
       },
@@ -212,11 +228,19 @@ export const useAgentStore = create<AgentState>()(
         const agent = state.windows[id];
         if (!agent || !agent.isOpen || agent.isMinimized) return state;
         
+        // Find the highest z-index among all open windows
+        const currentMaxZIndex = Object.values(state.windows).reduce((max, window) => {
+          return window.isOpen && !window.isMinimized ? Math.max(max, window.zIndex) : max;
+        }, 0);
+        
+        // Ensure focused windows always appear on top, with a higher z-index than any existing window
+        const effectiveHighestZIndex = Math.max(currentMaxZIndex, state.highestZIndex);
+        
         // If this is the 'design' agent, keep its z-index lower to prevent it from appearing on top of everything
         // This prevents it from becoming glitchy when interacting with animations
         const newZIndex = id === 'design' 
-          ? Math.min(state.highestZIndex, 10) // Cap at 10 to keep it from rising too high
-          : state.highestZIndex + 1;
+          ? Math.min(effectiveHighestZIndex, 10) // Cap at 10 to keep it from rising too high
+          : effectiveHighestZIndex + 1;
         
         // Log the focus change
         log.info(`Focused window: ${agent.title} with z-index ${newZIndex}`);
@@ -230,7 +254,7 @@ export const useAgentStore = create<AgentState>()(
             }
           },
           focusedAgentId: id,
-          highestZIndex: id === 'design' ? state.highestZIndex : newZIndex
+          highestZIndex: id === 'design' ? effectiveHighestZIndex : newZIndex
         };
       }),
 
