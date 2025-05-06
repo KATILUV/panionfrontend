@@ -7,6 +7,7 @@ import { useWindowSize } from 'react-use';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { playSnapSound, playOpenSound, playCloseSound } from '../../lib/audioEffects';
 import WindowContextMenu from './WindowContextMenu';
+import SnapGuides from './SnapGuides';
 import './Window.css';
 
 // Snap threshold in pixels
@@ -337,7 +338,7 @@ const Window: React.FC<WindowProps> = ({
     };
   }, [isActive, keyModifiers, applySnapPosition, toggleMaximize]);
   
-  // Handle drag during dragging with optimized performance
+  // Enhanced handle drag with magnetic snap and visual feedback
   const handleDrag = (_e: any, d: { x: number, y: number }) => {
     if (!isDragging) return;
     
@@ -354,10 +355,37 @@ const Window: React.FC<WindowProps> = ({
     if (lastPositionKeyRef.current !== positionKey) {
       lastPositionKeyRef.current = positionKey;
       
-      // Detect snap areas while dragging
+      // Enhanced snap detection with magnetic effect
       const snapPosition = detectSnapPosition(d.x, d.y);
+      
+      // Show visual snap indicator when near a snap area
       if (currentSnapPosition !== snapPosition) {
+        if (snapPosition !== 'none') {
+          // Play a subtle tick sound for feedback
+          playSnapSound(); 
+        }
         setCurrentSnapPosition(snapPosition);
+      }
+      
+      // The magnetic effect: if we're close to a special position, actually snap the window
+      // This creates a "magnetism" feel as the window gets pulled to key positions
+      if (snapPosition !== 'none' && keyModifiers.alt) {
+        // Apply magnetic pull toward the snap position
+        // We'll call applySnapPosition to position it immediately
+        const screenCenter = {
+          x: (windowWidth - size.width) / 2,
+          y: (windowHeight - size.height) / 2
+        };
+        
+        // Determine a destination based on the snap position
+        let magneticPosition = { ...d };
+        
+        if (snapPosition === 'center') {
+          magneticPosition = screenCenter;
+          updateAgentPosition(id, magneticPosition);
+        }
+        
+        // We show visual guides but don't snap - user needs to release to snap
       }
     }
   };
@@ -643,24 +671,46 @@ const Window: React.FC<WindowProps> = ({
 
   // Create a visual grid overlay when shift is pressed
   const renderGridOverlay = () => {
-    if (!keyModifiers.shift || !isDragging) return null;
+    if (!keyModifiers.shift) return null;
     
+    // Create a more sophisticated grid with primary and secondary lines
     return (
       <motion.div 
-        className="fixed inset-0 pointer-events-none z-0"
+        className="grid-overlay fixed inset-0 pointer-events-none"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.4 }}
+        animate={{ opacity: keyModifiers.shift ? 1 : 0 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        style={{
+      >
+        {/* Primary grid lines */}
+        <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)
+            linear-gradient(to right, rgba(93, 123, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(93, 123, 255, 0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: `${GRID_SIZE * 5}px ${GRID_SIZE * 5}px`,
+          zIndex: 9990
+        }} />
+        
+        {/* Secondary grid lines */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px)
           `,
           backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
-          zIndex: 9990
-        }}
-      />
+          zIndex: 9991
+        }} />
+        
+        {/* Guide lines for center alignment */}
+        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-indigo-500/30" />
+        <div className="absolute top-1/2 left-0 right-0 h-px bg-indigo-500/30" />
+        
+        {/* Indication text */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
+          Grid Mode: Use Shift + Drag to snap windows
+        </div>
+      </motion.div>
     );
   };
 
@@ -684,6 +734,14 @@ const Window: React.FC<WindowProps> = ({
       <AnimatePresence>
         {renderGridOverlay()}
       </AnimatePresence>
+      
+      {/* Visual snap guides */}
+      <SnapGuides 
+        isVisible={isDragging && currentSnapPosition !== 'none'}
+        snapPosition={currentSnapPosition}
+        windowWidth={windowWidth}
+        windowHeight={windowHeight}
+      />
       
       <Rnd
         style={{
