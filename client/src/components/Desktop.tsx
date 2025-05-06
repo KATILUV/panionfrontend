@@ -309,7 +309,7 @@ const Desktop: React.FC = () => {
                 isMinimized={window.isMinimized}
                 isMobile={isMobile}
               >
-                {renderAgentContent(window.id)}
+                {!window.isMinimized && renderAgentContent(window.id)}
               </Window>
             ))}
         </AnimatePresence>
