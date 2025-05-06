@@ -3,7 +3,7 @@ import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { EnhancedToaster } from "@/components/ui/enhanced-toast";
+import { Toaster } from "@/components/ui/toaster";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { PageTransition } from "@/components/ui/page-transition";
 import NotFound from "@/pages/not-found";
@@ -16,6 +16,7 @@ import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
 import MarketplaceAgent from "./components/agents/MarketplaceAgent";
 import { StatusExample } from "./components/agents/StatusExample";
+import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
 import { useAgentStore } from "./state/agentStore";
 import ThemeProvider from "./components/common/ThemeProvider";
 
@@ -173,7 +174,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <EnhancedToaster />
+          <Toaster />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

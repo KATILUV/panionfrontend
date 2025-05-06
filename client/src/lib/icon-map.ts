@@ -20,6 +20,7 @@ export const UI_ICONS = {
   FORWARD: 'ArrowRight',
   HOME: 'Home',
   RELOAD: 'RefreshCw',
+  REFRESH_CW: 'RefreshCw',
   
   // Common actions
   ADD: 'Plus',
@@ -39,10 +40,15 @@ export const UI_ICONS = {
   
   // State indicators
   SUCCESS: 'CheckCircle',
+  CHECK_CIRCLE: 'CheckCircle',
   ERROR: 'XCircle',
+  ALERT_CIRCLE: 'AlertCircle',
   WARNING: 'AlertTriangle',
+  ALERT_TRIANGLE: 'AlertTriangle',
   INFO: 'Info',
   LOADING: 'Loader2',
+  LOADER: 'Loader2',
+  BRAIN: 'Brain',
 };
 
 // Features and functionality
