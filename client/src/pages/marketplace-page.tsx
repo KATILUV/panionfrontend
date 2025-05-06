@@ -35,7 +35,8 @@ const MarketplacePage = () => {
     selectedTags
   } = useMarketplaceStore();
   
-  const [activeTab, setActiveTab] = useState<'featured' | 'popular' | 'new' | 'browse'>('featured');
+  type TabType = 'featured' | 'popular' | 'new' | 'browse';
+  const [activeTab, setActiveTab] = useState<TabType>('featured');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   
@@ -144,7 +145,7 @@ const MarketplacePage = () => {
           
           {/* Categories */}
           <div className="flex flex-wrap gap-1.5 mb-4">
-            {agent.categories.slice(0, 3).map((catId) => {
+            {agent.categories.slice(0, 3).map((catId: string) => {
               const category = categories.find(c => c.id === catId);
               return category ? (
                 <div key={catId} className="bg-primary/10 text-primary-foreground px-2 py-0.5 rounded-full text-xs flex items-center">
@@ -760,9 +761,7 @@ const MarketplacePage = () => {
                 </div>
                 <h3 className="text-xl font-medium mb-2">No agents found</h3>
                 <p className="text-white/60 max-w-lg">
-                  {activeTab === 'installed' 
-                    ? "You haven't installed any agents yet. Browse the marketplace to find new agents!" 
-                    : "Try adjusting your search or filters to find what you're looking for"}
+                  {"Try adjusting your search or filters to find what you're looking for"}
                 </p>
                 {activeTab === 'browse' && (
                   <button 
