@@ -48,6 +48,7 @@ const Window: React.FC<WindowProps> = ({
   const [preMaximizeState, setPreMaximizeState] = useState({ position, size });
   const [currentSnapPosition, setCurrentSnapPosition] = useState<SnapPosition>('none');
   const [isDragging, setIsDragging] = useState(false);
+  const lastPositionKeyRef = useRef<string>('');
   const [contextMenu, setContextMenu] = useState({ 
     isVisible: false, 
     position: { x: 0, y: 0 } 
@@ -187,15 +188,29 @@ const Window: React.FC<WindowProps> = ({
     onFocus();
   };
   
-  // Handle drag during dragging
+  // Handle drag during dragging with optimized performance
   const handleDrag = (_e: any, d: { x: number, y: number }) => {
     if (!isDragging) return;
     
-    // Detect snap areas while dragging
-    const snapPosition = detectSnapPosition(d.x, d.y);
-    setCurrentSnapPosition(snapPosition);
+    // Only detect snap areas every few pixels to improve performance
+    // Using a debounce-like approach based on position
+    const snapDebounceThreshold = 5; // Only check every 5px of movement
     
-    // Visual indicator could be added here
+    // Create a "position key" that changes less frequently
+    const posKeyX = Math.floor(d.x / snapDebounceThreshold);
+    const posKeyY = Math.floor(d.y / snapDebounceThreshold);
+    const positionKey = `${posKeyX}-${posKeyY}`;
+    
+    // Store the last position key as a ref to avoid unnecessary updates
+    if (lastPositionKeyRef.current !== positionKey) {
+      lastPositionKeyRef.current = positionKey;
+      
+      // Detect snap areas while dragging
+      const snapPosition = detectSnapPosition(d.x, d.y);
+      if (currentSnapPosition !== snapPosition) {
+        setCurrentSnapPosition(snapPosition);
+      }
+    }
   };
   
   // Prevent windows from being dragged completely off-screen and handle snapping
@@ -320,7 +335,8 @@ const Window: React.FC<WindowProps> = ({
     }
   };
 
-  // Enhanced animation variants for different window states
+  // Optimized animation variants for different window states
+  // More performant, higher quality animations
   const windowVariants = {
     open: {
       opacity: 1,
@@ -329,10 +345,10 @@ const Window: React.FC<WindowProps> = ({
       filter: "blur(0px)",
       transition: {
         type: "spring",
-        stiffness: 300,
-        damping: 25,
-        mass: 0.5,
-        velocity: 5
+        stiffness: 350, // Slightly stiffer for less bouncy, more focused feel
+        damping: 28,    // Higher damping for faster settling
+        mass: 0.6,      // Slightly more mass for a more substantial feel
+        velocity: 4     // Lower starting velocity for smoother start
       }
     },
     closed: {
@@ -342,9 +358,10 @@ const Window: React.FC<WindowProps> = ({
       filter: "blur(4px)",
       transition: {
         type: "spring",
-        stiffness: 400,
-        damping: 40,
-        mass: 0.5
+        stiffness: 450,
+        damping: 35,
+        mass: 0.5,
+        restDelta: 0.001 // More precise animation ending
       }
     },
     minimized: {
@@ -354,29 +371,30 @@ const Window: React.FC<WindowProps> = ({
       filter: "blur(4px)",
       transition: {
         type: "spring",
-        stiffness: 400,
-        damping: 40,
+        stiffness: 450,
+        damping: 35,
         mass: 0.5
       }
     }
   };
 
-  // Improved window content animations
+  // High-performance window content animations
+  // Using hardware-accelerated properties and simpler transitions
   const contentVariants = {
     open: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.3,
-        delay: 0.1,
-        ease: [0.4, 0, 0.2, 1] // cubic-bezier easing
+        duration: 0.25, // Slightly faster
+        delay: 0.05,    // Less delay for more responsive feel
+        ease: [0.33, 1, 0.68, 1] // Optimized cubic-bezier for smoother feel
       }
     },
     closed: {
       opacity: 0,
-      y: 10,
+      y: 5, // Smaller transform distance for smoother animation
       transition: {
-        duration: 0.2,
+        duration: 0.15, // Faster exit
         ease: [0.4, 0, 1, 1]
       }
     }
@@ -392,6 +410,9 @@ const Window: React.FC<WindowProps> = ({
       <Rnd
         style={{
           zIndex,
+          transform: 'translate3d(0,0,0)', // Force GPU acceleration
+          willChange: 'transform', // Hint to browser to optimize
+          isolation: 'isolate', // Create a new stacking context
         }}
         default={{
           ...position,
@@ -410,6 +431,13 @@ const Window: React.FC<WindowProps> = ({
         bounds="parent"
         minWidth={300}
         minHeight={200}
+        cancel=".window-control-button, .window-control-button *, button" // Prevent drag when clicking buttons
+        resizeHandleStyles={{
+          bottomRight: { zIndex: 2 }, // Make resize handles easier to grab
+          bottomLeft: { zIndex: 2 },
+          topRight: { zIndex: 2 },
+          topLeft: { zIndex: 2 }
+        }}
         className={getSnapIndicatorClass()}
       >
         <motion.div 
@@ -424,7 +452,14 @@ const Window: React.FC<WindowProps> = ({
           animate={isMinimized ? "minimized" : "open"}
           exit="closed"
           variants={windowVariants}
-          layout
+          layout="position"
+          layoutRoot
+          style={{ 
+            willChange: 'transform, opacity',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            perspective: 1000
+          }}
           onContextMenu={handleContextMenu}
         >
         {/* Snap Overlay Indicators */}
@@ -455,7 +490,7 @@ const Window: React.FC<WindowProps> = ({
               <div className="flex items-center space-x-1.5 mr-3">
                 {/* Improved window control buttons with larger hit areas */}
                 <motion.button 
-                  className="w-4 h-4 rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center"
+                  className="window-control-button w-4 h-4 rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center"
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.9 }}
                   title="Close"
@@ -466,7 +501,7 @@ const Window: React.FC<WindowProps> = ({
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
                 <motion.button 
-                  className="w-4 h-4 rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center" 
+                  className="window-control-button w-4 h-4 rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center" 
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.9 }}
                   title="Minimize"
@@ -477,7 +512,7 @@ const Window: React.FC<WindowProps> = ({
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 />
                 <motion.button 
-                  className="w-4 h-4 rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center"
+                  className="window-control-button w-4 h-4 rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center"
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.9 }}
                   title={isMaximized ? "Restore" : "Maximize"}
@@ -496,7 +531,11 @@ const Window: React.FC<WindowProps> = ({
         </div>
         <motion.div 
           className="flex-1 overflow-auto p-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
-          style={{ height: contentHeight }}
+          style={{ 
+            height: contentHeight,
+            willChange: 'transform, opacity',
+            transform: 'translateZ(0)',
+          }}
           variants={contentVariants}
           initial="closed"
           animate={isMinimized ? "closed" : "open"}
