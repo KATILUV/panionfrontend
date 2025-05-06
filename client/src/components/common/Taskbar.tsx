@@ -153,6 +153,7 @@ const AgentIconButton = React.forwardRef<
     </button>
   );
 });
+AgentIconButton.displayName = "AgentIconButton";
 
 interface TaskbarProps {
   className?: string;
