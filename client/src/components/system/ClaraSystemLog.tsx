@@ -13,6 +13,7 @@ import {
   Minimize2
 } from 'lucide-react';
 import { useThemeStore } from '../../state/themeStore';
+import { useTaskbarStore } from '../../state/taskbarStore';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -25,6 +26,7 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
   const [isMinimized, setIsMinimized] = React.useState(false);
   const accent = useThemeStore(state => state.accent);
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
+  const taskbarPosition = useTaskbarStore(state => state.position);
 
   // Get icon based on log type
   const getLogIcon = (type: LogType) => {
@@ -96,18 +98,71 @@ const ClaraSystemLog: React.FC<ClaraSystemLogProps> = ({ className = '' }) => {
 
   if (!isVisible) return null;
 
+  // Determine the correct positioning based on taskbar location
+  const getPositionClasses = () => {
+    const { location } = taskbarPosition;
+    
+    switch (location) {
+      case 'left':
+        return 'left-24 top-24';
+      case 'right':
+        return 'right-24 top-24';
+      case 'top':
+        return 'right-4 top-24';
+      case 'bottom':
+      default:
+        return 'right-4 bottom-16';
+    }
+  };
+
+  // Determine initial animation values based on taskbar position
+  const getAnimationValues = () => {
+    const { location } = taskbarPosition;
+    
+    switch (location) {
+      case 'left':
+        return { 
+          initial: { opacity: 0, x: -20 },
+          animate: { opacity: 1, x: 0 },
+          exit: { opacity: 0, x: -20 }
+        };
+      case 'right':
+        return { 
+          initial: { opacity: 0, x: 20 },
+          animate: { opacity: 1, x: 0 },
+          exit: { opacity: 0, x: 20 }
+        };
+      case 'top':
+        return { 
+          initial: { opacity: 0, y: -20 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: -20 }
+        };
+      case 'bottom':
+      default:
+        return { 
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: 20 }
+        };
+    }
+  };
+
+  const positionClasses = getPositionClasses();
+  const animationValues = getAnimationValues();
+
   return (
     <motion.div
-      className={`fixed right-4 bottom-16 w-80 max-h-[70vh] backdrop-blur-lg rounded-lg overflow-hidden z-50 ${
+      className={`fixed ${positionClasses} w-80 max-h-[70vh] backdrop-blur-lg rounded-lg overflow-hidden z-[999] ${
         getCurrentTheme() === 'dark' 
           ? 'bg-black/40 border border-purple-500/30' 
           : (accent === 'light'
               ? 'bg-white/30 border border-gray-200/50 shadow-md'
               : 'bg-white/30 border border-purple-200/30 shadow-md')
       } ${className}`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
+      initial={animationValues.initial}
+      animate={animationValues.animate}
+      exit={animationValues.exit}
       transition={{ duration: 0.2 }}
     >
       {/* MacOS Style Header */}
