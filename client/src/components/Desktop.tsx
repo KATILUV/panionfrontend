@@ -266,7 +266,7 @@ const Desktop: React.FC = () => {
       <CommandPalette />
       
       {/* Taskbar - position is handled via the useTaskbarStore */}
-      <Taskbar />
+      <Taskbar isMobile={isMobile} />
     </DesktopBackground>
   );
 };

@@ -182,9 +182,10 @@ AgentIconButton.displayName = "AgentIconButton";
 
 interface TaskbarProps {
   className?: string;
+  isMobile?: boolean;
 }
 
-const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
+const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) => {
   const { toast } = useToast();
   const [isQuickSaveOpen, setIsQuickSaveOpen] = useState(false);
   const [customLayoutName, setCustomLayoutName] = useState('');
@@ -352,7 +353,23 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       backdropFilter: enableBlur ? 'blur(4px)' : 'none',
     };
     
-    // Position specific styling
+    // For mobile, we always use bottom position
+    if (isMobile) {
+      return {
+        ...baseStyles,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '3.5rem',
+        width: '100%',
+        flexDirection: 'row' as const,
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        justifyContent: 'space-between',
+        padding: '0.5rem 0.5rem'
+      };
+    }
+    
+    // Desktop position specific styling
     switch (position.location) {
       case 'top':
         return {
@@ -457,16 +474,22 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     <>
       <div 
         style={getTaskbarBaseStyles()}
-        className={`taskbar ${className} ${autohide ? 'opacity-30 hover:opacity-100 transition-opacity duration-300' : ''}`}
+        className={`taskbar ${className} ${autohide && !isMobile ? 'opacity-30 hover:opacity-100 transition-opacity duration-300' : ''}`}
       >
         {/* Agent icons - changes flex direction based on position orientation */}
         <div className={`
-          flex-1 flex ${isVertical ? 'flex-col space-y-1 py-2' : 'items-center space-x-1'}
+          flex-1 flex ${isVertical && !isMobile ? 'flex-col space-y-1 py-2' : 'items-center space-x-1'}
+          ${isMobile ? 'justify-center' : ''}
         `}>
           {registry.map(agent => {
             const isOpen = windows[agent.id]?.isOpen;
             const isMinimized = windows[agent.id]?.isMinimized;
             const isActive = isOpen && !isMinimized;
+            
+            // For mobile, only show a limited set of agents to avoid clutter
+            if (isMobile && !['clara', 'chat', 'notes', 'settings'].includes(agent.id)) {
+              return null;
+            }
             
             return (
               <AgentIconButton
@@ -483,7 +506,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         
         {/* Widgets container - changes flex direction based on position orientation */}
         <div className={`
-          flex ${isVertical ? 'flex-col space-y-2 items-center' : 'items-center space-x-2'}
+          flex ${isVertical && !isMobile ? 'flex-col space-y-2 items-center' : 'items-center space-x-2'}
+          ${isMobile ? 'hidden md:flex' : ''}
         `}>
           {/* Search Bar Widget - hide on vertical taskbars */}
           {visibleWidgets.includes('searchBar') && !isVertical && (

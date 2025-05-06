@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import RotatingTagline from '../RotatingTagline';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useThemeStore } from '@/state/themeStore';
+import { useWindowSize } from 'react-use';
 
 interface QuickActionProps {
   title: string;
@@ -38,7 +39,12 @@ const QuickAction: React.FC<QuickActionProps> = ({ title, description, icon, onC
   );
 };
 
-const EmptyStateDashboard: React.FC = () => {
+interface EmptyStateDashboardProps {
+  isMobile?: boolean;
+}
+
+const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = false }) => {
+  const { width } = useWindowSize();
   const openAgent = useAgentStore(state => state.openAgent);
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accentColor = useThemeStore(state => state.accent);
@@ -148,29 +154,41 @@ const EmptyStateDashboard: React.FC = () => {
     "Your digital command center"
   ];
 
+  // Modify quickActions text for mobile if needed
+  const mobileQuickActions = quickActions.map(action => {
+    if (isMobile && action.title === "Press Cmd+K") {
+      return {
+        ...action,
+        title: "Command Palette",
+        description: "Tap to access all features and tools"
+      };
+    }
+    return action;
+  });
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className={`absolute inset-0 flex flex-col items-center justify-center p-8 bg-gradient-radial ${getGradient()}`}
+      className={`absolute inset-0 flex flex-col items-center justify-center ${isMobile ? 'p-4' : 'p-8'} bg-gradient-radial ${getGradient()}`}
     >
-      <div className="max-w-4xl w-full flex flex-col items-center">
+      <div className={`${isMobile ? 'w-full' : 'max-w-4xl w-full'} flex flex-col items-center`}>
         {/* Logo and welcome */}
         <motion.div 
           initial={{ y: -20 }}
           animate={{ y: 0 }}
-          className="text-center mb-10"
+          className={`text-center ${isMobile ? 'mb-6' : 'mb-10'}`}
         >
-          <h1 className="text-5xl font-bold mb-2 text-white">Panion</h1>
-          <div className="text-xl text-white">
+          <h1 className={`${isMobile ? 'text-4xl' : 'text-5xl'} font-bold mb-2 text-white`}>Panion</h1>
+          <div className={`${isMobile ? 'text-lg' : 'text-xl'} text-white`}>
             <RotatingTagline phrases={welcomePhrases} interval={3000} />
           </div>
         </motion.div>
         
         {/* Quick actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-10">
-          {quickActions.map((action, index) => (
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-3' : 'md:grid-cols-3 gap-4'} w-full ${isMobile ? 'mb-6' : 'mb-10'}`}>
+          {mobileQuickActions.map((action, index) => (
             <QuickAction
               key={index}
               title={action.title}
@@ -189,7 +207,11 @@ const EmptyStateDashboard: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="text-center text-white text-sm mt-4"
         >
-          <p>Pro tip: You can open multiple agents and arrange them in your workspace</p>
+          {isMobile ? (
+            <p>Tip: Tap the taskbar icons to switch between agents</p>
+          ) : (
+            <p>Pro tip: You can open multiple agents and arrange them in your workspace</p>
+          )}
         </motion.div>
       </div>
     </motion.div>
