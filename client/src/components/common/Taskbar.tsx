@@ -13,7 +13,9 @@ import {
   Settings, 
   Monitor, 
   SplitSquareVertical,
-  Terminal
+  Terminal,
+  Store,
+  ShoppingBag
 } from 'lucide-react';
 
 interface TaskbarProps {
@@ -134,6 +136,27 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           <span className="hidden sm:inline text-sm">System Console</span>
         </Button>
 
+        {/* Marketplace Button */}
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className={`h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
+            group
+            ${windows['marketplace']?.isOpen && !windows['marketplace']?.isMinimized
+              ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)] after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all'
+              : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
+            }
+            before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+            hover:before:opacity-100 hover:scale-105
+          `}
+          onClick={() => {
+            handleIconClick('marketplace');
+          }}
+        >
+          <Store size={16} className={`transition-all duration-200 ${windows['marketplace']?.isOpen ? 'text-primary' : 'group-hover:text-white'}`} />
+          <span className="hidden sm:inline text-sm">Marketplace</span>
+        </Button>
+        
         {/* Settings Button */}
         <Button 
           variant="ghost" 
