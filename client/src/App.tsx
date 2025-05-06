@@ -62,7 +62,7 @@ function App() {
       icon: claraIcon,
       component: () => <ClaraAgent />,
       defaultPosition: { x: 100, y: 100 },
-      defaultSize: { width: 640, height: 600 }
+      defaultSize: { width: 540, height: 500 }
     });
     
     // Notes Agent
@@ -135,7 +135,7 @@ function App() {
       icon: marketplaceIcon,
       component: () => <MarketplaceAgent />,
       defaultPosition: { x: 300, y: 120 },
-      defaultSize: { width: 900, height: 600 }
+      defaultSize: { width: 700, height: 550 }
     });
     
     // Auto-open Clara window by default
