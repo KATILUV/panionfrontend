@@ -67,15 +67,26 @@ export interface WindowLayout {
   }>;
 }
 
+// Helper to get current timestamp
+const getCurrentTimestamp = () => Date.now();
+
+// Auto-save debounce timeout
+let autoSaveTimeout: number | null = null;
+
 export const useAgentStore = create<AgentState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       registry: [],
       windows: {},
       focusedAgentId: null,
       highestZIndex: 0,
       layouts: [], // Stored window layouts
       activeLayoutId: null, // Currently active layout
+      
+      // Auto-save settings
+      autoSaveEnabled: true, // Enable auto-save by default
+      autoSaveInterval: 60000, // Auto-save every 60 seconds by default
+      lastAutoSave: null, // Timestamp of last auto-save
 
       registerAgent: (agent) => set((state) => {
         // Only register if not already in registry
