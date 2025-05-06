@@ -44,11 +44,11 @@ const MarketplaceAgent = () => {
       <motion.div 
         className={`relative rounded-lg p-4 cursor-pointer theme-transition
           ${isSelected 
-            ? 'bg-primary/20 border border-primary/40' 
+            ? 'bg-purple-600/20 border border-purple-400/40 shadow-lg' 
             : 'bg-black/20 hover:bg-black/30 border border-white/10'}
         `}
         onClick={() => setSelectedAgent(isSelected ? null : agent.id)}
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 300, damping: 15 }}
       >
@@ -60,8 +60,8 @@ const MarketplaceAgent = () => {
         )}
         
         <div className="flex items-center mb-3">
-          <div className={`p-2 rounded-full mr-3 ${isSelected ? 'bg-primary/30' : 'bg-primary/10'}`}>
-            <DynamicIcon name={agent.icon} size={24} className={isSelected ? 'text-primary' : 'text-white/70'} />
+          <div className={`p-2 rounded-full mr-3 ${isSelected ? 'bg-purple-600/30' : 'bg-purple-500/10'}`}>
+            <DynamicIcon name={agent.icon} size={24} className={isSelected ? 'text-purple-300' : 'text-white/70'} />
           </div>
           <div>
             <h3 className="text-lg font-medium">{agent.title}</h3>
@@ -95,7 +95,7 @@ const MarketplaceAgent = () => {
             className={`p-1.5 rounded-full transition-all
               ${isInstalled 
                 ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400' 
-                : 'bg-primary/20 hover:bg-primary/30 text-primary-foreground'}
+                : 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-300'}
             `}
           >
             {isInstalled ? <Check size={16} /> : <Plus size={16} />}
@@ -121,11 +121,11 @@ const MarketplaceAgent = () => {
       >
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-primary/20 mr-4">
-              <DynamicIcon name={agent.icon} size={32} className="text-primary" />
+            <div className="p-3 rounded-full bg-purple-600/20 mr-4">
+              <DynamicIcon name={agent.icon} size={32} className="text-purple-300" />
             </div>
             <div>
-              <h2 className="text-2xl font-semibold">{agent.title}</h2>
+              <h2 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">{agent.title}</h2>
               <div className="flex items-center text-sm text-white/60">
                 <span>{agent.author}</span>
                 <span className="mx-1">•</span>
@@ -136,10 +136,10 @@ const MarketplaceAgent = () => {
           
           <button
             onClick={() => agent.isInstalled ? uninstallAgent(agent.id) : installAgent(agent.id)}
-            className={`px-4 py-2 rounded-full flex items-center space-x-2 transition-all
+            className={`px-4 py-2 rounded-full flex items-center space-x-2 transition-all shadow-md
               ${agent.isInstalled 
                 ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' 
-                : 'bg-primary/20 hover:bg-primary/30 text-primary-foreground'}
+                : 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-300'}
             `}
           >
             {agent.isInstalled ? (
@@ -192,7 +192,7 @@ const MarketplaceAgent = () => {
             {agent.categories.map((catId) => {
               const category = categories.find(c => c.id === catId);
               return category ? (
-                <div key={catId} className="bg-primary/10 text-primary-foreground px-3 py-1 rounded-full text-sm flex items-center">
+                <div key={catId} className="bg-purple-600/10 text-purple-300 px-3 py-1 rounded-full text-sm flex items-center">
                   <DynamicIcon name={category.icon} size={14} className="mr-1" />
                   {category.name}
                 </div>
@@ -205,8 +205,8 @@ const MarketplaceAgent = () => {
           <h3 className="font-medium mb-2">Tags</h3>
           <div className="flex flex-wrap gap-2">
             {agent.tags.map((tag) => (
-              <div key={tag} className="bg-black/20 text-white/70 px-3 py-1 rounded-full text-sm flex items-center">
-                <Tag size={14} className="mr-1" />
+              <div key={tag} className="bg-black/20 border border-purple-500/20 text-white/80 px-3 py-1 rounded-full text-sm flex items-center">
+                <Tag size={14} className="mr-1 text-purple-400/80" />
                 {tag}
               </div>
             ))}
@@ -219,31 +219,38 @@ const MarketplaceAgent = () => {
   // Main component render
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Agent Manager</h1>
-        
-        <div className="flex items-center space-x-3">
-          {/* Search box */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search agents..."
-              className="pl-8 pr-3 py-1.5 bg-black/20 border border-white/10 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 w-48"
-              value={searchQuery}
-              onChange={(e) => searchAgents(e.target.value)}
-            />
-            <Search size={16} className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white/50" />
+      {/* Header with Panion branding */}
+      <div className="mb-6 px-2 py-4 bg-black/20 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="p-2 bg-purple-600/20 rounded-full mr-3">
+              <ShoppingBag size={20} className="text-purple-300" />
+            </div>
+            <h1 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">Agent Manager</h1>
           </div>
           
-          {/* Browse Marketplace button */}
-          <button 
-            className="px-4 py-1.5 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition-all flex items-center"
-            onClick={() => navigate('/marketplace')}
-          >
-            <ShoppingBag size={16} className="mr-2" />
-            Browse Marketplace
-          </button>
+          <div className="flex items-center space-x-3">
+            {/* Search box */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search agents..."
+                className="pl-8 pr-3 py-1.5 bg-black/30 border border-white/10 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500/50 w-48"
+                value={searchQuery}
+                onChange={(e) => searchAgents(e.target.value)}
+              />
+              <Search size={16} className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-purple-300/80" />
+            </div>
+            
+            {/* Browse Marketplace button */}
+            <button 
+              className="px-4 py-1.5 rounded-md bg-purple-600/80 hover:bg-purple-500/90 text-white transition-all flex items-center shadow-md"
+              onClick={() => navigate('/marketplace')}
+            >
+              <ShoppingBag size={16} className="mr-2" />
+              Browse Marketplace
+            </button>
+          </div>
         </div>
       </div>
       
@@ -260,15 +267,15 @@ const MarketplaceAgent = () => {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="bg-black/20 rounded-full p-4 mb-4">
-                  <PlayCircle size={36} className="text-white/40" />
+                <div className="bg-gradient-to-br from-purple-600/20 to-indigo-600/20 rounded-full p-5 mb-4 shadow-inner border border-white/5">
+                  <ShoppingBag size={36} className="text-purple-300/80" />
                 </div>
-                <h3 className="text-lg font-medium mb-2">No agents installed</h3>
-                <p className="text-white/60 max-w-md mb-6">
-                  You haven't installed any agents yet. Visit the marketplace to discover and install new agents.
+                <h3 className="text-xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-white">No Agents Installed</h3>
+                <p className="text-white/70 max-w-md mb-6">
+                  You haven't installed any agents yet. Visit the marketplace to discover and add powerful agents to enhance your Panion workspace.
                 </p>
                 <button 
-                  className="px-5 py-2.5 rounded-md bg-primary hover:bg-primary/90 text-white transition-all flex items-center"
+                  className="px-5 py-2.5 rounded-md bg-purple-600/80 hover:bg-purple-500/90 text-white transition-all flex items-center shadow-md"
                   onClick={() => navigate('/marketplace')}
                 >
                   <ShoppingBag size={18} className="mr-2" />
