@@ -511,7 +511,7 @@ const MarketplacePage = () => {
           </>
         )}
         
-        <div className="relative h-[400px] overflow-hidden">
+        <div className="relative h-[320px] overflow-hidden">
           {/* Carousel slide with animation */}
           <AnimatePresence initial={false} mode="wait">
             <motion.div
@@ -560,7 +560,7 @@ const MarketplacePage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.4 }}
-                  className="text-3xl md:text-4xl font-bold mb-3 text-white"
+                  className="text-2xl md:text-3xl font-bold mb-2 text-white"
                 >
                   {agent.title}
                 </motion.h2>
@@ -569,7 +569,7 @@ const MarketplacePage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.4 }}
-                  className="text-lg text-white/80 mb-6 line-clamp-3"
+                  className="text-base text-white/80 mb-4 line-clamp-2"
                 >
                   {agent.description}
                 </motion.p>
@@ -578,7 +578,7 @@ const MarketplacePage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.4 }}
-                  className="flex flex-wrap gap-2 mb-6"
+                  className="flex flex-wrap gap-2 mb-3"
                 >
                   {agent.categories.map((catId) => {
                     const category = categories.find(c => c.id === catId);
@@ -599,7 +599,7 @@ const MarketplacePage = () => {
                 >
                   <button
                     onClick={() => setSelectedAgent(agent.id)}
-                    className="bg-white text-black px-6 py-2.5 rounded-full font-medium flex items-center space-x-2 hover:bg-white/90 transition-all shadow-lg"
+                    className="bg-white text-black px-5 py-2 rounded-full font-medium flex items-center space-x-2 hover:bg-white/90 transition-all shadow-lg"
                   >
                     <span>Learn More</span>
                     <ArrowUpRight size={18} />
@@ -607,7 +607,7 @@ const MarketplacePage = () => {
                   
                   <button
                     onClick={() => agent.isInstalled ? uninstallAgent(agent.id) : installAgent(agent.id)}
-                    className={`px-6 py-2.5 rounded-full flex items-center space-x-2 transition-all shadow-lg
+                    className={`px-5 py-2 rounded-full flex items-center space-x-2 transition-all shadow-lg
                       ${agent.isInstalled 
                         ? 'bg-red-500 text-white hover:bg-red-600' 
                         : 'bg-purple-600 text-white hover:bg-purple-500'}
