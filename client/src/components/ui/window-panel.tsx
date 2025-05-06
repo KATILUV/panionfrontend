@@ -70,8 +70,7 @@ const WindowPanel = React.forwardRef<HTMLDivElement, WindowPanelProps>(
     },
     ref
   ) => {
-    const getCurrentTheme = useThemeStore((state) => state.getCurrentTheme);
-    const isDark = getCurrentTheme() === "dark";
+    // All themes are dark in Panion OS
 
     return (
       <Card

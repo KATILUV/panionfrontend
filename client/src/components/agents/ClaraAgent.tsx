@@ -14,7 +14,7 @@ import { WindowPanel, WindowContent } from '../ui/window-components';
 const ClaraAgent: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const getCurrentTheme = useThemeStore((state) => state.getCurrentTheme);
+  // Using unified dark theme
   const accent = useThemeStore((state) => state.accent);
   
   // Track Clara's status
