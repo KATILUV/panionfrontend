@@ -19,7 +19,8 @@ import {
   PlusCircle,
   FileText,
   CheckCircle,
-  Clock
+  Clock,
+  Search
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -55,20 +56,32 @@ const TaskbarButton = React.forwardRef<
 }, ref) => {
   const isHtmlIcon = typeof icon === 'string';
   const showLabels = useTaskbarStore(state => state.showLabels);
+  const { position } = useTaskbarStore();
+  const isVertical = position.location === 'left' || position.location === 'right';
   
   return (
     <button
       ref={ref}
       onClick={onClick}
       className={`
-        h-8 px-2.5 flex items-center space-x-2 rounded-lg transition-all duration-200 overflow-hidden relative
+        ${isVertical ? 'w-auto px-2 py-1.5' : 'h-8 px-2.5'} 
+        ${isVertical ? 'flex flex-col items-center gap-1' : 'flex items-center space-x-2'} 
+        rounded-lg transition-all duration-200 overflow-hidden relative
         group
         ${isActive 
           ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
           : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
         }
-        ${hasIndicator && isActive 
+        ${hasIndicator && isActive && !isVertical
           ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all' 
+          : ''
+        }
+        ${hasIndicator && isActive && isVertical && position.location === 'left'
+          ? 'after:absolute after:left-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+          : ''
+        }
+        ${hasIndicator && isActive && isVertical && position.location === 'right'
+          ? 'after:absolute after:right-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
           : ''
         }
         before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
@@ -88,7 +101,7 @@ const TaskbarButton = React.forwardRef<
         </span>
       )}
       {showLabels ? (
-        <span className="text-sm">{label}</span>
+        <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>{label}</span>
       ) : (
         <span className="hidden sm:inline text-sm">{label}</span>
       )}
@@ -117,6 +130,8 @@ const AgentIconButton = React.forwardRef<
   onClick
 }, ref) => {
   const showLabels = useTaskbarStore(state => state.showLabels);
+  const { position } = useTaskbarStore();
+  const isVertical = position.location === 'left' || position.location === 'right';
   
   return (
     <button
@@ -129,8 +144,16 @@ const AgentIconButton = React.forwardRef<
           : 'bg-transparent hover:bg-white/10 text-white/70 hover:text-white hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
         }
         group
-        ${isActive 
-          ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all taskbar-active-indicator' 
+        ${isActive && !isVertical
+          ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:w-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+          : ''
+        }
+        ${isActive && isVertical && position.location === 'left'
+          ? 'after:absolute after:left-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
+          : ''
+        }
+        ${isActive && isVertical && position.location === 'right'
+          ? 'after:absolute after:right-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
           : ''
         }
         before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
@@ -138,7 +161,9 @@ const AgentIconButton = React.forwardRef<
       `}
       title={title}
     >
-      <div className="flex items-center space-x-2">
+      <div className={`
+        ${isVertical && showLabels ? 'flex flex-col items-center gap-1' : 'flex items-center space-x-2'}
+      `}>
         <div className={`flex items-center justify-center w-7 h-7 transform transition-transform duration-200
           ${isActive ? 'scale-110' : 'group-hover:scale-110'}
         `}>
@@ -147,7 +172,7 @@ const AgentIconButton = React.forwardRef<
         </div>
         
         {showLabels && (
-          <span className="text-sm">{title}</span>
+          <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>{title}</span>
         )}
       </div>
     </button>
@@ -419,11 +444,15 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         style={getFixedPositionStyle()}
         className={`
           fixed ${isVertical ? 'flex-col' : 'flex'} ${getAlignmentClasses()} ${getTaskbarBgClass()} ${getBorderClasses()}
-          px-3 py-1.5 ${className} ${autohide ? 'hover:opacity-100 opacity-30 transition-opacity duration-300' : ''}
+          ${isVertical ? 'py-3 px-1.5' : 'px-3 py-1.5'} ${className} 
+          ${autohide ? 'hover:opacity-100 opacity-30 transition-opacity duration-300' : ''}
           z-10
         `}
       >
-        <div className="flex-1 flex items-center space-x-1">
+        {/* Agent icons - changes flex direction based on position orientation */}
+        <div className={`
+          flex-1 ${isVertical ? 'flex-col space-y-1 py-2' : 'flex items-center space-x-1'}
+        `}>
           {registry.map(agent => {
             const isOpen = windows[agent.id]?.isOpen;
             const isMinimized = windows[agent.id]?.isMinimized;
@@ -442,9 +471,12 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           })}
         </div>
         
-        <div className="flex items-center space-x-2">
-          {/* Search Bar Widget */}
-          {visibleWidgets.includes('searchBar') && (
+        {/* Widgets container - changes flex direction based on position orientation */}
+        <div className={`
+          ${isVertical ? 'flex-col space-y-2 items-center' : 'flex items-center space-x-2'}
+        `}>
+          {/* Search Bar Widget - hide on vertical taskbars */}
+          {visibleWidgets.includes('searchBar') && !isVertical && (
             <div className="relative w-40 lg:w-48">
               <Input
                 className="h-8 bg-black/40 border-primary/20 text-white placeholder:text-white/50 pr-8"
@@ -472,6 +504,20 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                 </svg>
               </div>
             </div>
+          )}
+          
+          {/* Simplified Search Button for vertical taskbars */}
+          {visibleWidgets.includes('searchBar') && isVertical && (
+            <TaskbarButton
+              icon={<Search size={16} />}
+              label="Search"
+              isActive={false}
+              onClick={() => toast({
+                title: "Search Feature",
+                description: "Global search will be implemented in a future update",
+                variant: "default",
+              })}
+            />
           )}
 
           {/* Notifications Widget */}
@@ -543,14 +589,27 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
             </Popover>
           )}
           
-          {/* AI Status Widget */}
-          {visibleWidgets.includes('aiStatus') && (
+          {/* AI Status Widget - horizontal version */}
+          {visibleWidgets.includes('aiStatus') && !isVertical && (
             <div className="px-2.5 py-1 rounded-lg bg-black/20 text-white/80 flex items-center space-x-2">
               <div className="relative">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div className="w-2 h-2 bg-green-500 rounded-full absolute inset-0 animate-ping opacity-75"></div>
               </div>
               <span className="text-xs font-medium">AI Active</span>
+            </div>
+          )}
+          
+          {/* AI Status Widget - vertical version */}
+          {visibleWidgets.includes('aiStatus') && isVertical && (
+            <div className="p-2 rounded-lg bg-black/20 text-white/80">
+              <div className="flex flex-col items-center space-y-1">
+                <div className="relative">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-green-500 rounded-full absolute inset-0 animate-ping opacity-75"></div>
+                </div>
+                {showLabels && <span className="text-xs font-medium">AI</span>}
+              </div>
             </div>
           )}
 
