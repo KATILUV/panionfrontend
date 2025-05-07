@@ -309,18 +309,27 @@ const Window: React.FC<WindowProps> = ({
     [updateAgentSize, id]
   );
   
-  // Function to keep window within viewport bounds
+  // Import taskbar dimensions hook
+  const { safeAreaInsets } = useTaskbarDimensions();
+  
+  // Enhanced function to keep window within viewport bounds and respect taskbar
   const keepWindowInBounds = useCallback((position: { x: number, y: number }) => {
-    // Ensure at least 100px of the window is visible on screen
+    // Ensure window doesn't get hidden offscreen but also respects taskbar position
     const minVisibleAmount = 100;
-    const maxX = Math.max(0, windowWidth - minVisibleAmount);
-    const maxY = Math.max(0, windowHeight - minVisibleAmount);
+    
+    // Calculate maximum positions accounting for taskbar safe areas
+    const maxX = Math.max(0, windowWidth - minVisibleAmount - safeAreaInsets.right);
+    const maxY = Math.max(0, windowHeight - minVisibleAmount - safeAreaInsets.bottom);
+    
+    // Calculate minimum positions accounting for taskbar safe areas
+    const minX = Math.min(safeAreaInsets.left, minVisibleAmount - size.width);
+    const minY = safeAreaInsets.top; // Start at top safe area
     
     return {
-      x: Math.min(maxX, Math.max(minVisibleAmount - size.width, position.x)),
-      y: Math.min(maxY, Math.max(0, position.y)) // Don't allow windows above the top of the screen
+      x: Math.min(maxX, Math.max(minX, position.x)),
+      y: Math.min(maxY, Math.max(minY, position.y))
     };
-  }, [windowWidth, windowHeight, size]);
+  }, [windowWidth, windowHeight, size, safeAreaInsets]);
   
   // Setup key listeners for modifier keys and shortcuts
   useEffect(() => {
