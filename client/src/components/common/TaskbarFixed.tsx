@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import useLayoutManager from '@/hooks/use-layout-manager';
+import { useThemeStore } from '@/state/themeStore';
 import '../ui/clara-themes.css';
 
 // Taskbar button component for icons and buttons
@@ -115,10 +116,17 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const [customLayoutName, setCustomLayoutName] = useState('');
   const [isQuickSaveOpen, setIsQuickSaveOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const taskbarRef = useRef<HTMLDivElement>(null);
+  
+  // State for dynamic transparency
+  const [transparency, setTransparency] = useState(0.2); // Initial transparency
   
   // Get current time for clock widget
   const [currentTime, setCurrentTime] = useState(new Date());
   const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  // Get theme values for better visual integration
+  const accent = useThemeStore(state => state.accent);
   
   // Update time every minute
   useEffect(() => {
@@ -126,6 +134,24 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       setCurrentTime(new Date());
     }, 60000);
     return () => clearInterval(timer);
+  }, []);
+  
+  // Add scroll listener for dynamic transparency
+  useEffect(() => {
+    const handleScroll = () => {
+      // Calculate transparency based on scroll position
+      // More scroll = more opaque taskbar
+      const scrollPosition = window.scrollY;
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const scrollPercentage = Math.min(scrollPosition / 300, 1); // Max effect at 300px scroll
+      
+      // Scale from 0.2 (transparent) to 0.85 (mostly opaque)
+      const newTransparency = 0.2 + scrollPercentage * 0.65;
+      setTransparency(newTransparency);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
   // Hooks for accessing store states
@@ -216,11 +242,36 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   
   // Create taskbar container styles based on position
   const getTaskbarStyles = (): React.CSSProperties => {
+    // Calculate a dynamic blur amount based on transparency
+    const blurAmount = enableBlur ? `blur(${4 + (transparency * 8)}px)` : 'none';
+    
+    // Create a gradient background based on theme accent and transparency
+    let gradientBg;
+    switch(accent) {
+      case 'purple':
+        gradientBg = `linear-gradient(to ${isVertical ? (position.location === 'left' ? 'right' : 'left') : 'bottom'}, 
+                      rgba(43, 24, 103, ${transparency}), 
+                      rgba(20, 12, 50, ${transparency * 0.9}))`;
+        break;
+      case 'blue':
+        gradientBg = `linear-gradient(to ${isVertical ? (position.location === 'left' ? 'right' : 'left') : 'bottom'}, 
+                      rgba(24, 43, 103, ${transparency}), 
+                      rgba(12, 20, 50, ${transparency * 0.9}))`;
+        break;
+      default:
+        gradientBg = `linear-gradient(to ${isVertical ? (position.location === 'left' ? 'right' : 'left') : 'bottom'}, 
+                      rgba(0, 0, 0, ${transparency}), 
+                      rgba(20, 20, 20, ${transparency * 0.9}))`;
+    }
+    
     const baseStyles: React.CSSProperties = {
       position: 'fixed',
       display: 'flex',
-      backgroundColor: 'rgba(0, 0, 0, 0.2)',
-      backdropFilter: enableBlur ? 'blur(8px)' : 'none',
+      backgroundColor: 'transparent',
+      backgroundImage: gradientBg,
+      backdropFilter: blurAmount,
+      boxShadow: `0 0 20px rgba(0, 0, 0, ${transparency * 0.5})`,
+      transition: 'background-color 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease',
       zIndex: 100,
     };
     
@@ -272,6 +323,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   return (
     <>
       <div 
+        ref={taskbarRef}
         style={getTaskbarStyles()}
         className={`taskbar ${className} ${autohide ? 'opacity-30 hover:opacity-100 transition-opacity duration-300' : ''}`}
       >
