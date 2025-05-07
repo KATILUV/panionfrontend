@@ -220,6 +220,16 @@ const Window: React.FC<WindowProps> = ({
     }
   };
   
+  // Toggle grid visibility
+  const handleToggleGrid = () => {
+    setShowGrid(prevState => !prevState);
+  };
+  
+  // Toggle snap-to-grid feature
+  const handleToggleSnapToGrid = () => {
+    setSnapToGridEnabled(prevState => !prevState);
+  };
+  
   // Handle drag start
   const handleDragStart = () => {
     setIsDragging(true);
@@ -241,6 +251,10 @@ const Window: React.FC<WindowProps> = ({
     ctrl: false,
     alt: false
   });
+  
+  // Grid feature states
+  const [showGrid, setShowGrid] = useState(false);
+  const [snapToGridEnabled, setSnapToGridEnabled] = useState(false);
   
   // Setup key listeners for modifier keys and shortcuts
   useEffect(() => {

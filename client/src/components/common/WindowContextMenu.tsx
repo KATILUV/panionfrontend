@@ -9,7 +9,10 @@ import {
   ArrowUpToLine,
   Layout, 
   PanelTop,
-  RotateCcw
+  RotateCcw,
+  Grid,
+  GridIcon,
+  MoveHorizontal
 } from 'lucide-react';
 
 interface WindowContextMenuProps {
@@ -23,7 +26,11 @@ interface WindowContextMenuProps {
   onSnapToSide: (position: 'left' | 'right' | 'top' | 'bottom') => void;
   onRestoreDefault: () => void;
   onCloseMenu: () => void;
+  onToggleGrid?: () => void;
+  onToggleSnapToGrid?: () => void;
   isMaximized: boolean;
+  showGrid?: boolean;
+  snapToGridEnabled?: boolean;
 }
 
 const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
@@ -37,7 +44,11 @@ const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
   onSnapToSide,
   onRestoreDefault,
   onCloseMenu,
+  onToggleGrid,
+  onToggleSnapToGrid,
   isMaximized,
+  showGrid = false,
+  snapToGridEnabled = false,
 }) => {
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
 
@@ -205,6 +216,38 @@ const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
               </button>
 
               <hr className={getSeparatorClass()} />
+              
+              {/* Grid Controls */}
+              {onToggleGrid && (
+                <>
+                  <div className="px-2 py-1 text-xs text-gray-500">Grid Options</div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleGrid();
+                      // Don't close menu to allow toggling multiple grid options
+                    }}
+                    className={`${getMenuItemClass()} ${showGrid ? 'bg-indigo-500/20' : ''}`}
+                  >
+                    <Grid size={16} />
+                    <span>Show Grid</span>
+                  </button>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleSnapToGrid && onToggleSnapToGrid();
+                      // Don't close menu to allow toggling multiple grid options
+                    }}
+                    className={`${getMenuItemClass()} ${snapToGridEnabled ? 'bg-indigo-500/20' : ''}`}
+                  >
+                    <MoveHorizontal size={16} />
+                    <span>Snap to Grid</span>
+                  </button>
+                  
+                  <hr className={getSeparatorClass()} />
+                </>
+              )}
 
               {/* Window Actions */}
               <button
