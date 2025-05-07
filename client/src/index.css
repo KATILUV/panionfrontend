@@ -349,48 +349,160 @@ h4, .h4 {
     @apply bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-md p-3 border border-white/10;
   }
   
-  /* Window styles with theme accent colors */
+  /* Enhanced window styles with advanced glassmorphism */
   .window {
-    @apply bg-black/30 backdrop-blur-md border border-white/10 overflow-hidden theme-transition;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2),
-                0 5px 10px rgba(0, 0, 0, 0.1);
+    @apply bg-black/25 backdrop-blur-md border border-white/10 overflow-hidden theme-transition;
+    background: linear-gradient(
+      to bottom,
+      rgba(20, 20, 35, 0.8),
+      rgba(15, 15, 30, 0.75)
+    );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 
+      0 10px 30px rgba(0, 0, 0, 0.3),
+      0 6px 12px rgba(0, 0, 0, 0.15),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    transform-style: preserve-3d;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform, opacity, box-shadow;
   }
   
   .window-focused {
-    @apply border-white/20;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25),
-                0 8px 15px rgba(0, 0, 0, 0.15),
-                0 0 0 1px rgba(var(--accent), 0.1),
-                0 0 15px rgba(var(--accent), 0.2);
+    @apply border-primary/20;
+    background: linear-gradient(
+      to bottom,
+      rgba(25, 25, 40, 0.85),
+      rgba(20, 20, 35, 0.8)
+    );
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.35),
+      0 10px 20px rgba(0, 0, 0, 0.2),
+      0 0 0 1px rgba(var(--primary-rgb), 0.2),
+      0 0 20px rgba(var(--primary-rgb), 0.15),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px) translateZ(0);
+    filter: saturate(1.05);
   }
   
   .window-blurred {
-    @apply border-white/5 opacity-95;
+    @apply border-white/5 opacity-90;
     filter: saturate(0.9);
+    transform: translateY(0) translateZ(0);
   }
   
   .window-titlebar {
-    @apply bg-black/40 backdrop-blur-sm border-b border-white/5 theme-transition;
+    @apply backdrop-blur-sm border-b border-white/5 theme-transition;
+    background: linear-gradient(
+      to bottom,
+      rgba(30, 30, 45, 0.85),
+      rgba(25, 25, 40, 0.75)
+    );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   
   .window-titlebar-focused {
-    @apply bg-black/50 border-b border-white/10;
-    background: linear-gradient(180deg, 
-                rgba(var(--accent), 0.2) 0%, 
-                rgba(0, 0, 0, 0.4) 100%);
+    @apply border-b border-primary/15;
+    background: linear-gradient(
+      180deg, 
+      rgba(var(--primary-rgb), 0.25) 0%, 
+      rgba(var(--primary-rgb), 0.1) 50%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
   
   .window-titlebar-blurred {
     @apply bg-black/40 opacity-90;
   }
   
+  /* New accent color bar animation - appears when window is focused */
+  .window-accent-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--primary);
+    box-shadow: 
+      0 0 8px 0 rgba(var(--primary-rgb), 0.6),
+      0 0 4px 0 rgba(var(--primary-rgb), 0.4);
+    opacity: 0; 
+    transform: scaleX(0.96);
+    transform-origin: center;
+    transition: all 0.3s ease;
+  }
+  
+  .window-focused .window-accent-bar {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  
+  .window-body {
+    background: linear-gradient(
+      to bottom,
+      rgba(20, 20, 35, 0.6),
+      rgba(15, 15, 30, 0.55)
+    );
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  
   .window-body-focused {
     @apply border-white/10;
+    background: linear-gradient(
+      to bottom,
+      rgba(25, 25, 40, 0.7),
+      rgba(20, 20, 35, 0.65)
+    );
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: inset 0 0 30px rgba(var(--primary-rgb), 0.03);
   }
   
   .window-body-blurred {
     @apply border-white/5 opacity-90;
   }
+}
+
+/* Futuristic UI effects */
+
+/* Enhanced button glow effect */
+.shadow-glow {
+  box-shadow: 
+    0 0 15px rgba(var(--primary-rgb), 0.4),
+    0 0 30px rgba(var(--primary-rgb), 0.2);
+  transition: box-shadow 0.3s ease;
+}
+
+.shadow-glow:hover {
+  box-shadow: 
+    0 0 20px rgba(var(--primary-rgb), 0.6),
+    0 0 40px rgba(var(--primary-rgb), 0.3);
+}
+
+/* Neon border effect */
+.neon-border {
+  --neon-color: rgba(var(--primary-rgb), 0.7);
+  box-shadow:
+    0 0 5px var(--neon-color),
+    0 0 10px var(--neon-color),
+    inset 0 0 5px var(--neon-color);
+  border: 1px solid rgba(var(--primary-rgb), 0.8);
+  transition: all 0.3s ease;
+}
+
+.neon-border:hover {
+  --neon-color: rgba(var(--primary-rgb), 1);
+  box-shadow:
+    0 0 10px var(--neon-color),
+    0 0 20px var(--neon-color),
+    inset 0 0 10px var(--neon-color);
 }
 
 /* Background glow effects */
