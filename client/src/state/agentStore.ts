@@ -89,7 +89,7 @@ interface AgentState {
   setAutoSaveInterval: (interval: number) => void;
   restoreDefaultLayout: () => void;
   
-  // No more template actions - using simplified layout system
+  // No template actions - using our simplified direct layout system from layoutUtils.ts
 }
 
 // Window layout profiles for quick switching

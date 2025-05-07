@@ -37,6 +37,11 @@ export const UI_ICONS = {
   SETTINGS: 'Settings',
   MORE: 'MoreHorizontal',
   MENU: 'Menu',
+
+  // Layout icons
+  LAYOUT_SPLIT: 'LayoutPanelLeft',
+  LAYOUT_GRID: 'LayoutGrid',
+  GRID: 'Grid',
   
   // State indicators
   SUCCESS: 'CheckCircle',
@@ -48,6 +53,7 @@ export const UI_ICONS = {
   INFO: 'Info',
   LOADING: 'Loader2',
   LOADER: 'Loader2',
+  X: 'X',
   BRAIN: 'Brain',
 };
 
