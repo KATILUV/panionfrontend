@@ -8,7 +8,8 @@ import { useThemeStore } from '../state/themeStore';
 import { useSystemLogStore, log } from '../state/systemLogStore';
 import { useUserPrefsStore } from '../state/userPrefsStore';
 import { initializeAgentRegistry } from '../state/agentStore';
-import { MessageSquare, FileText, Settings, PlusCircle, Layout, Layers } from 'lucide-react';
+import { MessageSquare, FileText, Settings, PlusCircle, Layout, Layers, Grid3x3, Maximize2, X } from 'lucide-react';
+import { ApplyLayout } from '../lib/layoutUtils';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
 import SettingsAgent from './agents/SettingsAgent';
@@ -315,32 +316,103 @@ const Desktop: React.FC = () => {
                 this is Panion
               </h2>
               
-              {/* Debug button for testing Split View template */}
-              <button 
-                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 mx-auto hover:bg-blue-700 transition-colors"
-                onClick={() => {
-                  console.log("Split View test button clicked");
-                  try {
-                    const { createLayoutFromTemplate } = useAgentStore.getState();
-                    console.log("Applying split-view template directly");
-                    createLayoutFromTemplate('split-view');
-                    toast({
-                      title: "Split View Test",
-                      description: "Attempting to apply Split View template"
-                    });
-                  } catch (err) {
-                    console.error("Error applying split view template:", err);
-                    toast({
-                      title: "Error",
-                      description: "Failed to apply Split View template",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-              >
-                <Layout className="h-5 w-5" />
-                Test Split View Template
-              </button>
+              {/* Layout templates quick access */}
+              <div className="flex flex-wrap gap-2 justify-center mt-4 mb-2">
+                <button 
+                  className="bg-blue-600 text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-blue-700 transition-colors text-sm"
+                  onClick={() => {
+                    try {
+                      // Use our simplified layout utility
+                      ApplyLayout.splitView('clara', 'notes');
+                      
+                      toast({
+                        title: "Split View",
+                        description: "Split view layout applied"
+                      });
+                    } catch (err) {
+                      console.error("Error applying split view:", err);
+                      toast({
+                        title: "Error",
+                        description: "Failed to apply Split View layout",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
+                  <Layout className="h-4 w-4" />
+                  Split View
+                </button>
+                
+                <button 
+                  className="bg-purple-600 text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-purple-700 transition-colors text-sm"
+                  onClick={() => {
+                    try {
+                      // Use our layout utility
+                      ApplyLayout.focusMode('clara');
+                      
+                      toast({
+                        title: "Focus Mode",
+                        description: "Focus mode layout applied"
+                      });
+                    } catch (err) {
+                      console.error("Error applying focus mode:", err);
+                      toast({
+                        title: "Error",
+                        description: "Failed to apply focus mode",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Focus Mode
+                </button>
+                
+                <button 
+                  className="bg-green-600 text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-green-700 transition-colors text-sm"
+                  onClick={() => {
+                    try {
+                      // Use our layout utility
+                      ApplyLayout.tripleLayout('clara', 'notes', 'settings');
+                      
+                      toast({
+                        title: "Triple Layout",
+                        description: "Triple window layout applied"
+                      });
+                    } catch (err) {
+                      console.error("Error applying triple layout:", err);
+                      toast({
+                        title: "Error",
+                        description: "Failed to apply triple layout",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
+                  <Layers className="h-4 w-4" />
+                  Triple Layout
+                </button>
+                
+                <button 
+                  className="bg-red-600 text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-red-700 transition-colors text-sm"
+                  onClick={() => {
+                    try {
+                      // Close all windows
+                      ApplyLayout.closeAll();
+                      
+                      toast({
+                        title: "Desktop Cleared",
+                        description: "All windows have been closed"
+                      });
+                    } catch (err) {
+                      console.error("Error closing windows:", err);
+                    }
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                  Clear All
+                </button>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
