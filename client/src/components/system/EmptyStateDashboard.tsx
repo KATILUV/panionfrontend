@@ -20,34 +20,31 @@ interface QuickActionProps {
 
 const QuickAction: React.FC<QuickActionProps> = ({ title, description, icon, onClick, color, shortcut }) => {
   return (
-    <motion.div
+    <motion.button 
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
-      className={`rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer`}
+      className={`w-full text-left rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none`}
       onClick={onClick}
     >
-      <div className="relative w-full h-full" onClick={onClick}>
-        <Card className="bg-card/50 backdrop-blur-sm border-none h-full">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <CardTitle className="text-xl font-bold">{title}</CardTitle>
-              <div className="text-foreground/80">{icon}</div>
+      <Card className="bg-card/50 backdrop-blur-sm border-none h-full">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-xl font-bold">{title}</CardTitle>
+            <div className="text-foreground/80">{icon}</div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <CardDescription className="text-sm">{description}</CardDescription>
+          {shortcut && (
+            <div className="mt-2 flex items-center">
+              <kbd className="px-2 py-1 text-xs font-semibold bg-black/10 dark:bg-white/10 rounded border border-gray-200 dark:border-gray-700">
+                {shortcut}
+              </kbd>
             </div>
-          </CardHeader>
-          <CardContent>
-            <CardDescription className="text-sm">{description}</CardDescription>
-            {shortcut && (
-              <div className="mt-2 flex items-center">
-                <kbd className="px-2 py-1 text-xs font-semibold bg-black/10 dark:bg-white/10 rounded border border-gray-200 dark:border-gray-700">
-                  {shortcut}
-                </kbd>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <div className="absolute inset-0 w-full h-full cursor-pointer" onClick={onClick}></div>
-      </div>
-    </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.button>
   );
 };
 
