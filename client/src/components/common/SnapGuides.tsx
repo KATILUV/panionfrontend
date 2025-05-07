@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTaskbarDimensions } from '../../hooks/use-taskbar-dimensions';
 
 interface SnapGuidesProps {
   isVisible: boolean;
@@ -24,32 +25,57 @@ const SnapGuides: React.FC<SnapGuidesProps> = ({
   gridSize = 20,
   snapToGrid = false
 }) => {
+  // Get taskbar dimensions to adjust guide positions
+  const { safeAreaInsets } = useTaskbarDimensions();
+  
   if (!isVisible && !showGrid) return null;
-
-  // Styles for different snap positions
+  
+  // Styles for different snap positions, accounting for taskbar
   const getHighlightStyles = () => {
     const baseStyle = "absolute rounded-lg border-2 border-indigo-500/80 bg-indigo-500/10 pointer-events-none z-50";
     
+    // Get styles based on taskbar position
+    const styles = {
+      left: safeAreaInsets.left ? `left-[${safeAreaInsets.left}px]` : 'left-0',
+      right: safeAreaInsets.right ? `right-[${safeAreaInsets.right}px]` : 'right-0',
+      top: safeAreaInsets.top ? `top-[${safeAreaInsets.top}px]` : 'top-0',
+      bottom: safeAreaInsets.bottom ? `bottom-[${safeAreaInsets.bottom}px]` : 'bottom-0',
+    };
+    
+    // Calculate available screen space
+    const availableWidth = windowWidth - safeAreaInsets.left - safeAreaInsets.right;
+    const halfWidth = availableWidth / 2;
+    const halfWidthPercent = Math.round((halfWidth / windowWidth) * 100);
+    
+    const availableHeight = windowHeight - safeAreaInsets.top - safeAreaInsets.bottom;
+    const halfHeight = availableHeight / 2;
+    const halfHeightPercent = Math.round((halfHeight / windowHeight) * 100);
+    
     switch (snapPosition) {
       case 'left':
-        return `${baseStyle} left-0 top-0 bottom-0 w-1/2`;
+        return `${baseStyle} ${styles.left} ${styles.top} ${styles.bottom} w-[${halfWidthPercent}%]`;
       case 'right':
-        return `${baseStyle} right-0 top-0 bottom-0 w-1/2`;
+        return `${baseStyle} ${styles.right} ${styles.top} ${styles.bottom} w-[${halfWidthPercent}%]`;
       case 'top':
-        return `${baseStyle} left-0 top-0 right-0 h-1/2`;
+        return `${baseStyle} ${styles.left} ${styles.top} ${styles.right} h-[${halfHeightPercent}%]`;
       case 'bottom':
-        return `${baseStyle} left-0 bottom-0 right-0 h-1/2`;
+        return `${baseStyle} ${styles.left} ${styles.bottom} ${styles.right} h-[${halfHeightPercent}%]`;
       case 'top-left':
-        return `${baseStyle} left-0 top-0 w-1/2 h-1/2`;
+        return `${baseStyle} ${styles.left} ${styles.top} w-[${halfWidthPercent}%] h-[${halfHeightPercent}%]`;
       case 'top-right':
-        return `${baseStyle} right-0 top-0 w-1/2 h-1/2`;
+        return `${baseStyle} ${styles.right} ${styles.top} w-[${halfWidthPercent}%] h-[${halfHeightPercent}%]`;
       case 'bottom-left':
-        return `${baseStyle} left-0 bottom-0 w-1/2 h-1/2`;
+        return `${baseStyle} ${styles.left} ${styles.bottom} w-[${halfWidthPercent}%] h-[${halfHeightPercent}%]`;
       case 'bottom-right':
-        return `${baseStyle} right-0 bottom-0 w-1/2 h-1/2`;
+        return `${baseStyle} ${styles.right} ${styles.bottom} w-[${halfWidthPercent}%] h-[${halfHeightPercent}%]`;
       case 'center':
-        // Calculate a centered box that's 70% of the screen
-        return `${baseStyle} left-[15%] right-[15%] top-[15%] bottom-[15%] w-[70%] h-[70%] m-auto`;
+        // Calculate a centered box within the available space
+        const centerWidthPercent = 70;
+        const centerHeightPercent = 70;
+        const leftPercent = safeAreaInsets.left + ((availableWidth - (availableWidth * 0.7)) / 2);
+        const topPercent = safeAreaInsets.top + ((availableHeight - (availableHeight * 0.7)) / 2);
+        
+        return `${baseStyle} left-[${leftPercent}px] top-[${topPercent}px] w-[${centerWidthPercent}%] h-[${centerHeightPercent}%]`;
       default:
         return '';
     }
@@ -62,37 +88,43 @@ const SnapGuides: React.FC<SnapGuidesProps> = ({
     transition: { duration: 0.2 }
   };
 
-  // Get edge guides (lines at edges of screen)
+  // Get edge guides (lines at edges of screen, respecting taskbar)
   const getEdgeGuides = () => {
     const edgeGuideStyle = "absolute bg-indigo-400 pointer-events-none";
     const edgeGuides = [];
     
+    // Position styles accounting for taskbar
+    const left = safeAreaInsets.left ? `left-[${safeAreaInsets.left}px]` : 'left-0';
+    const right = safeAreaInsets.right ? `right-[${safeAreaInsets.right}px]` : 'right-0';
+    const top = safeAreaInsets.top ? `top-[${safeAreaInsets.top}px]` : 'top-0';
+    const bottom = safeAreaInsets.bottom ? `bottom-[${safeAreaInsets.bottom}px]` : 'bottom-0';
+    
     // Only show edge guides for relevant snap positions
     if (['left', 'top-left', 'bottom-left'].includes(snapPosition)) {
-      // Left edge
+      // Left edge (accounting for taskbar if on left)
       edgeGuides.push(
-        <div key="left" className={`${edgeGuideStyle} left-0 top-0 bottom-0 w-0.5`} />
+        <div key="left" className={`${edgeGuideStyle} ${left} top-0 bottom-0 w-0.5`} />
       );
     }
     
     if (['right', 'top-right', 'bottom-right'].includes(snapPosition)) {
-      // Right edge
+      // Right edge (accounting for taskbar if on right)
       edgeGuides.push(
-        <div key="right" className={`${edgeGuideStyle} right-0 top-0 bottom-0 w-0.5`} />
+        <div key="right" className={`${edgeGuideStyle} ${right} top-0 bottom-0 w-0.5`} />
       );
     }
     
     if (['top', 'top-left', 'top-right'].includes(snapPosition)) {
-      // Top edge
+      // Top edge (accounting for taskbar if on top)
       edgeGuides.push(
-        <div key="top" className={`${edgeGuideStyle} top-0 left-0 right-0 h-0.5`} />
+        <div key="top" className={`${edgeGuideStyle} ${top} left-0 right-0 h-0.5`} />
       );
     }
     
     if (['bottom', 'bottom-left', 'bottom-right'].includes(snapPosition)) {
-      // Bottom edge
+      // Bottom edge (accounting for taskbar if on bottom)
       edgeGuides.push(
-        <div key="bottom" className={`${edgeGuideStyle} bottom-0 left-0 right-0 h-0.5`} />
+        <div key="bottom" className={`${edgeGuideStyle} ${bottom} left-0 right-0 h-0.5`} />
       );
     }
     

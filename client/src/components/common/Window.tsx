@@ -10,6 +10,7 @@ import WindowContextMenu from './WindowContextMenu';
 import SnapGuides from './SnapGuides';
 import WindowGroupIndicator from './WindowGroupIndicator';
 import { useScreenSize, useOrientation } from '../../hooks/use-mobile';
+import { useTaskbarDimensions } from '../../hooks/use-taskbar-dimensions';
 import './Window.css';
 
 // Utility function to debounce function calls
@@ -168,23 +169,33 @@ const Window: React.FC<WindowProps> = ({
     playSnapSound();
   };
   
-  // Detect which edge/corner we are near
+  // Detect which edge/corner we are near, respecting taskbar position
   const detectSnapPosition = (x: number, y: number): SnapPosition => {
-    const rightEdge = windowWidth - SNAP_THRESHOLD;
-    const bottomEdge = windowHeight - SNAP_THRESHOLD;
-    const centerX = windowWidth / 2;
-    const centerY = windowHeight / 2;
+    // Get safe area insets from taskbar
+    const { safeAreaInsets } = useTaskbarDimensions();
+    
+    // Calculate screen edges considering taskbar placement
+    const leftEdge = safeAreaInsets.left + SNAP_THRESHOLD;
+    const rightEdge = windowWidth - SNAP_THRESHOLD - safeAreaInsets.right;
+    const topEdge = safeAreaInsets.top + SNAP_THRESHOLD;
+    const bottomEdge = windowHeight - SNAP_THRESHOLD - safeAreaInsets.bottom;
+    
+    // Calculate center position respecting safe areas
+    const availableWidth = windowWidth - safeAreaInsets.left - safeAreaInsets.right;
+    const availableHeight = windowHeight - safeAreaInsets.top - safeAreaInsets.bottom;
+    const centerX = safeAreaInsets.left + (availableWidth / 2);
+    const centerY = safeAreaInsets.top + (availableHeight / 2);
     
     // Check corners first (they have priority)
-    if (x <= SNAP_THRESHOLD && y <= SNAP_THRESHOLD) return 'top-left';
-    if (x >= rightEdge && y <= SNAP_THRESHOLD) return 'top-right';
-    if (x <= SNAP_THRESHOLD && y >= bottomEdge - 40) return 'bottom-left';
+    if (x <= leftEdge && y <= topEdge) return 'top-left';
+    if (x >= rightEdge && y <= topEdge) return 'top-right';
+    if (x <= leftEdge && y >= bottomEdge - 40) return 'bottom-left';
     if (x >= rightEdge && y >= bottomEdge - 40) return 'bottom-right';
     
     // Then check edges
-    if (x <= SNAP_THRESHOLD) return 'left';
+    if (x <= leftEdge) return 'left';
     if (x >= rightEdge) return 'right';
-    if (y <= SNAP_THRESHOLD) return 'top';
+    if (y <= topEdge) return 'top';
     if (y >= bottomEdge - 40) return 'bottom';
     
     // Check center position
@@ -195,52 +206,66 @@ const Window: React.FC<WindowProps> = ({
     return 'none';
   };
   
-  // Apply snap positioning
+  // Apply snap positioning with respect to taskbar
   const applySnapPosition = (snapPosition: SnapPosition) => {
+    // Get taskbar dimensions
+    const { safeAreaInsets } = useTaskbarDimensions();
+    
     let newPosition = { ...position };
     let newSize = { ...size };
     
-    const halfWidth = windowWidth / 2;
-    const halfHeight = windowHeight / 2;
+    // Calculate available space accounting for taskbar
+    const availableWidth = windowWidth - safeAreaInsets.left - safeAreaInsets.right;
+    const availableHeight = windowHeight - safeAreaInsets.top - safeAreaInsets.bottom;
+    
+    // Calculate half-sizes respecting the safe areas
+    const halfWidth = availableWidth / 2;
+    const halfHeight = availableHeight / 2;
+    
+    // Adjusted starting positions accounting for taskbar placement
+    const startX = safeAreaInsets.left;
+    const startY = safeAreaInsets.top;
+    const midX = startX + halfWidth;
+    const midY = startY + halfHeight;
     
     switch (snapPosition) {
       case 'left':
-        newPosition = { x: 0, y: 0 };
-        newSize = { width: halfWidth, height: windowHeight };
+        newPosition = { x: startX, y: startY };
+        newSize = { width: halfWidth, height: availableHeight };
         break;
       case 'right':
-        newPosition = { x: halfWidth, y: 0 };
-        newSize = { width: halfWidth, height: windowHeight };
+        newPosition = { x: midX, y: startY };
+        newSize = { width: halfWidth, height: availableHeight };
         break;
       case 'top':
-        newPosition = { x: 0, y: 0 };
-        newSize = { width: windowWidth, height: halfHeight };
+        newPosition = { x: startX, y: startY };
+        newSize = { width: availableWidth, height: halfHeight };
         break;
       case 'bottom':
-        newPosition = { x: 0, y: halfHeight };
-        newSize = { width: windowWidth, height: halfHeight };
+        newPosition = { x: startX, y: midY };
+        newSize = { width: availableWidth, height: halfHeight };
         break;
       case 'top-left':
-        newPosition = { x: 0, y: 0 };
+        newPosition = { x: startX, y: startY };
         newSize = { width: halfWidth, height: halfHeight };
         break;
       case 'top-right':
-        newPosition = { x: halfWidth, y: 0 };
+        newPosition = { x: midX, y: startY };
         newSize = { width: halfWidth, height: halfHeight };
         break;
       case 'bottom-left':
-        newPosition = { x: 0, y: halfHeight };
+        newPosition = { x: startX, y: midY };
         newSize = { width: halfWidth, height: halfHeight };
         break;
       case 'bottom-right':
-        newPosition = { x: halfWidth, y: halfHeight };
+        newPosition = { x: midX, y: midY };
         newSize = { width: halfWidth, height: halfHeight };
         break;
       case 'center':
         // Center the window with its current size
         newPosition = {
-          x: (windowWidth - size.width) / 2,
-          y: (windowHeight - size.height) / 2
+          x: startX + (availableWidth - size.width) / 2,
+          y: startY + (availableHeight - size.height) / 2
         };
         break;
       default:
