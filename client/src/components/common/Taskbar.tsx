@@ -48,15 +48,32 @@ const TaskbarButton = React.forwardRef<
   const { position } = useTaskbarStore();
   const isVertical = position.location === 'left' || position.location === 'right';
   
+  // Get screen size for responsive styling
+  const { size: btnScreenSize } = useScreenSize();
+  const isExtraSmall = btnScreenSize === 'xs';
+  const isSmall = btnScreenSize === 'sm';
+  
   return (
     <button
       ref={ref}
       onClick={onClick}
       className={`
-        ${isVertical ? 'w-auto px-2 py-1.5' : 'h-8 px-2.5'} 
-        ${isVertical ? 'flex flex-col items-center gap-1' : 'flex items-center space-x-2'} 
+        ${isVertical 
+          ? 'w-auto px-2 py-1.5' 
+          : isExtraSmall 
+            ? 'h-7 px-2' 
+            : isSmall 
+              ? 'h-7 px-2.5' 
+              : 'h-8 px-2.5'
+        } 
+        ${isVertical 
+          ? 'flex flex-col items-center gap-1' 
+          : isExtraSmall 
+            ? 'flex items-center space-x-1.5' 
+            : 'flex items-center space-x-2'
+        }
         rounded-lg transition-all duration-200 overflow-hidden relative
-        group
+        group touch-manipulation
         ${isActive 
           ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
           : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
@@ -75,6 +92,7 @@ const TaskbarButton = React.forwardRef<
         }
         before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
         hover:before:opacity-100 hover:scale-105
+        active:scale-95 active:bg-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/30
         ${className}
       `}
       title={label}
@@ -82,15 +100,15 @@ const TaskbarButton = React.forwardRef<
       {isHtmlIcon ? (
         <div 
           dangerouslySetInnerHTML={{ __html: icon as string }} 
-          className={`transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`} 
+          className={`transition-all duration-200 ${isExtraSmall ? 'scale-90' : ''} ${isActive ? 'text-primary' : 'group-hover:text-white'}`} 
         />
       ) : (
-        <span className={`transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`}>
+        <span className={`transition-all duration-200 ${isExtraSmall ? 'scale-90' : ''} ${isActive ? 'text-primary' : 'group-hover:text-white'}`}>
           {icon}
         </span>
       )}
       {showLabels ? (
-        <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>{label}</span>
+        <span className={`${isVertical ? 'text-xs' : isExtraSmall ? 'text-xs' : 'text-sm'}`}>{label}</span>
       ) : (
         <span className="hidden sm:inline text-sm">{label}</span>
       )}
@@ -171,15 +189,15 @@ const AgentIconButton = React.forwardRef<
       <div className={`
         ${isVertical && showLabels ? 'flex flex-col items-center gap-1' : 'flex items-center space-x-2'}
       `}>
-        <div className={`flex items-center justify-center w-7 h-7 transform transition-transform duration-200
+        <div className={`flex items-center justify-center ${isExtraSmall ? 'w-6 h-6' : 'w-7 h-7'} transform transition-transform duration-200
           ${isActive ? 'scale-110' : 'group-hover:scale-110'}
         `}>
           <div dangerouslySetInnerHTML={{ __html: icon }} 
-            className={`transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`} />
+            className={`transition-all duration-200 ${isExtraSmall ? 'scale-90' : ''} ${isActive ? 'text-primary' : 'group-hover:text-white'}`} />
         </div>
         
         {showLabels && (
-          <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>{title}</span>
+          <span className={`${isVertical ? 'text-xs' : isExtraSmall ? 'text-xs' : 'text-sm'}`}>{title}</span>
         )}
       </div>
     </button>
@@ -237,22 +255,22 @@ const GroupIconButton = React.forwardRef<
       <div className={`
         ${isVertical && showLabels ? 'flex flex-col items-center gap-1' : 'flex items-center space-x-2'}
       `}>
-        <div className={`flex items-center justify-center w-7 h-7 transform transition-transform duration-200
+        <div className={`flex items-center justify-center ${isExtraSmall ? 'w-6 h-6' : 'w-7 h-7'} transform transition-transform duration-200
           ${isActive ? 'scale-110' : 'group-hover:scale-110'}
         `}>
           <div className={`relative transition-all duration-200 ${isActive ? 'text-primary' : 'group-hover:text-white'}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className={`${isExtraSmall ? 'h-5 w-5' : 'h-6 w-6'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8a1 1 0 011-1h8a1 1 0 011 1v8a1 1 0 01-1 1H8a1 1 0 01-1-1V8z" />
             </svg>
-            <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+            <span className={`absolute ${isExtraSmall ? '-top-1 -right-1.5' : '-top-1 -right-2'} bg-primary text-white text-xs rounded-full ${isExtraSmall ? 'h-3.5 w-3.5 text-[10px]' : 'h-4 w-4'} flex items-center justify-center`}>
               {group.windows.length}
             </span>
           </div>
         </div>
         
         {showLabels && (
-          <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>{group.title}</span>
+          <span className={`${isVertical ? 'text-xs' : isExtraSmall ? 'text-xs' : 'text-sm'}`}>{group.title}</span>
         )}
       </div>
     </button>
