@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Settings, Palette, Monitor, Bell, Shield, Info, Lock, CheckCircle2, Layout } from 'lucide-react';
+import { Settings, Palette, Monitor, Bell, Shield, Info, Lock, CheckCircle2, Layout, User } from 'lucide-react';
 import { useThemeStore, ThemeAccent } from '@/state/themeStore';
 import { useSettingsTabStore } from '@/state/settingsTabStore';
+import { useUserPrefsStore } from '@/state/userPrefsStore';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AgentStatusType } from '@/components/ui/agent-status';
 import { WindowPanel, WindowContent, WindowSection } from '@/components/ui/window-components';
@@ -74,6 +76,74 @@ const SettingsAgent = () => {
     </div>
   );
   
+  // Add User Profile section
+  const renderUserProfileTab = () => {
+    const userName = useUserPrefsStore(state => state.name);
+    const setUserName = useUserPrefsStore(state => state.setName);
+    const email = useUserPrefsStore(state => state.email) || '';
+    const setEmail = useUserPrefsStore(state => state.setEmail);
+    
+    const [nameInput, setNameInput] = useState(userName);
+    const [emailInput, setEmailInput] = useState(email);
+    
+    const handleSaveProfile = () => {
+      setUserName(nameInput);
+      if (emailInput) setEmail(emailInput);
+      
+      toast({
+        title: "Profile Updated",
+        description: "Your profile information has been saved",
+      });
+    };
+    
+    return (
+      <div>
+        <h3 className="h3 mb-6">User Profile</h3>
+        <WindowSection
+          title="Personal Information"
+          description="Update your profile information used across Panion"
+          className="mb-6"
+        >
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="userName" className="block text-sm font-medium mb-1">
+                Display Name
+              </label>
+              <Input
+                id="userName"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                className="max-w-md"
+                placeholder="Enter your name"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="userEmail" className="block text-sm font-medium mb-1">
+                Email Address (optional)
+              </label>
+              <Input
+                id="userEmail"
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                className="max-w-md"
+                placeholder="your@email.com"
+              />
+            </div>
+            
+            <Button 
+              onClick={handleSaveProfile} 
+              className="mt-2"
+            >
+              Save Profile
+            </Button>
+          </div>
+        </WindowSection>
+      </div>
+    );
+  };
+
   const renderSystemTab = () => (
     <div>
       <h3 className="h3 mb-6">System Settings</h3>
@@ -246,6 +316,15 @@ const SettingsAgent = () => {
         <div className="hidden md:block w-48 shrink-0 bg-black/10 backdrop-blur-sm border-r border-white/10">
           <div className="p-3">
             <div className="flex flex-col space-y-1.5">
+              <Button 
+                variant={activeTab === 'user-profile' ? 'secondary' : 'ghost'} 
+                className="justify-start px-2 py-1.5 h-auto text-sm"
+                onClick={() => setActiveTab('user-profile')}
+              >
+                <User className="h-4 w-4 mr-2" />
+                User Profile
+              </Button>
+              
               <Button 
                 variant={activeTab === 'appearance' ? 'secondary' : 'ghost'} 
                 className="justify-start px-2 py-1.5 h-auto text-sm"

@@ -6,6 +6,7 @@ import { useLocation } from 'wouter';
 import { useAgentStore, AgentId, WindowLayout } from '../state/agentStore';
 import { useThemeStore } from '../state/themeStore';
 import { useSystemLogStore, log } from '../state/systemLogStore';
+import { useUserPrefsStore } from '../state/userPrefsStore';
 import { initializeAgentRegistry } from '../state/agentStore';
 import { MessageSquare, FileText, Settings, PlusCircle } from 'lucide-react';
 import ClaraAgent from './agents/ClaraAgent';
@@ -210,6 +211,8 @@ const Desktop: React.FC = () => {
   const layouts = useAgentStore(state => state.layouts);
   const loadLayout = useAgentStore(state => state.loadLayout);
   const [isMobile, setIsMobile] = useState(false);
+  const userName = useUserPrefsStore(state => state.name);
+  const setUserName = useUserPrefsStore(state => state.setName);
   const { toast } = useToast();
   
   // Use the enhanced screen size hook
@@ -289,6 +292,7 @@ const Desktop: React.FC = () => {
   // Empty dashboard content with particle effects
   const EmptyDashboard = () => {
     const particleSettings = getParticleSettings();
+    const userPrefsName = useUserPrefsStore(state => state.name);
     
     return (
       <>
@@ -303,7 +307,14 @@ const Desktop: React.FC = () => {
         />
         <div className="absolute inset-0 z-10 pointer-events-auto flex flex-col items-center justify-center p-4">
           <div className="max-w-xl w-full mx-auto">
-            <h1 className="text-2xl font-bold mb-6 text-center text-white drop-shadow-md">Welcome to Panion</h1>
+            <div className="mb-8 text-center">
+              <h1 className="text-4xl font-light mb-2 text-white tracking-wide drop-shadow-lg">
+                Welcome <span className="font-semibold">{userPrefsName}</span>,
+              </h1>
+              <h2 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80">
+                this is Panion
+              </h2>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Theme-aware action cards */}
