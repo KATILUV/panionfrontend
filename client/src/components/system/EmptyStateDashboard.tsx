@@ -1,40 +1,83 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAgentStore } from '../../state/agentStore';
 import { useCommandStore } from '../../state/commandStore';
-import { PlusCircle, Fingerprint, Layout, Book, MessageSquare, FileText, Settings } from 'lucide-react';
+import { 
+  PlusCircle, 
+  Fingerprint, 
+  Layout, 
+  Book, 
+  MessageSquare, 
+  FileText, 
+  Settings, 
+  Search, 
+  Calendar, 
+  Code, 
+  Image, 
+  Palette, 
+  Sun, 
+  Moon, 
+  Sunset, 
+  X,
+  Info,
+  MousePointer,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import RotatingTagline from '../RotatingTagline';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useThemeStore } from '@/state/themeStore';
 import { useWindowSize } from 'react-use';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { useMarketplaceStore } from '@/state/marketplaceStore';
 
-interface QuickActionProps {
+// Define action card props type
+interface ActionCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
   onClick: () => void;
   color: string;
   shortcut?: string;
+  badge?: string;
+  badgeColor?: string;
 }
 
-const QuickAction: React.FC<QuickActionProps> = ({ title, description, icon, onClick, color, shortcut }) => {
+// Improved Action Card component
+const ActionCard: React.FC<ActionCardProps> = ({ 
+  title, 
+  description, 
+  icon, 
+  onClick, 
+  color, 
+  shortcut,
+  badge,
+  badgeColor = "bg-purple-600" 
+}) => {
   return (
     <motion.button 
-      whileHover={{ scale: 1.05 }}
+      whileHover={{ scale: 1.03, y: -2 }}
       whileTap={{ scale: 0.98 }}
-      className={`w-full text-left rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none`}
+      className={`w-full text-left rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-background`}
       onClick={onClick}
     >
-      <Card className="bg-card/50 backdrop-blur-sm border-none h-full">
+      <Card className="bg-card/50 backdrop-blur-sm border-none h-full overflow-hidden relative">
+        {badge && (
+          <div className={`absolute top-2 right-2 ${badgeColor} text-white text-xs px-1.5 py-0.5 rounded-sm font-medium`}>
+            {badge}
+          </div>
+        )}
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-xl font-bold">{title}</CardTitle>
-            <div className="text-foreground/80">{icon}</div>
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <span className="text-foreground/80">{icon}</span>
+              {title}
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          <CardDescription className="text-sm">{description}</CardDescription>
+          <CardDescription className="text-sm text-foreground/70">{description}</CardDescription>
           {shortcut && (
             <div className="mt-2 flex items-center">
               <kbd className="px-2 py-1 text-xs font-semibold bg-black/10 dark:bg-white/10 rounded border border-gray-200 dark:border-gray-700">
@@ -48,6 +91,82 @@ const QuickAction: React.FC<QuickActionProps> = ({ title, description, icon, onC
   );
 };
 
+// Workspace Layout Template Card
+interface LayoutTemplateProps {
+  title: string;
+  description: string;
+  type: 'centered' | 'split' | 'triple' | 'grid' | 'stack';
+  onClick: () => void;
+}
+
+const LayoutTemplateCard: React.FC<LayoutTemplateProps> = ({ title, description, type, onClick }) => {
+  // Generate simple SVG representation of the layout type
+  const renderLayoutIcon = () => {
+    switch (type) {
+      case 'centered':
+        return (
+          <svg width="64" height="36" viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-2">
+            <rect x="8" y="4" width="48" height="28" rx="2" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        );
+      case 'split':
+        return (
+          <svg width="64" height="36" viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-2">
+            <rect x="4" y="4" width="26" height="28" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="34" y="4" width="26" height="28" rx="2" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        );
+      case 'triple':
+        return (
+          <svg width="64" height="36" viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-2">
+            <rect x="4" y="4" width="16" height="28" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="24" y="4" width="16" height="28" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="44" y="4" width="16" height="28" rx="2" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        );
+      case 'grid':
+        return (
+          <svg width="64" height="36" viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-2">
+            <rect x="4" y="4" width="26" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="34" y="4" width="26" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="4" y="20" width="26" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="34" y="20" width="26" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        );
+      case 'stack':
+        return (
+          <svg width="64" height="36" viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-2">
+            <rect x="4" y="4" width="48" height="20" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="12" y="12" width="48" height="20" rx="2" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" />
+          </svg>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <motion.button
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="p-4 bg-black/10 dark:bg-white/5 rounded-lg border border-white/10 dark:border-white/5 hover:bg-black/20 dark:hover:bg-white/10 cursor-pointer transition-colors duration-200 flex flex-col items-center w-full border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+    >
+      {renderLayoutIcon()}
+      <h3 className="font-medium text-sm text-center">{title}</h3>
+      <p className="text-xs text-center text-muted-foreground mt-1">{description}</p>
+    </motion.button>
+  );
+};
+
+// Define Category interface
+interface Category {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+}
+
+// Main Dashboard Component
 interface EmptyStateDashboardProps {
   isMobile?: boolean;
 }
@@ -57,6 +176,32 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
   const openAgent = useAgentStore(state => state.openAgent);
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accentColor = useThemeStore(state => state.accent);
+  const [activeTab, setActiveTab] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [showSearch, setShowSearch] = useState<boolean>(false);
+  
+  // Time-based greeting
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return { text: "Good morning", icon: <Sun className="h-5 w-5 mr-2" /> };
+    if (hour < 18) return { text: "Good afternoon", icon: <Sunset className="h-5 w-5 mr-2" /> };
+    return { text: "Good evening", icon: <Moon className="h-5 w-5 mr-2" /> };
+  };
+  
+  const greeting = getTimeBasedGreeting();
+  
+  // Get and format marketplace agents
+  const { agents: marketplaceAgents, categories: marketplaceCategories } = useMarketplaceStore();
+  
+  // Define categories for organizing actions
+  const categories: Category[] = [
+    { id: "all", name: "All", icon: <Layout className="h-4 w-4 mr-1" /> },
+    { id: "productivity", name: "Productivity", icon: <Calendar className="h-4 w-4 mr-1" /> },
+    { id: "communication", name: "Communication", icon: <MessageSquare className="h-4 w-4 mr-1" /> },
+    { id: "creativity", name: "Creativity", icon: <Palette className="h-4 w-4 mr-1" /> },
+    { id: "development", name: "Development", icon: <Code className="h-4 w-4 mr-1" /> },
+    { id: "layouts", name: "Layouts", icon: <Layout className="h-4 w-4 mr-1" /> },
+  ];
   
   // Determine gradient based on theme and accent
   const getGradient = () => {
@@ -131,10 +276,42 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
   };
   
   const toggleCommandPalette = () => {
-    // This will work better than dispatching a keydown event
     useCommandStore.getState().togglePalette();
   };
+
+  const { 
+    generateWindowStates, 
+    openAgent: openAgentFn,
+    registry, 
+    createWindowGroup, 
+    loadLayout,
+    saveLayout 
+  } = useAgentStore.getState();
   
+  // Layout template handlers
+  const applyLayout = (type: 'centered' | 'split' | 'triple' | 'grid' | 'stack') => {
+    // Get agent IDs of installed agents
+    const agentIds = registry.map(agent => agent.id).slice(0, 4); // Limit to 4 agents
+    
+    // Generate window states based on the layout type
+    const windowStates = generateWindowStates(agentIds, type);
+    
+    // Create a new layout
+    const timestamp = Date.now();
+    const layoutName = `${type.charAt(0).toUpperCase() + type.slice(1)} Layout`;
+    
+    // Save the layout
+    saveLayout(layoutName);
+    
+    // Open agents based on window states
+    Object.entries(windowStates).forEach(([agentId, state]) => {
+      if (state.isOpen) {
+        openAgentFn(agentId);
+      }
+    });
+  };
+  
+  // Quick actions
   const quickActions = [
     {
       title: "Chat with Clara",
@@ -143,6 +320,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
       onClick: () => openAgent('clara'),
       color: getCardColor(0),
       shortcut: "Shift+C",
+      category: "communication",
       shortcutAction: (e: KeyboardEvent) => {
         if (e.shiftKey && e.key === 'C') openAgent('clara');
       }
@@ -154,28 +332,131 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
       onClick: () => openAgent('notes'),
       color: getCardColor(1),
       shortcut: "Shift+N", 
+      category: "productivity",
       shortcutAction: (e: KeyboardEvent) => {
         if (e.shiftKey && e.key === 'N') openAgent('notes');
       }
     },
     {
+      title: "Settings",
+      description: "Configure your Panion desktop environment",
+      icon: <Settings className="h-5 w-5" />,
+      onClick: () => openAgent('settings'),
+      color: getCardColor(2),
+      category: "utilities",
+      shortcutAction: null
+    },
+    {
+      title: "Marketplace",
+      description: "Discover and install new agents for your workspace",
+      icon: <PlusCircle className="h-5 w-5" />,
+      onClick: () => openAgent('marketplace'),
+      color: getCardColor(3),
+      category: "utilities",
+      shortcutAction: null
+    },
+    {
       title: "Command Palette",
-      description: "Access all features and tools (Cmd+K / Ctrl+K)",
+      description: "Access all features and tools",
       icon: <Layout className="h-5 w-5" />,
       onClick: toggleCommandPalette,
-      color: getCardColor(2),
+      color: getCardColor(4),
       shortcut: "Cmd+K",
+      category: "utilities",
       shortcutAction: (e: KeyboardEvent) => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') toggleCommandPalette();
       }
     }
   ];
   
+  // Add all marketplace agents to action list
+  const allActions = [
+    ...quickActions,
+    ...marketplaceAgents
+      .filter(agent => !quickActions.some(qa => qa.title === agent.title))
+      .map((agent, index) => ({
+        title: agent.title,
+        description: agent.description,
+        icon: getIconByName(agent.icon),
+        onClick: () => agent.isInstalled 
+          ? openAgent(agent.id) 
+          : openAgent('marketplace'),
+        color: getCardColor(index + quickActions.length),
+        category: agent.categories[0],
+        badge: agent.isInstalled ? undefined : "Install",
+        badgeColor: "bg-purple-600",
+        shortcutAction: null
+      }))
+  ];
+  
+  // Helper to get icon by name (string to component)
+  function getIconByName(iconName: string) {
+    switch (iconName) {
+      case 'MessageCircle':
+        return <MessageSquare className="h-5 w-5" />;
+      case 'FileText':
+        return <FileText className="h-5 w-5" />;
+      case 'Settings':
+        return <Settings className="h-5 w-5" />;
+      case 'Code':
+        return <Code className="h-5 w-5" />;
+      case 'Image':
+        return <Image className="h-5 w-5" />;
+      case 'Palette':
+        return <Palette className="h-5 w-5" />;
+      default:
+        return <Info className="h-5 w-5" />;
+    }
+  }
+  
+  // Define layout templates
+  const layoutTemplates = [
+    {
+      title: "Centered",
+      description: "Single window in center",
+      type: 'centered' as const
+    },
+    {
+      title: "Split View",
+      description: "Two windows side by side",
+      type: 'split' as const
+    },
+    {
+      title: "Triple View",
+      description: "Three windows arrangement",
+      type: 'triple' as const
+    },
+    {
+      title: "Grid Layout",
+      description: "Four windows in 2×2 grid",
+      type: 'grid' as const
+    },
+    {
+      title: "Stacked",
+      description: "Overlapping windows",
+      type: 'stack' as const
+    }
+  ];
+  
+  // Filter actions based on search and active tab
+  const getFilteredActions = () => {
+    return allActions.filter(action => {
+      // Filter by category
+      const categoryMatch = activeTab === "all" || action.category === activeTab;
+      
+      // Filter by search
+      const searchMatch = !searchQuery || 
+        action.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        action.description.toLowerCase().includes(searchQuery.toLowerCase());
+        
+      return categoryMatch && searchMatch;
+    });
+  };
+  
   const welcomePhrases = [
     "Your AI desktop environment",
     "Multi-agent workspace",
     "Flexible window management",
-    "Smarter than a chatbot",
     "Personalized AI assistant",
     "Your digital command center"
   ];
@@ -194,70 +475,244 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
           action.shortcutAction(e);
         }
       });
+      
+      // Search shortcut (Ctrl+F or Cmd+F)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowSearch(true);
+        setTimeout(() => {
+          document.getElementById('dashboard-search')?.focus();
+        }, 50);
+      }
+      
+      // Escape to close search
+      if (e.key === 'Escape' && showSearch) {
+        setShowSearch(false);
+        setSearchQuery('');
+      }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // Modify quickActions text for mobile if needed
-  const mobileQuickActions = quickActions.map(action => {
-    if (isMobile && action.title === "Command Palette") {
-      return {
-        ...action,
-        description: "Tap to access all features and tools"
-      };
-    }
-    return action;
-  });
+  }, [showSearch]);
 
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className={`absolute inset-0 flex flex-col items-center justify-center ${isMobile ? 'p-4' : 'p-8'} bg-gradient-radial ${getGradient()}`}
+      className={`absolute inset-0 flex flex-col items-center justify-start 
+                  ${isMobile ? 'p-4 pt-16' : 'p-8 pt-16'} 
+                  bg-gradient-radial ${getGradient()}
+                  overflow-y-auto overflow-x-hidden`}
     >
-      <div className={`${isMobile ? 'w-full' : 'max-w-4xl w-full'} flex flex-col items-center`}>
-        {/* Logo and welcome */}
+      <div className={`${isMobile ? 'w-full' : 'max-w-5xl w-full'} flex flex-col`}>
+        {/* Personalized greeting and welcome */}
         <motion.div 
           initial={{ y: -20 }}
           animate={{ y: 0 }}
-          className={`text-center ${isMobile ? 'mb-6' : 'mb-10'}`}
+          className={`${isMobile ? 'mb-6' : 'mb-8'}`}
         >
-          <h1 className={`${isMobile ? 'text-4xl' : 'text-5xl'} font-bold mb-2 text-white`}>Panion</h1>
-          <div className={`${isMobile ? 'text-lg' : 'text-xl'} text-white`}>
-            <RotatingTagline phrases={welcomePhrases} interval={3000} />
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+            <div>
+              <div className="flex items-center">
+                <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-medium text-white flex items-center`}>
+                  {greeting.icon}
+                  {greeting.text}
+                </h2>
+              </div>
+              <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-bold mt-1 mb-2 text-white`}>
+                Welcome to Panion
+              </h1>
+              <div className={`${isMobile ? 'text-base' : 'text-lg'} text-white/80`}>
+                <RotatingTagline phrases={welcomePhrases} interval={3000} />
+              </div>
+            </div>
+            
+            {/* Search toggle and input */}
+            <div className="mt-4 md:mt-0">
+              {showSearch ? (
+                <div className="relative">
+                  <Input
+                    id="dashboard-search"
+                    type="text"
+                    placeholder="Search agents and tools..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full md:w-64 bg-black/20 border-white/10 text-white placeholder:text-white/50"
+                    autoFocus
+                  />
+                  <button 
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white"
+                    onClick={() => {
+                      setShowSearch(false);
+                      setSearchQuery('');
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="bg-black/20 text-white border-white/10 hover:bg-black/30"
+                  onClick={() => setShowSearch(true)}
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Search
+                </Button>
+              )}
+            </div>
           </div>
-        </motion.div>
-        
-        {/* Quick actions */}
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-3' : 'md:grid-cols-3 gap-4'} w-full ${isMobile ? 'mb-6' : 'mb-10'}`}>
-          {mobileQuickActions.map((action, index) => (
-            <QuickAction
-              key={index}
-              title={action.title}
-              description={action.description}
-              icon={action.icon}
-              onClick={action.onClick}
-              color={action.color}
-              shortcut={!isMobile ? action.shortcut : undefined}
-            />
-          ))}
-        </div>
-        
-        {/* Tip section */}
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-center text-white text-sm mt-4"
-        >
-          {isMobile ? (
-            <p>Tip: Tap the taskbar icons to switch between agents</p>
-          ) : (
-            <p>Pro tip: You can open multiple agents and arrange them in your workspace</p>
-          )}
+          
+          {/* Category tabs */}
+          <div className="mt-6">
+            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="bg-black/20 border border-white/10 p-1">
+                {categories.map(category => (
+                  <TabsTrigger 
+                    key={category.id} 
+                    value={category.id}
+                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+                  >
+                    <div className="flex items-center">
+                      {category.icon}
+                      <span>{category.name}</span>
+                    </div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              <TabsContent value="all" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+                
+                {getFilteredActions().length === 0 && searchQuery && (
+                  <div className="flex flex-col items-center justify-center p-8 text-white/70">
+                    <Search className="h-10 w-10 mb-4 opacity-50" />
+                    <p className="text-lg font-medium">No results found</p>
+                    <p className="text-sm">Try a different search term</p>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="productivity" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="communication" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="creativity" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="development" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="layouts" className="mt-6">
+                <div className="mb-4">
+                  <h3 className="text-white text-lg font-medium mb-2">Workspace Layouts</h3>
+                  <p className="text-white/70 text-sm">Select a layout template to automatically arrange your workspace</p>
+                </div>
+                <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-5 gap-4'}`}>
+                  {layoutTemplates.map((template, index) => (
+                    <LayoutTemplateCard
+                      key={index}
+                      title={template.title}
+                      description={template.description}
+                      type={template.type}
+                      onClick={() => applyLayout(template.type)}
+                    />
+                  ))}
+                </div>
+                
+                <div className="mt-8 py-4 border-t border-white/10">
+                  <div className="flex items-center mb-2">
+                    <MousePointer className="h-4 w-4 mr-2 text-white/70" />
+                    <h3 className="text-white font-medium">Pro Tips</h3>
+                  </div>
+                  <ul className="text-sm text-white/70 space-y-2">
+                    <li>• Use keyboard shortcuts for quick access to agents (Shift+C for Clara, Shift+N for Notes)</li>
+                    <li>• Press Ctrl+F (or Cmd+F) to search for agents</li>
+                    <li>• Press Cmd+K or Ctrl+K to open the Command Palette for more options</li>
+                    <li>• Hold Shift while moving windows to snap to grid positions</li>
+                  </ul>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
         </motion.div>
       </div>
     </motion.div>
