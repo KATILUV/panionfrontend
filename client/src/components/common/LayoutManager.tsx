@@ -172,9 +172,16 @@ const WindowControlPanel = ({
   setLayoutAgents,
   availableAgents,
   isDark
+}: {
+  selectedAgents: string[];
+  setSelectedAgents: React.Dispatch<React.SetStateAction<string[]>>;
+  layoutAgents: LayoutAgent[];
+  setLayoutAgents: React.Dispatch<React.SetStateAction<LayoutAgent[]>>;
+  availableAgents: Agent[];
+  isDark: boolean;
 }) => {
   // Add agent to layout
-  const handleAddAgent = (agentId) => {
+  const handleAddAgent = (agentId: string) => {
     const agent = availableAgents.find(a => a.id === agentId);
     if (!agent) return;
     
@@ -296,8 +303,27 @@ const WindowControlPanel = ({
   );
 };
 
+// Define template structure
+interface TemplateData {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  layout: {
+    type: string;
+  };
+}
+
 // Template preview component
-const TemplatePreview = ({ template, onApply, isDark }) => {
+const TemplatePreview = ({ 
+  template, 
+  onApply, 
+  isDark 
+}: {
+  template: TemplateData;
+  onApply: (id: string) => void;
+  isDark: boolean;
+}) => {
   return (
     <div 
       className={`rounded-lg overflow-hidden shadow-md transition-all hover:shadow-lg ${
@@ -419,7 +445,7 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
   const [makeDefault, setMakeDefault] = useState(false);
   
   // State for visual layout builder
-  const [layoutAgents, setLayoutAgents] = useState([]);
+  const [layoutAgents, setLayoutAgents] = useState<LayoutAgent[]>([]);
   const [selectedAgents, setSelectedAgents] = useState<AgentId[]>([]);
   
   const { toast } = useToast();
@@ -458,8 +484,8 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
   }, [dialogOpen]);
   
   // Handle selecting a template
-  const handleSelectTemplate = (template) => {
-    setSelectedTemplate(template);
+  const handleSelectTemplate = (template: TemplateData) => {
+    setSelectedTemplate(template as any);
     setLayoutName(`${template.name} Layout`);
     setLayoutCategory(template.category);
     

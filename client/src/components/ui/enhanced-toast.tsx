@@ -4,6 +4,18 @@ import { Icon } from "@/components/ui/icon-provider";
 import { ICONS } from "@/lib/icon-map";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
+import React from "react";
+import type { ToastActionElement } from "@/hooks/use-toast";
+
+// Custom Toast Props
+type EnhancedToastProps = {
+  id?: string;
+  className?: string;
+  variant?: "default" | "destructive" | "success" | "error" | "warning" | "info" | "loading";
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  action?: ToastActionElement;
+} & Omit<ToastProps, "title" | "description" | "action">;
 
 interface IconMap {
   [key: string]: string;
@@ -18,9 +30,8 @@ const TOAST_ICONS: IconMap = {
   loading: ICONS.LOADER,
 };
 
-export function EnhancedToast({ className, ...props }: ToastProps) {
+export function EnhancedToast({ className, title, description, variant = "default", ...props }: EnhancedToastProps) {
   // Determine the appropriate icon based on the variant
-  const variant = props.variant || "default";
   const iconName = TOAST_ICONS[variant] || TOAST_ICONS.default;
   
   return (
@@ -47,9 +58,9 @@ export function EnhancedToast({ className, ...props }: ToastProps) {
         </div>
         
         <div className="flex-1 space-y-1">
-          {props.title && <ToastTitle>{props.title}</ToastTitle>}
-          {props.description && (
-            <ToastDescription>{props.description}</ToastDescription>
+          {title && <ToastTitle>{title}</ToastTitle>}
+          {description && (
+            <ToastDescription>{description}</ToastDescription>
           )}
         </div>
       </div>
