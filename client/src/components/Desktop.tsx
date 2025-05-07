@@ -8,7 +8,7 @@ import { useThemeStore } from '../state/themeStore';
 import { useSystemLogStore, log } from '../state/systemLogStore';
 import { useUserPrefsStore } from '../state/userPrefsStore';
 import { initializeAgentRegistry } from '../state/agentStore';
-import { MessageSquare, FileText, Settings, PlusCircle } from 'lucide-react';
+import { MessageSquare, FileText, Settings, PlusCircle, Layout, Layers } from 'lucide-react';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
 import SettingsAgent from './agents/SettingsAgent';
