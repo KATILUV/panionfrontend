@@ -131,13 +131,20 @@ const ChatPage: React.FC = () => {
           )}
           
           {error && (
-            <div className="px-4 py-2">
+            <div className="px-4 py-4">
               <ErrorMessage
-                type="server"
+                type={error.toLowerCase().includes('network') ? 'network' : 
+                      error.toLowerCase().includes('timeout') ? 'timeout' :
+                      error.toLowerCase().includes('not found') ? 'notFound' :
+                      error.toLowerCase().includes('unauthorized') ? 'unauthorized' :
+                      error.toLowerCase().includes('forbidden') ? 'forbidden' :
+                      error.toLowerCase().includes('validation') ? 'validation' :
+                      'server'}
                 message={error}
                 retryFn={() => sendMessage(messages[messages.length - 1]?.content || "")}
                 size="md"
-                variant="inline"
+                variant={error.toLowerCase().includes('retrying') ? 'inline' : 'card'}
+                dismissable={!error.toLowerCase().includes('retrying')}
               />
             </div>
           )}

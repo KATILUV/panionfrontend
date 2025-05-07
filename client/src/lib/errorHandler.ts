@@ -79,6 +79,42 @@ export function getErrorTypeFromError(error: unknown): { type: ErrorType; messag
     };
   }
   
+  // Handle simulated errors (for testing in development)
+  if (error instanceof Error && error.message.includes('Simulated')) {
+    if (error.message.includes('network')) {
+      return {
+        type: 'network',
+        message: 'Simulated network error. This error was generated for testing purposes.'
+      };
+    }
+    
+    if (error.message.includes('server')) {
+      return {
+        type: 'server',
+        message: 'Simulated server error. This error was generated for testing purposes.'
+      };
+    }
+    
+    if (error.message.includes('timeout')) {
+      return {
+        type: 'timeout',
+        message: 'Simulated timeout error. This error was generated for testing purposes.'
+      };
+    }
+    
+    if (error.message.includes('notFound')) {
+      return {
+        type: 'notFound',
+        message: 'Simulated not found error. This error was generated for testing purposes.'
+      };
+    }
+    
+    return {
+      type: 'unknown',
+      message: 'Simulated unknown error. This error was generated for testing purposes.'
+    };
+  }
+  
   // Default fallback
   return {
     type: 'unknown',
@@ -106,16 +142,26 @@ export function handleError(error: unknown): { type: ErrorType; message: string 
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
-  maxRetries: number = 3,
-  initialDelay: number = 1000
+  options?: {
+    maxRetries?: number;
+    initialDelay?: number;
+    onRetry?: (attempt: number, maxRetries: number, delay: number) => void;
+  }
 ): Promise<T> {
+  const maxRetries = options?.maxRetries ?? 3;
+  const initialDelay = options?.initialDelay ?? 1000;
+  const onRetry = options?.onRetry;
+  
   let retries = 0;
   let delay = initialDelay;
+  let lastError: unknown;
   
   while (true) {
     try {
       return await fn();
     } catch (error) {
+      lastError = error;
+      
       // Don't retry for certain error types
       const { type } = getErrorTypeFromError(error);
       if (
@@ -129,7 +175,16 @@ export async function withRetry<T>(
       // Check if we've reached max retries
       retries++;
       if (retries >= maxRetries) {
+        // Enhance error message with retry information
+        if (error instanceof Error) {
+          error.message = `${error.message} (Failed after ${retries} retries)`;
+        }
         throw error;
+      }
+      
+      // Call the retry callback if provided
+      if (onRetry) {
+        onRetry(retries, maxRetries, delay);
       }
       
       // Wait with exponential backoff

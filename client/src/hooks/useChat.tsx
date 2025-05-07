@@ -3,10 +3,28 @@ import { Message, ChatResponse } from '../types/chat';
 import { log } from '../state/systemLogStore';
 import { handleError, mapErrorTypeFromStatus } from '../lib/errorHandler'; 
 import { useToast } from './use-toast';
+import { ErrorType } from '@/components/ui/error-message';
 
 /**
  * Custom hook for managing chat functionality with Clara
  */
+// For simulating errors during development/testing
+const shouldSimulateError = (content: string): { simulate: boolean, type: ErrorType } => {
+  if (content.toLowerCase().includes('#err-network')) {
+    return { simulate: true, type: 'network' };
+  }
+  if (content.toLowerCase().includes('#err-server')) {
+    return { simulate: true, type: 'server' };
+  }
+  if (content.toLowerCase().includes('#err-timeout')) {
+    return { simulate: true, type: 'timeout' };
+  }
+  if (content.toLowerCase().includes('#err-notfound')) {
+    return { simulate: true, type: 'notFound' };
+  }
+  return { simulate: false, type: 'unknown' };
+};
+
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +56,15 @@ export const useChat = () => {
       };
       
       setMessages(prev => [...prev, userMessage]);
+      
+      // Check for test/debug commands to simulate errors
+      const { simulate, type } = shouldSimulateError(content);
+      if (simulate && process.env.NODE_ENV === 'development') {
+        log.info(`Simulating ${type} error for testing`);
+        // Simulate a delay before showing the error
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        throw new Error(`Simulated ${type} error for testing`);
+      }
       
       // Prepare form data or JSON for API request
       let requestOptions: RequestInit = {
@@ -107,6 +134,36 @@ export const useChat = () => {
       console.error('Error sending message:', err);
       const { type, message } = handleError(err);
       log.error(`Chat error (${type}): ${message}`);
+      
+      // Retry logic for network and server errors
+      // Only retry up to 2 times (total of 3 attempts)
+      const MAX_RETRIES = 2;
+      
+      if ((type === 'network' || type === 'server' || type === 'timeout') && retryCount < MAX_RETRIES) {
+        const nextRetryCount = retryCount + 1;
+        const delayMs = 1000 * Math.pow(2, retryCount); // Exponential backoff
+        
+        log.info(`Retrying request (attempt ${nextRetryCount} of ${MAX_RETRIES}) in ${delayMs}ms...`);
+        
+        // Show retry toast
+        toast({
+          title: "Reconnecting...",
+          description: `Retrying in ${delayMs/1000} seconds (attempt ${nextRetryCount} of ${MAX_RETRIES})`,
+          variant: "info",
+        });
+        
+        // Set a temporary connection error message
+        setError(`Connection issue. Retrying in ${delayMs/1000} seconds...`);
+        
+        // Try again after delay with exponential backoff
+        setTimeout(() => {
+          sendMessage(content, imageFile, nextRetryCount);
+        }, delayMs);
+        
+        return; // Exit early, we'll handle the error in the retry
+      }
+      
+      // If we've reached max retries or it's not a retryable error, display final error
       setError(message);
       
       // Show toast notification for network errors
@@ -114,11 +171,21 @@ export const useChat = () => {
         toast({
           variant: 'destructive',
           title: 'Connection Error',
+          description: `${message} Please check your internet connection.`,
+        });
+      } else if (type === 'server') {
+        toast({
+          variant: 'destructive',
+          title: 'Server Error',
           description: message,
         });
       }
     } finally {
-      setIsLoading(false);
+      // Only set loading to false if this is a final attempt
+      // or if there was no error (success case)
+      if (retryCount >= 2 || !error) {
+        setIsLoading(false);
+      }
     }
   };
   
