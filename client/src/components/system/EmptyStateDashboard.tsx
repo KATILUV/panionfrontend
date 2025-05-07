@@ -54,11 +54,11 @@ const ActionCard: React.FC<ActionCardProps> = ({
   color, 
   shortcut,
   badge,
-  badgeColor = "bg-purple-600" 
+  badgeColor = "bg-primary" 
 }) => {
   return (
     <div 
-      className={`w-full text-left rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-background pointer-events-auto z-50`}
+      className={`w-full text-left rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-background pointer-events-auto z-50`}
       onClick={() => {
         console.log(`Card clicked: ${title}`);
         onClick();
@@ -153,7 +153,7 @@ const LayoutTemplateCard: React.FC<LayoutTemplateProps> = ({ title, description,
         console.log(`Layout template clicked: ${type}`);
         onClick();
       }}
-      className="p-4 bg-black/10 dark:bg-white/5 rounded-lg border border-white/10 dark:border-white/5 hover:bg-black/20 dark:hover:bg-white/10 cursor-pointer transition-colors duration-200 flex flex-col items-center w-full border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40 pointer-events-auto"
+      className="p-4 bg-black/10 dark:bg-white/5 rounded-lg border border-white/10 dark:border-white/5 hover:bg-black/20 dark:hover:bg-white/10 cursor-pointer transition-colors duration-200 flex flex-col items-center w-full border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 pointer-events-auto"
     >
       {renderLayoutIcon()}
       <h3 className="font-medium text-sm text-center">{title}</h3>
@@ -446,7 +446,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
         color: getCardColor(index + quickActions.length),
         category: agent.categories && agent.categories.length > 0 ? agent.categories[0] : "utilities",
         badge: agent.isInstalled ? undefined : "Install",
-        badgeColor: "bg-purple-600",
+        badgeColor: "bg-primary",
         shortcutAction: null
       }))
   ];
@@ -577,7 +577,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
               key={category.id} 
               value={category.id}
               className={activeTab === category.id 
-                ? "bg-black/20 text-white border-white/10 hover:bg-black/30"
+                ? "bg-primary/20 text-white border-primary/30 hover:bg-primary/30"
                 : "bg-transparent border border-white/5 hover:bg-white/5"
               }
             >
