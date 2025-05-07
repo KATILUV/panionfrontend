@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAgentStore } from '../../state/agentStore';
 import { MessageSquare, FileText, Settings, PlusCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import SimpleActionCard from './SimpleActionCard';
+import { useThemeStore } from '../../state/themeStore';
 
 const SimpleEmptyStateDashboard: React.FC = () => {
   const openAgent = useAgentStore(state => state.openAgent);
   const [_, navigate] = useLocation();
+  const accent = useThemeStore(state => state.accent);
+  
+  // Add a re-render trigger for theme changes
+  const [renderKey, setRenderKey] = useState(0);
+  
+  // Force re-render when accent color changes
+  useEffect(() => {
+    console.log("SimpleEmptyStateDashboard: Accent color changed to:", accent);
+    setRenderKey(prev => prev + 1);
+  }, [accent]);
 
   const actions = [
     {
@@ -17,7 +28,7 @@ const SimpleEmptyStateDashboard: React.FC = () => {
         console.log("Opening Clara agent");
         openAgent('clara');
       },
-      color: 'from-purple-500 to-indigo-600'
+      colorIndex: 0  // Use index instead of hardcoded color
     },
     {
       title: "Take Notes",
@@ -27,7 +38,7 @@ const SimpleEmptyStateDashboard: React.FC = () => {
         console.log("Opening Notes agent");
         openAgent('notes');
       },
-      color: 'from-indigo-400 to-purple-700'
+      colorIndex: 1  // Use index instead of hardcoded color
     },
     {
       title: "Settings",
@@ -37,7 +48,7 @@ const SimpleEmptyStateDashboard: React.FC = () => {
         console.log("Opening Settings agent");
         openAgent('settings');
       },
-      color: 'from-violet-500 to-purple-600'
+      colorIndex: 2  // Use index instead of hardcoded color
     },
     {
       title: "Marketplace",
@@ -47,7 +58,7 @@ const SimpleEmptyStateDashboard: React.FC = () => {
         console.log("Navigating to marketplace");
         navigate('/marketplace');
       },
-      color: 'from-purple-500 to-indigo-600'
+      colorIndex: 0  // Use index instead of hardcoded color (different pattern)
     }
   ];
 
@@ -58,12 +69,12 @@ const SimpleEmptyStateDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {actions.map((action, index) => (
           <SimpleActionCard
-            key={`${action.title}-${index}`}
+            key={`${action.title}-${index}-${renderKey}`} // Include renderKey in the key
             title={action.title}
             description={action.description}
             icon={action.icon}
             onClick={action.onClick}
-            color={action.color}
+            colorIndex={action.colorIndex} // Pass colorIndex instead of color
           />
         ))}
       </div>
