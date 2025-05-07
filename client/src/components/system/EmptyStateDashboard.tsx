@@ -221,8 +221,16 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showSearch, setShowSearch] = useState<boolean>(false);
+  // Add state to force re-render when accent color changes
+  const [renderKey, setRenderKey] = useState(0);
   // Initialize navigation function from wouter
   const [_, navigate] = useLocation();
+  
+  // Force re-render when accent color changes
+  useEffect(() => {
+    console.log("Accent color changed to:", accentColor);
+    setRenderKey(prev => prev + 1);
+  }, [accentColor]);
   
   // Time-based greeting
   const getTimeBasedGreeting = () => {
@@ -640,7 +648,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {filteredActions.map((action, index) => (
                 <ActionCard
-                  key={`${action.title}-${index}`}
+                  key={`${action.title}-${index}-${renderKey}`}
                   title={action.title}
                   description={action.description}
                   icon={action.icon}
