@@ -131,23 +131,44 @@ const SnapGuides: React.FC<SnapGuidesProps> = ({
     return edgeGuides;
   };
 
-  // Get center guides (lines at center of screen)
+  // Get center guides (lines at center of screen, respecting taskbar)
   const getCenterGuides = () => {
     const centerGuideStyle = "absolute bg-indigo-400/60 pointer-events-none";
     const centerGuides = [];
+    
+    // Calculate true center of available area (accounting for taskbar)
+    const availableWidth = windowWidth - safeAreaInsets.left - safeAreaInsets.right;
+    const availableHeight = windowHeight - safeAreaInsets.top - safeAreaInsets.bottom;
+    
+    const centerX = safeAreaInsets.left + (availableWidth / 2);
+    const centerY = safeAreaInsets.top + (availableHeight / 2);
+    
+    // Get left offset as percentage for vertical center line
+    const centerXPercent = (centerX / windowWidth) * 100;
+    
+    // Get top offset as percentage for horizontal center line
+    const centerYPercent = (centerY / windowHeight) * 100;
     
     // Only show center guides for certain snap positions
     if (['center', 'left', 'right'].includes(snapPosition)) {
       // Vertical center line
       centerGuides.push(
-        <div key="vertical-center" className={`${centerGuideStyle} left-1/2 -ml-px top-0 bottom-0 w-0.5`} />
+        <div 
+          key="vertical-center" 
+          className={`${centerGuideStyle} top-0 bottom-0 w-0.5`} 
+          style={{ left: `${centerXPercent}%` }}
+        />
       );
     }
     
     if (['center', 'top', 'bottom'].includes(snapPosition)) {
       // Horizontal center line
       centerGuides.push(
-        <div key="horizontal-center" className={`${centerGuideStyle} top-1/2 -mt-px left-0 right-0 h-0.5`} />
+        <div 
+          key="horizontal-center" 
+          className={`${centerGuideStyle} left-0 right-0 h-0.5`} 
+          style={{ top: `${centerYPercent}%` }}
+        />
       );
     }
     
