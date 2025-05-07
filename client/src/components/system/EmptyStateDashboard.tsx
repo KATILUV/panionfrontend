@@ -58,42 +58,62 @@ const ActionCard: React.FC<ActionCardProps> = ({
   badge,
   badgeColor = "bg-primary" 
 }) => {
-  // Get accent color from theme store to ensure it's reactive
-  const accentColor = useThemeStore(state => state.accent);
+  // THIS IS CRITICAL - We get the accent color INSIDE the component render
+  // This ensures it's reactive to theme changes
+  const accent = useThemeStore(state => state.accent);
   
-  // Calculate gradient color based on accent
-  // We need a new approach that directly uses the theme's primary color
-  // This ensures the cards are always in sync with the current theme
-  const getGradientColor = () => {
-    // If color is explicitly provided, use it
-    if (color) return color;
+  // Calculate the gradient directly in the render instead of in a function
+  // This ensures it's always fresh with the latest theme
+  let gradientColor = color;
+  
+  if (!gradientColor) {
+    const variant = colorIndex % 3;
     
-    // Get the index for variety
-    const index = colorIndex; // Use the colorIndex parameter
-    
-    // Instead of manually defining colors for each theme, use CSS variables that follow the theme
-    // The variant is just for visual variety within the same theme
-    const variant = index % 3;
-    
-    if (accentColor === 'orange') {
-      // Special case for the orange (dark mode) theme
-      return variant === 0 
+    // Pick colors based on current theme
+    if (accent === 'purple') {
+      gradientColor = variant === 0 
+        ? 'from-purple-500 to-indigo-600' 
+        : variant === 1 
+          ? 'from-indigo-400 to-purple-700' 
+          : 'from-violet-500 to-purple-600';
+    }
+    else if (accent === 'blue') {
+      gradientColor = variant === 0 
+        ? 'from-blue-500 to-cyan-600' 
+        : variant === 1 
+          ? 'from-cyan-400 to-blue-700' 
+          : 'from-sky-500 to-blue-600';
+    }
+    else if (accent === 'green') {
+      gradientColor = variant === 0 
+        ? 'from-green-500 to-emerald-600' 
+        : variant === 1 
+          ? 'from-emerald-400 to-green-700' 
+          : 'from-teal-500 to-green-600';
+    }
+    else if (accent === 'orange') {
+      gradientColor = variant === 0 
         ? 'from-gray-800 to-black' 
         : variant === 1 
           ? 'from-zinc-800 to-gray-900' 
           : 'from-neutral-800 to-gray-950';
     }
-    
-    // For all other themes, use the primary color with various intensities
-    return variant === 0 
-      ? 'from-primary/80 to-primary/100' 
-      : variant === 1 
-        ? 'from-primary/70 to-primary/90' 
-        : 'from-primary/60 to-primary/80';
-  };
-  
-  // Get the calculated gradient color
-  const gradientColor = getGradientColor();
+    else if (accent === 'pink') {
+      gradientColor = variant === 0 
+        ? 'from-pink-500 to-rose-600' 
+        : variant === 1 
+          ? 'from-rose-400 to-pink-700' 
+          : 'from-fuchsia-500 to-pink-600';
+    }
+    else {
+      // Default to purple
+      gradientColor = variant === 0 
+        ? 'from-purple-500 to-indigo-600' 
+        : variant === 1 
+          ? 'from-indigo-400 to-purple-700' 
+          : 'from-violet-500 to-purple-600';
+    }
+  }
   
   return (
     <div 
