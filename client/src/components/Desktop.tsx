@@ -105,6 +105,7 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
 };
 
 const Desktop: React.FC = () => {
+  const [_, navigate] = useLocation();
   const windows = useAgentStore(state => state.windows);
   const windowGroups = useAgentStore(state => state.windowGroups);
   const focusedAgentId = useAgentStore(state => state.focusedAgentId);
@@ -346,8 +347,9 @@ const Desktop: React.FC = () => {
 
                 <button 
                   onClick={() => {
-                    openAgent('marketplace');
-                    console.log("Marketplace agent button clicked");
+                    // Update this to navigate to marketplace page instead of opening agent
+                    navigate('/marketplace');
+                    console.log("Marketplace page navigation clicked");
                   }}
                   className="bg-gradient-to-br from-purple-500 to-indigo-600 p-[1px] rounded-xl shadow-lg"
                 >
