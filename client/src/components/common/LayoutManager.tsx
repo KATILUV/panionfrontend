@@ -1122,7 +1122,7 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
                             title="Load this layout"
                             className={`h-7 w-7 p-0 ${isDark ? 'text-white hover:text-purple-300' : 'text-purple-700 hover:text-purple-600'}`}
                           >
-                            <Download className="h-4 w-4" />
+                            <CheckCircle className="h-4 w-4" />
                           </Button>
                           
                           <Button
