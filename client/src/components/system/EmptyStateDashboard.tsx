@@ -195,6 +195,8 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showSearch, setShowSearch] = useState<boolean>(false);
+  // Initialize navigation function from wouter
+  const [_, navigate] = useLocation();
   
   // Time-based greeting
   const getTimeBasedGreeting = () => {
@@ -450,8 +452,8 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
           if (agent.isInstalled) {
             openAgent(agent.id);
           } else {
-            // Navigate directly to marketplace for non-installed agents
-            window.location.href = '/marketplace';
+            // Navigate directly to marketplace for non-installed agents using wouter
+            navigate('/marketplace');
           }
         },
         color: getCardColor(index + quickActions.length),
