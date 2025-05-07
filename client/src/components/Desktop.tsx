@@ -287,7 +287,9 @@ const Desktop: React.FC = () => {
       <div className={`flex-1 relative ${isMobile ? 'pt-2 pb-14' : ''}`}>
         {/* Show empty state dashboard if no visible windows and no window groups */}
         {!hasVisibleWindows && Object.keys(windowGroups).length === 0 && (
-          <EmptyStateDashboard isMobile={isMobile} />
+          <div className="absolute inset-0 z-10 pointer-events-auto">
+            <EmptyStateDashboard isMobile={isMobile} />
+          </div>
         )}
         
         {/* Render Individual Windows */}

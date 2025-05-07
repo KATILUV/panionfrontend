@@ -55,12 +55,20 @@ const ActionCard: React.FC<ActionCardProps> = ({
   badge,
   badgeColor = "bg-purple-600" 
 }) => {
+  // Explicit handler for better debugging
+  const handleActionClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log(`Card clicked: ${title}`);
+    onClick();
+  };
+
   return (
     <motion.button 
       whileHover={{ scale: 1.03, y: -2 }}
       whileTap={{ scale: 0.98 }}
-      className={`w-full text-left rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-background`}
-      onClick={onClick}
+      className={`w-full text-left rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-background pointer-events-auto z-50`}
+      onClick={handleActionClick}
     >
       <Card className="bg-card/50 backdrop-blur-sm border-none h-full overflow-hidden relative">
         {badge && (
@@ -100,6 +108,13 @@ interface LayoutTemplateProps {
 }
 
 const LayoutTemplateCard: React.FC<LayoutTemplateProps> = ({ title, description, type, onClick }) => {
+  // Make sure the onClick handler is properly attached and working
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log(`Layout template clicked: ${type}`);
+    onClick();
+  };
   // Generate simple SVG representation of the layout type
   const renderLayoutIcon = () => {
     switch (type) {
@@ -149,8 +164,8 @@ const LayoutTemplateCard: React.FC<LayoutTemplateProps> = ({ title, description,
     <motion.button
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="p-4 bg-black/10 dark:bg-white/5 rounded-lg border border-white/10 dark:border-white/5 hover:bg-black/20 dark:hover:bg-white/10 cursor-pointer transition-colors duration-200 flex flex-col items-center w-full border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+      onClick={handleClick}
+      className="p-4 bg-black/10 dark:bg-white/5 rounded-lg border border-white/10 dark:border-white/5 hover:bg-black/20 dark:hover:bg-white/10 cursor-pointer transition-colors duration-200 flex flex-col items-center w-full border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40 pointer-events-auto"
     >
       {renderLayoutIcon()}
       <h3 className="font-medium text-sm text-center">{title}</h3>
@@ -553,7 +568,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
       className={`absolute inset-0 flex flex-col items-center justify-start 
                   ${isMobile ? 'p-4 pt-16' : 'p-8 pt-16'} 
                   bg-gradient-radial ${getGradient()}
-                  overflow-y-auto overflow-x-hidden`}
+                  overflow-y-auto overflow-x-hidden z-0 pointer-events-auto`}
     >
       <div className={`${isMobile ? 'w-full' : 'max-w-5xl w-full'} flex flex-col`}>
         {/* Personalized greeting and welcome */}
