@@ -727,7 +727,7 @@ const Window: React.FC<WindowProps> = ({
   };
 
   // Optimized animation variants for different window states
-  // More performant, higher quality animations
+  // Enhanced window animations with theme-aware effects
   const windowVariants = {
     open: {
       opacity: 1,
@@ -736,17 +736,17 @@ const Window: React.FC<WindowProps> = ({
       filter: "blur(0px)",
       transition: {
         type: "spring",
-        stiffness: 350, // Slightly stiffer for less bouncy, more focused feel
-        damping: 28,    // Higher damping for faster settling
-        mass: 0.6,      // Slightly more mass for a more substantial feel
-        velocity: 4     // Lower starting velocity for smoother start
+        stiffness: 380, // Stiffer for more precise movement
+        damping: 30,    // Higher damping for faster settling
+        mass: 0.7,      // More substantial feel
+        velocity: 3     // Smoother start
       }
     },
     closed: {
       opacity: 0,
       scale: 0.95,
       y: 10,
-      filter: "blur(4px)",
+      filter: "blur(8px)",
       transition: {
         type: "spring",
         stiffness: 450,
@@ -757,14 +757,15 @@ const Window: React.FC<WindowProps> = ({
     },
     minimized: {
       opacity: 0,
-      scale: 0.9,
-      y: 25,
+      scale: 0.8,
+      y: 20,
       filter: "blur(4px)",
       transition: {
         type: "spring",
-        stiffness: 450,
-        damping: 35,
-        mass: 0.5
+        stiffness: 500,
+        damping: 40,
+        mass: 0.5,
+        restDelta: 0.001 // More precise animation ending
       }
     }
   };
@@ -955,6 +956,8 @@ const Window: React.FC<WindowProps> = ({
           }}
           onContextMenu={isMobile ? undefined : handleContextMenu}
         >
+          {/* Accent color bar at the top of focused windows */}
+          <div className="window-accent-bar"></div>
         {/* Snap Overlay Indicators */}
         <AnimatePresence>
           {isDragging && currentSnapPosition !== 'none' && (

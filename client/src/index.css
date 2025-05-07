@@ -348,6 +348,49 @@ h4, .h4 {
   .window-panel {
     @apply bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-md p-3 border border-white/10;
   }
+  
+  /* Window styles with theme accent colors */
+  .window {
+    @apply bg-black/30 backdrop-blur-md border border-white/10 overflow-hidden theme-transition;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2),
+                0 5px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .window-focused {
+    @apply border-white/20;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25),
+                0 8px 15px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(var(--accent), 0.1),
+                0 0 15px rgba(var(--accent), 0.2);
+  }
+  
+  .window-blurred {
+    @apply border-white/5 opacity-95;
+    filter: saturate(0.9);
+  }
+  
+  .window-titlebar {
+    @apply bg-black/40 backdrop-blur-sm border-b border-white/5 theme-transition;
+  }
+  
+  .window-titlebar-focused {
+    @apply bg-black/50 border-b border-white/10;
+    background: linear-gradient(180deg, 
+                rgba(var(--accent), 0.2) 0%, 
+                rgba(0, 0, 0, 0.4) 100%);
+  }
+  
+  .window-titlebar-blurred {
+    @apply bg-black/40 opacity-90;
+  }
+  
+  .window-body-focused {
+    @apply border-white/10;
+  }
+  
+  .window-body-blurred {
+    @apply border-white/5 opacity-90;
+  }
 }
 
 /* Background glow effects */
@@ -712,6 +755,69 @@ h4, .h4 {
 
 .window-focus-glow {
   animation: window-focus-glow 3s infinite ease-in-out;
+}
+
+/* Window transitions and animations */
+@keyframes window-appear {
+  from { 
+    opacity: 0; 
+    transform: scale(0.95) translateY(10px);
+    filter: blur(8px);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes window-minimize {
+  from { 
+    opacity: 1; 
+    transform: scale(1);
+    filter: blur(0);
+  }
+  to { 
+    opacity: 0; 
+    transform: scale(0.8) translateY(20px);
+    filter: blur(4px);
+  }
+}
+
+/* Window active indicator at the top */
+.window-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+              hsl(var(--primary)), 
+              hsl(var(--primary) / 0.7),
+              hsl(var(--primary)));
+  opacity: 0;
+  transform: scaleX(0.95);
+  transition: all 0.3s ease-in-out;
+  z-index: 10;
+  border-radius: 2px;
+  box-shadow: 0 0 10px hsl(var(--primary) / 0.4);
+}
+
+.window-focused .window-accent-bar {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* Window resize handle indicators */
+.resize-handle {
+  @apply absolute bg-transparent;
+  z-index: 100;
+  transition: background-color 0.2s ease;
+}
+
+.resize-handle:hover,
+.window-focused .resize-handle:hover {
+  background-color: hsla(var(--primary), 0.2);
 }
 
 /* Taskbar active indicator animation */
