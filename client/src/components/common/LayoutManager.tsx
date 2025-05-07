@@ -318,10 +318,12 @@ interface TemplateData {
 const TemplatePreview = ({ 
   template, 
   onApply, 
+  onApplyDirect, 
   isDark 
 }: {
   template: TemplateData;
   onApply: (id: string) => void;
+  onApplyDirect?: (id: string) => void;
   isDark: boolean;
 }) => {
   return (
@@ -382,15 +384,31 @@ const TemplatePreview = ({
       <div className="p-3">
         <div className="flex items-center justify-between mb-1">
           <div className="font-medium">{template.name}</div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onApply(template.id)}
-            className={`h-7 w-7 p-0 hover:bg-purple-500/10 ${isDark ? 'text-white hover:text-purple-300' : 'text-purple-700 hover:text-purple-600'}`}
-            title="Use this template"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            {/* Apply directly button */}
+            {onApplyDirect && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onApplyDirect(template.id)}
+                className={`h-7 w-7 p-0 hover:bg-green-500/10 ${isDark ? 'text-white hover:text-green-300' : 'text-green-700 hover:text-green-600'}`}
+                title="Apply this template directly"
+              >
+                <CheckCircle className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {/* Customize button */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onApply(template.id)}
+              className={`h-7 w-7 p-0 hover:bg-purple-500/10 ${isDark ? 'text-white hover:text-purple-300' : 'text-purple-700 hover:text-purple-600'}`}
+              title="Customize this template"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
         <p className={`text-xs mb-2 line-clamp-2 ${
@@ -662,11 +680,39 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
   };
   
   // Handle template selection
+  // Handle applying a template to the visual builder
   const handleApplyTemplate = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
       handleSelectTemplate(template);
       setSelectedTab('builder');
+    }
+  };
+  
+  // Apply template directly without builder
+  const handleApplyTemplateDirect = (templateId: string) => {
+    try {
+      // Apply template directly using agentStore function
+      createLayoutFromTemplate(templateId);
+      
+      // Close dialog
+      setDialogOpen(false);
+      
+      // Get template name for toast message
+      const template = templates.find(t => t.id === templateId);
+      const templateName = template ? template.name : 'Selected template';
+      
+      // Show success message
+      toast({
+        title: 'Template applied',
+        description: `${templateName} has been applied to your desktop`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error applying template',
+        description: error.message || 'Failed to apply template',
+        variant: 'destructive',
+      });
     }
   };
   
@@ -775,6 +821,7 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
                   key={template.id}
                   template={template}
                   onApply={handleApplyTemplate}
+                  onApplyDirect={handleApplyTemplateDirect}
                   isDark={isDark}
                 />
               ))}
