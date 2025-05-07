@@ -112,12 +112,16 @@ export function ErrorMessage({
     return null;
   }
 
+  // States for managing the visibility of the error message
+  const [isDismissed, setIsDismissed] = React.useState(false);
+  
   // Handle dismissing the error (used for inline/card variants)
   const handleDismiss = () => {
-    // This gets handled by the parent component
+    setIsDismissed(true);
     toast({
       title: "Error dismissed",
-      description: "You can retry the operation if needed."
+      description: "You can retry the operation if needed.",
+      variant: "default"
     });
   };
 
@@ -135,6 +139,11 @@ export function ErrorMessage({
     type === 'unknown' && 'text-gray-500'
   );
 
+  // If dismissed, don't show anything
+  if (isDismissed) {
+    return null;
+  }
+
   // Inline variant - simpler, more compact
   if (variant === 'inline') {
     return (
@@ -148,11 +157,21 @@ export function ErrorMessage({
           {React.cloneElement(errorContent.icon, { size: iconSize })}
         </span>
         <span className="flex-1">{errorContent.message}</span>
+        {dismissable && (
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="ml-auto h-7 px-2 text-xs opacity-70 hover:opacity-100"
+            onClick={handleDismiss}
+          >
+            ✕
+          </Button>
+        )}
         {retryFn && (
           <Button 
             size="sm" 
             variant="ghost" 
-            className="ml-2 h-7 px-2 text-xs"
+            className="h-7 px-2 text-xs"
             onClick={retryFn}
           >
             Retry
