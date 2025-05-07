@@ -306,7 +306,7 @@ const Desktop: React.FC = () => {
                 >
                   <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
                     <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
-                      <MessageSquare className="h-5 w-5 text-white" />
+                      {React.createElement(MessageSquare, { className: "h-5 w-5 text-white" })}
                       Chat with Clara
                     </h3>
                     <p className="text-sm text-white/90">Start a conversation with Clara, your AI assistant</p>
@@ -322,7 +322,7 @@ const Desktop: React.FC = () => {
                 >
                   <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
                     <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
-                      <FileText className="h-5 w-5 text-white" />
+                      {React.createElement(FileText, { className: "h-5 w-5 text-white" })}
                       Take Notes
                     </h3>
                     <p className="text-sm text-white/90">Open the Notes agent to capture your thoughts</p>
