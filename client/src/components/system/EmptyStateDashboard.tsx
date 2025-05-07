@@ -191,7 +191,12 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
   const greeting = getTimeBasedGreeting();
   
   // Get and format marketplace agents
-  const { agents: marketplaceAgents, categories: marketplaceCategories } = useMarketplaceStore();
+  const { 
+    agents: marketplaceAgents = [], 
+    categories: marketplaceCategories = [],
+    getInstalledAgents,
+    getFilteredAgents
+  } = useMarketplaceStore(state => state);
   
   // Define categories for organizing actions
   const categories: Category[] = [
@@ -280,7 +285,6 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
   };
 
   const { 
-    generateWindowStates, 
     openAgent: openAgentFn,
     registry, 
     createWindowGroup, 
@@ -293,22 +297,53 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
     // Get agent IDs of installed agents
     const agentIds = registry.map(agent => agent.id).slice(0, 4); // Limit to 4 agents
     
-    // Generate window states based on the layout type
-    const windowStates = generateWindowStates(agentIds, type);
-    
     // Create a new layout
-    const timestamp = Date.now();
     const layoutName = `${type.charAt(0).toUpperCase() + type.slice(1)} Layout`;
     
-    // Save the layout
-    saveLayout(layoutName);
+    // Simple layout implementation without generateWindowStates
+    // Just open the agents directly in a basic arrangement
+    switch(type) {
+      case 'centered':
+        // Just open the first agent centered
+        if (agentIds.length > 0) {
+          openAgentFn(agentIds[0]);
+        }
+        break;
+        
+      case 'split':
+        // Open first two agents
+        if (agentIds.length > 0) {
+          openAgentFn(agentIds[0]);
+        }
+        if (agentIds.length > 1) {
+          openAgentFn(agentIds[1]);
+        }
+        break;
+        
+      case 'triple':
+        // Open first three agents
+        agentIds.slice(0, 3).forEach(id => {
+          openAgentFn(id);
+        });
+        break;
+        
+      case 'grid':
+        // Open up to four agents in a grid
+        agentIds.slice(0, 4).forEach(id => {
+          openAgentFn(id);
+        });
+        break;
+        
+      case 'stack':
+        // Open up to three agents stacked
+        agentIds.slice(0, 3).forEach(id => {
+          openAgentFn(id);
+        });
+        break;
+    }
     
-    // Open agents based on window states
-    Object.entries(windowStates).forEach(([agentId, state]) => {
-      if (state.isOpen) {
-        openAgentFn(agentId);
-      }
-    });
+    // At the end, save the current layout with the specified name
+    saveLayout(layoutName);
   };
   
   // Quick actions
@@ -369,10 +404,24 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
     }
   ];
   
+  // Define a type for all action items
+  interface ActionItem {
+    title: string;
+    description: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+    color: string;
+    category: string;
+    shortcut?: string;
+    badge?: string;
+    badgeColor?: string;
+    shortcutAction: ((e: KeyboardEvent) => void) | null;
+  }
+  
   // Add all marketplace agents to action list
-  const allActions = [
+  const allActions: ActionItem[] = [
     ...quickActions,
-    ...marketplaceAgents
+    ...(marketplaceAgents || [])
       .filter(agent => !quickActions.some(qa => qa.title === agent.title))
       .map((agent, index) => ({
         title: agent.title,
@@ -382,7 +431,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
           ? openAgent(agent.id) 
           : openAgent('marketplace'),
         color: getCardColor(index + quickActions.length),
-        category: agent.categories[0],
+        category: agent.categories && agent.categories.length > 0 ? agent.categories[0] : "utilities",
         badge: agent.isInstalled ? undefined : "Install",
         badgeColor: "bg-purple-600",
         shortcutAction: null
