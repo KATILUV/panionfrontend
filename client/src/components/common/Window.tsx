@@ -8,6 +8,7 @@ import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { playSnapSound, playOpenSound, playCloseSound } from '../../lib/audioEffects';
 import WindowContextMenu from './WindowContextMenu';
 import SnapGuides from './SnapGuides';
+import WindowGroupIndicator from './WindowGroupIndicator';
 import { useScreenSize, useOrientation } from '../../hooks/use-mobile';
 import './Window.css';
 
@@ -373,6 +374,10 @@ const Window: React.FC<WindowProps> = ({
       // Enhanced snap detection with magnetic effect
       const snapPosition = detectSnapPosition(d.x, d.y);
       
+      // Check for nearby windows for potential grouping
+      const nearby = detectNearbyWindows(d.x, d.y);
+      setNearbyWindow(nearby);
+      
       // Show visual snap indicator when near a snap area
       if (currentSnapPosition !== snapPosition) {
         if (snapPosition !== 'none') {
@@ -409,6 +414,9 @@ const Window: React.FC<WindowProps> = ({
   const handleDragStop = (_e: any, d: { x: number, y: number }) => {
     setIsDragging(false);
     
+    // Clear nearby window
+    setNearbyWindow(null);
+    
     // Check if we should snap to screen edges/corners
     const snapPosition = detectSnapPosition(d.x, d.y);
     
@@ -439,6 +447,16 @@ const Window: React.FC<WindowProps> = ({
     
     updateAgentPosition(id, newPosition);
     setCurrentSnapPosition('none');
+  };
+  
+  // Handle group creation
+  const handleCreateGroup = () => {
+    if (nearbyWindow) {
+      const createWindowGroup = useAgentStore.getState().createWindowGroup;
+      createWindowGroup([id, nearbyWindow.id], `Group: ${title}`);
+      setNearbyWindow(null);
+      playSnapSound();
+    }
   };
 
   // Handle resize
@@ -481,6 +499,88 @@ const Window: React.FC<WindowProps> = ({
       y: (windowHeight - size.height) / 2
     };
     updateAgentPosition(id, newPosition);
+  };
+  
+  // Window grouping detection state
+  const [nearbyWindow, setNearbyWindow] = useState<{
+    id: string;
+    position: { x: number, y: number };
+    size: { width: number, height: number };
+    direction: 'top' | 'right' | 'bottom' | 'left' | 'center';
+  } | null>(null);
+  
+  const detectNearbyWindows = (x: number, y: number) => {
+    // Skip detection if we're already in a group
+    const currentWindow = useAgentStore.getState().windows[id];
+    if (currentWindow?.groupId) return null;
+    
+    // Get all other open windows
+    const allWindows = useAgentStore.getState().windows;
+    const otherWindows = Object.values(allWindows).filter(w => 
+      w.id !== id && 
+      w.isOpen && 
+      !w.isMinimized && 
+      !w.groupId // Not already in a group
+    );
+    
+    // If no other windows, return null
+    if (otherWindows.length === 0) return null;
+    
+    // Define the overlap threshold
+    const OVERLAP_THRESHOLD = 60; // pixels
+    
+    // Check each window for proximity to current window
+    for (const otherWindow of otherWindows) {
+      const otherX = otherWindow.position.x;
+      const otherY = otherWindow.position.y;
+      const otherWidth = otherWindow.size.width;
+      const otherHeight = otherWindow.size.height;
+      
+      // Define the edges of the current window being dragged
+      const currentLeft = x;
+      const currentRight = x + size.width;
+      const currentTop = y;
+      const currentBottom = y + size.height;
+      
+      // Define the edges of the other window
+      const otherLeft = otherX;
+      const otherRight = otherX + otherWidth;
+      const otherTop = otherY;
+      const otherBottom = otherY + otherHeight;
+      
+      // Check for overlap or close proximity
+      const horizontalProximity = 
+        (Math.abs(currentRight - otherLeft) < OVERLAP_THRESHOLD) || // Current window right edge near other window left edge
+        (Math.abs(currentLeft - otherRight) < OVERLAP_THRESHOLD);   // Current window left edge near other window right edge
+      
+      const verticalProximity = 
+        (Math.abs(currentBottom - otherTop) < OVERLAP_THRESHOLD) || // Current window bottom edge near other window top edge
+        (Math.abs(currentTop - otherBottom) < OVERLAP_THRESHOLD);   // Current window top edge near other window bottom edge
+      
+      // Determine proximity direction
+      let direction: 'top' | 'right' | 'bottom' | 'left' | 'center' = 'center';
+      
+      if (Math.abs(currentRight - otherLeft) < OVERLAP_THRESHOLD) {
+        direction = 'right'; // Current window's right edge is near other window's left edge
+      } else if (Math.abs(currentLeft - otherRight) < OVERLAP_THRESHOLD) {
+        direction = 'left'; // Current window's left edge is near other window's right edge
+      } else if (Math.abs(currentBottom - otherTop) < OVERLAP_THRESHOLD) {
+        direction = 'bottom'; // Current window's bottom edge is near other window's top edge
+      } else if (Math.abs(currentTop - otherBottom) < OVERLAP_THRESHOLD) {
+        direction = 'top'; // Current window's top edge is near other window's bottom edge
+      }
+      
+      if (horizontalProximity || verticalProximity) {
+        return {
+          id: otherWindow.id,
+          position: otherWindow.position,
+          size: otherWindow.size,
+          direction
+        };
+      }
+    }
+    
+    return null;
   };
   
   // Handle restore to default position and size

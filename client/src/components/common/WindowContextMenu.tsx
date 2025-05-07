@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useThemeStore } from '../../state/themeStore';
+import { useAgentStore } from '../../state/agentStore';
 import { 
   Minimize2, 
   X, 
@@ -12,10 +13,16 @@ import {
   RotateCcw,
   Grid,
   GridIcon,
-  MoveHorizontal
+  MoveHorizontal,
+  Layers,
+  SplitSquareVertical,
+  FolderOpen,
+  Link,
+  Unlink
 } from 'lucide-react';
 
 interface WindowContextMenuProps {
+  windowId: string;
   isVisible: boolean;
   position: { x: number; y: number };
   onClose: () => void;
@@ -31,9 +38,11 @@ interface WindowContextMenuProps {
   isMaximized: boolean;
   showGrid?: boolean;
   snapToGridEnabled?: boolean;
+  isInGroup?: boolean;
 }
 
 const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
+  windowId,
   isVisible,
   position,
   onClose,
@@ -49,8 +58,17 @@ const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
   isMaximized,
   showGrid = false,
   snapToGridEnabled = false,
+  isInGroup = false
 }) => {
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
+  
+  // Access agent store functions for window grouping
+  const { 
+    windows, 
+    registry, 
+    createWindowGroup, 
+    ungroupWindow 
+  } = useAgentStore();
 
   // Animation variants - simplified for stability
   const menuVariants = {
@@ -81,9 +99,10 @@ const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
   };
 
   // Menu item style
-  const getMenuItemClass = (isDestructive = false) => {
+  const getMenuItemClass = (isDestructive = false, isDisabled = false) => {
     return `
       flex items-center px-3 py-2 space-x-2 text-sm transition-colors rounded-md
+      ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       ${getCurrentTheme() === 'dark'
         ? isDestructive
           ? 'hover:bg-red-900/30 hover:text-red-300 text-white/80'
@@ -99,6 +118,30 @@ const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
   const getSeparatorClass = () => {
     return `my-1 ${getCurrentTheme() === 'dark' ? 'border-white/10' : 'border-gray-200'}`;
   };
+  
+  // Get all open windows that could be grouped with this one
+  const getGroupableWindows = () => {
+    return Object.values(windows).filter(window => 
+      window.id !== windowId && 
+      window.isOpen && 
+      !window.isMinimized &&
+      !window.groupId // Not already in a group
+    );
+  };
+  
+  // Handle creating a window group
+  const handleCreateGroup = (targetWindowId: string) => {
+    createWindowGroup([windowId, targetWindowId], 'Window Group');
+    onCloseMenu();
+  };
+  
+  // Handle removing from group
+  const handleRemoveFromGroup = () => {
+    ungroupWindow(windowId);
+    onCloseMenu();
+  };
+  
+  const groupableWindows = getGroupableWindows();
 
   if (!isVisible) return null;
 
@@ -162,6 +205,54 @@ const WindowContextMenu: React.FC<WindowContextMenuProps> = ({
                 <RotateCcw size={16} />
                 <span>Restore Default</span>
               </button>
+
+              <hr className={getSeparatorClass()} />
+
+              {/* Group Controls */}
+              <div className="px-2 py-1 text-xs text-gray-500">Window Grouping</div>
+              
+              {isInGroup ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFromGroup();
+                  }}
+                  className={getMenuItemClass()}
+                >
+                  <Unlink size={16} />
+                  <span>Remove from Group</span>
+                </button>
+              ) : (
+                <>
+                  {groupableWindows.length > 0 ? (
+                    <>
+                      <div className="max-h-32 overflow-y-auto py-1">
+                        {groupableWindows.map((window) => (
+                          <button
+                            key={window.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateGroup(window.id);
+                            }}
+                            className={getMenuItemClass()}
+                          >
+                            <Link size={16} />
+                            <span className="truncate">Group with {window.title}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <button
+                      disabled
+                      className={getMenuItemClass(false, true)}
+                    >
+                      <Layers size={16} />
+                      <span>No windows to group with</span>
+                    </button>
+                  )}
+                </>
+              )}
 
               <hr className={getSeparatorClass()} />
 
