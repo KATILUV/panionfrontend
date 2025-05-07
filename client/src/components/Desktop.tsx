@@ -285,10 +285,79 @@ const Desktop: React.FC = () => {
     <DesktopBackground>
       {/* Desktop Area - Adjusted for mobile responsiveness */}
       <div className={`flex-1 relative ${isMobile ? 'pt-2 pb-14' : ''}`}>
-        {/* Show empty state dashboard if no visible windows and no window groups */}
+        {/* Show emergency dashboard if no visible windows and no window groups */}
         {!hasVisibleWindows && Object.keys(windowGroups).length === 0 && (
-          <div className="absolute inset-0 z-10 pointer-events-auto">
-            <SimpleEmptyStateDashboard />
+          <div className="absolute inset-0 z-10 pointer-events-auto flex flex-col items-center justify-center p-4">
+            <div className="max-w-xl w-full mx-auto">
+              <h1 className="text-2xl font-bold mb-6 text-center">Welcome to Panion</h1>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Directly embedded action cards with simple HTML */}
+                <button 
+                  onClick={() => {
+                    openAgent('clara');
+                    console.log("Clara button clicked");
+                  }}
+                  className="bg-gradient-to-br from-purple-500 to-indigo-600 p-[1px] rounded-xl shadow-lg"
+                >
+                  <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
+                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5" />
+                      Chat with Clara
+                    </h3>
+                    <p className="text-sm opacity-80">Start a conversation with Clara, your AI assistant</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => {
+                    openAgent('notes');
+                    console.log("Notes button clicked");
+                  }}
+                  className="bg-gradient-to-br from-indigo-400 to-purple-700 p-[1px] rounded-xl shadow-lg"
+                >
+                  <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
+                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Take Notes
+                    </h3>
+                    <p className="text-sm opacity-80">Open the Notes agent to capture your thoughts</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => {
+                    openAgent('settings');
+                    console.log("Settings button clicked");
+                  }}
+                  className="bg-gradient-to-br from-violet-500 to-purple-600 p-[1px] rounded-xl shadow-lg"
+                >
+                  <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
+                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Settings
+                    </h3>
+                    <p className="text-sm opacity-80">Configure your Panion desktop environment</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => {
+                    navigate('/marketplace');
+                    console.log("Marketplace button clicked");
+                  }}
+                  className="bg-gradient-to-br from-purple-500 to-indigo-600 p-[1px] rounded-xl shadow-lg"
+                >
+                  <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
+                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
+                      <PlusCircle className="h-5 w-5" />
+                      Marketplace
+                    </h3>
+                    <p className="text-sm opacity-80">Discover and install new agents for your workspace</p>
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
         )}
         
