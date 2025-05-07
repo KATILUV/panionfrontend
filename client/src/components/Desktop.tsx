@@ -2,10 +2,12 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Window from './common/Window';
 import GroupedWindow from './common/GroupedWindow';
 import Taskbar from './common/Taskbar';
+import { useLocation } from 'wouter';
 import { useAgentStore, AgentId, WindowLayout } from '../state/agentStore';
 import { useThemeStore } from '../state/themeStore';
 import { useSystemLogStore, log } from '../state/systemLogStore';
 import { initializeAgentRegistry } from '../state/agentStore';
+import { MessageSquare, FileText, Settings, PlusCircle } from 'lucide-react';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
 import SettingsAgent from './agents/SettingsAgent';
@@ -109,6 +111,7 @@ const Desktop: React.FC = () => {
   const closeAgent = useAgentStore(state => state.closeAgent);
   const minimizeAgent = useAgentStore(state => state.minimizeAgent);
   const focusAgent = useAgentStore(state => state.focusAgent);
+  const openAgent = useAgentStore(state => state.openAgent);
   const layouts = useAgentStore(state => state.layouts);
   const activeLayoutId = useAgentStore(state => state.activeLayoutId);
   const saveLayout = useAgentStore(state => state.saveLayout);
@@ -343,8 +346,8 @@ const Desktop: React.FC = () => {
 
                 <button 
                   onClick={() => {
-                    navigate('/marketplace');
-                    console.log("Marketplace button clicked");
+                    openAgent('marketplace');
+                    console.log("Marketplace agent button clicked");
                   }}
                   className="bg-gradient-to-br from-purple-500 to-indigo-600 p-[1px] rounded-xl shadow-lg"
                 >

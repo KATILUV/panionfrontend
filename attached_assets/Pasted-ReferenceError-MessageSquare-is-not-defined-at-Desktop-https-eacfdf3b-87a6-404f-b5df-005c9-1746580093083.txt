@@ -1,0 +1,20 @@
+ReferenceError: MessageSquare is not defined
+
+
+    at Desktop (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/src/components/Desktop.tsx?t=1746579831705:133:19)
+    at DesktopPage
+    at div
+    at MotionComponent (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=afe96f0d:6536:40)
+    at PresenceChild (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=afe96f0d:7742:24)
+    at AnimatePresence (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=afe96f0d:7800:26)
+    at PageTransition (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/src/components/ui/page-transition.tsx:56:3)
+    at Route (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=afe96f0d:323:16)
+    at Switch (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=afe96f0d:379:17)
+    at ErrorBoundary (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/src/components/ui/error-boundary.tsx:9:5)
+    at Router
+    at Provider (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OMOYXI53.js?v=afe96f0d:38:15)
+    at TooltipProvider (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=afe96f0d:59:5)
+    at div
+    at ThemeProvider (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/src/components/common/ThemeProvider.tsx:21:26)
+    at QueryClientProvider (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=afe96f0d:2805:3)
+    at App (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/src/App.tsx?t=1746579831705&v=6ElXswNiQoWbVc1GP5dwl:128:3)
