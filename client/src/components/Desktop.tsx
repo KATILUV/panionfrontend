@@ -292,7 +292,7 @@ const Desktop: React.FC = () => {
         {!hasVisibleWindows && Object.keys(windowGroups).length === 0 && (
           <div className="absolute inset-0 z-10 pointer-events-auto flex flex-col items-center justify-center p-4">
             <div className="max-w-xl w-full mx-auto">
-              <h1 className="text-2xl font-bold mb-6 text-center">Welcome to Panion</h1>
+              <h1 className="text-2xl font-bold mb-6 text-center text-white drop-shadow-md">Welcome to Panion</h1>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Directly embedded action cards with simple HTML */}
@@ -304,11 +304,11 @@ const Desktop: React.FC = () => {
                   className="bg-gradient-to-br from-purple-500 to-indigo-600 p-[1px] rounded-xl shadow-lg"
                 >
                   <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
-                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
+                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
+                      <MessageSquare className="h-5 w-5 text-white" />
                       Chat with Clara
                     </h3>
-                    <p className="text-sm opacity-80">Start a conversation with Clara, your AI assistant</p>
+                    <p className="text-sm text-white/90">Start a conversation with Clara, your AI assistant</p>
                   </div>
                 </button>
 
@@ -320,11 +320,11 @@ const Desktop: React.FC = () => {
                   className="bg-gradient-to-br from-indigo-400 to-purple-700 p-[1px] rounded-xl shadow-lg"
                 >
                   <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
-                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
+                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
+                      <FileText className="h-5 w-5 text-white" />
                       Take Notes
                     </h3>
-                    <p className="text-sm opacity-80">Open the Notes agent to capture your thoughts</p>
+                    <p className="text-sm text-white/90">Open the Notes agent to capture your thoughts</p>
                   </div>
                 </button>
 
@@ -336,11 +336,11 @@ const Desktop: React.FC = () => {
                   className="bg-gradient-to-br from-violet-500 to-purple-600 p-[1px] rounded-xl shadow-lg"
                 >
                   <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
-                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
+                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
+                      <Settings className="h-5 w-5 text-white" />
                       Settings
                     </h3>
-                    <p className="text-sm opacity-80">Configure your Panion desktop environment</p>
+                    <p className="text-sm text-white/90">Configure your Panion desktop environment</p>
                   </div>
                 </button>
 
@@ -352,11 +352,11 @@ const Desktop: React.FC = () => {
                   className="bg-gradient-to-br from-purple-500 to-indigo-600 p-[1px] rounded-xl shadow-lg"
                 >
                   <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
-                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
-                      <PlusCircle className="h-5 w-5" />
+                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
+                      <PlusCircle className="h-5 w-5 text-white" />
                       Marketplace
                     </h3>
-                    <p className="text-sm opacity-80">Discover and install new agents for your workspace</p>
+                    <p className="text-sm text-white/90">Discover and install new agents for your workspace</p>
                   </div>
                 </button>
               </div>
