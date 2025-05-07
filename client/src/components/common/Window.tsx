@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Rnd } from 'react-rnd';
 import { useAgentStore, AgentId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
@@ -11,6 +11,41 @@ import SnapGuides from './SnapGuides';
 import WindowGroupIndicator from './WindowGroupIndicator';
 import { useScreenSize, useOrientation } from '../../hooks/use-mobile';
 import './Window.css';
+
+// Utility function to debounce function calls
+const debounce = <F extends (...args: any[]) => any>(
+  func: F,
+  waitFor: number
+) => {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  const debounced = (...args: Parameters<F>) => {
+    if (timeout !== null) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(() => func(...args), waitFor);
+  };
+
+  return debounced as (...args: Parameters<F>) => ReturnType<F>;
+};
+
+// Utility function to throttle function calls
+const throttle = <F extends (...args: any[]) => any>(
+  func: F,
+  waitFor: number
+) => {
+  let lastTime = 0;
+  
+  const throttled = (...args: Parameters<F>) => {
+    const now = Date.now();
+    if (now - lastTime >= waitFor) {
+      lastTime = now;
+      return func(...args);
+    }
+  };
+  
+  return throttled as (...args: Parameters<F>) => ReturnType<F>;
+};
 
 // Snap threshold in pixels
 const SNAP_THRESHOLD = 20;
@@ -258,6 +293,34 @@ const Window: React.FC<WindowProps> = ({
   const [showGrid, setShowGrid] = useState(false);
   const [snapToGridEnabled, setSnapToGridEnabled] = useState(false);
   
+  // Create debounced versions of position and size update functions
+  const debouncedUpdatePosition = useCallback(
+    debounce((newPosition: { x: number, y: number }) => {
+      updateAgentPosition(id, newPosition);
+    }, 16), // 16ms delay for smoother 60fps performance
+    [updateAgentPosition, id]
+  );
+  
+  const throttledUpdateSize = useCallback(
+    throttle((newSize: { width: number, height: number }) => {
+      updateAgentSize(id, newSize);
+    }, 32), // 32ms throttle for better resize performance
+    [updateAgentSize, id]
+  );
+  
+  // Function to keep window within viewport bounds
+  const keepWindowInBounds = useCallback((position: { x: number, y: number }) => {
+    // Ensure at least 100px of the window is visible on screen
+    const minVisibleAmount = 100;
+    const maxX = Math.max(0, windowWidth - minVisibleAmount);
+    const maxY = Math.max(0, windowHeight - minVisibleAmount);
+    
+    return {
+      x: Math.min(maxX, Math.max(minVisibleAmount - size.width, position.x)),
+      y: Math.min(maxY, Math.max(0, position.y)) // Don't allow windows above the top of the screen
+    };
+  }, [windowWidth, windowHeight, size]);
+  
   // Setup key listeners for modifier keys and shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -371,13 +434,19 @@ const Window: React.FC<WindowProps> = ({
     if (lastPositionKeyRef.current !== positionKey) {
       lastPositionKeyRef.current = positionKey;
       
+      // Apply bounds checking during drag to prevent dragging off-screen
+      const boundedPosition = keepWindowInBounds({ x: d.x, y: d.y });
+      
       // Enhanced snap detection with magnetic effect
-      const snapPosition = detectSnapPosition(d.x, d.y);
+      const snapPosition = detectSnapPosition(boundedPosition.x, boundedPosition.y);
       
       // Check for nearby windows for potential grouping
       // Only check this if holding Shift key to make it more intentional
       if (keyModifiers.shift) {
-        const nearby = detectNearbyWindows(d.x, d.y);
+        // Use a higher threshold distance when holding shift
+        const distanceThreshold = 100; // pixels
+        const nearby = detectNearbyWindows(boundedPosition.x, boundedPosition.y);
+        
         if (nearby && nearby.id !== nearbyWindow?.id) {
           // Play sound when a new window is detected nearby
           playSnapSound();
@@ -394,7 +463,7 @@ const Window: React.FC<WindowProps> = ({
       if (currentSnapPosition !== snapPosition) {
         if (snapPosition !== 'none') {
           // Play a subtle tick sound for feedback
-          playSnapSound(); 
+          playSnapSound();
         }
         setCurrentSnapPosition(snapPosition);
       }
@@ -410,19 +479,21 @@ const Window: React.FC<WindowProps> = ({
         };
         
         // Determine a destination based on the snap position
-        let magneticPosition = { ...d };
+        let magneticPosition = { ...boundedPosition };
         
         if (snapPosition === 'center') {
           magneticPosition = screenCenter;
-          updateAgentPosition(id, magneticPosition);
+          // Use debounced update for smoother performance
+          debouncedUpdatePosition(magneticPosition);
         }
-        
-        // We show visual guides but don't snap - user needs to release to snap
+      } else {
+        // Update position with debounced function for better performance
+        debouncedUpdatePosition(boundedPosition);
       }
     }
   };
   
-  // Prevent windows from being dragged completely off-screen and handle snapping
+  // Handle drag stop with improved bounds checking and snapping
   const handleDragStop = (_e: any, d: { x: number, y: number }) => {
     setIsDragging(false);
     
@@ -436,8 +507,11 @@ const Window: React.FC<WindowProps> = ({
     // Clear nearby window
     setNearbyWindow(null);
     
+    // Apply bounds checking
+    const boundedPosition = keepWindowInBounds({ x: d.x, y: d.y });
+    
     // Check if we should snap to screen edges/corners
-    const snapPosition = detectSnapPosition(d.x, d.y);
+    const snapPosition = detectSnapPosition(boundedPosition.x, boundedPosition.y);
     
     if (snapPosition !== 'none') {
       // Apply the snap position to screen edges
@@ -445,26 +519,18 @@ const Window: React.FC<WindowProps> = ({
       return;
     }
     
-    // Apply normal bounds
-    // Ensure at least 20% of the window remains within the viewport
-    const minVisibleX = -size.width * 0.8;
-    const minVisibleY = 0; // Don't allow dragging above the viewport
-    const maxVisibleX = windowWidth - size.width * 0.2;
-    const maxVisibleY = windowHeight - 40; // Keep title bar visible
-
-    const boundedX = Math.max(minVisibleX, Math.min(d.x, maxVisibleX));
-    const boundedY = Math.max(minVisibleY, Math.min(d.y, maxVisibleY));
-
-    let newPosition = { x: boundedX, y: boundedY };
+    // Final position with bounds applied
+    let finalPosition = { ...boundedPosition };
     
     // Apply snap-to-grid if enabled or shift key is pressed
     if (snapToGridEnabled || keyModifiers.shift) {
-      newPosition = snapToGrid(newPosition);
+      finalPosition = snapToGrid(finalPosition);
       // Play snap sound for feedback
       playSnapSound();
     }
     
-    updateAgentPosition(id, newPosition);
+    // Use direct update on drag stop for immediate position change
+    updateAgentPosition(id, finalPosition);
     setCurrentSnapPosition('none');
   };
   
@@ -478,14 +544,35 @@ const Window: React.FC<WindowProps> = ({
     }
   };
 
-  // Handle resize
+  // Handle resize with throttling for better performance
+  const handleResize = useCallback(
+    (_e: any, _direction: any, ref: any, _delta: any, position: { x: number, y: number }) => {
+      // Throttle resize updates for better performance
+      const newWidth = Math.max(200, parseInt(ref.style.width));
+      const newHeight = Math.max(150, parseInt(ref.style.height));
+      
+      throttledUpdateSize({ width: newWidth, height: newHeight });
+      debouncedUpdatePosition(position);
+    },
+    [throttledUpdateSize, debouncedUpdatePosition]
+  );
+  
+  // Handle resize stop - update final size and position
   const handleResizeStop = (_e: any, _direction: any, ref: any, _delta: any, position: { x: number, y: number }) => {
     const newSize = {
-      width: parseInt(ref.style.width),
-      height: parseInt(ref.style.height),
+      width: Math.max(200, parseInt(ref.style.width)),
+      height: Math.max(150, parseInt(ref.style.height)),
     };
+    
+    // Apply bounds checking to ensure window stays in viewport
+    const boundedPosition = keepWindowInBounds(position);
+    
+    // Direct update on resize stop for immediate size change
     updateAgentSize(id, newSize);
-    updateAgentPosition(id, position);
+    updateAgentPosition(id, boundedPosition);
+    
+    // Play feedback sound
+    playSnapSound();
   };
   
   // Handle context menu
@@ -907,6 +994,9 @@ const Window: React.FC<WindowProps> = ({
           transform: 'translate3d(0,0,0)', // Force GPU acceleration
           willChange: 'transform', // Hint to browser to optimize
           isolation: 'isolate', // Create a new stacking context
+          boxShadow: isActive 
+            ? `0 0 0 2px var(--primary), 0 4px 20px 0 rgba(0, 0, 0, 0.25)` 
+            : '0 2px 10px 0 rgba(0, 0, 0, 0.15)'
         }}
         default={{
           ...position,
@@ -917,6 +1007,7 @@ const Window: React.FC<WindowProps> = ({
         onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragStop={handleDragStop}
+        onResize={handleResize}
         onResizeStop={handleResizeStop}
         onMouseDown={onFocus}
         onTouchStart={onFocus}
@@ -924,9 +1015,11 @@ const Window: React.FC<WindowProps> = ({
         enableResizing={!isMaximized && !isMobile} // Disable resizing on mobile or when maximized
         dragHandleClassName="window-drag-handle"
         bounds="parent"
-        minWidth={isMobile ? windowWidth * 0.95 : 300} // Adjusted width for mobile
-        minHeight={isMobile ? windowHeight * 0.7 : 200} // Adjusted height for mobile
+        minWidth={isMobile ? windowWidth * 0.95 : 200} // Adjusted width for mobile
+        minHeight={isMobile ? windowHeight * 0.7 : 150} // Adjusted height for mobile
         cancel=".window-control-button, .window-control-button *, button, a, input, textarea, select" // Prevent drag when clicking buttons and interactive elements
+        dragGrid={snapToGridEnabled ? [GRID_SIZE, GRID_SIZE] : undefined} // Add grid snapping for drag
+        resizeGrid={snapToGridEnabled ? [GRID_SIZE, GRID_SIZE] : undefined} // Add grid snapping for resize
         resizeHandleStyles={{
           bottomRight: { zIndex: 2, display: isMobile ? 'none' : 'block' }, // Hide resize handles on mobile
           bottomLeft: { zIndex: 2, display: isMobile ? 'none' : 'block' },

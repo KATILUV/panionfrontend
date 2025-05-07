@@ -304,13 +304,20 @@ export const useAgentStore = create<AgentState>()(
         const agent = state.windows[id];
         if (!agent || !agent.isOpen || agent.isMinimized) return state;
         
-        // Find the highest z-index among all open windows
-        const currentMaxZIndex = Object.values(state.windows).reduce((max, window) => {
+        // Get highest z-index from both windows and window groups
+        const windowsMaxZ = Object.values(state.windows).reduce((max, window) => {
           return window.isOpen && !window.isMinimized ? Math.max(max, window.zIndex) : max;
         }, 0);
         
-        // Ensure focused windows always appear on top, with a higher z-index than any existing window
-        const effectiveHighestZIndex = Math.max(currentMaxZIndex, state.highestZIndex);
+        const groupsMaxZ = Object.values(state.windowGroups).reduce((max, group) => {
+          return !group.isMinimized ? Math.max(max, group.zIndex) : max;
+        }, 0);
+        
+        // Find the true highest z-index in the system
+        const currentMaxZIndex = Math.max(windowsMaxZ, groupsMaxZ);
+        
+        // Ensure focused windows always appear on top with a higher z-index
+        const effectiveHighestZIndex = Math.max(currentMaxZIndex, state.highestZIndex) + 1;
         
         // Different z-index handling for special windows
         let newZIndex;
