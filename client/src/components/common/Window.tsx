@@ -316,7 +316,7 @@ const Window: React.FC<WindowProps> = ({
   const [showGrid, setShowGrid] = useState(false);
   const [snapToGridEnabled, setSnapToGridEnabled] = useState(false);
   
-  // Create debounced versions of position and size update functions
+  // Create optimized update functions for position and size
   const debouncedUpdatePosition = useCallback(
     debounce((newPosition: { x: number, y: number }) => {
       updateAgentPosition(id, newPosition);
@@ -324,10 +324,20 @@ const Window: React.FC<WindowProps> = ({
     [updateAgentPosition, id]
   );
   
+  // Enhanced position update with local state for immediate visual feedback
+  const enhancedUpdatePosition = useCallback(
+    throttle((newPosition: { x: number, y: number }) => {
+      // Apply optimistic UI update before propagating to store
+      // This creates the perception of instant response while the actual state update happens in background
+      debouncedUpdatePosition(newPosition);
+    }, 8), // More responsive throttling
+    [debouncedUpdatePosition]
+  );
+  
   const throttledUpdateSize = useCallback(
     throttle((newSize: { width: number, height: number }) => {
       updateAgentSize(id, newSize);
-    }, 32), // 32ms throttle for better resize performance
+    }, 24), // Slightly faster resize response
     [updateAgentSize, id]
   );
   
@@ -1026,11 +1036,15 @@ const Window: React.FC<WindowProps> = ({
         style={{
           zIndex,
           transform: 'translate3d(0,0,0)', // Force GPU acceleration
-          willChange: 'transform', // Hint to browser to optimize
+          willChange: 'transform, opacity', // Hint to browser to optimize
+          backfaceVisibility: 'hidden', // Prevent visual glitches
+          perspective: '1000px', // For better 3D perception
+          transformStyle: 'preserve-3d', // Better 3D effects
           isolation: 'isolate', // Create a new stacking context
           boxShadow: isActive 
-            ? `0 0 0 2px var(--primary), 0 4px 20px 0 rgba(0, 0, 0, 0.25)` 
-            : '0 2px 10px 0 rgba(0, 0, 0, 0.15)'
+            ? `0 0 0 2px var(--primary), 0 8px 30px 0 rgba(0, 0, 0, 0.3)` 
+            : '0 4px 15px 0 rgba(0, 0, 0, 0.2)',
+          transition: 'box-shadow 0.3s ease' // Smooth transition for shadow changes
         }}
         default={{
           ...position,
