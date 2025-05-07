@@ -496,84 +496,13 @@ export const useAgentStore = create<AgentState>()(
         };
       }),
       
-      // Create a new layout from template
-      createLayoutFromTemplate: (templateId) => {
-        set((state) => {
-          try {
-            // Get the template from the template store
-            const template = useTemplateStore.getState().getTemplateById(templateId);
-            
-            // Debug logging
-            console.log("Applying template:", templateId);
-            console.log("Template found:", template);
-            
-            if (!template) {
-              log.error(`Template not found: ${templateId}`);
-              console.error(`Template not found: ${templateId}`);
-              return state;
-            }
-            
-            // Get agent IDs from registry
-            const agentIds = state.registry.map(agent => agent.id);
-            console.log("Available agents:", agentIds);
-            
-            // Generate window states based on template layout type
-            const windowStates = generateWindowStates(template, agentIds);
-            console.log("Generated window states:", windowStates);
-            
-            // Create timestamp for ID and timestamps
-            const timestamp = Date.now();
-            
-            // Create a new layout
-            const newLayout: WindowLayout = {
-              id: timestamp.toString(),
-              name: template.name,
-              category: template.category,
-              tags: template.tags,
-              createdAt: timestamp,
-              updatedAt: timestamp,
-              windowStates
-            };
-            
-            // Log the action
-            log.action(`Created layout from template: "${template.name}" (${template.layout.type})`);
-            
-            // Create a new windows state by applying template
-            const newWindows = { ...state.windows };
-            
-            // First close all windows
-            Object.keys(newWindows).forEach(id => {
-              newWindows[id as AgentId] = {
-                ...newWindows[id as AgentId],
-                isOpen: false,
-                isMinimized: false
-              };
-            });
-            
-            // Apply template positions, sizes, and states to windows
-            Object.entries(windowStates).forEach(([agentId, windowState]) => {
-              const id = agentId as AgentId;
-              if (newWindows[id]) {
-                newWindows[id] = {
-                  ...newWindows[id],
-                  position: windowState.position,
-                  size: windowState.size,
-                  isOpen: windowState.isOpen,
-                  isMinimized: windowState.isMinimized,
-                  zIndex: 10 + Object.keys(windowStates).indexOf(id) // Set proper z-index order
-                };
-              }
-            });
-            
-            return {
-              windows: newWindows,
-              layouts: [...state.layouts, newLayout],
-              activeLayoutId: newLayout.id
-            };
-          } catch (error: any) {
-            log.error(`Error applying template: ${error?.message || 'Unknown error'}`);
-            return state;
-          }
+      // Deprecated - Use layoutUtils.ts instead
+      createLayoutFromTemplate: (templateId: string) => {
+        log.warn('The template system is deprecated. Use layoutUtils.ts instead.');
+        // Import and use the new layout utility instead
+        import('../lib/layoutUtils').then(({ ApplyLayout }) => {
+          // Default to focus mode as fallback
+          ApplyLayout.focusMode('clara');
         });
       },
       
