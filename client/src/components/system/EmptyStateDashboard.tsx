@@ -58,8 +58,7 @@ const ActionCard: React.FC<ActionCardProps> = ({
 }) => {
   // Explicit handler for better debugging
   const handleActionClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    // Don't use preventDefault here as it prevents the click from working
     console.log(`Card clicked: ${title}`);
     onClick();
   };
@@ -70,6 +69,7 @@ const ActionCard: React.FC<ActionCardProps> = ({
       whileTap={{ scale: 0.98 }}
       className={`w-full text-left rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-background pointer-events-auto z-50`}
       onClick={handleActionClick}
+      type="button"
     >
       <Card className="bg-card/50 backdrop-blur-sm border-none h-full overflow-hidden relative">
         {badge && (
@@ -111,8 +111,7 @@ interface LayoutTemplateProps {
 const LayoutTemplateCard: React.FC<LayoutTemplateProps> = ({ title, description, type, onClick }) => {
   // Make sure the onClick handler is properly attached and working
   const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    // Don't use preventDefault here as it might interfere with click functionality
     console.log(`Layout template clicked: ${type}`);
     onClick();
   };
@@ -166,6 +165,7 @@ const LayoutTemplateCard: React.FC<LayoutTemplateProps> = ({ title, description,
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
       onClick={handleClick}
+      type="button"
       className="p-4 bg-black/10 dark:bg-white/5 rounded-lg border border-white/10 dark:border-white/5 hover:bg-black/20 dark:hover:bg-white/10 cursor-pointer transition-colors duration-200 flex flex-col items-center w-full border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40 pointer-events-auto"
     >
       {renderLayoutIcon()}
