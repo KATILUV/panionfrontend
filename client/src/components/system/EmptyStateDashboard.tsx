@@ -39,7 +39,8 @@ interface ActionCardProps {
   description: string;
   icon: React.ReactNode;
   onClick: () => void;
-  color: string;
+  color?: string;      // Made optional - can calculate from colorIndex
+  colorIndex?: number; // Added to support dynamic color calculation
   shortcut?: string;
   badge?: string;
   badgeColor?: string;
@@ -52,13 +53,69 @@ const ActionCard: React.FC<ActionCardProps> = ({
   icon, 
   onClick, 
   color, 
+  colorIndex = 0,  // Default to 0 if not provided
   shortcut,
   badge,
   badgeColor = "bg-primary" 
 }) => {
+  // Get accent color from theme store to ensure it's reactive
+  const accentColor = useThemeStore(state => state.accent);
+  
+  // Calculate gradient color based on accent
+  const getGradientColor = () => {
+    // If color is explicitly provided, use it
+    if (color) return color;
+    
+    // Otherwise calculate based on index (which is stored in each action)
+    const index = colorIndex; // Use the colorIndex parameter
+    
+    // Use the same logic as getCardColor function
+    switch (accentColor) {
+      case 'purple':
+        return index % 3 === 0 
+          ? 'from-purple-500 to-indigo-600' 
+          : index % 3 === 1 
+            ? 'from-indigo-400 to-purple-700' 
+            : 'from-violet-500 to-purple-600';
+      case 'blue':
+        return index % 3 === 0 
+          ? 'from-blue-500 to-cyan-600' 
+          : index % 3 === 1 
+            ? 'from-cyan-400 to-blue-700' 
+            : 'from-sky-500 to-blue-600';
+      case 'green':
+        return index % 3 === 0 
+          ? 'from-green-500 to-emerald-600' 
+          : index % 3 === 1 
+            ? 'from-emerald-400 to-green-700' 
+            : 'from-teal-500 to-green-600';
+      case 'orange':
+        return index % 3 === 0 
+          ? 'from-gray-800 to-black' 
+          : index % 3 === 1 
+            ? 'from-zinc-800 to-gray-900' 
+            : 'from-neutral-800 to-gray-950';
+      case 'pink':
+        return index % 3 === 0 
+          ? 'from-pink-500 to-rose-600' 
+          : index % 3 === 1 
+            ? 'from-rose-400 to-pink-700' 
+            : 'from-fuchsia-500 to-pink-600';
+      default:
+        return index % 3 === 0 
+          ? 'from-purple-500 to-indigo-600' 
+          : index % 3 === 1 
+            ? 'from-indigo-400 to-purple-700' 
+            : 'from-violet-500 to-purple-600';
+    }
+  };
+  
+  // Get the calculated gradient color
+  const gradientColor = getGradientColor();
+  
   return (
     <div 
-      className={`w-full text-left rounded-xl bg-gradient-to-br ${color} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-background pointer-events-auto z-50`}
+      className={`w-full text-left rounded-xl bg-gradient-to-br ${gradientColor} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-background pointer-events-auto z-50`}
       onClick={() => {
         console.log(`Card clicked: ${title}`);
         onClick();
@@ -351,14 +408,14 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
     saveLayout(layoutName);
   };
   
-  // Quick actions
+  // Quick actions - notice we don't pre-calculate colors here
   const quickActions = [
     {
       title: "Chat with Clara",
       description: "Start a conversation with Clara, your AI assistant",
       icon: <MessageSquare className="h-5 w-5" />,
       onClick: () => openAgent('clara'),
-      color: getCardColor(0),
+      colorIndex: 0,  // Use index instead of pre-calculated color
       shortcut: "Shift+C",
       category: "communication",
       shortcutAction: (e: KeyboardEvent) => {
@@ -370,7 +427,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
       description: "Open the Notes agent to capture your thoughts",
       icon: <FileText className="h-5 w-5" />,
       onClick: () => openAgent('notes'),
-      color: getCardColor(1),
+      colorIndex: 1,  // Use index instead of pre-calculated color
       shortcut: "Shift+N", 
       category: "productivity",
       shortcutAction: (e: KeyboardEvent) => {
@@ -382,7 +439,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
       description: "Configure your Panion desktop environment",
       icon: <Settings className="h-5 w-5" />,
       onClick: () => openAgent('settings'),
-      color: getCardColor(2),
+      colorIndex: 2,  // Use index instead of pre-calculated color
       category: "utilities",
       shortcutAction: null
     },
@@ -394,7 +451,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
         // Use wouter's navigation instead of modifying window.location directly
         navigate('/marketplace');
       },
-      color: getCardColor(3),
+      colorIndex: 3,  // Use index instead of pre-calculated color
       category: "utilities",
       shortcutAction: null
     },
@@ -403,7 +460,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
       description: "Access all features and tools",
       icon: <Layout className="h-5 w-5" />,
       onClick: toggleCommandPalette,
-      color: getCardColor(4),
+      colorIndex: 4,  // Use index instead of pre-calculated color
       shortcut: "Cmd+K",
       category: "utilities",
       shortcutAction: (e: KeyboardEvent) => {
@@ -418,7 +475,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
     description: string;
     icon: React.ReactNode;
     onClick: () => void;
-    color: string;
+    colorIndex: number; // Store index instead of actual color
     category: string;
     shortcut?: string;
     badge?: string;
@@ -428,7 +485,10 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
   
   // Add all marketplace agents to action list
   const allActions: ActionItem[] = [
-    ...quickActions,
+    ...quickActions.map(action => ({
+      ...action,
+      // Don't pre-calculate colors here
+    })),
     ...(marketplaceAgents || [])
       .filter(agent => !quickActions.some(qa => qa.title === agent.title))
       .map((agent, index) => ({
@@ -443,7 +503,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
             navigate('/marketplace');
           }
         },
-        color: getCardColor(index + quickActions.length),
+        colorIndex: index + quickActions.length, // Store index only
         category: agent.categories && agent.categories.length > 0 ? agent.categories[0] : "utilities",
         badge: agent.isInstalled ? undefined : "Install",
         badgeColor: "bg-primary",
@@ -603,7 +663,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
                   description={action.description}
                   icon={action.icon}
                   onClick={action.onClick}
-                  color={action.color}
+                  colorIndex={action.colorIndex}
                   shortcut={action.shortcut}
                   badge={action.badge}
                   badgeColor={action.badgeColor}
