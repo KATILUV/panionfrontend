@@ -868,16 +868,6 @@ const Window: React.FC<WindowProps> = ({
       ? `0 ${baseDepth * 2}px ${baseDepth * 6}px rgba(0,0,0,0.15), 0 ${baseDepth}px ${baseDepth * 2}px rgba(var(--color-primary-rgb), 0.${baseDepth + 1})` 
       : `0 ${baseDepth}px ${baseDepth * 3}px rgba(0,0,0,0.1)`;
   };
-  
-  // Get window padding based on density setting
-  const getWindowPadding = () => {
-    const { density, getSpacingForDensity } = useThemeStore.getState();
-    // Base padding depends on mobile vs desktop
-    const basePadding = isMobile ? 16 : 12; // 'p-4' (16px) for mobile, 'p-3' (12px) for desktop
-    // Adjust based on density
-    const adjustedPadding = getSpacingForDensity(basePadding);
-    return `${adjustedPadding}px`;
-  };
 
   return (
     <MotionConfig transition={{ 
@@ -984,19 +974,27 @@ const Window: React.FC<WindowProps> = ({
         </AnimatePresence>
         
         <div 
-          className={`window-drag-handle window-titlebar flex items-center justify-between px-3 ${isMobile ? 'h-8' : 'h-6'} cursor-move
+          className={`window-drag-handle window-titlebar flex items-center justify-between cursor-move
             ${isActive 
               ? 'window-titlebar-focused' 
               : 'window-titlebar-blurred'
             }`}
+          style={{
+            height: isMobile ? '32px' : useThemeStore.getState().getSpacingForDensity(24) + 'px',
+            paddingLeft: useThemeStore.getState().getSpacingForDensity(12) + 'px',
+            paddingRight: useThemeStore.getState().getSpacingForDensity(12) + 'px'
+          }}
           onDoubleClick={toggleMaximize}
         >
           <div className="flex items-center justify-between flex-1">
             <div className="flex items-center">
-              <div className="flex items-center space-x-1.5 mr-3 group">
+              <div className="flex items-center group" style={{
+                gap: useThemeStore.getState().getSpacingForDensity(6) + 'px',
+                marginRight: useThemeStore.getState().getSpacingForDensity(12) + 'px'
+              }}>
                 {/* Improved window control buttons with larger hit areas */}
                 <motion.div 
-                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center group`}
+                  className="window-control-button rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center group"
                   whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.95 }}
                   title="Close"
@@ -1005,13 +1003,18 @@ const Window: React.FC<WindowProps> = ({
                     playCloseSound();
                     onClose();
                   }}
-                  style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
+                  style={{ 
+                    zIndex: 9999, 
+                    boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
+                    width: isMobile ? '20px' : useThemeStore.getState().getSpacingForDensity(16) + 'px',
+                    height: isMobile ? '20px' : useThemeStore.getState().getSpacingForDensity(16) + 'px'
+                  }}
                 >
                   {/* Optional X icon */}
                   <span className="opacity-0 group-hover:opacity-100 transition-opacity text-black/70" style={{fontSize: '8px'}}>×</span>
                 </motion.div>
                 <motion.div 
-                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center group`}
+                  className="window-control-button rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center group"
                   whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.95 }}
                   title="Minimize"
@@ -1020,13 +1023,18 @@ const Window: React.FC<WindowProps> = ({
                     playSnapSound();
                     onMinimize();
                   }}
-                  style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
+                  style={{ 
+                    zIndex: 9999, 
+                    boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
+                    width: isMobile ? '20px' : useThemeStore.getState().getSpacingForDensity(16) + 'px',
+                    height: isMobile ? '20px' : useThemeStore.getState().getSpacingForDensity(16) + 'px'
+                  }}
                 >
                   {/* Optional minimize icon */}
                   <span className="opacity-0 group-hover:opacity-100 transition-opacity text-black/70" style={{fontSize: '8px'}}>_</span>
                 </motion.div>
                 <motion.div 
-                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center group`}
+                  className="window-control-button rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center group"
                   whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.95 }}
                   title={isMaximized ? "Restore" : "Maximize"}
@@ -1034,7 +1042,12 @@ const Window: React.FC<WindowProps> = ({
                     e.stopPropagation(); // Prevent event propagation
                     toggleMaximize();
                   }}
-                  style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
+                  style={{ 
+                    zIndex: 9999, 
+                    boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
+                    width: isMobile ? '20px' : useThemeStore.getState().getSpacingForDensity(16) + 'px',
+                    height: isMobile ? '20px' : useThemeStore.getState().getSpacingForDensity(16) + 'px'
+                  }}
                 >
                   {/* Optional maximize icon */}
                   <span className="opacity-0 group-hover:opacity-100 transition-opacity text-black/70" style={{fontSize: '8px'}}>+</span>
@@ -1053,7 +1066,7 @@ const Window: React.FC<WindowProps> = ({
             height: contentHeight,
             willChange: 'transform, opacity',
             transform: 'translateZ(0)',
-            padding: getWindowPadding(),
+            padding: useThemeStore.getState().getSpacingForDensity(isMobile ? 16 : 12) + 'px',
           }}
           variants={contentVariants}
           initial="closed"
