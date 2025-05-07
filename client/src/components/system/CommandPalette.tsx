@@ -1,20 +1,52 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Command, CommandType, useCommandStore } from '../../state/commandStore';
+import { Command as CommandType, useCommandStore } from '../../state/commandStore';
 import { useThemeStore } from '../../state/themeStore';
-import { Search, X, Command as CommandIcon, Monitor, Paintbrush, LayoutGrid, Terminal, Sparkles } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { useScreenSize } from '@/hooks/use-mobile';
+import Fuse from 'fuse.js';
+import { 
+  Search, Command as CommandIcon, Monitor, Paintbrush, 
+  LayoutGrid, Terminal, Sparkles, Star, Clock, Settings
+} from 'lucide-react';
+
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@/components/ui/command";
 
 const CommandPalette: React.FC = () => {
   const { isOpen, getAvailableCommands, setIsOpen } = useCommandStore();
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
+  const { isMobile } = useScreenSize();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredCommands, setFilteredCommands] = useState<Command[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const commandsRef = useRef<HTMLDivElement>(null);
+  const [recentCommands, setRecentCommands] = useState<string[]>([]);
+  const [favoriteCommands, setFavoriteCommands] = useState<string[]>([]);
+
+  // Load recent and favorite commands from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedRecent = localStorage.getItem('recentCommands');
+      if (storedRecent) {
+        setRecentCommands(JSON.parse(storedRecent));
+      }
+      
+      const storedFavorites = localStorage.getItem('favoriteCommands');
+      if (storedFavorites) {
+        setFavoriteCommands(JSON.parse(storedFavorites));
+      }
+    } catch (error) {
+      console.error('Error loading command history:', error);
+    }
+  }, []);
   
-  // Memoize commands to prevent infinite renders
+  // Memoize commands to prevent unnecessary renders
   const allCommands = useMemo(() => {
     if (isOpen) {
       return getAvailableCommands();
@@ -22,110 +54,210 @@ const CommandPalette: React.FC = () => {
     return [];
   }, [isOpen, getAvailableCommands]);
   
-  // Filter commands based on search query
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredCommands(allCommands);
-      return;
-    }
-    
-    const query = searchQuery.toLowerCase();
-    const filtered = allCommands.filter(command => {
-      // Match by title
-      if (command.title.toLowerCase().includes(query)) {
-        return true;
-      }
-      
-      // Match by description
-      if (command.description?.toLowerCase().includes(query)) {
-        return true;
-      }
-      
-      // Match by keywords
-      if (command.keywords?.some(keyword => keyword.toLowerCase().includes(query))) {
-        return true;
-      }
-      
-      return false;
-    });
-    
-    setFilteredCommands(filtered);
-    setSelectedIndex(0);
-  }, [searchQuery, allCommands]);
-  
-  // Reset state when command palette opens
-  useEffect(() => {
-    if (isOpen) {
-      setSearchQuery('');
-      setSelectedIndex(0);
-      setFilteredCommands(allCommands);
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    }
-  }, [isOpen, allCommands]);
-  
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-      
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedIndex(prev => Math.min(prev + 1, filteredCommands.length - 1));
-      }
-      
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedIndex(prev => Math.max(prev - 1, 0));
-      }
-      
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (filteredCommands[selectedIndex]) {
-          filteredCommands[selectedIndex].action();
-        }
-      }
+  // Group commands by type for better organization
+  const groupedCommands = useMemo(() => {
+    const groups: Record<string, CommandType[]> = {
+      window: [],
+      agent: [],
+      system: [],
+      theme: [],
+      suggestion: [],
+      recent: [],
+      favorite: []
     };
     
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, filteredCommands, selectedIndex]);
-  
-  // Scroll selected item into view
-  useEffect(() => {
-    if (!commandsRef.current) return;
-    
-    const selectedElement = commandsRef.current.querySelector(`[data-index="${selectedIndex}"]`);
-    if (selectedElement) {
-      selectedElement.scrollIntoView({ block: 'nearest' });
+    // First, fill recent and favorites if they exist
+    if (recentCommands.length > 0) {
+      groups.recent = allCommands.filter(cmd => recentCommands.includes(cmd.id)).slice(0, 5);
     }
-  }, [selectedIndex]);
+    
+    if (favoriteCommands.length > 0) {
+      groups.favorite = allCommands.filter(cmd => favoriteCommands.includes(cmd.id));
+    }
+    
+    // Then fill the type-based groups
+    allCommands.forEach(command => {
+      if (command.type in groups) {
+        groups[command.type].push(command);
+      }
+    });
+    
+    return groups;
+  }, [allCommands, recentCommands, favoriteCommands]);
+  
+  // Set up fuzzy search for better command matching
+  const fuse = useMemo(() => {
+    return new Fuse(allCommands, {
+      keys: ['title', 'description', 'keywords'],
+      includeScore: true,
+      threshold: 0.4,
+    });
+  }, [allCommands]);
+  
+  // Filter commands based on search query using fuzzy search
+  const filteredCommands = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return allCommands;
+    }
+    
+    return fuse.search(searchQuery).map(result => result.item);
+  }, [searchQuery, allCommands, fuse]);
+  
+  // Add command to recent history
+  const addToRecentCommands = useCallback((commandId: string) => {
+    setRecentCommands(prev => {
+      // Remove if it exists already to avoid duplicates
+      const filtered = prev.filter(id => id !== commandId);
+      // Add to beginning of array and limit to 10 items
+      const updated = [commandId, ...filtered].slice(0, 10);
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('recentCommands', JSON.stringify(updated));
+      } catch (error) {
+        console.error('Error saving recent commands:', error);
+      }
+      
+      return updated;
+    });
+  }, []);
+  
+  // Toggle favorite command
+  const toggleFavoriteCommand = useCallback((commandId: string) => {
+    setFavoriteCommands(prev => {
+      let updated;
+      if (prev.includes(commandId)) {
+        updated = prev.filter(id => id !== commandId);
+      } else {
+        updated = [...prev, commandId];
+      }
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('favoriteCommands', JSON.stringify(updated));
+      } catch (error) {
+        console.error('Error saving favorite commands:', error);
+      }
+      
+      return updated;
+    });
+  }, []);
+  
+  // Run command with side effects
+  const runCommand = useCallback((command: CommandType) => {
+    command.action();
+    addToRecentCommands(command.id);
+  }, [addToRecentCommands]);
   
   // Get icon for command type
-  const getCommandIcon = (type: CommandType) => {
+  const getCommandIcon = (type: string, command: CommandType) => {
+    // If command has a custom icon, try to use it first
+    if (command.icon) {
+      // For safety, we'll wrap this in a try-catch
+      try {
+        // Check if it's an SVG string (starts with <svg)
+        if (typeof command.icon === 'string' && command.icon.trim().startsWith('<svg')) {
+          return <div dangerouslySetInnerHTML={{ __html: command.icon }} className="w-4 h-4" />;
+        }
+        
+        // If it's not an SVG string, it might be a string reference to an icon component
+        return <div className="w-4 h-4">{command.icon}</div>;
+      } catch (error) {
+        console.error('Error rendering command icon:', error);
+      }
+    }
+    
+    // Fall back to default icons based on command type
     switch (type) {
+      case 'recent':
+        return <Clock className="size-4" />;
+      case 'favorite':
+        return <Star className="size-4" />;
       case 'window':
-        return <LayoutGrid className="w-4 h-4" />;
+        return <LayoutGrid className="size-4" />;
       case 'agent':
-        return <Sparkles className="w-4 h-4" />;
+        return <Sparkles className="size-4" />;
       case 'system':
-        return <Terminal className="w-4 h-4" />;
+        return <Terminal className="size-4" />;
       case 'theme':
-        return <Paintbrush className="w-4 h-4" />;
+        return <Paintbrush className="size-4" />;
       case 'suggestion':
-        return <Sparkles className="w-4 h-4" />;
+        return <Sparkles className="size-4" />;
       default:
-        return <CommandIcon className="w-4 h-4" />;
+        return <CommandIcon className="size-4" />;
     }
   };
   
-  // Get class for command type
-  const getCommandTypeClass = (type: CommandType) => {
+  // Get appropriate group label
+  const getGroupLabel = (groupKey: string) => {
+    switch (groupKey) {
+      case 'recent':
+        return 'Recent Commands';
+      case 'favorite':
+        return 'Favorites';
+      case 'window':
+        return 'Window Management';
+      case 'agent':
+        return 'Agents';
+      case 'system':
+        return 'System';
+      case 'theme':
+        return 'Appearance';
+      case 'suggestion':
+        return 'Suggestions';
+      default:
+        return groupKey.charAt(0).toUpperCase() + groupKey.slice(1);
+    }
+  };
+  
+  // Command palette UI classes based on theme
+  const getCommandUIClasses = () => {
+    const isDark = getCurrentTheme() === 'dark';
+    const isLightAccent = useThemeStore.getState().accent === 'light' && !isDark;
+    
+    return {
+      dialog: isDark 
+        ? 'bg-black/70 border border-purple-500/30 text-white' 
+        : (isLightAccent 
+           ? 'bg-white/95 border border-gray-200 text-gray-900' 
+           : 'bg-white/95 border border-purple-200 text-gray-900'),
+      backdrop: isDark ? 'bg-black/50' : 'bg-slate-900/30',
+      input: isDark
+        ? 'text-white placeholder:text-white/50'
+        : 'text-gray-800 placeholder:text-gray-400',
+      kbd: isDark
+        ? 'bg-white/10 text-white/70'
+        : (isLightAccent
+           ? 'bg-gray-100 border border-gray-200 text-gray-600'
+           : 'bg-purple-50 border border-purple-100 text-purple-700'),
+      groupHeading: isDark
+        ? 'text-white/60'
+        : (isLightAccent
+           ? 'text-gray-500'
+           : 'text-purple-600'),
+      itemSelected: isDark
+        ? 'bg-purple-800/30 border border-purple-700/30'
+        : (isLightAccent
+           ? 'bg-gray-100 border border-gray-200'
+           : 'bg-purple-100 border border-purple-200'),
+      itemHover: isDark
+        ? 'hover:bg-black/30'
+        : (isLightAccent
+           ? 'hover:bg-gray-50'
+           : 'hover:bg-purple-50'),
+    };
+  };
+  
+  // Get command type color class
+  const getCommandTypeClass = (type: string) => {
     const isDark = getCurrentTheme() === 'dark';
     const isLightAccent = useThemeStore.getState().accent === 'light' && !isDark;
     
     switch (type) {
+      case 'recent':
+        return isDark ? 'text-amber-400' : 'text-amber-600';
+      case 'favorite': 
+        return isDark ? 'text-yellow-400' : 'text-yellow-600';
       case 'window':
         return isDark ? 'text-blue-400' : 'text-blue-600';
       case 'agent':
@@ -149,18 +281,18 @@ const CommandPalette: React.FC = () => {
     }
   };
   
+  // Determine if we should use the dialog mode (recommended) or inline mode
+  // Dialog is better for accessibility and mobile use
+  const uiClasses = getCommandUIClasses();
+  
   if (!isOpen) return null;
   
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-start justify-center">
+      <div className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-6 md:p-8">
         {/* Backdrop */}
         <motion.div 
-          className={`absolute inset-0 backdrop-blur-sm ${
-            getCurrentTheme() === 'dark' 
-              ? 'bg-black/50' 
-              : 'bg-slate-900/30'
-          }`}
+          className={`absolute inset-0 backdrop-blur-sm ${uiClasses.backdrop}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -169,171 +301,219 @@ const CommandPalette: React.FC = () => {
         
         {/* Command palette */}
         <motion.div
-          className={`relative w-full max-w-lg mt-20 backdrop-blur-xl rounded-lg shadow-2xl overflow-hidden ${
-            getCurrentTheme() === 'dark'
-              ? 'bg-black/70 border border-purple-500/30 text-white'
-              : (useThemeStore.getState().accent === 'light' 
-                 ? 'bg-white/95 border border-gray-200 text-gray-900'
-                 : 'bg-white/95 border border-purple-200 text-gray-900')
-          }`}
+          className={`relative w-full max-w-lg mt-8 sm:mt-16 backdrop-blur-xl rounded-lg shadow-2xl overflow-hidden ${uiClasses.dialog}`}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.2 }}
         >
-          {/* Search header */}
-          <div className={`flex items-center px-4 py-3 border-b ${
-            getCurrentTheme() === 'dark' 
-              ? 'border-purple-500/20' 
-              : (useThemeStore.getState().accent === 'light'
-                 ? 'border-gray-200' 
-                 : 'border-purple-100')
-          }`}>
-            <Search className={`w-5 h-5 mr-2 ${
-              getCurrentTheme() === 'dark' 
-                ? 'text-white/50' 
-                : (useThemeStore.getState().accent === 'light'
-                   ? 'text-gray-400'
-                   : 'text-purple-400')
-            }`} />
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder="Type a command or search..."
+          <Command className="rounded-lg border-none bg-transparent">
+            <CommandInput 
+              placeholder="Type a command or search..." 
+              className={uiClasses.input}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`flex-1 bg-transparent border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                getCurrentTheme() === 'dark'
-                  ? 'text-white placeholder:text-white/50'
-                  : 'text-gray-800 placeholder:text-gray-400'
-              }`}
+              onValueChange={setSearchQuery}
+              autoFocus
             />
-            <div className={`flex items-center gap-1 text-xs ${
-              getCurrentTheme() === 'dark' 
-                ? 'text-white/40' 
-                : 'text-gray-500'
-            }`}>
-              <kbd className={`px-1.5 py-0.5 rounded ${
-                getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : (useThemeStore.getState().accent === 'light'
-                     ? 'bg-gray-100 border border-gray-200'
-                     : 'bg-purple-50 border border-purple-100')
-              }`}>↑↓</kbd>
-              <span>to navigate</span>
-              <kbd className={`px-1.5 py-0.5 rounded ${
-                getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : (useThemeStore.getState().accent === 'light'
-                     ? 'bg-gray-100 border border-gray-200'
-                     : 'bg-purple-50 border border-purple-100')
-              }`}>↵</kbd>
-              <span>to select</span>
-              <kbd className={`px-1.5 py-0.5 rounded ${
-                getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : (useThemeStore.getState().accent === 'light'
-                     ? 'bg-gray-100 border border-gray-200'
-                     : 'bg-purple-50 border border-purple-100')
-              }`}>esc</kbd>
-              <span>to close</span>
-            </div>
-          </div>
-          
-          {/* Commands */}
-          <div 
-            ref={commandsRef}
-            className="overflow-y-auto max-h-80"
-          >
-            {filteredCommands.length === 0 ? (
-              <div className={`p-4 text-center ${
-                getCurrentTheme() === 'dark' 
-                  ? 'text-white/50' 
-                  : 'text-gray-500'
-              }`}>
-                No commands found
-              </div>
-            ) : (
-              <div className="p-2">
-                {filteredCommands.map((command, index) => (
-                  <div
-                    key={command.id}
-                    data-index={index}
-                    className={`flex items-center px-3 py-2 rounded-md cursor-pointer transition-colors ${
-                      index === selectedIndex 
-                        ? getCurrentTheme() === 'dark' 
-                          ? 'bg-purple-800/30 border border-purple-700/30' 
-                          : (useThemeStore.getState().accent === 'light'
-                             ? 'bg-gray-100 border border-gray-200'
-                             : 'bg-purple-100 border border-purple-200')
-                        : getCurrentTheme() === 'dark'
-                          ? 'hover:bg-black/30'
-                          : (useThemeStore.getState().accent === 'light'
-                             ? 'hover:bg-gray-50'
-                             : 'hover:bg-purple-50')
-                    }`}
-                    onClick={() => {
-                      command.action();
-                    }}
-                  >
-                    <div className={`mr-3 ${getCommandTypeClass(command.type)}`}>
-                      {command.icon ? (
-                        <div dangerouslySetInnerHTML={{ __html: command.icon }} className="w-4 h-4" />
-                      ) : (
-                        getCommandIcon(command.type)
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className={`text-sm font-medium ${
-                        getCurrentTheme() === 'dark' 
-                          ? 'text-white' 
-                          : 'text-gray-800'
-                      }`}>{command.title}</div>
+            
+            <CommandList className="max-h-[300px] sm:max-h-[400px] overflow-auto">
+              <CommandEmpty>
+                <div className="py-6 text-center text-sm">
+                  No commands found for "{searchQuery}"
+                </div>
+              </CommandEmpty>
+              
+              {searchQuery.trim() === '' ? (
+                // Show categorized commands when not searching
+                <>
+                  {/* Recent commands section */}
+                  {groupedCommands.recent.length > 0 && (
+                    <>
+                      <CommandGroup heading="Recent Commands" className={`${uiClasses.groupHeading}`}>
+                        {groupedCommands.recent.map((command) => (
+                          <CommandItem
+                            key={`recent-${command.id}`}
+                            onSelect={() => runCommand(command)}
+                            className="flex items-center"
+                          >
+                            <div className={`mr-2 ${getCommandTypeClass('recent')}`}>
+                              {getCommandIcon('recent', command)}
+                            </div>
+                            <span>{command.title}</span>
+                            {command.description && (
+                              <span className="text-xs text-muted-foreground ml-2">
+                                {command.description}
+                              </span>
+                            )}
+                            {/* Favorite button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavoriteCommand(command.id);
+                              }}
+                              className="ml-auto"
+                            >
+                              <Star 
+                                className={`size-4 ${
+                                  favoriteCommands.includes(command.id) 
+                                    ? 'fill-yellow-400 text-yellow-400' 
+                                    : 'text-muted-foreground'
+                                }`} 
+                              />
+                            </button>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                      <CommandSeparator />
+                    </>
+                  )}
+                  
+                  {/* Favorite commands section */}
+                  {groupedCommands.favorite.length > 0 && (
+                    <>
+                      <CommandGroup heading="Favorites" className={`${uiClasses.groupHeading}`}>
+                        {groupedCommands.favorite.map((command) => (
+                          <CommandItem
+                            key={`favorite-${command.id}`}
+                            onSelect={() => runCommand(command)}
+                            className="flex items-center"
+                          >
+                            <div className={`mr-2 ${getCommandTypeClass('favorite')}`}>
+                              {getCommandIcon(command.type, command)}
+                            </div>
+                            <span>{command.title}</span>
+                            {command.description && (
+                              <span className="text-xs text-muted-foreground ml-2">
+                                {command.description}
+                              </span>
+                            )}
+                            {/* Unfavorite button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavoriteCommand(command.id);
+                              }}
+                              className="ml-auto"
+                            >
+                              <Star className="size-4 fill-yellow-400 text-yellow-400" />
+                            </button>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                      <CommandSeparator />
+                    </>
+                  )}
+                  
+                  {/* Command groups by type */}
+                  {Object.entries(groupedCommands).map(([groupKey, commands]) => {
+                    // Skip empty groups, recent and favorite which we've already shown
+                    if (commands.length === 0 || groupKey === 'recent' || groupKey === 'favorite') {
+                      return null;
+                    }
+                    
+                    return (
+                      <React.Fragment key={groupKey}>
+                        <CommandGroup heading={getGroupLabel(groupKey)} className={`${uiClasses.groupHeading}`}>
+                          {commands.map((command) => (
+                            <CommandItem
+                              key={command.id}
+                              onSelect={() => runCommand(command)}
+                              className="flex items-center"
+                            >
+                              <div className={`mr-2 ${getCommandTypeClass(command.type)}`}>
+                                {getCommandIcon(command.type, command)}
+                              </div>
+                              <span>{command.title}</span>
+                              {command.description && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  {command.description}
+                                </span>
+                              )}
+                              {/* Favorite button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFavoriteCommand(command.id);
+                                }}
+                                className="ml-auto"
+                              >
+                                <Star 
+                                  className={`size-4 ${
+                                    favoriteCommands.includes(command.id) 
+                                      ? 'fill-yellow-400 text-yellow-400' 
+                                      : 'text-muted-foreground'
+                                  }`} 
+                                />
+                              </button>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                        <CommandSeparator />
+                      </React.Fragment>
+                    );
+                  })}
+                </>
+              ) : (
+                // Show search results
+                <CommandGroup heading="Search Results">
+                  {filteredCommands.map((command) => (
+                    <CommandItem
+                      key={`search-${command.id}`}
+                      onSelect={() => runCommand(command)}
+                      className="flex items-center"
+                    >
+                      <div className={`mr-2 ${getCommandTypeClass(command.type)}`}>
+                        {getCommandIcon(command.type, command)}
+                      </div>
+                      <span>{command.title}</span>
                       {command.description && (
-                        <div className={`text-xs ${
-                          getCurrentTheme() === 'dark' 
-                            ? 'text-white/50' 
-                            : 'text-gray-500'
-                        }`}>{command.description}</div>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {command.description}
+                        </span>
                       )}
-                    </div>
+                      {/* Favorite button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavoriteCommand(command.id);
+                        }}
+                        className="ml-auto"
+                      >
+                        <Star 
+                          className={`size-4 ${
+                            favoriteCommands.includes(command.id) 
+                              ? 'fill-yellow-400 text-yellow-400' 
+                              : 'text-muted-foreground'
+                          }`} 
+                        />
+                      </button>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              
+              {/* Footer with keyboard shortcuts */}
+              <div className="p-2 border-t border-border">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span>Press</span>
+                    <kbd className={`px-1.5 py-0.5 rounded text-xs ${uiClasses.kbd}`}>↑↓</kbd>
+                    <span>to navigate</span>
+                    <kbd className={`px-1.5 py-0.5 rounded text-xs ${uiClasses.kbd}`}>↵</kbd>
+                    <span>to select</span>
+                    <kbd className={`px-1.5 py-0.5 rounded text-xs ${uiClasses.kbd}`}>esc</kbd>
+                    <span>to close</span>
                   </div>
-                ))}
+                  
+                  <div>
+                    {!searchQuery.trim() ? 
+                      Object.values(groupedCommands).reduce((count, cmds) => count + cmds.length, 0) : 
+                      filteredCommands.length} command{filteredCommands.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-          
-          {/* Footer */}
-          <div className={`flex items-center justify-between px-4 py-2 border-t text-xs ${
-            getCurrentTheme() === 'dark' 
-              ? 'border-purple-500/20 text-white/50' 
-              : (useThemeStore.getState().accent === 'light'
-                 ? 'border-gray-200 text-gray-500'
-                 : 'border-purple-100 text-gray-500')
-          }`}>
-            <div>
-              <span className="mr-1">Press</span>
-              <kbd className={`px-1.5 py-0.5 rounded ${
-                getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : (useThemeStore.getState().accent === 'light'
-                     ? 'bg-gray-100 border border-gray-200'
-                     : 'bg-purple-50 border border-purple-100')
-              }`}>Ctrl</kbd>
-              <span className="mx-1">+</span>
-              <kbd className={`px-1.5 py-0.5 rounded ${
-                getCurrentTheme() === 'dark' 
-                  ? 'bg-white/10' 
-                  : (useThemeStore.getState().accent === 'light'
-                     ? 'bg-gray-100 border border-gray-200'
-                     : 'bg-purple-50 border border-purple-100')
-              }`}>K</kbd>
-              <span className="ml-1">to open command palette</span>
-            </div>
-            <div>
-              {filteredCommands.length} command{filteredCommands.length !== 1 ? 's' : ''}
-            </div>
-          </div>
+            </CommandList>
+          </Command>
         </motion.div>
       </div>
     </AnimatePresence>
