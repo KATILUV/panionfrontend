@@ -62,52 +62,34 @@ const ActionCard: React.FC<ActionCardProps> = ({
   const accentColor = useThemeStore(state => state.accent);
   
   // Calculate gradient color based on accent
+  // We need a new approach that directly uses the theme's primary color
+  // This ensures the cards are always in sync with the current theme
   const getGradientColor = () => {
     // If color is explicitly provided, use it
     if (color) return color;
     
-    // Otherwise calculate based on index (which is stored in each action)
+    // Get the index for variety
     const index = colorIndex; // Use the colorIndex parameter
     
-    // Use the same logic as getCardColor function
-    switch (accentColor) {
-      case 'purple':
-        return index % 3 === 0 
-          ? 'from-purple-500 to-indigo-600' 
-          : index % 3 === 1 
-            ? 'from-indigo-400 to-purple-700' 
-            : 'from-violet-500 to-purple-600';
-      case 'blue':
-        return index % 3 === 0 
-          ? 'from-blue-500 to-cyan-600' 
-          : index % 3 === 1 
-            ? 'from-cyan-400 to-blue-700' 
-            : 'from-sky-500 to-blue-600';
-      case 'green':
-        return index % 3 === 0 
-          ? 'from-green-500 to-emerald-600' 
-          : index % 3 === 1 
-            ? 'from-emerald-400 to-green-700' 
-            : 'from-teal-500 to-green-600';
-      case 'orange':
-        return index % 3 === 0 
-          ? 'from-gray-800 to-black' 
-          : index % 3 === 1 
-            ? 'from-zinc-800 to-gray-900' 
-            : 'from-neutral-800 to-gray-950';
-      case 'pink':
-        return index % 3 === 0 
-          ? 'from-pink-500 to-rose-600' 
-          : index % 3 === 1 
-            ? 'from-rose-400 to-pink-700' 
-            : 'from-fuchsia-500 to-pink-600';
-      default:
-        return index % 3 === 0 
-          ? 'from-purple-500 to-indigo-600' 
-          : index % 3 === 1 
-            ? 'from-indigo-400 to-purple-700' 
-            : 'from-violet-500 to-purple-600';
+    // Instead of manually defining colors for each theme, use CSS variables that follow the theme
+    // The variant is just for visual variety within the same theme
+    const variant = index % 3;
+    
+    if (accentColor === 'orange') {
+      // Special case for the orange (dark mode) theme
+      return variant === 0 
+        ? 'from-gray-800 to-black' 
+        : variant === 1 
+          ? 'from-zinc-800 to-gray-900' 
+          : 'from-neutral-800 to-gray-950';
     }
+    
+    // For all other themes, use the primary color with various intensities
+    return variant === 0 
+      ? 'from-primary/80 to-primary/100' 
+      : variant === 1 
+        ? 'from-primary/70 to-primary/90' 
+        : 'from-primary/60 to-primary/80';
   };
   
   // Get the calculated gradient color
