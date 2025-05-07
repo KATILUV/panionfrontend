@@ -544,203 +544,14 @@ const MarketplacePage = () => {
     );
   };
 
-  // Featured spotlight for the top of the page
-  const FeaturedSpotlight = () => {
-    // Use all featured agents for the carousel, not just the first one
-    const featuredAgents = getFeaturedAgents();
-    if (!featuredAgents.length) return null;
-    
-    // State for carousel
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const agent = featuredAgents[currentIndex];
-    
-    // Navigation functions
-    const goToPrev = () => {
-      setCurrentIndex((prev) => 
-        prev === 0 ? featuredAgents.length - 1 : prev - 1
-      );
-    };
-    
-    const goToNext = () => {
-      setCurrentIndex((prev) => 
-        prev === featuredAgents.length - 1 ? 0 : prev + 1
-      );
-    };
-    
-    const goToSlide = (index: number) => {
-      setCurrentIndex(index);
-    };
-    
-    // Auto-advance the carousel (optional)
-    useEffect(() => {
-      if (featuredAgents.length <= 1) return; // Don't auto-advance if only one agent
-      
-      const interval = setInterval(() => {
-        goToNext();
-      }, 10000); // Change slide every 10 seconds
-      
-      return () => clearInterval(interval);
-    }, [currentIndex, featuredAgents.length]);
-    
+  // Featured section heading (simple version - carousel removed)
+  const FeaturedHeading = () => {
     return (
-      <div className="mb-8 relative overflow-hidden rounded-xl shadow-xl border border-purple-500/20">
-        {/* Navigation arrows - only show if more than one agent */}
-        {featuredAgents.length > 1 && (
-          <>
-            <button 
-              onClick={goToPrev}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm shadow-lg"
-              aria-label="Previous agent"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button 
-              onClick={goToNext}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm shadow-lg"
-              aria-label="Next agent"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </>
-        )}
-        
-        <div className="relative h-[320px] overflow-hidden">
-          {/* Carousel slide with animation */}
-          <AnimatePresence initial={false} mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ type: "spring", stiffness: 250, damping: 30 }}
-              className="absolute inset-0 flex"
-            >
-              {/* Background image with overlay */}
-              {agent.previewImage ? (
-                <>
-                  <motion.div 
-                    className="absolute inset-0 bg-center bg-cover" 
-                    style={{ backgroundImage: `url(${agent.previewImage})` }}
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 8, ease: "easeOut" }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
-                </>
-              ) : (
-                // Fallback gradient if no image
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-700/80 to-purple-500/20" />
-              )}
-              
-              {/* Content with animations */}
-              <div className="relative flex flex-col justify-center p-8 md:pl-16 md:max-w-[55%]">
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, duration: 0.4 }}
-                  className="mb-4 flex items-center space-x-2"
-                >
-                  <div className="bg-purple-600/20 backdrop-blur-sm p-2 rounded-full">
-                    <DynamicIcon name={agent.icon} size={28} className="text-purple-300" />
-                  </div>
-                  <div className="bg-purple-600 rounded-full px-3 py-1 text-xs text-white font-bold flex items-center">
-                    <Sparkles size={10} className="mr-1" />
-                    FEATURED AGENT
-                  </div>
-                </motion.div>
-                
-                <motion.h2 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.4 }}
-                  className="text-2xl md:text-3xl font-bold mb-2 text-white"
-                >
-                  {agent.title}
-                </motion.h2>
-                
-                <motion.p 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.4 }}
-                  className="text-base text-white/80 mb-4 line-clamp-2"
-                >
-                  {agent.description}
-                </motion.p>
-                
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.4 }}
-                  className="flex flex-wrap gap-2 mb-3"
-                >
-                  {agent.categories.map((catId) => {
-                    const category = categories.find(c => c.id === catId);
-                    return category ? (
-                      <div key={catId} className="bg-black/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm flex items-center">
-                        <DynamicIcon name={category.icon} size={14} className="mr-1.5" />
-                        {category.name}
-                      </div>
-                    ) : null;
-                  })}
-                </motion.div>
-                
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.4 }}
-                  className="flex flex-wrap gap-4"
-                >
-                  <button
-                    onClick={() => setSelectedAgent(agent.id)}
-                    className="bg-white text-black px-5 py-2 rounded-full font-medium flex items-center space-x-2 hover:bg-white/90 transition-all shadow-lg"
-                  >
-                    <span>Learn More</span>
-                    <ArrowUpRight size={18} />
-                  </button>
-                  
-                  <button
-                    onClick={() => agent.isInstalled ? uninstallAgent(agent.id) : installAgent(agent.id)}
-                    className={`px-5 py-2 rounded-full flex items-center space-x-2 transition-all shadow-lg
-                      ${agent.isInstalled 
-                        ? 'bg-red-500 text-white hover:bg-red-600' 
-                        : 'bg-purple-600 text-white hover:bg-purple-500'}
-                    `}
-                  >
-                    {agent.isInstalled ? (
-                      <>
-                        <Check size={18} />
-                        <span>Installed</span>
-                      </>
-                    ) : (
-                      <>
-                        <Plus size={18} />
-                        <span>Install Now</span>
-                      </>
-                    )}
-                  </button>
-                </motion.div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+      <div className="mb-8 flex items-center">
+        <div className="bg-purple-600/20 backdrop-blur-sm p-2 rounded-full mr-3">
+          <Sparkles size={20} className="text-purple-300" />
         </div>
-        
-        {/* Pagination indicators - only show if more than one agent */}
-        {featuredAgents.length > 1 && (
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-10">
-            {featuredAgents.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  index === currentIndex
-                    ? 'bg-purple-500 scale-125 shadow-glow'
-                    : 'bg-white/30 hover:bg-white/50'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
+        <h2 className="text-2xl font-bold text-white">Featured Agents</h2>
       </div>
     );
   };
@@ -963,8 +774,8 @@ const MarketplacePage = () => {
       
       {/* Content Section - with improved gradient background and visual hierarchy */}
       <section className="container mx-auto px-6 pb-20 relative bg-gradient-to-b from-[#0c0a1f] to-[#080619]">
-        {/* Only show featured spotlight when on the featured tab */}
-        {activeTab === 'featured' && <FeaturedSpotlight />}
+        {/* Simple heading for featured section */}
+        {activeTab === 'featured' && <FeaturedHeading />}
         
         {/* Main tabs - Enhanced toolbar */}
         <div className="bg-black/30 backdrop-blur-md border border-purple-500/20 rounded-xl px-3 py-2 flex justify-between items-center mb-6 mt-8 shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all">
