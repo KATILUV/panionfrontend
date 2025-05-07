@@ -702,15 +702,15 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
       const template = templates.find(t => t.id === templateId);
       const templateName = template ? template.name : 'Selected template';
       
-      // Show success message
+      // Show success toast
       toast({
-        title: 'Template applied',
+        title: "Template applied",
         description: `${templateName} has been applied to your desktop`,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       toast({
         title: 'Error applying template',
-        description: error.message || 'Failed to apply template',
+        description: error instanceof Error ? error.message : 'Failed to apply template',
         variant: 'destructive',
       });
     }
@@ -753,7 +753,7 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
         {children}
       </DialogTrigger>
       <DialogContent 
-        className={`sm:max-w-[800px] backdrop-blur-xl shadow-lg shadow-black/20 overflow-hidden z-[999] ${
+        className={`sm:max-w-[800px] backdrop-blur-xl shadow-lg shadow-black/20 overflow-hidden z-[9999] ${
           isDark
             ? 'bg-gray-900/90 border border-purple-600/50 text-white' 
             : 'bg-white/95 border border-purple-300 text-gray-900'
