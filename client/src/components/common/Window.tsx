@@ -169,11 +169,11 @@ const Window: React.FC<WindowProps> = ({
     playSnapSound();
   };
   
+  // Import taskbar dimensions hook at component level
+  const { safeAreaInsets } = useTaskbarDimensions();
+  
   // Detect which edge/corner we are near, respecting taskbar position
   const detectSnapPosition = (x: number, y: number): SnapPosition => {
-    // Get safe area insets from taskbar
-    const { safeAreaInsets } = useTaskbarDimensions();
-    
     // Calculate screen edges considering taskbar placement
     const leftEdge = safeAreaInsets.left + SNAP_THRESHOLD;
     const rightEdge = windowWidth - SNAP_THRESHOLD - safeAreaInsets.right;
@@ -208,9 +208,6 @@ const Window: React.FC<WindowProps> = ({
   
   // Apply snap positioning with respect to taskbar
   const applySnapPosition = (snapPosition: SnapPosition) => {
-    // Get taskbar dimensions
-    const { safeAreaInsets } = useTaskbarDimensions();
-    
     let newPosition = { ...position };
     let newSize = { ...size };
     
@@ -334,8 +331,7 @@ const Window: React.FC<WindowProps> = ({
     [updateAgentSize, id]
   );
   
-  // Import taskbar dimensions hook
-  const { safeAreaInsets } = useTaskbarDimensions();
+  // Taskbar safe area insets already obtained at component level
   
   // Enhanced function to keep window within viewport bounds and respect taskbar
   const keepWindowInBounds = useCallback((position: { x: number, y: number }) => {
