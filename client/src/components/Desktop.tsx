@@ -387,11 +387,10 @@ const Desktop: React.FC = () => {
         </AnimatePresence>
         
         {/* Render Window Groups */}
-        {Object.entries(windowGroups).map(([groupId, group]) => (
+        {Object.entries(windowGroups).map(([groupId, _]) => (
           <GroupedWindow
             key={groupId}
             groupId={groupId}
-            group={group}
           />
         ))}
       </div>

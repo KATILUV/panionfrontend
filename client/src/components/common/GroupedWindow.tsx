@@ -1,173 +1,209 @@
-import React, { useRef, useEffect } from 'react';
-import { Rnd } from 'react-rnd';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAgentStore, WindowGroup, AgentId } from '../../state/agentStore';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAgentStore } from '../../state/agentStore';
+import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useThemeStore } from '../../state/themeStore';
-import { X, Minus, Maximize2, Minimize2, Layers, GripVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import './Window.css';
-import { playSnapSound } from '../../lib/audioEffects';
+import Window from './Window';
+import { useIsMobile } from '../../hooks/use-mobile';
 
 interface GroupedWindowProps {
   groupId: string;
-  group: WindowGroup;
 }
 
-const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId, group }) => {
-  const isDark = useThemeStore(state => state.getCurrentTheme() === 'dark');
-  const rndRef = useRef<Rnd>(null);
-  
-  const {
-    windows,
+const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
+  const { 
+    windowGroups, 
+    windows, 
+    registry,
+    setActiveWindowInGroup,
+    ungroupWindow,
     updateGroupPosition,
     updateGroupSize,
-    closeWindowGroup,
-    minimizeWindowGroup,
-    focusWindowGroup,
-    setActiveGroupWindow,
-    ungroupWindow
+    closeGroup,
+    bringGroupToFront,
+    minimizeGroup
   } = useAgentStore();
-
-  // Focus this group when clicked
-  const handleGroupClick = () => {
-    focusWindowGroup(groupId);
+  
+  const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
+  const isMobile = useIsMobile();
+  
+  // Get the group from the store
+  const group = windowGroups[groupId];
+  
+  if (!group) return null;
+  
+  const { windows: windowIds, activeWindowId, position, size, zIndex, isMinimized } = group;
+  
+  // Calculate tab width based on number of windows (with a minimum and maximum)
+  const tabWidth = Math.min(Math.max(120, size.width / windowIds.length), 200);
+  
+  // State for tab overflow handling
+  const [startTabIndex, setStartTabIndex] = useState(0);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+  
+  // Update tab navigation arrows
+  useEffect(() => {
+    const visibleTabCount = Math.floor((size.width - 40) / tabWidth); // 40px for padding and buttons
+    setShowLeftArrow(startTabIndex > 0);
+    setShowRightArrow(startTabIndex + visibleTabCount < windowIds.length);
+  }, [startTabIndex, windowIds.length, size.width, tabWidth]);
+  
+  // Handle tab navigation
+  const scrollTabsLeft = () => {
+    setStartTabIndex(Math.max(0, startTabIndex - 1));
   };
-
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    setActiveGroupWindow(groupId, value as AgentId);
-    focusWindowGroup(groupId);
+  
+  const scrollTabsRight = () => {
+    const visibleTabCount = Math.floor((size.width - 40) / tabWidth);
+    setStartTabIndex(Math.min(windowIds.length - visibleTabCount, startTabIndex + 1));
   };
-
-  // Get windows in this group
-  const groupWindows = group.windows.map(windowId => windows[windowId]).filter(Boolean);
-  const activeWindow = windows[group.activeWindowId || ''];
-
-  // Handle window drag
-  const onDragStop = (_e: any, d: { x: number; y: number }) => {
-    playSnapSound();
-    updateGroupPosition(groupId, { x: d.x, y: d.y });
+  
+  // Get the currently active window to render
+  const activeWindow = activeWindowId ? windows[activeWindowId] : null;
+  
+  if (!activeWindow) return null;
+  
+  // Define the tab bar's visual theme based on the current theme
+  const getTabBarStyle = () => {
+    const isDark = getCurrentTheme() === 'dark';
+    return {
+      backgroundColor: isDark ? 'rgba(20, 20, 30, 0.8)' : 'rgba(240, 240, 255, 0.9)',
+      borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+    };
   };
-
-  // Handle window resize
-  const onResizeStop = (_e: any, _direction: any, ref: any, _delta: any, position: { x: number; y: number }) => {
-    updateGroupSize(
-      groupId,
-      { width: parseInt(ref.style.width), height: parseInt(ref.style.height) }
-    );
-    updateGroupPosition(groupId, position);
+  
+  // Handle closing a window in the group
+  const handleCloseWindow = (windowId: string) => {
+    // If this is the last window in the group, close the entire group
+    if (windowIds.length === 1) {
+      closeGroup(groupId);
+    } else {
+      ungroupWindow(windowId);
+    }
   };
-
+  
+  // Get active agent details for title and icon
+  const activeAgent = registry.find(agent => agent.id === activeWindowId);
+  
   return (
-    <Rnd
-      ref={rndRef}
+    <div 
+      className="grouped-window"
       style={{
-        zIndex: group.zIndex,
-        transition: 'box-shadow 0.2s ease-in-out',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)'
+        position: 'absolute',
+        top: position.y,
+        left: position.x,
+        width: size.width,
+        height: size.height,
+        zIndex,
+        display: isMinimized ? 'none' : 'flex',
+        flexDirection: 'column',
+        borderRadius: 8,
+        overflow: 'hidden',
+        boxShadow: '0 4px 25px rgba(0, 0, 0, 0.2)'
       }}
-      className={cn(
-        "window-container rounded-lg overflow-hidden border",
-        isDark 
-          ? "bg-black/30 border-slate-700/50" 
-          : "bg-white/70 border-slate-200/70",
-        "shadow-lg hover:shadow-xl"
-      )}
-      size={{ width: group.size.width, height: group.size.height }}
-      position={{ x: group.position.x, y: group.position.y }}
-      onDragStop={onDragStop}
-      onResizeStop={onResizeStop}
-      onClick={handleGroupClick}
-      dragHandleClassName="window-drag-handle"
-      bounds="parent"
-      minWidth={350}
-      minHeight={300}
     >
-      <div className="h-full flex flex-col">
-        {/* Window Header with Tabs */}
-        <div className={cn(
-          "window-drag-handle flex flex-col",
-          isDark ? "bg-gray-800/70" : "bg-gray-100/80"
-        )}>
-          {/* Top row with controls */}
-          <div className="flex items-center justify-between p-1 h-7">
-            <div className="flex items-center space-x-1 ml-1">
-              <Layers className="h-3.5 w-3.5 text-purple-500" />
-              <span className="text-xs font-medium truncate max-w-[150px]">
-                {group.title}
-              </span>
-            </div>
-            
-            <div className="flex">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5 rounded-full p-0 text-gray-500 hover:bg-gray-200/70 hover:text-gray-700"
-                onClick={() => minimizeWindowGroup(groupId)}
-              >
-                <Minus className="h-3 w-3" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5 rounded-full p-0 text-gray-500 hover:bg-red-100 hover:text-red-600"
-                onClick={() => closeWindowGroup(groupId)}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-          
-          {/* Tabs for windows */}
-          <Tabs
-            defaultValue={group.activeWindowId}
-            value={group.activeWindowId}
-            onValueChange={handleTabChange}
-            className="w-full"
+      {/* Tab Bar */}
+      <div 
+        className="grouped-window-tabs flex items-center"
+        style={{
+          ...getTabBarStyle(),
+          height: 32,
+          padding: '0 4px',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)'
+        }}
+      >
+        {/* Left scroll button */}
+        {showLeftArrow && (
+          <button 
+            className="p-1 rounded-full hover:bg-black/10 flex items-center justify-center"
+            onClick={scrollTabsLeft}
           >
-            <TabsList className="w-full bg-transparent h-8 flex overflow-x-auto px-1">
-              {groupWindows.map(window => (
-                <TabsTrigger
-                  key={window.id}
-                  value={window.id}
-                  className="h-7 rounded flex items-center justify-between group"
+            <ChevronLeft size={16} />
+          </button>
+        )}
+        
+        {/* Tabs */}
+        <div className="flex-1 flex overflow-hidden">
+          <AnimatePresence initial={false}>
+            {windowIds.slice(startTabIndex).map((windowId, index) => {
+              const window = windows[windowId];
+              const isActive = windowId === activeWindowId;
+              const agent = registry.find(a => a.id === windowId);
+              
+              if (!window || index >= Math.floor((size.width - 40) / tabWidth)) return null;
+              
+              return (
+                <motion.div
+                  key={windowId}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.15 }}
+                  className={`group tab-item flex items-center ${isActive ? 'bg-black/10' : 'hover:bg-black/5'}`}
+                  style={{
+                    width: tabWidth,
+                    height: 28,
+                    margin: '0 2px',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onClick={() => setActiveWindowInGroup(groupId, windowId)}
                 >
-                  <span className="text-xs truncate max-w-[100px]">{window.title}</span>
-                  
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 rounded-full p-0 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  {agent?.icon && (
+                    <div className="flex-shrink-0 w-4 h-4 mx-2">
+                      {agent.icon}
+                    </div>
+                  )}
+                  <div className="flex-1 truncate text-xs font-medium px-1">
+                    {window.title}
+                  </div>
+                  <button
+                    className="w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-black/20 transition-opacity"
                     onClick={(e) => {
                       e.stopPropagation();
-                      ungroupWindow(window.id);
+                      handleCloseWindow(windowId);
                     }}
                   >
-                    <X className="h-2.5 w-2.5" />
-                  </Button>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+                    <X size={12} />
+                  </button>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
-
-        {/* Window Content */}
-        <div className="flex-1 overflow-hidden">
-          {activeWindow && (
-            <div className="w-full h-full">
-              {activeWindow.component ? activeWindow.component() : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-sm opacity-70">No content available</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        
+        {/* Right scroll button */}
+        {showRightArrow && (
+          <button 
+            className="p-1 rounded-full hover:bg-black/10 flex items-center justify-center"
+            onClick={scrollTabsRight}
+          >
+            <ChevronRight size={16} />
+          </button>
+        )}
       </div>
-    </Rnd>
+      
+      {/* Render the active window content */}
+      <div className="flex-1 relative">
+        <Window
+          id={activeWindowId}
+          title={activeWindow.title}
+          isActive={true}
+          position={{x: 0, y: 0}} // Position is relative to the group container
+          size={{width: size.width, height: size.height - 32}} // Adjust for tab bar height
+          zIndex={1}
+          onClose={() => closeGroup(groupId)}
+          onMinimize={() => minimizeGroup(groupId)}
+          onFocus={() => bringGroupToFront(groupId)}
+          isMobile={isMobile}
+        >
+          {activeAgent && activeAgent.component}
+        </Window>
+      </div>
+    </div>
   );
 };
 

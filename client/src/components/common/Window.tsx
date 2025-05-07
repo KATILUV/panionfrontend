@@ -1027,6 +1027,7 @@ const Window: React.FC<WindowProps> = ({
     {/* Context Menu - Hide on mobile devices */}
     {!isMobile && (
       <WindowContextMenu
+        windowId={id}
         isVisible={contextMenu.isVisible}
         position={contextMenu.position}
         onClose={onClose}
@@ -1050,6 +1051,18 @@ const Window: React.FC<WindowProps> = ({
         isMaximized={isMaximized}
         showGrid={showGrid}
         snapToGridEnabled={snapToGridEnabled}
+        isInGroup={!!useAgentStore.getState().windows[id]?.groupId}
+      />
+    )}
+    
+    {/* Window Group Indicator */}
+    {nearbyWindow && (
+      <WindowGroupIndicator
+        isVisible={!!nearbyWindow}
+        position={nearbyWindow.position}
+        size={nearbyWindow.size}
+        direction={nearbyWindow.direction}
+        onCreateGroup={handleCreateGroup}
       />
     )}
     </MotionConfig>
