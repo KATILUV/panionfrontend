@@ -6,6 +6,9 @@ interface SnapGuidesProps {
   snapPosition: string;
   windowWidth: number;
   windowHeight: number;
+  showGrid?: boolean;
+  gridSize?: number;
+  snapToGrid?: boolean;
 }
 
 /**
@@ -16,9 +19,12 @@ const SnapGuides: React.FC<SnapGuidesProps> = ({
   isVisible,
   snapPosition,
   windowWidth,
-  windowHeight
+  windowHeight,
+  showGrid = false,
+  gridSize = 20,
+  snapToGrid = false
 }) => {
-  if (!isVisible) return null;
+  if (!isVisible && !showGrid) return null;
 
   // Styles for different snap positions
   const getHighlightStyles = () => {
@@ -116,30 +122,95 @@ const SnapGuides: React.FC<SnapGuidesProps> = ({
     return centerGuides;
   };
 
-  return (
-    <motion.div 
-      className="absolute inset-0 z-40 pointer-events-none overflow-hidden"
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      variants={guideAnimation}
-    >
-      {/* Highlight area */}
-      <div className={getHighlightStyles()} />
+  // Grid rendering function
+  const renderGrid = () => {
+    if (!showGrid) return null;
+    
+    const gridLines = [];
+    const totalWidth = window.innerWidth;
+    const totalHeight = window.innerHeight;
+    
+    // Calculate number of lines based on grid size
+    const numVerticalLines = Math.floor(totalWidth / gridSize);
+    const numHorizontalLines = Math.floor(totalHeight / gridSize);
+    
+    // Base style for grid lines
+    const lineStyle = "absolute pointer-events-none";
+    
+    // Create vertical grid lines
+    for (let i = 1; i < numVerticalLines; i++) {
+      const position = i * gridSize;
+      const opacity = i % 5 === 0 ? 0.15 : 0.08; // Make every 5th line more visible
       
-      {/* Edge guides */}
-      {getEdgeGuides()}
+      gridLines.push(
+        <div 
+          key={`v-${i}`} 
+          className={`${lineStyle} top-0 bottom-0 w-px bg-indigo-500`} 
+          style={{ 
+            left: `${position}px`,
+            opacity
+          }}
+        />
+      );
+    }
+    
+    // Create horizontal grid lines
+    for (let i = 1; i < numHorizontalLines; i++) {
+      const position = i * gridSize;
+      const opacity = i % 5 === 0 ? 0.15 : 0.08; // Make every 5th line more visible
       
-      {/* Center guides */}
-      {getCenterGuides()}
-      
-      {/* Position label */}
-      <div className="absolute left-1/2 bottom-8 transform -translate-x-1/2 z-50">
-        <div className="bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
-          {snapPosition.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-        </div>
+      gridLines.push(
+        <div 
+          key={`h-${i}`} 
+          className={`${lineStyle} left-0 right-0 h-px bg-indigo-500`} 
+          style={{ 
+            top: `${position}px`,
+            opacity
+          }}
+        />
+      );
+    }
+    
+    return (
+      <div className="absolute inset-0 z-30 pointer-events-none">
+        {gridLines}
       </div>
-    </motion.div>
+    );
+  };
+
+  return (
+    <>
+      {/* Grid (always present when showGrid=true) */}
+      {renderGrid()}
+      
+      {/* Snap guides (only visible when isVisible=true) */}
+      {isVisible && (
+        <motion.div 
+          className="absolute inset-0 z-40 pointer-events-none overflow-hidden"
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          variants={guideAnimation}
+        >
+          {/* Highlight area */}
+          <div className={getHighlightStyles()} />
+          
+          {/* Edge guides */}
+          {getEdgeGuides()}
+          
+          {/* Center guides */}
+          {getCenterGuides()}
+          
+          {/* Position label */}
+          <div className="absolute left-1/2 bottom-8 transform -translate-x-1/2 z-50">
+            <div className="bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
+              {snapPosition.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              {snapToGrid && <span className="ml-1 text-indigo-300">(Grid Snap)</span>}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </>
   );
 };
 
