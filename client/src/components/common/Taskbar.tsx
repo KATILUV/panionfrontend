@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Icon, IconButton } from '@/components/ui/icon-provider';
 import { ICONS } from '@/lib/icon-map';
 import { playOpenSound, playCloseSound } from '@/lib/audioEffects';
+import { useScreenSize } from '@/hooks/use-mobile';
 
 // Reusable TaskbarButton component to reduce repetition
 interface TaskbarButtonProps {
@@ -447,6 +448,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
   };
   
   // Simplified approach: The taskbar's base styles
+  // Use enhanced screen size detection for more precise mobile handling
+  const { screenSize, isMobile: detectedMobile } = useScreenSize();
+  const isSmallScreen = isMobile || detectedMobile || screenSize === 'xs' || screenSize === 'sm';
+  
   const getTaskbarBaseStyles = () => {
     // Basic styles that apply to all taskbar positions
     const baseStyles = {
@@ -455,21 +460,24 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
       zIndex: 200,
       backgroundColor: 'rgba(0, 0, 0, 0.2)',
       backdropFilter: enableBlur ? 'blur(4px)' : 'none',
+      transition: 'all 0.3s ease-in-out',
     };
     
-    // For mobile, we always use bottom position
-    if (isMobile) {
+    // For mobile or small screens, we always use a special bottom position
+    if (isSmallScreen) {
       return {
         ...baseStyles,
         bottom: 0,
         left: 0,
         right: 0,
-        height: '3.5rem',
+        height: screenSize === 'xs' ? '3rem' : '3.5rem',
         width: '100%',
         flexDirection: 'row' as const,
         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-        justifyContent: 'space-between',
-        padding: '0.5rem 0.5rem'
+        justifyContent: 'space-around', // Better for touch targets on mobile
+        padding: screenSize === 'xs' ? '0.25rem 0.5rem' : '0.5rem 0.5rem',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // More opaque for better visibility on mobile
+        boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06)'
       };
     }
     
@@ -579,8 +587,14 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
       >
         {/* Agent icons - changes flex direction based on position orientation */}
         <div className={`
-          flex-1 flex ${isVertical && !isMobile ? 'flex-col space-y-1 py-2' : 'items-center space-x-1'}
-          ${isMobile ? 'justify-center' : position.location === 'right' ? 'justify-center w-full' : ''}
+          flex-1 flex 
+          ${isVertical && !isSmallScreen ? 'flex-col space-y-1 py-2' : 'items-center space-x-1'}
+          ${isSmallScreen 
+            ? 'justify-center space-x-2' 
+            : position.location === 'right' 
+              ? 'justify-center w-full' 
+              : ''}
+          ${screenSize === 'xs' ? 'px-0.5' : 'px-1'}
         `}>
           {/* Individual Agent Icons */}
           {registry.map(agent => {
