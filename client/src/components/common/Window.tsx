@@ -47,9 +47,10 @@ const throttle = <F extends (...args: any[]) => any>(
   return throttled as (...args: Parameters<F>) => ReturnType<F>;
 };
 
-// Snap threshold in pixels
-const SNAP_THRESHOLD = 20;
+// Snap threshold in pixels - increased for easier snapping
+const SNAP_THRESHOLD = 30;
 const GRID_SIZE = 20; // Grid size for snap-to-grid feature
+const SNAP_ENABLED_BY_DEFAULT = true; // Enable snapping by default
 
 // Edge positions
 type SnapPosition = 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'none';
@@ -468,23 +469,24 @@ const Window: React.FC<WindowProps> = ({
         setCurrentSnapPosition(snapPosition);
       }
       
-      // The magnetic effect: if we're close to a special position, actually snap the window
+      // Apply automatic snapping when near a snap point (no Alt key required)
       // This creates a "magnetism" feel as the window gets pulled to key positions
-      if (snapPosition !== 'none' && keyModifiers.alt) {
-        // Apply magnetic pull toward the snap position
-        // We'll call applySnapPosition to position it immediately
-        const screenCenter = {
-          x: (windowWidth - size.width) / 2,
-          y: (windowHeight - size.height) / 2
-        };
+      if (snapPosition !== 'none' && (SNAP_ENABLED_BY_DEFAULT || keyModifiers.alt)) {
+        // Visual indication happens automatically via the snap indicators
+        // Only apply the actual snap position when drag stops for better UX
         
-        // Determine a destination based on the snap position
-        let magneticPosition = { ...boundedPosition };
-        
+        // For center position, we can snap immediately as it doesn't resize the window
         if (snapPosition === 'center') {
-          magneticPosition = screenCenter;
+          const screenCenter = {
+            x: (windowWidth - size.width) / 2,
+            y: (windowHeight - size.height) / 2
+          };
           // Use debounced update for smoother performance
-          debouncedUpdatePosition(magneticPosition);
+          debouncedUpdatePosition(screenCenter);
+        } else {
+          // For edge snapping, just update position normally during drag
+          // The actual snap will be applied on drag stop
+          debouncedUpdatePosition(boundedPosition);
         }
       } else {
         // Update position with debounced function for better performance
@@ -511,9 +513,11 @@ const Window: React.FC<WindowProps> = ({
     const boundedPosition = keepWindowInBounds({ x: d.x, y: d.y });
     
     // Check if we should snap to screen edges/corners
-    const snapPosition = detectSnapPosition(boundedPosition.x, boundedPosition.y);
+    const snapPosition = currentSnapPosition !== 'none' 
+      ? currentSnapPosition // Use the current snap position from drag
+      : detectSnapPosition(boundedPosition.x, boundedPosition.y); // Detect it again
     
-    if (snapPosition !== 'none') {
+    if (snapPosition !== 'none' && (SNAP_ENABLED_BY_DEFAULT || keyModifiers.alt)) {
       // Apply the snap position to screen edges
       applySnapPosition(snapPosition);
       return;
@@ -522,8 +526,8 @@ const Window: React.FC<WindowProps> = ({
     // Final position with bounds applied
     let finalPosition = { ...boundedPosition };
     
-    // Apply snap-to-grid if enabled or shift key is pressed
-    if (snapToGridEnabled || keyModifiers.shift) {
+    // Apply snap-to-grid if enabled
+    if (snapToGridEnabled) {
       finalPosition = snapToGrid(finalPosition);
       // Play snap sound for feedback
       playSnapSound();
@@ -1051,17 +1055,26 @@ const Window: React.FC<WindowProps> = ({
         >
           {/* Accent color bar at the top of focused windows */}
           <div className="window-accent-bar"></div>
-        {/* Snap Overlay Indicators */}
+        {/* Enhanced Snap Overlay Indicators */}
         <AnimatePresence>
           {isDragging && currentSnapPosition !== 'none' && (
             <motion.div
-              className="absolute inset-0 z-10 pointer-events-none rounded-lg"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              className="absolute inset-0 z-10 pointer-events-none rounded-lg overflow-hidden"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 500,
+                damping: 30,
+                duration: 0.2 
+              }}
             >
-              <div className={`absolute inset-0 rounded-lg border-2 border-primary bg-primary/20`} />
+              <div className={`absolute inset-0 rounded-lg border-2 border-primary bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb)/0.3)]`} />
+              <div className="absolute top-0 left-0 w-full h-1 bg-primary/60" />
+              <div className="absolute top-0 right-0 h-full w-1 bg-primary/60" />
+              <div className="absolute bottom-0 right-0 w-full h-1 bg-primary/60" />
+              <div className="absolute top-0 left-0 h-full w-1 bg-primary/60" />
             </motion.div>
           )}
         </AnimatePresence>
