@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, FC } from 'react';
 import Window from './common/Window';
 import GroupedWindow from './common/GroupedWindow';
 import Taskbar from './common/Taskbar';
@@ -18,6 +18,98 @@ import SimpleEmptyStateDashboard from './system/SimpleEmptyStateDashboard';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence } from 'framer-motion';
 import { useScreenSize, useOrientation } from '../hooks/use-mobile';
+
+// ThemeAwareButton Component for Empty Dashboard
+interface ThemeAwareButtonProps {
+  onClick: () => void;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  colorIndex: number;
+}
+
+const ThemeAwareButton: FC<ThemeAwareButtonProps> = ({ 
+  onClick, 
+  title, 
+  description, 
+  icon, 
+  colorIndex 
+}) => {
+  // Get current theme accent directly in the component render
+  const accent = useThemeStore(state => state.accent);
+  const [renderKey, setRenderKey] = useState(0);
+  
+  // Re-render when accent changes
+  useEffect(() => {
+    console.log(`ThemeAwareButton (${title}): Accent changed to ${accent}`);
+    setRenderKey(prev => prev + 1);
+  }, [accent, title]);
+  
+  // Determine gradient based on theme and index
+  const getGradient = () => {
+    const variant = colorIndex % 3;
+    
+    switch (accent) {
+      case 'purple':
+        return variant === 0 
+          ? 'from-purple-500 to-indigo-600' 
+          : variant === 1 
+            ? 'from-indigo-400 to-purple-700' 
+            : 'from-violet-500 to-purple-600';
+      case 'blue':
+        return variant === 0 
+          ? 'from-blue-500 to-cyan-600' 
+          : variant === 1 
+            ? 'from-cyan-400 to-blue-700' 
+            : 'from-sky-500 to-blue-600';
+      case 'green':
+        return variant === 0 
+          ? 'from-green-500 to-emerald-600' 
+          : variant === 1 
+            ? 'from-emerald-400 to-green-700' 
+            : 'from-teal-500 to-green-600';
+      case 'orange': // Dark theme
+        return variant === 0 
+          ? 'from-gray-800 to-black' 
+          : variant === 1 
+            ? 'from-zinc-800 to-gray-900' 
+            : 'from-neutral-800 to-gray-950';
+      case 'pink':
+        return variant === 0 
+          ? 'from-pink-500 to-rose-600' 
+          : variant === 1 
+            ? 'from-rose-400 to-pink-700' 
+            : 'from-fuchsia-500 to-pink-600';
+      default: // Default to purple
+        return variant === 0 
+          ? 'from-purple-500 to-indigo-600' 
+          : variant === 1 
+            ? 'from-indigo-400 to-purple-700' 
+            : 'from-violet-500 to-purple-600';
+    }
+  };
+  
+  // Get the current gradient based on theme
+  const gradient = getGradient();
+  
+  return (
+    <button 
+      key={`theme-btn-${title}-${renderKey}`}
+      onClick={onClick}
+      className={`bg-gradient-to-br ${gradient} p-[1px] rounded-xl shadow-lg`}
+    >
+      <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
+        <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
+          {React.isValidElement(icon) 
+            ? React.cloneElement(icon as React.ReactElement, { className: "h-5 w-5 text-white" })
+            : icon}
+          {title}
+        </h3>
+        <p className="text-sm text-white/90">{description}</p>
+      </div>
+    </button>
+  );
+};
 
 // Component rendering helper
 const renderAgentContent = (agentId: string) => {
@@ -292,71 +384,50 @@ const Desktop: React.FC = () => {
               <h1 className="text-2xl font-bold mb-6 text-center text-white drop-shadow-md">Welcome to Panion</h1>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Directly embedded action cards with simple HTML */}
-                <button 
+                {/* Theme-aware action cards */}
+                <ThemeAwareButton
                   onClick={() => {
                     openAgent('clara');
                     console.log("Clara button clicked");
                   }}
-                  className="bg-gradient-to-br from-purple-500 to-indigo-600 p-[1px] rounded-xl shadow-lg"
-                >
-                  <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
-                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
-                      {React.createElement(MessageSquare, { className: "h-5 w-5 text-white" })}
-                      Chat with Clara
-                    </h3>
-                    <p className="text-sm text-white/90">Start a conversation with Clara, your AI assistant</p>
-                  </div>
-                </button>
+                  colorIndex={0}
+                  icon={<MessageSquare className="h-5 w-5" />}
+                  title="Chat with Clara"
+                  description="Start a conversation with Clara, your AI assistant"
+                />
 
-                <button 
+                <ThemeAwareButton
                   onClick={() => {
                     openAgent('notes');
                     console.log("Notes button clicked");
                   }}
-                  className="bg-gradient-to-br from-indigo-400 to-purple-700 p-[1px] rounded-xl shadow-lg"
-                >
-                  <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
-                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
-                      {React.createElement(FileText, { className: "h-5 w-5 text-white" })}
-                      Take Notes
-                    </h3>
-                    <p className="text-sm text-white/90">Open the Notes agent to capture your thoughts</p>
-                  </div>
-                </button>
+                  colorIndex={1}
+                  icon={<FileText className="h-5 w-5" />}
+                  title="Take Notes"
+                  description="Open the Notes agent to capture your thoughts"
+                />
 
-                <button 
+                <ThemeAwareButton
                   onClick={() => {
                     openAgent('settings');
                     console.log("Settings button clicked");
                   }}
-                  className="bg-gradient-to-br from-violet-500 to-purple-600 p-[1px] rounded-xl shadow-lg"
-                >
-                  <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
-                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
-                      {React.createElement(Settings, { className: "h-5 w-5 text-white" })}
-                      Settings
-                    </h3>
-                    <p className="text-sm text-white/90">Configure your Panion desktop environment</p>
-                  </div>
-                </button>
+                  colorIndex={2}
+                  icon={<Settings className="h-5 w-5" />}
+                  title="Settings"
+                  description="Configure your Panion desktop environment"
+                />
 
-                <button 
+                <ThemeAwareButton
                   onClick={() => {
-                    // Update this to navigate to marketplace page instead of opening agent
                     navigate('/marketplace');
                     console.log("Marketplace page navigation clicked");
                   }}
-                  className="bg-gradient-to-br from-purple-500 to-indigo-600 p-[1px] rounded-xl shadow-lg"
-                >
-                  <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
-                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
-                      {React.createElement(PlusCircle, { className: "h-5 w-5 text-white" })}
-                      Marketplace
-                    </h3>
-                    <p className="text-sm text-white/90">Discover and install new agents for your workspace</p>
-                  </div>
-                </button>
+                  colorIndex={0}
+                  icon={<PlusCircle className="h-5 w-5" />}
+                  title="Marketplace"
+                  description="Discover and install new agents for your workspace"
+                />
               </div>
             </div>
           </div>
