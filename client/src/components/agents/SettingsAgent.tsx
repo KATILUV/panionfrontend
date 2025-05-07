@@ -256,6 +256,15 @@ const SettingsAgent = () => {
       <div className="md:hidden overflow-x-auto pb-2 pt-1 px-2 border-b border-white/10">
         <div className="flex space-x-1 min-w-max">
           <Button 
+            variant={activeTab === 'user-profile' ? 'secondary' : 'ghost'} 
+            className="px-2 py-1 h-auto text-xs"
+            onClick={() => setActiveTab('user-profile')}
+          >
+            <User className="h-3 w-3 mr-1" />
+            Profile
+          </Button>
+
+          <Button 
             variant={activeTab === 'appearance' ? 'secondary' : 'ghost'} 
             className="px-2 py-1 h-auto text-xs"
             onClick={() => setActiveTab('appearance')}
@@ -386,6 +395,7 @@ const SettingsAgent = () => {
         
         {/* Main Content - Adjusted padding for mobile */}
         <div className="flex-1 overflow-auto p-3 md:p-6 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+          {activeTab === 'user-profile' && renderUserProfileTab()}
           {activeTab === 'appearance' && renderAppearanceTab()}
           {activeTab === 'system' && renderSystemTab()}
           {activeTab === 'taskbar' && (

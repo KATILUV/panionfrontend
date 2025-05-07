@@ -6,6 +6,6 @@ interface SettingsTabState {
 }
 
 export const useSettingsTabStore = create<SettingsTabState>((set) => ({
-  activeTab: 'appearance',
+  activeTab: 'user-profile',
   setActiveTab: (tab) => set({ activeTab: tab }),
 }));
