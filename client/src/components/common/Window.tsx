@@ -429,8 +429,8 @@ const Window: React.FC<WindowProps> = ({
 
     let newPosition = { x: boundedX, y: boundedY };
     
-    // Apply snap-to-grid if shift key is pressed
-    if (keyModifiers.shift) {
+    // Apply snap-to-grid if enabled or shift key is pressed
+    if (snapToGridEnabled || keyModifiers.shift) {
       newPosition = snapToGrid(newPosition);
       // Play snap sound for feedback
       playSnapSound();
@@ -683,16 +683,18 @@ const Window: React.FC<WindowProps> = ({
     }
   };
 
-  // Create a visual grid overlay when shift is pressed
+  // Create a visual grid overlay when shift is pressed or showGrid is enabled
   const renderGridOverlay = () => {
-    if (!keyModifiers.shift) return null;
+    // Only show the grid overlay if either shift is pressed or showGrid is enabled 
+    // (but not if already using SnapGuides grid display)
+    if ((!keyModifiers.shift && !showGrid) || (showGrid && isDragging)) return null;
     
     // Create a more sophisticated grid with primary and secondary lines
     return (
       <motion.div 
         className="grid-overlay fixed inset-0 pointer-events-none"
         initial={{ opacity: 0 }}
-        animate={{ opacity: keyModifiers.shift ? 1 : 0 }}
+        animate={{ opacity: keyModifiers.shift || showGrid ? 1 : 0 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
       >
@@ -720,10 +722,19 @@ const Window: React.FC<WindowProps> = ({
         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-indigo-500/30" />
         <div className="absolute top-1/2 left-0 right-0 h-px bg-indigo-500/30" />
         
-        {/* Indication text */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
-          Grid Mode: Use Shift + Drag to snap windows
-        </div>
+        {/* Indication text - only show when using shift key, not when grid is toggled on permanently */}
+        {keyModifiers.shift && !showGrid && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
+            Grid Mode: Use Shift + Drag to snap windows
+          </div>
+        )}
+        
+        {/* Different indication when grid is enabled permanently */}
+        {showGrid && snapToGridEnabled && !keyModifiers.shift && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-indigo-500/30">
+            Grid Snapping Enabled
+          </div>
+        )}
       </motion.div>
     );
   };
@@ -749,12 +760,15 @@ const Window: React.FC<WindowProps> = ({
         {renderGridOverlay()}
       </AnimatePresence>
       
-      {/* Visual snap guides */}
+      {/* Visual snap guides and grid */}
       <SnapGuides 
         isVisible={isDragging && currentSnapPosition !== 'none'}
         snapPosition={currentSnapPosition}
         windowWidth={windowWidth}
         windowHeight={windowHeight}
+        showGrid={showGrid}
+        gridSize={GRID_SIZE}
+        snapToGrid={snapToGridEnabled}
       />
       
       <Rnd
@@ -929,7 +943,11 @@ const Window: React.FC<WindowProps> = ({
           applySnapPosition(snapMap[side]);
         }}
         onCloseMenu={handleCloseContextMenu}
+        onToggleGrid={handleToggleGrid}
+        onToggleSnapToGrid={handleToggleSnapToGrid}
         isMaximized={isMaximized}
+        showGrid={showGrid}
+        snapToGridEnabled={snapToGridEnabled}
       />
     )}
     </MotionConfig>
