@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAgentStore } from '../../state/agentStore';
+import { useCommandStore } from '../../state/commandStore';
 import { PlusCircle, Fingerprint, Layout, Book, MessageSquare, FileText, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import RotatingTagline from '../RotatingTagline';
@@ -14,9 +15,10 @@ interface QuickActionProps {
   icon: React.ReactNode;
   onClick: () => void;
   color: string;
+  shortcut?: string;
 }
 
-const QuickAction: React.FC<QuickActionProps> = ({ title, description, icon, onClick, color }) => {
+const QuickAction: React.FC<QuickActionProps> = ({ title, description, icon, onClick, color, shortcut }) => {
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
@@ -33,6 +35,13 @@ const QuickAction: React.FC<QuickActionProps> = ({ title, description, icon, onC
         </CardHeader>
         <CardContent>
           <CardDescription className="text-sm">{description}</CardDescription>
+          {shortcut && (
+            <div className="mt-2 flex items-center">
+              <kbd className="px-2 py-1 text-xs font-semibold bg-black/10 dark:bg-white/10 rounded border border-gray-200 dark:border-gray-700">
+                {shortcut}
+              </kbd>
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>
@@ -121,27 +130,44 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
     }
   };
   
+  const toggleCommandPalette = () => {
+    // This will work better than dispatching a keydown event
+    useCommandStore.getState().togglePalette();
+  };
+  
   const quickActions = [
     {
       title: "Chat with Clara",
       description: "Start a conversation with Clara, your AI assistant",
       icon: <MessageSquare className="h-5 w-5" />,
       onClick: () => openAgent('clara'),
-      color: getCardColor(0)
+      color: getCardColor(0),
+      shortcut: "Shift+C",
+      shortcutAction: (e: KeyboardEvent) => {
+        if (e.shiftKey && e.key === 'C') openAgent('clara');
+      }
     },
     {
       title: "Take Notes",
       description: "Open the Notes agent to capture your thoughts",
       icon: <FileText className="h-5 w-5" />,
       onClick: () => openAgent('notes'),
-      color: getCardColor(1)
+      color: getCardColor(1),
+      shortcut: "Shift+N", 
+      shortcutAction: (e: KeyboardEvent) => {
+        if (e.shiftKey && e.key === 'N') openAgent('notes');
+      }
     },
     {
-      title: "Press Cmd+K",
-      description: "Open the command palette to access all features",
+      title: "Command Palette",
+      description: "Access all features and tools (Cmd+K / Ctrl+K)",
       icon: <Layout className="h-5 w-5" />,
-      onClick: () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true })),
-      color: getCardColor(2)
+      onClick: toggleCommandPalette,
+      color: getCardColor(2),
+      shortcut: "Cmd+K",
+      shortcutAction: (e: KeyboardEvent) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') toggleCommandPalette();
+      }
     }
   ];
   
@@ -154,12 +180,31 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
     "Your digital command center"
   ];
 
+  // Add keyboard shortcut handlers
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only apply shortcuts when empty state is visible (no windows open)
+      if (Object.values(useAgentStore.getState().windows).some(w => w.isOpen)) {
+        return;
+      }
+      
+      // Process shortcuts
+      quickActions.forEach(action => {
+        if (action.shortcutAction) {
+          action.shortcutAction(e);
+        }
+      });
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Modify quickActions text for mobile if needed
   const mobileQuickActions = quickActions.map(action => {
-    if (isMobile && action.title === "Press Cmd+K") {
+    if (isMobile && action.title === "Command Palette") {
       return {
         ...action,
-        title: "Command Palette",
         description: "Tap to access all features and tools"
       };
     }
@@ -196,6 +241,7 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
               icon={action.icon}
               onClick={action.onClick}
               color={action.color}
+              shortcut={!isMobile ? action.shortcut : undefined}
             />
           ))}
         </div>
