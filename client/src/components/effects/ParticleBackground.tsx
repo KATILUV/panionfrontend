@@ -59,9 +59,10 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
     }
   };
   
-  // Initialize particles
+  // Initialize particles when dimensions change or component mounts
   useEffect(() => {
-    if (!canvasRef.current) return;
+    // Only initialize if we have valid dimensions
+    if (!canvasRef.current || dimensions.width === 0 || dimensions.height === 0) return;
     
     const baseHue = getBaseHue();
     const particles: Particle[] = [];
@@ -79,7 +80,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
     }
     
     particlesRef.current = particles;
-  }, [dimensions, particleCount, particleSize, particleSpeed, particleOpacity, accent]);
+  }, [dimensions.width, dimensions.height]);
   
   // Handle mouse movement for interactive particles
   useEffect(() => {
@@ -215,7 +216,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [dimensions, particleSize, particleOpacity, interactive, accent]);
+  }, [particleSize, particleOpacity, interactive]);
   
   return (
     <canvas 
