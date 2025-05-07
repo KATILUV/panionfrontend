@@ -426,6 +426,13 @@ const Window: React.FC<WindowProps> = ({
   const handleDragStop = (_e: any, d: { x: number, y: number }) => {
     setIsDragging(false);
     
+    // Check if user is trying to create a window group
+    if (nearbyWindow && keyModifiers.shift) {
+      // Create a window group with the nearby window
+      handleCreateGroup();
+      return;
+    }
+    
     // Clear nearby window
     setNearbyWindow(null);
     
@@ -884,6 +891,15 @@ const Window: React.FC<WindowProps> = ({
         snapToGrid={snapToGridEnabled}
       />
       
+      {/* Window grouping indicator */}
+      <WindowGroupIndicator 
+        isVisible={!!nearbyWindow && keyModifiers.shift}
+        position={nearbyWindow?.position || { x: 0, y: 0 }}
+        size={nearbyWindow?.size || { width: 0, height: 0 }}
+        direction={nearbyWindow?.direction || 'center'}
+        onCreateGroup={handleCreateGroup}
+      />
+      
       <Rnd
         style={{
           zIndex,
@@ -1067,16 +1083,7 @@ const Window: React.FC<WindowProps> = ({
       />
     )}
     
-    {/* Window Group Indicator */}
-    {nearbyWindow && (
-      <WindowGroupIndicator
-        isVisible={!!nearbyWindow}
-        position={nearbyWindow.position}
-        size={nearbyWindow.size}
-        direction={nearbyWindow.direction}
-        onCreateGroup={handleCreateGroup}
-      />
-    )}
+
     </MotionConfig>
   );
 };
