@@ -17,6 +17,7 @@ import CommandPalette from './system/CommandPalette';
 import SimpleEmptyStateDashboard from './system/SimpleEmptyStateDashboard';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence } from 'framer-motion';
+import { useScreenSize, useOrientation } from '../hooks/use-mobile';
 
 // Component rendering helper
 const renderAgentContent = (agentId: string) => {
@@ -123,21 +124,16 @@ const Desktop: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
   
-  // Detect mobile devices on mount and window resize
+  // Use the enhanced screen size hook
+  const { isMobile: isMobileScreen, isTablet, size } = useScreenSize();
+  
+  // Update the mobile state when screen size changes
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    // Initial check
-    checkMobile();
-    
-    // Setup resize listener
-    window.addEventListener('resize', checkMobile);
-    
-    // Cleanup
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    setIsMobile(isMobileScreen);
+  }, [isMobileScreen]);
+  
+  // Get device orientation
+  const orientation = useOrientation();
   
   // Create a demo window group for testing
   const createDemoWindowGroup = () => {

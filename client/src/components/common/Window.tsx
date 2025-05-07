@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Rnd } from 'react-rnd';
 import { useAgentStore, AgentId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
-import { Minimize2, X, Maximize2 } from 'lucide-react';
+import { Minimize2, X, Maximize2, ArrowLeft, MoreVertical } from 'lucide-react';
 import { useWindowSize } from 'react-use';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { playSnapSound, playOpenSound, playCloseSound } from '../../lib/audioEffects';
 import WindowContextMenu from './WindowContextMenu';
 import SnapGuides from './SnapGuides';
+import { useScreenSize, useOrientation } from '../../hooks/use-mobile';
 import './Window.css';
 
 // Snap threshold in pixels
@@ -789,13 +790,14 @@ const Window: React.FC<WindowProps> = ({
         onDragStop={handleDragStop}
         onResizeStop={handleResizeStop}
         onMouseDown={onFocus}
+        onTouchStart={onFocus}
         disableDragging={isMaximized || isMobile} // Disable dragging on mobile or when maximized
         enableResizing={!isMaximized && !isMobile} // Disable resizing on mobile or when maximized
         dragHandleClassName="window-drag-handle"
         bounds="parent"
         minWidth={isMobile ? windowWidth * 0.95 : 300} // Adjusted width for mobile
         minHeight={isMobile ? windowHeight * 0.7 : 200} // Adjusted height for mobile
-        cancel=".window-control-button, .window-control-button *, button" // Prevent drag when clicking buttons
+        cancel=".window-control-button, .window-control-button *, button, a, input, textarea, select" // Prevent drag when clicking buttons and interactive elements
         resizeHandleStyles={{
           bottomRight: { zIndex: 2, display: isMobile ? 'none' : 'block' }, // Hide resize handles on mobile
           bottomLeft: { zIndex: 2, display: isMobile ? 'none' : 'block' },
