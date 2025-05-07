@@ -180,16 +180,24 @@ export function generateWindowStates(
     return windowStates;
   }
   
+  console.log("Template being used:", template);
+  console.log("Available agent IDs:", agentIds);
+  
   // Sort agents based on template priority if provided
   let sortedAgentIds = [...agentIds];
   if (template.layout.priority && template.layout.priority.length) {
+    console.log("Template has priority agents:", template.layout.priority);
+    
     // Move priority agents to the front of the array
     sortedAgentIds = template.layout.priority
       .filter(id => agentIds.includes(id)) // Keep only existing agents
       .concat(agentIds.filter(id => !template.layout.priority!.includes(id))); // Add the rest
+    
+    console.log("Sorted agent IDs:", sortedAgentIds);
   }
   
   const { type } = template.layout;
+  console.log("Template layout type:", type);
   
   switch (type) {
     case 'centered':

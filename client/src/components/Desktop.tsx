@@ -314,6 +314,33 @@ const Desktop: React.FC = () => {
               <h2 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80">
                 this is Panion
               </h2>
+              
+              {/* Debug button for testing Split View template */}
+              <button 
+                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 mx-auto hover:bg-blue-700 transition-colors"
+                onClick={() => {
+                  console.log("Split View test button clicked");
+                  try {
+                    const { createLayoutFromTemplate } = useAgentStore.getState();
+                    console.log("Applying split-view template directly");
+                    createLayoutFromTemplate('split-view');
+                    toast({
+                      title: "Split View Test",
+                      description: "Attempting to apply Split View template"
+                    });
+                  } catch (err) {
+                    console.error("Error applying split view template:", err);
+                    toast({
+                      title: "Error",
+                      description: "Failed to apply Split View template",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+              >
+                <Layout className="h-5 w-5" />
+                Test Split View Template
+              </button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

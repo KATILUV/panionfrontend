@@ -326,6 +326,9 @@ const TemplatePreview = ({
   onApplyDirect?: (id: string) => void;
   isDark: boolean;
 }) => {
+  // Debug logging for templates
+  console.log(`Rendering template: ${template.id} (${template.layout.type})`);
+  
   return (
     <div 
       className={`rounded-lg overflow-hidden shadow-md transition-all hover:shadow-lg ${
