@@ -76,71 +76,126 @@ const MarketplacePage = () => {
     return Array.from(tagSet);
   };
   
-  // Single agent card component - enhanced for marketplace
+  // Enhanced agent card component with hover effects and masonry layout support
   const AgentCard = ({ agent }: { agent: any }) => {
     const isSelected = selectedAgent === agent.id;
     const isInstalled = agent.isInstalled;
+    const [isHovered, setIsHovered] = useState(false);
+    
+    // Determine card height class for masonry-style layout
+    // We'll use agent description length & features to suggest a row height
+    const getCardHeight = () => {
+      // Factors: has preview image, description length, number of categories
+      if (agent.previewImage) return 'row-span-2'; // Taller for cards with images
+      
+      const descLength = agent.description.length;
+      const catCount = agent.categories.length;
+      
+      if (descLength > 200 || catCount > 4) return 'row-span-2';
+      if (descLength < 100 && catCount < 3) return 'row-span-1';
+      return agent.isFeatured ? 'row-span-2' : 'row-span-1'; 
+    };
     
     return (
       <motion.div 
-        className={`relative rounded-lg overflow-hidden cursor-pointer transition-all
-          ${isSelected 
-            ? 'ring-2 ring-purple-500/50 bg-black/30' 
-            : 'hover:bg-black/30 bg-black/20'}
-        `}
+        className={`relative rounded-xl overflow-hidden cursor-pointer group ${getCardHeight()}`}
         onClick={() => setSelectedAgent(isSelected ? null : agent.id)}
-        whileHover={{ scale: 1.02, y: -3 }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        whileHover={{ 
+          y: -5,
+          transition: { 
+            duration: 0.2,
+          },
+        }}
         whileTap={{ scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+        layout // Enable layout animations for masonry effect
+        transition={{ 
+          layout: { 
+            type: 'spring', 
+            stiffness: 350, 
+            damping: 30
+          }
+        }}
       >
-        {/* New badge */}
+        {/* Card background with gradient overlay */}
+        <div 
+          className={`absolute inset-0 transition-all duration-300 ${
+            isSelected 
+              ? 'bg-gradient-to-br from-purple-900/50 to-black/70 backdrop-blur-sm' 
+              : 'bg-gradient-to-br from-black/20 to-black/30 backdrop-blur-sm group-hover:from-purple-900/30 group-hover:to-black/50'
+          }`}
+        />
+        
+        {/* Highlight border - animated on hover */}
+        <div 
+          className={`absolute inset-0 transition-opacity duration-300 pointer-events-none ${
+            isSelected
+              ? 'opacity-100 border-2 border-purple-500/50'
+              : isHovered
+                ? 'opacity-100 border border-purple-500/30' 
+                : 'opacity-0 border border-transparent'
+          }`}
+        />
+        
+        {/* New badge with enhanced styling */}
         {agent.isNew && (
-          <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">
-            NEW
+          <div className="absolute top-3 right-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md transform transition-transform group-hover:scale-110 flex items-center">
+            <span className="mr-1">NEW</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse" />
           </div>
         )}
         
-        {/* Featured badge */}
+        {/* Featured badge with enhanced styling */}
         {agent.isFeatured && (
-          <div className="absolute top-3 left-3 bg-purple-600 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10 flex items-center">
+          <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md transform transition-transform group-hover:scale-110 flex items-center">
             <Sparkles size={10} className="mr-1" />
-            FEATURED
+            <span>FEATURED</span>
           </div>
         )}
         
-        {/* Preview image */}
+        {/* Preview image with enhanced effects */}
         {agent.previewImage && (
-          <div className="h-48 w-full relative overflow-hidden">
+          <div className="relative overflow-hidden">
             <div 
-              className="absolute inset-0 bg-center bg-cover" 
+              className="h-48 w-full transition-transform duration-700 ease-out group-hover:scale-105"
               style={{ 
                 backgroundImage: `url(${agent.previewImage})`,
-                filter: 'blur(1px)',
-                transform: 'scale(1.05)'
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />
+            {/* Gradient overlay with varying opacity */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90 group-hover:from-black/10 transition-opacity duration-300" />
+            
+            {/* Agent icon and name positioned over image */}
             <div className="absolute bottom-0 left-0 p-4 text-white w-full">
               <div className="flex items-center">
-                <div className="p-2 rounded-full bg-purple-600/20 backdrop-blur-sm mr-3">
+                <div className="p-2 rounded-full bg-purple-600/30 backdrop-blur-sm mr-3 group-hover:bg-purple-600/50 transition-colors duration-300 shadow-lg">
                   <DynamicIcon name={agent.icon} size={20} className="text-white" />
                 </div>
-                <h3 className="text-xl font-semibold">{agent.title}</h3>
+                <h3 className="text-xl font-semibold group-hover:text-white transition-colors text-white/90">{agent.title}</h3>
               </div>
             </div>
           </div>
         )}
         
-        {/* Content */}
-        <div className="p-5">
+        {/* Content section with improved spacing */}
+        <div className="p-5 relative">
           {/* Only show icon and title if there's no preview image */}
           {!agent.previewImage && (
             <div className="flex items-center mb-3">
-              <div className={`p-2 rounded-full mr-3 ${isSelected ? 'bg-purple-600/30' : 'bg-purple-500/10'}`}>
-                <DynamicIcon name={agent.icon} size={24} className={isSelected ? 'text-purple-300' : 'text-white/80'} />
+              <div className={`p-2 rounded-full mr-3 transition-colors duration-300 ${
+                isSelected 
+                  ? 'bg-purple-600/50' 
+                  : isHovered 
+                    ? 'bg-purple-600/30' 
+                    : 'bg-purple-500/10'
+              }`}>
+                <DynamicIcon name={agent.icon} size={24} className="text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-medium">{agent.title}</h3>
+                <h3 className="text-lg font-medium text-white/90 group-hover:text-white transition-colors">{agent.title}</h3>
                 <div className="flex items-center text-xs text-white/60">
                   <span>{agent.author}</span>
                   <span className="mx-1">•</span>
@@ -150,62 +205,99 @@ const MarketplacePage = () => {
             </div>
           )}
           
-          <p className="text-sm text-white/80 mb-4 line-clamp-2">{agent.description}</p>
+          {/* Description with line clamp and hover effect to show more */}
+          <div className="relative">
+            <p className={`text-sm text-white/70 mb-4 transition-all duration-300 group-hover:text-white/90 ${
+              isSelected ? 'line-clamp-none' : 'line-clamp-2'
+            }`}>
+              {agent.description}
+            </p>
+            
+            {/* Read more indicator that fades out when selected */}
+            {!isSelected && agent.description.length > 120 && (
+              <div className="absolute bottom-0 right-0 text-xs text-purple-300 bg-gradient-to-l from-black/40 px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                Read more
+              </div>
+            )}
+          </div>
           
-          {/* Categories */}
+          {/* Categories with enhanced visual style */}
           <div className="flex flex-wrap gap-1.5 mb-4">
             {agent.categories.slice(0, 3).map((catId: string) => {
               const category = categories.find(c => c.id === catId);
               return category ? (
-                <div key={catId} className="bg-purple-500/10 text-purple-200 px-2 py-0.5 rounded-full text-xs flex items-center">
-                  <DynamicIcon name={category.icon} size={10} className="mr-1" />
+                <div 
+                  key={catId} 
+                  className="bg-black/40 text-purple-200 px-2 py-0.5 rounded-full text-xs flex items-center border border-purple-500/20 group-hover:border-purple-500/40 transition-colors"
+                >
+                  <DynamicIcon name={category.icon} size={10} className="mr-1 text-purple-300" />
                   {category.name}
                 </div>
               ) : null;
             })}
             {agent.categories.length > 3 && (
-              <div className="bg-black/20 text-white/60 px-2 py-0.5 rounded-full text-xs">
+              <div className="bg-black/40 text-white/60 px-2 py-0.5 rounded-full text-xs border border-white/10">
                 +{agent.categories.length - 3} more
               </div>
             )}
           </div>
           
+          {/* Stats and action buttons with enhanced animations */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="flex items-center">
+              <div className="flex items-center group-hover:scale-105 transition-transform">
                 <Star size={14} className="text-yellow-400 mr-1" />
-                <span className="text-xs">{agent.rating}</span>
+                <span className="text-xs text-white/80 group-hover:text-white transition-colors">{agent.rating}</span>
               </div>
-              <div className="flex items-center">
-                <Download size={14} className="text-white/60 mr-1" />
-                <span className="text-xs">{agent.downloads}</span>
+              <div className="flex items-center group-hover:scale-105 transition-transform">
+                <Download size={14} className="text-white/60 mr-1 group-hover:text-white/80 transition-colors" />
+                <span className="text-xs text-white/80 group-hover:text-white transition-colors">{agent.downloads}</span>
               </div>
             </div>
             
-            <button
+            {/* Install/Uninstall button with enhanced hover effects */}
+            <motion.button
               onClick={(e) => {
                 e.stopPropagation();
                 isInstalled ? uninstallAgent(agent.id) : installAgent(agent.id);
               }}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center space-x-1
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center space-x-1 shadow-md
                 ${isInstalled 
-                  ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400' 
-                  : 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-300'}
+                  ? 'bg-green-500/20 hover:bg-green-500/40 text-green-400 border border-green-500/30' 
+                  : 'bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30'}
               `}
             >
               {isInstalled ? (
                 <>
-                  <Check size={14} />
+                  <Check size={14} className="mr-1" />
                   <span>Installed</span>
                 </>
               ) : (
                 <>
-                  <Plus size={14} />
+                  <Plus size={14} className="mr-1" />
                   <span>Install</span>
                 </>
               )}
-            </button>
+            </motion.button>
           </div>
+          
+          {/* Quick preview indicator - only shows on hover */}
+          {!isSelected && (
+            <motion.div 
+              className="absolute -bottom-10 left-0 right-0 flex justify-center pointer-events-none"
+              animate={{ 
+                y: isHovered ? -15 : 0,
+                opacity: isHovered ? 1 : 0
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs text-white/80 flex items-center shadow-lg">
+                <span>Click for details</span>
+              </div>
+            </motion.div>
+          )}
         </div>
       </motion.div>
     );
@@ -656,9 +748,9 @@ const MarketplacePage = () => {
   // Main component render
   return (
     <div className="min-h-screen">
-      {/* Hero section with Panion branding */}
+      {/* Enhanced Split Hero Section */}
       <section className="relative overflow-hidden py-10 md:py-16 bg-gradient-to-br from-[#1c1056] via-[#1a1245] to-[#21115b]">
-        {/* Background stars/particles effect */}
+        {/* Enhanced Background stars/particles effect */}
         <div className="absolute inset-0 z-0 opacity-30">
           <div className="absolute h-1 w-1 bg-white rounded-full top-[15%] left-[10%] shadow-glow"></div>
           <div className="absolute h-1 w-1 bg-white rounded-full top-[35%] left-[25%] shadow-glow"></div>
@@ -672,23 +764,6 @@ const MarketplacePage = () => {
         </div>
         
         <div className="container mx-auto px-6 relative z-20">
-          {/* Animated background elements - larger, more subtle */}
-          <motion.div 
-            className="absolute -top-40 -left-20 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.3, 0.2] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div 
-            className="absolute top-20 right-0 w-96 h-96 bg-violet-500/15 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.25, 0.15] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          />
-          <motion.div 
-            className="absolute bottom-0 left-1/4 w-72 h-72 bg-indigo-600/10 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.2, 0.1] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          />
-          
           {/* Back to desktop link */}
           <div className="mb-5">
             <Link href="/desktop" className="inline-flex items-center text-white/70 hover:text-white transition-colors bg-black/20 px-4 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
@@ -697,50 +772,188 @@ const MarketplacePage = () => {
             </Link>
           </div>
           
-          {/* Page title with branding - more compact */}
-          <div className="max-w-4xl">
+          {/* Split Hero Layout - Two columns on desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            {/* Left column - Text and search content */}
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7 }}
-              className="relative mb-4"
+              className="relative z-10"
             >
-              <motion.div 
-                className="absolute -top-6 -left-6 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.div 
-                className="absolute -top-6 -right-6 w-32 h-32 bg-violet-500/20 rounded-full blur-2xl"
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-              />
+              {/* Title with enhanced visual treatment */}
+              <div className="relative mb-6">
+                <motion.div 
+                  className="absolute -top-10 -left-10 w-40 h-40 bg-purple-500/20 rounded-full blur-2xl"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                />
+                
+                <div className="relative z-20 mb-2">
+                  <h1 className="text-4xl md:text-6xl font-bold mb-3 text-white tracking-tight">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-300 to-white">Panion</span> 
+                    <span className="relative">
+                      <span className="relative z-10">Agent</span>
+                      <motion.span 
+                        className="absolute bottom-1 left-0 h-3 w-full bg-purple-600/30 rounded-sm -z-10"
+                        animate={{ width: ["0%", "100%"], opacity: [0, 1] }}
+                        transition={{ duration: 0.8, delay: 0.5 }}
+                      />
+                    </span>
+                    <span className="block">Marketplace</span>
+                  </h1>
+                </div>
+                
+                <p className="text-lg md:text-xl text-purple-100 max-w-xl mb-8 leading-relaxed">
+                  Discover specialized agents to enhance your workspace and boost your productivity with intelligent automation.
+                </p>
+              </div>
               
-              <h1 className="text-3xl md:text-5xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 drop-shadow-sm relative z-30">
-                <span className="absolute inset-0 blur-xl bg-black/20 -z-10 rounded-3xl"></span>
-                <span className="text-violet-300">Panion</span> Agent Marketplace
-              </h1>
-              <p className="text-lg text-purple-100 max-w-2xl">
-                Discover specialized agents to enhance your workspace and boost your productivity
-              </p>
+              {/* Enhanced Search bar with glow effect */}
+              <div className="relative max-w-md mb-8">
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-violet-500/20 blur-md z-0"
+                  animate={{ scale: [1, 1.05, 1], opacity: [0.2, 0.3, 0.2] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search agents..."
+                  className="pl-12 pr-4 py-3 bg-black/40 backdrop-blur-sm border border-purple-500/30 rounded-full text-white w-full focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 relative z-10 shadow-[0_0_15px_rgba(147,51,234,0.15)]"
+                  value={searchQuery}
+                  onChange={(e) => searchAgents(e.target.value)}
+                />
+                <div className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-purple-300 z-10 bg-purple-500/20 rounded-full p-1">
+                  <Search size={18} />
+                </div>
+              </div>
+              
+              {/* Quick filter chips for popular categories */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <div className="text-sm text-white/70 mr-1 flex items-center">Popular:</div>
+                {categories.slice(0, 4).map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setCategory(selectedCategory === category.id ? null : category.id)}
+                    className={`px-3 py-1.5 rounded-full text-sm flex items-center transition-all
+                      ${selectedCategory === category.id
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30'
+                        : 'bg-black/30 hover:bg-black/40 text-white/80 hover:text-white border border-white/10 backdrop-blur-sm'
+                      }
+                    `}
+                  >
+                    <DynamicIcon name={category.icon} size={14} className="mr-1.5" />
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+              
+              {/* CTA buttons */}
+              <div className="flex flex-wrap gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white rounded-full font-medium flex items-center shadow-lg shadow-purple-900/30 transition-all"
+                  onClick={() => setActiveTab('featured')}
+                >
+                  <Sparkles size={16} className="mr-2" />
+                  Explore Featured Agents
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-5 py-2.5 bg-black/40 hover:bg-black/50 text-white border border-purple-500/30 rounded-full font-medium flex items-center backdrop-blur-sm transition-all"
+                  onClick={() => setActiveTab('browse')}
+                >
+                  <Tag size={16} className="mr-2" />
+                  Browse All Agents
+                </motion.button>
+              </div>
             </motion.div>
             
-            {/* Search box - enhanced with glow effect */}
-            <div className="relative max-w-lg">
-              <motion.div
-                className="absolute inset-0 rounded-full bg-violet-500/20 blur-md z-0"
-                animate={{ scale: [1, 1.05, 1], opacity: [0.2, 0.3, 0.2] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            {/* Right column - Visual elements and featured preview */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="relative hidden md:block"
+            >
+              {/* Decorative blob/gradient backgrounds */}
+              <motion.div 
+                className="absolute -top-40 -right-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.3, 0.2] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
               />
-              <input
-                type="text"
-                placeholder="Search agents..."
-                className="pl-10 pr-4 py-2.5 bg-black/40 backdrop-blur-sm border border-purple-500/30 rounded-full text-white w-full focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 relative z-10 shadow-[0_0_15px_rgba(147,51,234,0.1)]"
-                value={searchQuery}
-                onChange={(e) => searchAgents(e.target.value)}
+              <motion.div 
+                className="absolute top-20 left-0 w-80 h-80 bg-violet-500/15 rounded-full blur-3xl"
+                animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.25, 0.15] }}
+                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
               />
-              <Search size={16} className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-purple-300 z-10" />
-            </div>
+              
+              {/* Featured mini preview cards */}
+              <div className="relative px-4 py-6">
+                <div className="absolute inset-0 bg-gradient-to-br from-black/30 to-purple-900/20 backdrop-blur-sm rounded-2xl border border-white/10"></div>
+                
+                <h3 className="relative text-lg font-semibold mb-4 text-white flex items-center">
+                  <Sparkles size={18} className="text-purple-300 mr-2" />
+                  Featured Agents
+                </h3>
+                
+                {/* Staggered agent preview cards */}
+                <div className="relative flex flex-col">
+                  {getFeaturedAgents().slice(0, 3).map((agent, idx) => (
+                    <motion.div
+                      key={agent.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 + (idx * 0.1) }}
+                      className={`relative p-3 mb-3 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 
+                        ${idx === 0 ? 'z-30 -rotate-2 shadow-xl' : idx === 1 ? 'z-20 rotate-1 shadow-lg' : 'z-10 -rotate-1 shadow-md'}`}
+                      style={{ transformOrigin: 'center' }}
+                    >
+                      <div className="flex items-center">
+                        <div className="p-2 rounded-full bg-purple-600/20 mr-3">
+                          <DynamicIcon name={agent.icon} size={20} className="text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">{agent.title}</h4>
+                          <div className="text-xs text-white/60">{agent.author}</div>
+                        </div>
+                        {agent.isInstalled ? (
+                          <div className="ml-auto bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full flex items-center">
+                            <Check size={10} className="mr-1" />
+                            Installed
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              installAgent(agent.id);
+                            }}
+                            className="ml-auto bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-xs px-2 py-0.5 rounded-full flex items-center transition-colors"
+                          >
+                            <Plus size={10} className="mr-1" />
+                            Install
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                  
+                  {/* More agents indicator */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                    className="flex justify-center items-center py-2 text-sm text-white/70"
+                  >
+                    <ArrowUpRight size={14} className="mr-1.5" />
+                    Explore all {agents.length} agents
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
         
@@ -910,19 +1123,19 @@ const MarketplacePage = () => {
         {selectedAgent ? (
           <AgentDetail />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 auto-rows-min">
             {getDisplayedAgents().map((agent) => (
               <AgentCard key={agent.id} agent={agent} />
             ))}
             
             {getDisplayedAgents().length === 0 && (
               <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-                <div className="bg-black/20 rounded-full p-6 mb-6">
-                  <Search size={40} className="text-white/40" />
+                <div className="w-16 h-16 bg-purple-900/30 rounded-full flex items-center justify-center mb-4">
+                  <SearchX size={24} className="text-purple-300" />
                 </div>
-                <h3 className="text-xl font-medium mb-2">No agents found</h3>
-                <p className="text-white/60 max-w-lg">
-                  {"Try adjusting your search or filters to find what you're looking for"}
+                <h3 className="text-xl font-medium text-white mb-2">No agents found</h3>
+                <p className="text-white/60 max-w-md mb-4">
+                  {"We couldn't find any agents matching your current filters. Try adjusting your search criteria."}
                 </p>
                 {activeTab === 'browse' && (
                   <button 
