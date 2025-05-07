@@ -208,9 +208,9 @@ const Desktop: React.FC = () => {
     
     log.action('System ready for user interaction');
     
-    // Show the system log by default on first run
+    // Don't automatically show the system log on startup
     const setVisibility = useSystemLogStore.getState().setVisibility;
-    setVisibility(true);
+    setVisibility(false);
     
     // Cleanup auto-save when component unmounts
     return () => {
