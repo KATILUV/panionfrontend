@@ -375,8 +375,20 @@ const Window: React.FC<WindowProps> = ({
       const snapPosition = detectSnapPosition(d.x, d.y);
       
       // Check for nearby windows for potential grouping
-      const nearby = detectNearbyWindows(d.x, d.y);
-      setNearbyWindow(nearby);
+      // Only check this if holding Shift key to make it more intentional
+      if (keyModifiers.shift) {
+        const nearby = detectNearbyWindows(d.x, d.y);
+        if (nearby && nearby.id !== nearbyWindow?.id) {
+          // Play sound when a new window is detected nearby
+          playSnapSound();
+        }
+        setNearbyWindow(nearby);
+      } else {
+        // Clear nearby window if shift is not pressed
+        if (nearbyWindow) {
+          setNearbyWindow(null);
+        }
+      }
       
       // Show visual snap indicator when near a snap area
       if (currentSnapPosition !== snapPosition) {

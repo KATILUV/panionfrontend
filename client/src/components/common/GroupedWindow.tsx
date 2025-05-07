@@ -62,7 +62,8 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
   // Get the currently active window to render
   const activeWindow = activeWindowId ? windows[activeWindowId] : null;
   
-  if (!activeWindow) return null;
+  // Return early if no active window found
+  if (!activeWindow || !activeWindowId) return null;
   
   // Define the tab bar's visual theme based on the current theme
   const getTabBarStyle = () => {
@@ -150,7 +151,10 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
                     cursor: 'pointer',
                     transition: 'background-color 0.2s ease'
                   }}
-                  onClick={() => setActiveGroupWindow(groupId, windowId)}
+                  onClick={() => {
+                    console.log(`Setting active window in group: ${groupId}, window: ${windowId}`);
+                    setActiveGroupWindow(groupId, windowId);
+                  }}
                 >
                   {agent?.icon && (
                     <div className="flex-shrink-0 w-4 h-4 mx-2">
@@ -201,8 +205,11 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
             onFocus={() => focusWindowGroup(groupId)}
             isMobile={isMobile}
           >
-            {activeAgent && React.isValidElement(activeAgent.component) 
-              ? activeAgent.component 
+            {/* Render the agent content safely */}
+            {activeAgent?.component ? 
+              (typeof activeAgent.component === 'function' ? 
+                activeAgent.component() : 
+                activeAgent.component) 
               : <div>No content available</div>}
           </Window>
         )}
