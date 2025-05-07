@@ -1,14 +1,14 @@
-import React, { useEffect, useState, useMemo, FC } from 'react';
+import React, { useEffect, useState, FC } from 'react';
 import Window from './common/Window';
 import GroupedWindow from './common/GroupedWindow';
 import Taskbar from './common/Taskbar';
 import { useLocation } from 'wouter';
-import { useAgentStore, AgentId, WindowLayout } from '../state/agentStore';
+import { useAgentStore, AgentId } from '../state/agentStore';
 import { useThemeStore } from '../state/themeStore';
 import { useSystemLogStore, log } from '../state/systemLogStore';
 import { useUserPrefsStore } from '../state/userPrefsStore';
 import { initializeAgentRegistry } from '../state/agentStore';
-import { MessageSquare, FileText, Settings, PlusCircle, Layout, Layers, Grid3x3, Maximize2, X } from 'lucide-react';
+import { MessageSquare, FileText, Settings, PlusCircle, Layout, Layers, X } from 'lucide-react';
 import { ApplyLayout } from '../lib/layoutUtils';
 import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
@@ -209,8 +209,7 @@ const Desktop: React.FC = () => {
   const minimizeAgent = useAgentStore(state => state.minimizeAgent);
   const focusAgent = useAgentStore(state => state.focusAgent);
   const openAgent = useAgentStore(state => state.openAgent);
-  const layouts = useAgentStore(state => state.layouts);
-  const loadLayout = useAgentStore(state => state.loadLayout);
+  // Simple desktop without complex layouts
   const [isMobile, setIsMobile] = useState(false);
   const userName = useUserPrefsStore(state => state.name);
   const setUserName = useUserPrefsStore(state => state.setName);
@@ -233,29 +232,23 @@ const Desktop: React.FC = () => {
     log.thinking('Loading user preferences and system settings');
     log.memory('Retrieving saved window layouts and theme settings');
     
-    // Check for default layout and load it if found
-    const allLayouts = useAgentStore.getState().layouts;
-    const defaultLayout = allLayouts.find(layout => layout.isDefault);
+    // Simple initialization - no complex layouts
+    log.action('Using simplified layout system');
     
-    if (defaultLayout) {
-      log.action(`Loading default layout: ${defaultLayout.name}`);
-      setTimeout(() => {
-        loadLayout(defaultLayout.id);
+    // Apply the Split View layout as a demo
+    setTimeout(() => {
+      try {
+        // Use our simplified layout utility to show basic functionality
+        ApplyLayout.splitView('clara', 'notes');
+        
         toast({
-          title: "Default layout applied",
-          description: `Layout "${defaultLayout.name}" has been loaded automatically`,
+          title: "Welcome to Panion",
+          description: "Split view layout applied as a demonstration"
         });
-      }, 500); // Small delay to ensure everything is initialized
-    } else {
-      log.action('No default layout found, using standard configuration');
-    }
-    
-    // Initialize window layout auto-save
-    const { autoSaveCurrentLayout, autoSaveEnabled, autoSaveInterval } = useAgentStore.getState();
-    if (autoSaveEnabled) {
-      log.info(`Auto-save enabled with interval: ${autoSaveInterval/1000} seconds`);
-      autoSaveCurrentLayout(); // Start the auto-save cycle
-    }
+      } catch (err) {
+        console.error("Error applying initial layout:", err);
+      }
+    }, 2000); // Delay to ensure everything is loaded
     
     log.action('System ready for user interaction');
     
