@@ -174,32 +174,105 @@ const Window: React.FC<WindowProps> = ({
   
   // Detect which edge/corner we are near, respecting taskbar position
   const detectSnapPosition = (x: number, y: number): SnapPosition => {
+    // If shift is pressed, disable snapping
+    if (keyModifiers.shift) return 'none';
+    
+    // Use a hysteresis approach to prevent rapid flipping between snap positions
+    // Only change snap positions when clearly in a new zone or clearly out of all zones
+    const EDGE_THRESHOLD = 50; // Increased for better UX
+    const CORNER_THRESHOLD = 70; // Larger threshold for corners
+    const CENTER_THRESHOLD = 80; // Larger threshold for center detection
+    
     // Calculate screen edges considering taskbar placement
-    const leftEdge = safeAreaInsets.left + SNAP_THRESHOLD;
-    const rightEdge = windowWidth - SNAP_THRESHOLD - safeAreaInsets.right;
-    const topEdge = safeAreaInsets.top + SNAP_THRESHOLD;
-    const bottomEdge = windowHeight - SNAP_THRESHOLD - safeAreaInsets.bottom;
+    const leftEdge = safeAreaInsets.left + EDGE_THRESHOLD;
+    const rightEdge = windowWidth - size.width - EDGE_THRESHOLD - safeAreaInsets.right;
+    const topEdge = safeAreaInsets.top + EDGE_THRESHOLD;
+    const bottomEdge = windowHeight - size.height - EDGE_THRESHOLD - safeAreaInsets.bottom;
     
     // Calculate center position respecting safe areas
     const availableWidth = windowWidth - safeAreaInsets.left - safeAreaInsets.right;
     const availableHeight = windowHeight - safeAreaInsets.top - safeAreaInsets.bottom;
-    const centerX = safeAreaInsets.left + (availableWidth / 2);
-    const centerY = safeAreaInsets.top + (availableHeight / 2);
+    const centerX = safeAreaInsets.left + (availableWidth / 2) - (size.width / 2);
+    const centerY = safeAreaInsets.top + (availableHeight / 2) - (size.height / 2);
+    
+    // Coordinates of window center (not corner)
+    const windowCenterX = x + (size.width / 2);
+    const windowCenterY = y + (size.height / 2);
+    
+    // If we're already in a snap position, use a larger threshold to exit it
+    // This creates a "sticky" effect and prevents oscillation
+    const EXIT_THRESHOLD = 100;
+    
+    // If we're currently in a snap position, check if we should exit it
+    if (currentSnapPosition !== 'none') {
+      const screen = {
+        left: safeAreaInsets.left,
+        right: windowWidth - safeAreaInsets.right,
+        top: safeAreaInsets.top,
+        bottom: windowHeight - safeAreaInsets.bottom,
+        centerX: centerX + (size.width / 2),
+        centerY: centerY + (size.height / 2)
+      };
+      
+      // Calculate if we're far enough from the current snap zone to exit
+      switch (currentSnapPosition) {
+        case 'left':
+          if (Math.abs(x - screen.left) > EXIT_THRESHOLD) return 'none';
+          break;
+        case 'right':
+          if (Math.abs(x + size.width - screen.right) > EXIT_THRESHOLD) return 'none';
+          break;
+        case 'top':
+          if (Math.abs(y - screen.top) > EXIT_THRESHOLD) return 'none';
+          break;
+        case 'bottom':
+          if (Math.abs(y + size.height - screen.bottom) > EXIT_THRESHOLD) return 'none';
+          break;
+        case 'center':
+          if (Math.abs(windowCenterX - screen.centerX) > EXIT_THRESHOLD || 
+              Math.abs(windowCenterY - screen.centerY) > EXIT_THRESHOLD) return 'none';
+          break;
+        // Handle corners similarly
+        default:
+          // For compound positions (corners), require significant movement to exit
+          if (currentSnapPosition.includes('-')) {
+            const isLeft = currentSnapPosition.includes('left');
+            const isRight = currentSnapPosition.includes('right');
+            const isTop = currentSnapPosition.includes('top');
+            const isBottom = currentSnapPosition.includes('bottom');
+            
+            let shouldExit = false;
+            
+            if ((isLeft && Math.abs(x - screen.left) > EXIT_THRESHOLD) ||
+                (isRight && Math.abs(x + size.width - screen.right) > EXIT_THRESHOLD) ||
+                (isTop && Math.abs(y - screen.top) > EXIT_THRESHOLD) ||
+                (isBottom && Math.abs(y + size.height - screen.bottom) > EXIT_THRESHOLD)) {
+              shouldExit = true;
+            }
+            
+            if (shouldExit) return 'none';
+          }
+      }
+      
+      // If we didn't exit, keep the current snap position
+      return currentSnapPosition;
+    }
     
     // Check corners first (they have priority)
     if (x <= leftEdge && y <= topEdge) return 'top-left';
     if (x >= rightEdge && y <= topEdge) return 'top-right';
-    if (x <= leftEdge && y >= bottomEdge - 40) return 'bottom-left';
-    if (x >= rightEdge && y >= bottomEdge - 40) return 'bottom-right';
+    if (x <= leftEdge && y >= bottomEdge) return 'bottom-left';
+    if (x >= rightEdge && y >= bottomEdge) return 'bottom-right';
     
     // Then check edges
     if (x <= leftEdge) return 'left';
     if (x >= rightEdge) return 'right';
     if (y <= topEdge) return 'top';
-    if (y >= bottomEdge - 40) return 'bottom';
+    if (y >= bottomEdge) return 'bottom';
     
-    // Check center position
-    if (Math.abs(x - centerX) <= SNAP_THRESHOLD * 2 && Math.abs(y - centerY) <= SNAP_THRESHOLD * 2) {
+    // Check center position - use window center point rather than top-left
+    if (Math.abs(windowCenterX - (centerX + size.width/2)) <= CENTER_THRESHOLD && 
+        Math.abs(windowCenterY - (centerY + size.height/2)) <= CENTER_THRESHOLD) {
       return 'center';
     }
     
@@ -458,13 +531,13 @@ const Window: React.FC<WindowProps> = ({
     };
   }, [isActive, keyModifiers, applySnapPosition, toggleMaximize]);
   
-  // Enhanced handle drag with magnetic snap and visual feedback
+  // Enhanced handle drag with smoother magnetic snap and improved visual feedback
   const handleDrag = (_e: any, d: { x: number, y: number }) => {
     if (!isDragging) return;
     
     // Only detect snap areas every few pixels to improve performance
     // Using a debounce-like approach based on position
-    const snapDebounceThreshold = 5; // Only check every 5px of movement
+    const snapDebounceThreshold = 10; // Increased threshold for better performance
     
     // Create a "position key" that changes less frequently
     const posKeyX = Math.floor(d.x / snapDebounceThreshold);
@@ -478,58 +551,100 @@ const Window: React.FC<WindowProps> = ({
       // Apply bounds checking during drag to prevent dragging off-screen
       const boundedPosition = keepWindowInBounds({ x: d.x, y: d.y });
       
+      // Create a new position object that we'll modify for the magnetic effect
+      let magneticPosition = { ...boundedPosition };
+      
       // Enhanced snap detection with magnetic effect
       const snapPosition = detectSnapPosition(boundedPosition.x, boundedPosition.y);
+      const snapPositionChanged = currentSnapPosition !== snapPosition;
       
-      // Check for nearby windows for potential grouping
-      // Only check this if holding Shift key to make it more intentional
+      // Only play sound when snap position changes to avoid constant noise
+      if (snapPositionChanged) {
+        // Update visual snap indicators
+        setCurrentSnapPosition(snapPosition);
+        
+        if (snapPosition !== 'none') {
+          // Play sound feedback only when entering a snap zone, not during movement within it
+          playSnapSound();
+        }
+      }
+      
+      // Check for nearby windows for potential grouping (only when Shift is pressed)
       if (keyModifiers.shift) {
-        // Use a higher threshold distance when holding shift
-        const distanceThreshold = 100; // pixels
+        // Use a moderate distance threshold
         const nearby = detectNearbyWindows(boundedPosition.x, boundedPosition.y);
         
+        // Only play sound when detecting a new nearby window
         if (nearby && nearby.id !== nearbyWindow?.id) {
-          // Play sound when a new window is detected nearby
           playSnapSound();
         }
-        setNearbyWindow(nearby);
-      } else {
-        // Clear nearby window if shift is not pressed
-        if (nearbyWindow) {
-          setNearbyWindow(null);
-        }
-      }
-      
-      // Show visual snap indicator when near a snap area
-      if (currentSnapPosition !== snapPosition) {
-        if (snapPosition !== 'none') {
-          // Play a subtle tick sound for feedback
-          playSnapSound();
-        }
-        setCurrentSnapPosition(snapPosition);
-      }
-      
-      // Apply automatic snapping when near a snap point (no Alt key required)
-      // This creates a "magnetism" feel as the window gets pulled to key positions
-      if (snapPosition !== 'none' && (SNAP_ENABLED_BY_DEFAULT || keyModifiers.alt)) {
-        // Visual indication happens automatically via the snap indicators
-        // Only apply the actual snap position when drag stops for better UX
         
-        // For center position, we can snap immediately as it doesn't resize the window
-        if (snapPosition === 'center') {
-          const screenCenter = {
-            x: (windowWidth - size.width) / 2,
-            y: (windowHeight - size.height) / 2
-          };
-          // Use debounced update for smoother performance
-          debouncedUpdatePosition(screenCenter);
-        } else {
-          // For edge snapping, just update position normally during drag
-          // The actual snap will be applied on drag stop
-          debouncedUpdatePosition(boundedPosition);
+        setNearbyWindow(nearby);
+      } else if (nearbyWindow) {
+        // Clear nearby window if shift is not pressed
+        setNearbyWindow(null);
+      }
+      
+      // Apply smooth magnetic effect when near snap points
+      if (snapPosition !== 'none' && (SNAP_ENABLED_BY_DEFAULT || keyModifiers.alt)) {
+        // Calculate available space accounting for taskbar
+        const availableWidth = windowWidth - safeAreaInsets.left - safeAreaInsets.right;
+        const availableHeight = windowHeight - safeAreaInsets.top - safeAreaInsets.bottom;
+        
+        // Calculate snap target positions
+        let targetX = boundedPosition.x;
+        let targetY = boundedPosition.y;
+        
+        // Determine target position based on snap position
+        switch (snapPosition) {
+          case 'left':
+            targetX = safeAreaInsets.left;
+            break;
+          case 'right':
+            targetX = windowWidth - size.width - safeAreaInsets.right;
+            break;
+          case 'top':
+            targetY = safeAreaInsets.top;
+            break;
+          case 'bottom':
+            targetY = windowHeight - size.height - safeAreaInsets.bottom;
+            break;
+          case 'center':
+            targetX = safeAreaInsets.left + (availableWidth - size.width) / 2;
+            targetY = safeAreaInsets.top + (availableHeight - size.height) / 2;
+            break;
+          // Handle corners
+          case 'top-left':
+            targetX = safeAreaInsets.left;
+            targetY = safeAreaInsets.top;
+            break;
+          case 'top-right':
+            targetX = windowWidth - size.width - safeAreaInsets.right;
+            targetY = safeAreaInsets.top;
+            break;
+          case 'bottom-left':
+            targetX = safeAreaInsets.left;
+            targetY = windowHeight - size.height - safeAreaInsets.bottom;
+            break;
+          case 'bottom-right':
+            targetX = windowWidth - size.width - safeAreaInsets.right;
+            targetY = windowHeight - size.height - safeAreaInsets.bottom;
+            break;
         }
+        
+        // Apply a subtle magnetic pull effect (15% pull)
+        // This creates a smooth attraction toward snap points without jumping
+        const PULL_STRENGTH = 0.15;
+        
+        magneticPosition = {
+          x: boundedPosition.x * (1 - PULL_STRENGTH) + targetX * PULL_STRENGTH,
+          y: boundedPosition.y * (1 - PULL_STRENGTH) + targetY * PULL_STRENGTH
+        };
+        
+        // Use the magnetic position for smoother movement
+        debouncedUpdatePosition(magneticPosition);
       } else {
-        // Update position with debounced function for better performance
+        // No snapping, just use the bounded position
         debouncedUpdatePosition(boundedPosition);
       }
     }
