@@ -338,7 +338,7 @@ const Desktop: React.FC = () => {
                 >
                   <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
                     <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
-                      <Settings className="h-5 w-5 text-white" />
+                      {React.createElement(Settings, { className: "h-5 w-5 text-white" })}
                       Settings
                     </h3>
                     <p className="text-sm text-white/90">Configure your Panion desktop environment</p>
@@ -355,7 +355,7 @@ const Desktop: React.FC = () => {
                 >
                   <div className="bg-card/50 backdrop-blur-sm p-4 rounded-xl h-full">
                     <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-white">
-                      <PlusCircle className="h-5 w-5 text-white" />
+                      {React.createElement(PlusCircle, { className: "h-5 w-5 text-white" })}
                       Marketplace
                     </h3>
                     <p className="text-sm text-white/90">Discover and install new agents for your workspace</p>
