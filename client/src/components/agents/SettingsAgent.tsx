@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { AgentStatusType } from '@/components/ui/agent-status';
 import { WindowPanel, WindowContent, WindowSection } from '@/components/ui/window-components';
+import { DensitySelector } from '@/components/ui/density-selector';
 import TaskbarSettings from '../settings/TaskbarSettings';
 
 const SettingsAgent = () => {
@@ -68,14 +69,7 @@ const SettingsAgent = () => {
         title="User Interface Density"
         description="Adjust how compact or spacious the user interface appears."
       >
-        <div className="flex gap-4">
-          <Button variant="outline" className="flex-1">Compact</Button>
-          <Button 
-            variant="secondary" 
-            className="flex-1"
-          >Standard</Button>
-          <Button variant="outline" className="flex-1">Comfortable</Button>
-        </div>
+        <DensitySelector />
       </WindowSection>
     </div>
   );

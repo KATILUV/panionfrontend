@@ -868,6 +868,16 @@ const Window: React.FC<WindowProps> = ({
       ? `0 ${baseDepth * 2}px ${baseDepth * 6}px rgba(0,0,0,0.15), 0 ${baseDepth}px ${baseDepth * 2}px rgba(var(--color-primary-rgb), 0.${baseDepth + 1})` 
       : `0 ${baseDepth}px ${baseDepth * 3}px rgba(0,0,0,0.1)`;
   };
+  
+  // Get window padding based on density setting
+  const getWindowPadding = () => {
+    const { density, getSpacingForDensity } = useThemeStore.getState();
+    // Base padding depends on mobile vs desktop
+    const basePadding = isMobile ? 16 : 12; // 'p-4' (16px) for mobile, 'p-3' (12px) for desktop
+    // Adjust based on density
+    const adjustedPadding = getSpacingForDensity(basePadding);
+    return `${adjustedPadding}px`;
+  };
 
   return (
     <MotionConfig transition={{ 
@@ -1037,12 +1047,13 @@ const Window: React.FC<WindowProps> = ({
           </div>
         </div>
         <motion.div 
-          className={`window-body flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-3'} scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent
+          className={`window-body flex-1 overflow-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent
             ${isActive ? 'window-body-focused' : 'window-body-blurred'}`}
           style={{ 
             height: contentHeight,
             willChange: 'transform, opacity',
             transform: 'translateZ(0)',
+            padding: getWindowPadding(),
           }}
           variants={contentVariants}
           initial="closed"
