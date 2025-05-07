@@ -76,10 +76,14 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
   
   // Handle closing a window in the group
   const handleCloseWindow = (windowId: string) => {
+    console.log(`Handling close window: ${windowId} in group: ${groupId}`);
+    
     // If this is the last window in the group, close the entire group
     if (windowIds.length === 1) {
+      console.log(`Last window in group, closing group: ${groupId}`);
       closeWindowGroup(groupId);
     } else {
+      console.log(`Removing window: ${windowId} from group: ${groupId}`);
       ungroupWindow(windowId);
     }
   };
@@ -151,7 +155,8 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
                     cursor: 'pointer',
                     transition: 'background-color 0.2s ease'
                   }}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     console.log(`Setting active window in group: ${groupId}, window: ${windowId}`);
                     setActiveGroupWindow(groupId, windowId);
                   }}
@@ -200,9 +205,18 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
             position={{x: 0, y: 0}} // Position is relative to the group container
             size={{width: size.width, height: size.height - 32}} // Adjust for tab bar height
             zIndex={1}
-            onClose={() => closeWindowGroup(groupId)}
-            onMinimize={() => minimizeWindowGroup(groupId)}
-            onFocus={() => focusWindowGroup(groupId)}
+            onClose={() => {
+              console.log(`Closing window group: ${groupId}`);
+              closeWindowGroup(groupId);
+            }}
+            onMinimize={() => {
+              console.log(`Minimizing window group: ${groupId}`);
+              minimizeWindowGroup(groupId);
+            }}
+            onFocus={() => {
+              console.log(`Focusing window group: ${groupId}`);
+              focusWindowGroup(groupId);
+            }}
             isMobile={isMobile}
           >
             {/* Render the agent content safely */}
