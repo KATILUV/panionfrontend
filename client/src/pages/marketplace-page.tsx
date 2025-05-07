@@ -3,10 +3,10 @@ import { useMarketplaceStore } from '@/state/marketplaceStore';
 import { useThemeStore } from '@/state/themeStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, Filter, Star, Download, Plus, Check, Tag, X, 
+  Search, SearchX, Filter, Star, Download, Plus, Check, Tag, X, 
   RefreshCw, ShoppingBag, ArrowLeft, Zap, MessageCircle, 
   ArrowUpRight, Sparkles, ChevronLeft, ChevronRight,
-  Folder as FolderIcon
+  Folder as FolderIcon, RotateCcw, ChevronDown, LayoutGrid, Grid, Timer
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Link, useLocation } from 'wouter';
@@ -961,7 +961,7 @@ const MarketplacePage = () => {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0c0a1f] via-[#110b2b]/90 to-transparent z-10"></div>
       </section>
       
-      {/* Content Section - with improved gradient background */}
+      {/* Content Section - with improved gradient background and visual hierarchy */}
       <section className="container mx-auto px-6 pb-20 relative bg-gradient-to-b from-[#0c0a1f] to-[#080619]">
         {/* Only show featured spotlight when on the featured tab */}
         {activeTab === 'featured' && <FeaturedSpotlight />}
@@ -1131,7 +1131,7 @@ const MarketplacePage = () => {
             {getDisplayedAgents().length === 0 && (
               <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 bg-purple-900/30 rounded-full flex items-center justify-center mb-4">
-                  <SearchX size={24} className="text-purple-300" />
+                  <Search size={24} className="text-purple-300" />
                 </div>
                 <h3 className="text-xl font-medium text-white mb-2">No agents found</h3>
                 <p className="text-white/60 max-w-md mb-4">
