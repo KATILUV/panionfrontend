@@ -15,13 +15,13 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
     windowGroups, 
     windows, 
     registry,
-    setActiveWindowInGroup,
+    setActiveGroupWindow,
     ungroupWindow,
     updateGroupPosition,
     updateGroupSize,
-    closeGroup,
-    bringGroupToFront,
-    minimizeGroup
+    closeWindowGroup,
+    focusWindowGroup,
+    minimizeWindowGroup
   } = useAgentStore();
   
   const getCurrentTheme = useThemeStore(state => state.getCurrentTheme);
@@ -77,7 +77,7 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
   const handleCloseWindow = (windowId: string) => {
     // If this is the last window in the group, close the entire group
     if (windowIds.length === 1) {
-      closeGroup(groupId);
+      closeWindowGroup(groupId);
     } else {
       ungroupWindow(windowId);
     }
@@ -150,7 +150,7 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
                     cursor: 'pointer',
                     transition: 'background-color 0.2s ease'
                   }}
-                  onClick={() => setActiveWindowInGroup(groupId, windowId)}
+                  onClick={() => setActiveGroupWindow(groupId, windowId)}
                 >
                   {agent?.icon && (
                     <div className="flex-shrink-0 w-4 h-4 mx-2">
@@ -188,20 +188,24 @@ const GroupedWindow: React.FC<GroupedWindowProps> = ({ groupId }) => {
       
       {/* Render the active window content */}
       <div className="flex-1 relative">
-        <Window
-          id={activeWindowId}
-          title={activeWindow.title}
-          isActive={true}
-          position={{x: 0, y: 0}} // Position is relative to the group container
-          size={{width: size.width, height: size.height - 32}} // Adjust for tab bar height
-          zIndex={1}
-          onClose={() => closeGroup(groupId)}
-          onMinimize={() => minimizeGroup(groupId)}
-          onFocus={() => bringGroupToFront(groupId)}
-          isMobile={isMobile}
-        >
-          {activeAgent && activeAgent.component}
-        </Window>
+        {activeWindowId && (
+          <Window
+            id={activeWindowId}
+            title={activeWindow.title}
+            isActive={true}
+            position={{x: 0, y: 0}} // Position is relative to the group container
+            size={{width: size.width, height: size.height - 32}} // Adjust for tab bar height
+            zIndex={1}
+            onClose={() => closeWindowGroup(groupId)}
+            onMinimize={() => minimizeWindowGroup(groupId)}
+            onFocus={() => focusWindowGroup(groupId)}
+            isMobile={isMobile}
+          >
+            {activeAgent && React.isValidElement(activeAgent.component) 
+              ? activeAgent.component 
+              : <div>No content available</div>}
+          </Window>
+        )}
       </div>
     </div>
   );
