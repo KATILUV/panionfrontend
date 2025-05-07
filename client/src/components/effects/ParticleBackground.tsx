@@ -37,26 +37,27 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
   // Get theme data
   const accent = useThemeStore(state => state.accent);
   
-  // Function to calculate base hue for particles based on theme
-  const getBaseHue = (): number => {
+  // Function to get accent color in HSL format for particles based on theme
+  const getAccentColor = (): { hue: number, saturation: number, lightness: number } => {
     switch (accent) {
       case 'blue':
-        return 220;
+        return { hue: 217, saturation: 91, lightness: 60 };
       case 'purple':
-        return 270;
+        return { hue: 265, saturation: 83, lightness: 65 };
       case 'pink':
-        return 330;
+        return { hue: 330, saturation: 80, lightness: 70 };
       case 'green':
-        return 120;
-      case 'orange': // dark
-        return 200; // blueish for dark theme
-      case 'light':
-        return 210;
-      case 'dark':
-        return 220;
+        return { hue: 142, saturation: 76, lightness: 46 };
+      case 'orange': // dark/black
+        return { hue: 220, saturation: 13, lightness: 20 }; // subtle dark blue
       default:
-        return 270; // Default purple
+        return { hue: 265, saturation: 83, lightness: 65 }; // Default purple
     }
+  };
+  
+  // Get CSS variable value
+  const getCssVariable = (name: string): string => {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   };
   
   // Initialize particles when dimensions change or component mounts
@@ -64,7 +65,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
     // Only initialize if we have valid dimensions
     if (!canvasRef.current || dimensions.width === 0 || dimensions.height === 0) return;
     
-    const baseHue = getBaseHue();
+    const accentColor = getAccentColor();
     const particles: Particle[] = [];
     
     for (let i = 0; i < particleCount; i++) {
@@ -74,13 +75,13 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         size: Math.random() * particleSize + 0.5,
         speedX: (Math.random() - 0.5) * particleSpeed,
         speedY: (Math.random() - 0.5) * particleSpeed,
-        hue: baseHue + (Math.random() * 30 - 15), // Slight variation in hue
+        hue: accentColor.hue + (Math.random() * 30 - 15), // Slight variation in hue
         opacity: Math.random() * particleOpacity
       });
     }
     
     particlesRef.current = particles;
-  }, [dimensions.width, dimensions.height]);
+  }, [dimensions.width, dimensions.height, accent, particleSize, particleSpeed, particleOpacity, particleCount]);
   
   // Handle mouse movement for interactive particles
   useEffect(() => {
@@ -135,11 +136,11 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
     const animate = () => {
       if (!ctx || !canvas) return;
       
-      // Clear canvas with transparency for trailing effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      // Clear canvas with transparency for trailing effect - use a darker, theme-matching color
+      const accentColor = getAccentColor();
+      const bgColor = `rgba(10, 10, 15, 0.05)`;
+      ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      const baseHue = getBaseHue();
       
       // Update and draw particles
       particlesRef.current.forEach((particle, index) => {
@@ -168,20 +169,29 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
             // Highlight particles near mouse
             particle.opacity = Math.min(1, particle.opacity + 0.02);
             particle.size = Math.min(particleSize * 2, particle.size + 0.1);
-            particle.hue = baseHue - 20 + (force * 40); // Shift hue based on proximity
+            particle.hue = accentColor.hue - 20 + (force * 40); // Shift hue based on proximity
           } else {
             // Return to normal state
             particle.opacity = Math.max(Math.random() * particleOpacity, particle.opacity - 0.01);
             particle.size = Math.max(Math.random() * particleSize + 0.5, particle.size - 0.05);
-            particle.hue = baseHue + (Math.random() * 30 - 15);
+            particle.hue = accentColor.hue + (Math.random() * 30 - 15);
           }
         }
         
-        // Draw the particle
+        // Draw the particle with more vibrancy
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${particle.hue}, 70%, 60%, ${particle.opacity})`;
+        // Use theme-matched saturation and lightness
+        ctx.fillStyle = `hsla(${particle.hue}, ${accentColor.saturation}%, ${accentColor.lightness}%, ${particle.opacity})`;
         ctx.fill();
+        
+        // Add subtle glow effect for larger particles
+        if (particle.size > particleSize) {
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, particle.size * 2, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${particle.hue}, ${accentColor.saturation}%, ${accentColor.lightness}%, ${particle.opacity * 0.2})`;
+          ctx.fill();
+        }
         
         // Random chance to draw connection lines between nearby particles
         if (Math.random() < 0.05) {
@@ -195,7 +205,8 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
               ctx.beginPath();
               ctx.moveTo(particle.x, particle.y);
               ctx.lineTo(otherParticle.x, otherParticle.y);
-              ctx.strokeStyle = `hsla(${particle.hue}, 70%, 60%, ${0.1 * (1 - distance / 100)})`;
+              // Make connection lines match the accent color theme better
+              ctx.strokeStyle = `hsla(${accentColor.hue}, ${accentColor.saturation}%, ${accentColor.lightness}%, ${0.15 * (1 - distance / 100)})`;
               ctx.lineWidth = 0.5;
               ctx.stroke();
             }
@@ -216,7 +227,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [particleSize, particleOpacity, interactive]);
+  }, [particleSize, particleOpacity, interactive, accent]);
   
   return (
     <canvas 
