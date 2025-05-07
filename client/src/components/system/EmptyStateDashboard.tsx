@@ -31,6 +31,7 @@ import { useWindowSize } from 'react-use';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useMarketplaceStore } from '@/state/marketplaceStore';
+import { useLocation } from 'wouter';
 
 // Define action card props type
 interface ActionCardProps {
@@ -400,7 +401,10 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
       title: "Marketplace",
       description: "Discover and install new agents for your workspace",
       icon: <PlusCircle className="h-5 w-5" />,
-      onClick: () => openAgent('marketplace'),
+      onClick: () => {
+        // Use wouter's navigation instead of modifying window.location directly
+        navigate('/marketplace');
+      },
       color: getCardColor(3),
       category: "utilities",
       shortcutAction: null
@@ -442,9 +446,14 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
         title: agent.title,
         description: agent.description,
         icon: getIconByName(agent.icon),
-        onClick: () => agent.isInstalled 
-          ? openAgent(agent.id) 
-          : openAgent('marketplace'),
+        onClick: () => {
+          if (agent.isInstalled) {
+            openAgent(agent.id);
+          } else {
+            // Navigate directly to marketplace for non-installed agents
+            window.location.href = '/marketplace';
+          }
+        },
         color: getCardColor(index + quickActions.length),
         category: agent.categories && agent.categories.length > 0 ? agent.categories[0] : "utilities",
         badge: agent.isInstalled ? undefined : "Install",
