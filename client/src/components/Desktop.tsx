@@ -12,7 +12,7 @@ import SettingsAgent from './agents/SettingsAgent';
 import MarketplaceAgent from './agents/MarketplaceAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
-import EmptyStateDashboard from './system/EmptyStateDashboard';
+import SimpleEmptyStateDashboard from './system/SimpleEmptyStateDashboard';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence } from 'framer-motion';
 
@@ -288,7 +288,7 @@ const Desktop: React.FC = () => {
         {/* Show empty state dashboard if no visible windows and no window groups */}
         {!hasVisibleWindows && Object.keys(windowGroups).length === 0 && (
           <div className="absolute inset-0 z-10 pointer-events-auto">
-            <EmptyStateDashboard isMobile={isMobile} />
+            <SimpleEmptyStateDashboard />
           </div>
         )}
         
