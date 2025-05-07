@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Message, ChatResponse } from '../types/chat';
 import { log } from '../state/systemLogStore';
+import { handleError, mapErrorTypeFromStatus } from '../lib/errorHandler'; 
+import { useToast } from './use-toast';
 
 /**
  * Custom hook for managing chat functionality with Clara
@@ -10,11 +12,13 @@ export const useChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
+  const { toast } = useToast();
 
   /**
    * Send a message to Clara and handle the response
+   * Includes automatic retry for certain types of errors
    */
-  const sendMessage = async (content: string, imageFile?: File | null) => {
+  const sendMessage = async (content: string, imageFile?: File | null, retryCount = 0) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -68,9 +72,12 @@ export const useChat = () => {
       }
       
       if (!response.ok) {
-        const errorMsg = `Error: ${response.status} ${response.statusText}`;
-        log.error(errorMsg);
-        throw new Error(errorMsg);
+        const errorType = mapErrorTypeFromStatus(response.status);
+        const errorMsg = `Error ${response.status}: ${response.statusText}`;
+        log.error(`API error (${errorType}): ${errorMsg}`);
+        
+        // Throw the response object so our error handler can properly categorize it
+        throw response;
       }
       
       const data: ChatResponse = await response.json();
@@ -98,7 +105,18 @@ export const useChat = () => {
       setMessages(prev => [...prev, aiMessage]);
     } catch (err) {
       console.error('Error sending message:', err);
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      const { type, message } = handleError(err);
+      log.error(`Chat error (${type}): ${message}`);
+      setError(message);
+      
+      // Show toast notification for network errors
+      if (type === 'network') {
+        toast({
+          variant: 'destructive',
+          title: 'Connection Error',
+          description: message,
+        });
+      }
     } finally {
       setIsLoading(false);
     }

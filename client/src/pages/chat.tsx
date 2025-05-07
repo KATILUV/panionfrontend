@@ -4,6 +4,7 @@ import ChatBubble from '../components/ChatBubble';
 import ChatInput from '../components/ChatInput';
 import TypingIndicator from '../components/TypingIndicator';
 import RotatingTagline from '../components/RotatingTagline';
+import { ErrorMessage } from '../components/ui/error-message';
 import { useChat } from '../hooks/useChat';
 import { useThemeStore } from '@/state/themeStore';
 import { Message } from '../types/chat';
@@ -130,8 +131,14 @@ const ChatPage: React.FC = () => {
           )}
           
           {error && (
-            <div className="text-red-400 text-center py-2 px-4 rounded-md bg-red-900/20 backdrop-blur-sm">
-              {error}
+            <div className="px-4 py-2">
+              <ErrorMessage
+                type="server"
+                message={error}
+                retryFn={() => sendMessage(messages[messages.length - 1]?.content || "")}
+                size="md"
+                variant="inline"
+              />
             </div>
           )}
         </div>
