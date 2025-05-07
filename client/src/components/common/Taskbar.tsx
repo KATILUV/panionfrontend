@@ -134,12 +134,17 @@ const AgentIconButton = React.forwardRef<
   const { position } = useTaskbarStore();
   const isVertical = position.location === 'left' || position.location === 'right';
   
+  // Get screen size for responsive styling
+  const { size: btnScreenSize } = useScreenSize();
+  const isExtraSmall = btnScreenSize === 'xs';
+  
   return (
     <button
       ref={ref}
       onClick={() => onClick(id)}
       className={`
-        p-2 rounded-lg transition-all duration-200 relative overflow-hidden
+        ${isExtraSmall ? 'p-1.5' : 'p-2'} 
+        rounded-lg transition-all duration-200 relative overflow-hidden
         ${isActive 
           ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
           : 'bg-transparent hover:bg-white/10 text-white/70 hover:text-white hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
@@ -159,6 +164,7 @@ const AgentIconButton = React.forwardRef<
         }
         before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
         hover:before:opacity-100 hover:scale-105
+        active:scale-95 active:bg-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/30
       `}
       title={title}
     >
@@ -194,12 +200,17 @@ const GroupIconButton = React.forwardRef<
   const isVertical = position.location === 'left' || position.location === 'right';
   const isActive = !group.isMinimized;
   
+  // Get screen size for responsive styling
+  const { size: btnScreenSize } = useScreenSize();
+  const isExtraSmall = btnScreenSize === 'xs';
+  
   return (
     <button
       ref={ref}
       onClick={() => onClick(groupId)}
       className={`
-        p-2 rounded-lg transition-all duration-200 relative overflow-hidden
+        ${isExtraSmall ? 'p-1.5' : 'p-2'} 
+        rounded-lg transition-all duration-200 relative overflow-hidden
         ${isActive 
           ? 'bg-primary/20 text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
           : 'bg-transparent hover:bg-white/10 text-white/70 hover:text-white hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
@@ -219,6 +230,7 @@ const GroupIconButton = React.forwardRef<
         }
         before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
         hover:before:opacity-100 hover:scale-105
+        active:scale-95 active:bg-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/30
       `}
       title={group.title}
     >
@@ -449,8 +461,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
   
   // Simplified approach: The taskbar's base styles
   // Use enhanced screen size detection for more precise mobile handling
-  const { screenSize, isMobile: detectedMobile } = useScreenSize();
-  const isSmallScreen = isMobile || detectedMobile || screenSize === 'xs' || screenSize === 'sm';
+  const { size: screenSizeValue, isMobile: detectedMobile } = useScreenSize();
+  const isSmallScreen = isMobile || detectedMobile || screenSizeValue === 'xs' || screenSizeValue === 'sm';
   
   const getTaskbarBaseStyles = () => {
     // Basic styles that apply to all taskbar positions
@@ -470,12 +482,12 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
         bottom: 0,
         left: 0,
         right: 0,
-        height: screenSize === 'xs' ? '3rem' : '3.5rem',
+        height: screenSizeValue === 'xs' ? '3rem' : '3.5rem',
         width: '100%',
         flexDirection: 'row' as const,
         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
         justifyContent: 'space-around', // Better for touch targets on mobile
-        padding: screenSize === 'xs' ? '0.25rem 0.5rem' : '0.5rem 0.5rem',
+        padding: screenSizeValue === 'xs' ? '0.25rem 0.5rem' : '0.5rem 0.5rem',
         backgroundColor: 'rgba(0, 0, 0, 0.5)', // More opaque for better visibility on mobile
         boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06)'
       };
@@ -594,7 +606,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
             : position.location === 'right' 
               ? 'justify-center w-full' 
               : ''}
-          ${screenSize === 'xs' ? 'px-0.5' : 'px-1'}
+          ${screenSizeValue === 'xs' ? 'px-0.5' : 'px-1'}
         `}>
           {/* Individual Agent Icons */}
           {registry.map(agent => {
@@ -606,9 +618,16 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
             // Skip windows that are part of a group
             if (window?.groupId) return null;
             
-            // For mobile, only show a limited set of agents to avoid clutter
-            if (isMobile && !['clara', 'chat', 'notes', 'settings'].includes(agent.id)) {
-              return null;
+            // For mobile or small screens, only show a limited set of agents to avoid clutter
+            if (isSmallScreen) {
+              // Extremely small screens (xs) - show only essential agents
+              if (screenSizeValue === 'xs' && !['clara', 'chat', 'settings'].includes(agent.id)) {
+                return null;
+              }
+              // Small screens (sm) - show a slightly expanded set of agents
+              else if (screenSizeValue === 'sm' && !['clara', 'chat', 'notes', 'settings', 'system'].includes(agent.id)) {
+                return null;
+              }
             }
             
             return (
@@ -636,8 +655,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
         
         {/* Widgets container - changes flex direction based on position orientation */}
         <div className={`
-          flex ${isVertical && !isMobile ? 'flex-col space-y-2 items-center' : 'items-center space-x-2'}
-          ${isMobile ? 'hidden md:flex' : ''}
+          flex ${isVertical && !isSmallScreen ? 'flex-col space-y-2 items-center' : 'items-center space-x-2'}
+          ${isSmallScreen ? (screenSizeValue === 'xs' ? 'hidden' : 'hidden sm:flex') : ''}
         `}>
           {/* Search Bar Widget - hide on vertical taskbars */}
           {visibleWidgets.includes('searchBar') && !isVertical && (
