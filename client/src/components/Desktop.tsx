@@ -326,9 +326,9 @@ const Desktop: React.FC = () => {
         ))}
       </div>
       
-      {/* Clara's Context Panel - visible when Clara is active */}
+      {/* Clara's Context Panel - only visible when Clara agent is actually open */}
       <ClaraContextPanel 
-        active={focusedAgentId === 'clara' || Object.values(windows).some(w => w.id === 'clara' && w.isOpen)} 
+        active={Object.values(windows).some(w => w.id === 'clara' && w.isOpen && !w.isMinimized)} 
       />
       
       {/* Command Palette */}

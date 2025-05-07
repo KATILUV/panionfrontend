@@ -8,7 +8,7 @@ interface ContextPanelProps {
   className?: string;
 }
 
-const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = true, className = '' }) => {
+const ClaraContextPanel: React.FC<ContextPanelProps> = ({ active = false, className = '' }) => {
   const [currentMemory, setCurrentMemory] = useState<string | null>(null);
   const [currentGoal, setCurrentGoal] = useState<string | null>("Help the user build a modular agent system");
   const [currentTone, setCurrentTone] = useState<string>("🤔");
