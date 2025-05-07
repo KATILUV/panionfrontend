@@ -15,6 +15,7 @@ import MarketplaceAgent from './agents/MarketplaceAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
 import SimpleEmptyStateDashboard from './system/SimpleEmptyStateDashboard';
+import ParticleBackground from './effects/ParticleBackground';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence } from 'framer-motion';
 import { useScreenSize, useOrientation } from '../hooks/use-mobile';
@@ -183,15 +184,47 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
   const backgroundGradient = getBackgroundGradient();
   console.log("Applied background gradient:", backgroundGradient);
   
+  // Determine particle settings based on theme
+  const getParticleSettings = () => {
+    const isDark = currentTheme === 'dark';
+    if (!isDark) {
+      // Light theme has more subtle particles
+      return {
+        particleCount: 25,
+        particleOpacity: 0.2,
+        particleSize: 1.5,
+        particleSpeed: 0.3
+      };
+    }
+    
+    // Dark theme has more prominent particles
+    return {
+      particleCount: 40,
+      particleOpacity: 0.5,
+      particleSize: 2,
+      particleSpeed: 0.5
+    };
+  };
+  
+  const particleSettings = getParticleSettings();
+  
   return (
     <div 
-      className="panion-desktop overflow-auto min-h-screen"
+      className="panion-desktop overflow-auto min-h-screen relative"
       style={{ 
         // Use direct inline background gradient as highest priority
         backgroundImage: backgroundGradient,
         backgroundColor: 'transparent' // Fallback only
       }}
     >
+      {/* Particle background effect for enhanced visual interest */}
+      <ParticleBackground 
+        particleCount={particleSettings.particleCount}
+        particleOpacity={particleSettings.particleOpacity}
+        particleSize={particleSettings.particleSize}
+        particleSpeed={particleSettings.particleSpeed}
+        interactive={true}
+      />
       {children}
     </div>
   );

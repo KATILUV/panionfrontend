@@ -44,10 +44,16 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         return 220;
       case 'purple':
         return 270;
-      case 'red':
-        return 0;
+      case 'pink':
+        return 330;
       case 'green':
         return 120;
+      case 'orange': // dark
+        return 200; // blueish for dark theme
+      case 'light':
+        return 210;
+      case 'dark':
+        return 220;
       default:
         return 270; // Default purple
     }
