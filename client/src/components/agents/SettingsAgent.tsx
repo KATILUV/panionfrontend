@@ -20,8 +20,22 @@ const SettingsAgent = () => {
   const setAccent = useThemeStore(state => state.setAccent);
   const { toast } = useToast();
   
-  // Track agent status
+  // User profile settings
+  const userName = useUserPrefsStore(state => state.name);
+  const setUserName = useUserPrefsStore(state => state.setName);
+  const email = useUserPrefsStore(state => state.email) || '';
+  const setEmail = useUserPrefsStore(state => state.setEmail);
+  
+  // Local state
   const [status, setStatus] = useState<AgentStatusType>("active");
+  const [nameInput, setNameInput] = useState(userName);
+  const [emailInput, setEmailInput] = useState(email);
+  
+  // Update local state when store values change
+  useEffect(() => {
+    setNameInput(userName);
+    setEmailInput(email || '');
+  }, [userName, email]);
   
   // Define available accent colors with semantic CSS classes
   const accentColors: Array<{ id: ThemeAccent, name: string, color: string }> = [
@@ -77,25 +91,17 @@ const SettingsAgent = () => {
   );
   
   // Add User Profile section
+  const handleSaveProfile = () => {
+    setUserName(nameInput);
+    if (emailInput) setEmail(emailInput);
+    
+    toast({
+      title: "Profile Updated",
+      description: "Your profile information has been saved",
+    });
+  };
+
   const renderUserProfileTab = () => {
-    const userName = useUserPrefsStore(state => state.name);
-    const setUserName = useUserPrefsStore(state => state.setName);
-    const email = useUserPrefsStore(state => state.email) || '';
-    const setEmail = useUserPrefsStore(state => state.setEmail);
-    
-    const [nameInput, setNameInput] = useState(userName);
-    const [emailInput, setEmailInput] = useState(email);
-    
-    const handleSaveProfile = () => {
-      setUserName(nameInput);
-      if (emailInput) setEmail(emailInput);
-      
-      toast({
-        title: "Profile Updated",
-        description: "Your profile information has been saved",
-      });
-    };
-    
     return (
       <div>
         <h3 className="h3 mb-6">User Profile</h3>

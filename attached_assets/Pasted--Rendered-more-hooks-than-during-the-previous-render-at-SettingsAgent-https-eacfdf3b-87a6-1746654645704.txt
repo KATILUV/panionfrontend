@@ -1,0 +1,19 @@
+: Rendered more hooks than during the previous render.
+
+
+    at SettingsAgent (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/src/components/agents/SettingsAgent.tsx?t=1746654580360:33:21)
+    at div
+    at div
+    at MotionComponent (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=488a878e:6536:40)
+    at div
+    at MotionComponent (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=488a878e:6536:40)
+    at div
+    at Resizable2 (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-rnd.js?v=488a878e:2313:26)
+    at DraggableCore (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-rnd.js?v=488a878e:1364:9)
+    at Draggable2 (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-rnd.js?v=488a878e:1796:9)
+    at Rnd2 (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-rnd.js?v=488a878e:2957:26)
+    at MotionConfig (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=488a878e:7872:25)
+    at Window (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/src/components/common/Window.tsx:55:3)
+    at PresenceChild (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=488a878e:7742:24)
+    at AnimatePresence (https://eacfdf3b-87a6-404f-b5df-005c97c58c21-00-2zbwnsuwt8qnn.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=488a878e:7800:26)
+    at div
