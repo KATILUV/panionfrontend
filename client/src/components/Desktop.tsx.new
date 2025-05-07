@@ -183,31 +183,6 @@ const DesktopBackground: React.FC<{children: React.ReactNode}> = ({ children }) 
   };
   
   const backgroundGradient = getBackgroundGradient();
-  console.log("Applied background gradient:", backgroundGradient);
-  
-  // Determine particle settings based on theme
-  const getParticleSettings = () => {
-    const isDark = currentTheme === 'dark';
-    if (!isDark) {
-      // Light theme has more subtle particles
-      return {
-        particleCount: 25,
-        particleOpacity: 0.2,
-        particleSize: 1.5,
-        particleSpeed: 0.3
-      };
-    }
-    
-    // Dark theme has more prominent particles
-    return {
-      particleCount: 40,
-      particleOpacity: 0.5,
-      particleSize: 2,
-      particleSpeed: 0.5
-    };
-  };
-  
-  const particleSettings = getParticleSettings();
   
   return (
     <div 
@@ -233,58 +208,17 @@ const Desktop: React.FC = () => {
   const focusAgent = useAgentStore(state => state.focusAgent);
   const openAgent = useAgentStore(state => state.openAgent);
   const layouts = useAgentStore(state => state.layouts);
-  const activeLayoutId = useAgentStore(state => state.activeLayoutId);
-  const saveLayout = useAgentStore(state => state.saveLayout);
   const loadLayout = useAgentStore(state => state.loadLayout);
-  const deleteLayout = useAgentStore(state => state.deleteLayout);
-  const [showLayoutPrompt, setShowLayoutPrompt] = useState(false);
-  const [newLayoutName, setNewLayoutName] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
   
   // Use the enhanced screen size hook
-  const { isMobile: isMobileScreen, isTablet, size } = useScreenSize();
+  const { isMobile: isMobileScreen } = useScreenSize();
   
   // Update the mobile state when screen size changes
   useEffect(() => {
     setIsMobile(isMobileScreen);
   }, [isMobileScreen]);
-  
-  // Get device orientation
-  const orientation = useOrientation();
-  
-  // Create a demo window group for testing
-  const createDemoWindowGroup = () => {
-    const { 
-      openAgent, 
-      createWindowGroup,
-      updateGroupPosition,
-      updateGroupSize
-    } = useAgentStore.getState();
-    
-    // First, make sure we have some agents open
-    openAgent('notes');
-    openAgent('marketplace');
-    
-    // Small delay to ensure windows are created
-    setTimeout(() => {
-      // Create a window group with these agents
-      const groupId = createWindowGroup(['notes', 'marketplace'], 'Productivity Suite');
-      
-      // Position the group in a good spot
-      updateGroupPosition(groupId, { x: 200, y: 100 });
-      updateGroupSize(groupId, { width: 800, height: 600 });
-      
-      // Add a toast notification
-      toast({
-        title: "Window Group Created",
-        description: "Demo window group 'Productivity Suite' has been created with Notes and Marketplace agents",
-      });
-      
-      // Log the action
-      log.action("Created demo window group: Productivity Suite");
-    }, 300);
-  };
   
   // Initialize agent registry and system logs when component mounts
   useEffect(() => {
@@ -319,36 +253,12 @@ const Desktop: React.FC = () => {
       autoSaveCurrentLayout(); // Start the auto-save cycle
     }
     
-    // Uncomment the following to create a demo window group
-    // setTimeout(() => {
-    //   createDemoWindowGroup();
-    // }, 2000);
-    
     log.action('System ready for user interaction');
     
     // Don't automatically show the system log on startup
     const setVisibility = useSystemLogStore.getState().setVisibility;
     setVisibility(false);
-    
-    // Cleanup auto-save when component unmounts
-    return () => {
-      // We don't need explicit cleanup here since the timeout is handled
-      // in the autoSaveCurrentLayout function in the store
-      log.info('Desktop component unmounted, auto-save will be stopped');
-    };
-  }, []);
-  
-  // Load layout handler
-  const handleLoadLayout = (layoutId: string) => {
-    loadLayout(layoutId);
-    const layout = layouts.find(l => l.id === layoutId);
-    if (layout) {
-      toast({
-        title: "Layout loaded",
-        description: `Window layout "${layout.name}" has been applied`,
-      });
-    }
-  };
+  }, [toast]);
   
   // Particle settings based on theme
   const getParticleSettings = () => {
