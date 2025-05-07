@@ -4,11 +4,13 @@ import { MessageSquare, FileText, Settings, PlusCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import SimpleActionCard from './SimpleActionCard';
 import { useThemeStore } from '../../state/themeStore';
+import { useUserPrefsStore } from '../../state/userPrefsStore';
 
 const SimpleEmptyStateDashboard: React.FC = () => {
   const openAgent = useAgentStore(state => state.openAgent);
   const [_, navigate] = useLocation();
   const accent = useThemeStore(state => state.accent);
+  const userName = useUserPrefsStore(state => state.name);
   
   // Add a re-render trigger for theme changes
   const [renderKey, setRenderKey] = useState(0);
@@ -64,7 +66,8 @@ const SimpleEmptyStateDashboard: React.FC = () => {
 
   return (
     <div className="h-full w-full max-w-screen-xl mx-auto px-4 md:px-8 relative z-10 pt-4 pb-10">
-      <h1 className="text-2xl font-bold mb-6">Welcome to Panion</h1>
+      <h1 className="text-3xl font-bold mb-2">Welcome {userName}, this is Panion</h1>
+      <p className="text-muted-foreground mb-8">Your personal AI workspace environment</p>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {actions.map((action, index) => (
