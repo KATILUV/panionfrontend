@@ -60,18 +60,33 @@ interface LayoutManagerProps {
 }
 
 // Custom component for the visual layout builder
+interface LayoutAgent {
+  id: string;
+  title: string;
+  position: { x: number, y: number };
+  size: { width: number, height: number };
+  isOpen: boolean;
+  isMinimized: boolean;
+}
+
 const LayoutBuilderCanvas = ({ 
   agents, 
   selectedAgents, 
   onSelectAgent, 
   onUpdatePosition,
   onPreview
+}: {
+  agents: LayoutAgent[];
+  selectedAgents: string[];
+  onSelectAgent: (id: string) => void;
+  onUpdatePosition: (id: string) => void;
+  onPreview: (id?: string) => void;
 }) => {
   const isDark = useThemeStore(state => state.getCurrentTheme()) === 'dark';
   const canvasRef = useRef(null);
   
   // Helper function to render a window preview
-  const renderWindow = (agent, index) => {
+  const renderWindow = (agent: LayoutAgent, index: number) => {
     const isSelected = selectedAgents.includes(agent.id);
     
     return (
