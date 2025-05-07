@@ -505,16 +505,23 @@ export const useAgentStore = create<AgentState>()(
             // Get the template from the template store
             const template = useTemplateStore.getState().getTemplateById(templateId);
             
+            // Debug logging
+            console.log("Applying template:", templateId);
+            console.log("Template found:", template);
+            
             if (!template) {
               log.error(`Template not found: ${templateId}`);
+              console.error(`Template not found: ${templateId}`);
               return state;
             }
             
             // Get agent IDs from registry
             const agentIds = state.registry.map(agent => agent.id);
+            console.log("Available agents:", agentIds);
             
             // Generate window states based on template layout type
             const windowStates = generateWindowStates(template, agentIds);
+            console.log("Generated window states:", windowStates);
             
             // Create timestamp for ID and timestamps
             const timestamp = Date.now();

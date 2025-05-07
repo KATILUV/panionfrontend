@@ -692,15 +692,22 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
   // Apply template directly without builder
   const handleApplyTemplateDirect = (templateId: string) => {
     try {
+      console.log("Starting direct application of template:", templateId);
+      
+      // Get template details for logging
+      const template = templates.find(t => t.id === templateId);
+      console.log("Template details:", template);
+      
       // Apply template directly using agentStore function
+      console.log("Calling createLayoutFromTemplate with ID:", templateId);
       createLayoutFromTemplate(templateId);
+      console.log("Template application function completed");
       
       // Close dialog
       setDialogOpen(false);
       
-      // Get template name for toast message
-      const template = templates.find(t => t.id === templateId);
       const templateName = template ? template.name : 'Selected template';
+      console.log("Showing success toast for template:", templateName);
       
       // Show success toast
       toast({
@@ -708,6 +715,7 @@ const LayoutManager = ({ children }: LayoutManagerProps) => {
         description: `${templateName} has been applied to your desktop`,
       });
     } catch (error: unknown) {
+      console.error("Error applying template:", error);
       toast({
         title: 'Error applying template',
         description: error instanceof Error ? error.message : 'Failed to apply template',
