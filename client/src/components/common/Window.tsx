@@ -822,10 +822,10 @@ const Window: React.FC<WindowProps> = ({
         >
           <div className="flex items-center justify-between flex-1">
             <div className="flex items-center">
-              <div className="flex items-center space-x-1.5 mr-3">
+              <div className="flex items-center space-x-1.5 mr-3 group">
                 {/* Improved window control buttons with larger hit areas */}
                 <motion.div 
-                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center`}
+                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-red-500 cursor-pointer z-50 flex items-center justify-center group`}
                   whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.95 }}
                   title="Close"
@@ -837,10 +837,10 @@ const Window: React.FC<WindowProps> = ({
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 >
                   {/* Optional X icon */}
-                  <span className="opacity-0 group-hover:opacity-100 transition-opacity" style={{fontSize: '8px'}}>×</span>
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity text-black/70" style={{fontSize: '8px'}}>×</span>
                 </motion.div>
                 <motion.div 
-                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center`}
+                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-yellow-500 cursor-pointer z-50 flex items-center justify-center group`}
                   whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.95 }}
                   title="Minimize"
@@ -852,10 +852,10 @@ const Window: React.FC<WindowProps> = ({
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
                 >
                   {/* Optional minimize icon */}
-                  <span className="opacity-0 group-hover:opacity-100 transition-opacity" style={{fontSize: '8px'}}>_</span>
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity text-black/70" style={{fontSize: '8px'}}>_</span>
                 </motion.div>
-                <motion.button 
-                  className={`window-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center`}
+                <motion.div 
+                  className={`window-control-button ${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full bg-green-500 cursor-pointer z-50 flex items-center justify-center group`}
                   whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.95 }}
                   title={isMaximized ? "Restore" : "Maximize"}
@@ -864,7 +864,10 @@ const Window: React.FC<WindowProps> = ({
                     toggleMaximize();
                   }}
                   style={{ zIndex: 9999, boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }}
-                />
+                >
+                  {/* Optional maximize icon */}
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity text-black/70" style={{fontSize: '8px'}}>+</span>
+                </motion.div>
               </div>
               <div className={`${isMobile ? 'text-sm' : 'text-xs'} font-medium truncate transition-all duration-200 theme-transition ${isActive ? 'text-primary font-semibold' : 'text-white/70'}`}>
                 {title}
