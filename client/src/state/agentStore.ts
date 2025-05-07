@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { log } from './systemLogStore';
-import { generateWindowStates, useTemplateStore } from './layoutTemplatesStore';
 
 export type AgentId = string;
 
@@ -90,8 +89,7 @@ interface AgentState {
   setAutoSaveInterval: (interval: number) => void;
   restoreDefaultLayout: () => void;
   
-  // Template Actions
-  createLayoutFromTemplate: (templateId: string) => void;
+  // No more template actions - using simplified layout system
 }
 
 // Window layout profiles for quick switching

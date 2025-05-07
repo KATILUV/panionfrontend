@@ -4,7 +4,7 @@ import { useThemeStore } from '../../state/themeStore';
 import { useSystemLogStore } from '../../state/systemLogStore';
 import { useTaskbarStore } from '../../state/taskbarStore';
 import { useSettingsTabStore } from '../../state/settingsTabStore';
-import LayoutManager from './LayoutManager';
+//No longer using LayoutManager component
 import ClaraSystemLog from '../system/ClaraSystemLog';
 import { Button } from '@/components/ui/button';
 import { LucideIcon } from 'lucide-react';
@@ -919,47 +919,94 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
             </button>
           )}
           
-          {/* Layout Manager Button - conditionally rendered */}
+          {/* Layout Quick Menu - simplified */}
           {visibleWidgets.includes('layoutManager') && (
-            <LayoutManager>
-              <button
-                className={`
-                  ${isVertical ? 'w-auto px-2 py-1.5 flex flex-col items-center gap-1' : 'h-8 px-2.5 flex items-center space-x-2'} 
-                  rounded-lg transition-all duration-200 overflow-hidden relative touch-manipulation
-                  group
-                  ${activeLayoutId
-                    ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,0,0,0.1)]' 
-                    : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]'
-                  }
-                  ${activeLayoutId && !isVertical
-                    ? 'after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary after:opacity-90 after:rounded-full after:w-5 after:transition-all' 
-                    : ''
-                  }
-                  ${activeLayoutId && isVertical && position.location === 'left'
-                    ? 'after:absolute after:left-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
-                    : ''
-                  }
-                  ${activeLayoutId && isVertical && position.location === 'right'
-                    ? 'after:absolute after:right-0.5 after:top-1/2 after:-translate-y-1/2 after:w-0.5 after:h-5 after:bg-primary after:opacity-90 after:rounded-full after:transition-all' 
-                    : ''
-                  }
-                  before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
-                  hover:before:opacity-100 hover:scale-105
-                `}
-                title={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
-              >
-                <span className={`transition-all duration-200 ${activeLayoutId ? 'text-primary' : 'group-hover:text-white'}`}>
-                  <Icon name={ICONS.LAYOUTS} size="sm" />
-                </span>
-                {showLabels ? (
-                  <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>
-                    {getActiveLayoutName() ? getActiveLayoutName() : 'Layouts'}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={`
+                    ${isVertical ? 'w-auto px-2 py-1.5 flex flex-col items-center gap-1' : 'h-8 px-2.5 flex items-center space-x-2'} 
+                    rounded-lg transition-all duration-200 overflow-hidden relative touch-manipulation
+                    group text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.1)]
+                    before:absolute before:inset-0 before:opacity-0 before:bg-primary/10 before:transition-opacity before:duration-300 
+                    hover:before:opacity-100 hover:scale-105
+                  `}
+                  title="Quick Layouts"
+                >
+                  <span className={`transition-all duration-200 group-hover:text-white`}>
+                    <Icon name={ICONS.LAYOUTS} size="sm" />
                   </span>
-                ) : (
-                  <span className="hidden sm:inline text-sm">Layouts</span>
-                )}
-              </button>
-            </LayoutManager>
+                  {showLabels ? (
+                    <span className={`text-sm ${isVertical ? 'text-xs' : ''}`}>
+                      Layouts
+                    </span>
+                  ) : (
+                    <span className="hidden sm:inline text-sm">Layouts</span>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="end" className="w-56 p-2">
+                <div className="flex flex-col gap-2">
+                  <h3 className="font-semibold text-sm mb-1">Quick Layouts</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start"
+                    onClick={() => {
+                      import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
+                        ApplyLayout.splitView('clara', 'notes');
+                        toast({ title: "Split View", description: "Applied Split View layout" });
+                      });
+                    }}
+                  >
+                    <Icon name={ICONS.LAYOUT_SPLIT} className="mr-2 h-4 w-4" />
+                    Split View
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start"
+                    onClick={() => {
+                      import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
+                        ApplyLayout.focusMode('clara');
+                        toast({ title: "Focus Mode", description: "Applied Focus Mode layout" });
+                      });
+                    }}
+                  >
+                    <Icon name={ICONS.MAXIMIZE} className="mr-2 h-4 w-4" />
+                    Focus Mode
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start"
+                    onClick={() => {
+                      import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
+                        ApplyLayout.tripleLayout('clara', 'notes', 'settings');
+                        toast({ title: "Triple Layout", description: "Applied Triple Layout" });
+                      });
+                    }}
+                  >
+                    <Icon name={ICONS.LAYOUT_GRID} className="mr-2 h-4 w-4" />
+                    Triple Layout
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="justify-start mt-2"
+                    onClick={() => {
+                      import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
+                        ApplyLayout.closeAll();
+                        toast({ title: "Desktop Cleared", description: "Closed all windows" });
+                      });
+                    }}
+                  >
+                    <Icon name={ICONS.X} className="mr-2 h-4 w-4" />
+                    Clear All
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
           
           {/* Clock Widget - horizontal version */}
