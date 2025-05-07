@@ -102,6 +102,12 @@ interface LayoutTemplateProps {
 }
 
 const LayoutTemplateCard: React.FC<LayoutTemplateProps> = ({ title, description, type, onClick }) => {
+  // Make sure the onClick handler is properly attached and working
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't use preventDefault here as it might interfere with click functionality
+    console.log(`Layout template clicked: ${type}`);
+    onClick();
+  };
   // Generate simple SVG representation of the layout type
   const renderLayoutIcon = () => {
     switch (type) {
@@ -148,17 +154,17 @@ const LayoutTemplateCard: React.FC<LayoutTemplateProps> = ({ title, description,
   };
 
   return (
-    <div
-      onClick={() => {
-        console.log(`Layout template clicked: ${type}`);
-        onClick();
-      }}
+    <motion.button
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={handleClick}
+      type="button"
       className="p-4 bg-black/10 dark:bg-white/5 rounded-lg border border-white/10 dark:border-white/5 hover:bg-black/20 dark:hover:bg-white/10 cursor-pointer transition-colors duration-200 flex flex-col items-center w-full border-0 focus:outline-none focus:ring-2 focus:ring-purple-500/40 pointer-events-auto"
     >
       {renderLayoutIcon()}
       <h3 className="font-medium text-sm text-center">{title}</h3>
       <p className="text-xs text-center text-muted-foreground mt-1">{description}</p>
-    </div>
+    </motion.button>
   );
 };
 
@@ -495,210 +501,289 @@ const EmptyStateDashboard: React.FC<EmptyStateDashboardProps> = ({ isMobile = fa
     },
     {
       title: "Stacked",
-      description: "Windows stacked together",
+      description: "Overlapping windows",
       type: 'stack' as const
     }
   ];
   
-  // Filter actions by category and search query
-  const filteredActions = allActions.filter(action => {
-    const matchesCategory = activeTab === 'all' || action.category === activeTab;
-    const matchesSearch = searchQuery === '' || 
-      action.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      action.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Filter actions based on search and active tab
+  const getFilteredActions = () => {
+    return allActions.filter(action => {
+      // Filter by category
+      const categoryMatch = activeTab === "all" || action.category === activeTab;
+      
+      // Filter by search
+      const searchMatch = !searchQuery || 
+        action.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        action.description.toLowerCase().includes(searchQuery.toLowerCase());
+        
+      return categoryMatch && searchMatch;
+    });
+  };
   
-  // Set up keyboard shortcuts
+  const welcomePhrases = [
+    "Your AI desktop environment",
+    "Multi-agent workspace",
+    "Flexible window management",
+    "Personalized AI assistant",
+    "Your digital command center"
+  ];
+
+  // Add keyboard shortcut handlers
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Global keyboard shortcuts
-      allActions.forEach(action => {
+      // Only apply shortcuts when empty state is visible (no windows open)
+      if (Object.values(useAgentStore.getState().windows).some(w => w.isOpen)) {
+        return;
+      }
+      
+      // Process shortcuts
+      quickActions.forEach(action => {
         if (action.shortcutAction) {
           action.shortcutAction(e);
         }
       });
+      
+      // Search shortcut (Ctrl+F or Cmd+F)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowSearch(true);
+        setTimeout(() => {
+          document.getElementById('dashboard-search')?.focus();
+        }, 50);
+      }
+      
+      // Escape to close search
+      if (e.key === 'Escape' && showSearch) {
+        setShowSearch(false);
+        setSearchQuery('');
+      }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [allActions]);
-  
+  }, [showSearch]);
+
   return (
-    <div className={`h-full w-full max-w-screen-xl mx-auto px-4 md:px-8 relative z-10 pt-4 ${isMobile ? 'pb-20' : 'pb-10'}`}>
-      {/* Top greeting section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div className="flex items-center">
-          {greeting.icon}
-          <h1 className="text-2xl font-bold">{greeting.text}</h1>
-        </div>
-        
-        <div className="flex items-center mt-4 md:mt-0 w-full md:w-auto">
-          {showSearch ? (
-            <div className="relative w-full md:w-auto flex items-center">
-              <Input
-                placeholder="Search actions and agents..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full md:w-64 pr-8"
-                autoFocus
-              />
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-0" 
-                onClick={() => {
-                  setSearchQuery('');
-                  setShowSearch(false);
-                }}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <Button variant="outline" size="sm" onClick={() => setShowSearch(true)} className="gap-2 ml-auto">
-              <Search className="h-4 w-4" />
-              <span className="hidden md:inline">Search</span>
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      {/* Tabs for categories */}
-      <Tabs 
-        defaultValue="all" 
-        value={activeTab} 
-        onValueChange={setActiveTab}
-        className="mb-6"
-      >
-        <TabsList className="bg-transparent grid grid-cols-3 md:grid-cols-6 gap-1 p-0">
-          {categories.map((category) => (
-            <TabsTrigger 
-              key={category.id} 
-              value={category.id}
-              className={activeTab === category.id 
-                ? "bg-black/20 text-white border-white/10 hover:bg-black/30"
-                : "bg-transparent border border-white/5 hover:bg-white/5"
-              }
-            >
-              <div className="flex items-center gap-1.5">
-                {category.icon}
-                <span>{category.name}</span>
-              </div>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-      
-      {/* Main content area with adaptive layout */}
-      <div className="flex flex-col gap-10">
-        {activeTab !== 'layouts' ? (
-          <>
-            {/* Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {filteredActions.map((action, index) => (
-                <ActionCard
-                  key={`${action.title}-${index}`}
-                  title={action.title}
-                  description={action.description}
-                  icon={action.icon}
-                  onClick={action.onClick}
-                  color={action.color}
-                  shortcut={action.shortcut}
-                  badge={action.badge}
-                  badgeColor={action.badgeColor}
-                />
-              ))}
-            </div>
-            
-            {/* Only show layouts teaser when not in layouts tab */}
-            <div className="mt-6">
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-semibold">Window Layouts</h2>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setActiveTab('layouts')}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  See all layouts
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {layoutTemplates.slice(0, isMobile ? 2 : 5).map((template) => (
-                  <LayoutTemplateCard
-                    key={template.type}
-                    title={template.title}
-                    description={template.description}
-                    type={template.type}
-                    onClick={() => applyLayout(template.type)}
-                  />
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Layout Templates (when in layouts tab) */}
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className={`absolute inset-0 flex flex-col items-center justify-start 
+                  ${isMobile ? 'p-4 pt-16' : 'p-8 pt-16'} 
+                  bg-gradient-radial ${getGradient()}
+                  overflow-y-auto overflow-x-hidden z-0 pointer-events-auto`}
+    >
+      <div className={`${isMobile ? 'w-full' : 'max-w-5xl w-full'} flex flex-col`}>
+        {/* Personalized greeting and welcome */}
+        <motion.div 
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
+          className={`${isMobile ? 'mb-6' : 'mb-8'}`}
+        >
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center">
             <div>
-              <h2 className="text-xl font-semibold mb-4">Window Layouts</h2>
-              <p className="text-muted-foreground mb-6">
-                Choose a layout to arrange your windows in a specific configuration.
-              </p>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {layoutTemplates.map((template) => (
-                  <LayoutTemplateCard
-                    key={template.type}
-                    title={template.title}
-                    description={template.description}
-                    type={template.type}
-                    onClick={() => applyLayout(template.type)}
-                  />
-                ))}
+              <div className="flex items-center">
+                <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-medium text-white flex items-center`}>
+                  {greeting.icon}
+                  {greeting.text}
+                </h2>
+              </div>
+              <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-bold mt-1 mb-2 text-white`}>
+                Welcome to Panion
+              </h1>
+              <div className={`${isMobile ? 'text-base' : 'text-lg'} text-white/80`}>
+                <RotatingTagline phrases={welcomePhrases} interval={3000} />
               </div>
             </div>
             
-            {/* Saved Layouts (future feature) */}
-            <div className="mt-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Your Saved Layouts</h2>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <PlusCircle className="h-4 w-4" />
-                  Save Current Layout
-                </Button>
-              </div>
-              
-              <div className="bg-black/20 rounded-lg border border-white/10 p-8 text-center">
-                <div className="flex justify-center mb-3">
-                  <Layout className="h-10 w-10 text-muted-foreground" />
+            {/* Search toggle and input */}
+            <div className="mt-4 md:mt-0">
+              {showSearch ? (
+                <div className="relative">
+                  <Input
+                    id="dashboard-search"
+                    type="text"
+                    placeholder="Search agents and tools..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full md:w-64 bg-black/20 border-white/10 text-white placeholder:text-white/50"
+                    autoFocus
+                  />
+                  <button 
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white"
+                    onClick={() => {
+                      setShowSearch(false);
+                      setSearchQuery('');
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
-                <h3 className="text-lg font-medium mb-1">No saved layouts yet</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Arrange your windows and save the layout to create your own custom arrangements.
-                </p>
-              </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="bg-black/20 text-white border-white/10 hover:bg-black/30"
+                  onClick={() => setShowSearch(true)}
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Search
+                </Button>
+              )}
             </div>
-          </>
-        )}
+          </div>
+          
+          {/* Category tabs */}
+          <div className="mt-6">
+            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="bg-black/20 border border-white/10 p-1">
+                {categories.map(category => (
+                  <TabsTrigger 
+                    key={category.id} 
+                    value={category.id}
+                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+                  >
+                    <div className="flex items-center">
+                      {category.icon}
+                      <span>{category.name}</span>
+                    </div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              <TabsContent value="all" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+                
+                {getFilteredActions().length === 0 && searchQuery && (
+                  <div className="flex flex-col items-center justify-center p-8 text-white/70">
+                    <Search className="h-10 w-10 mb-4 opacity-50" />
+                    <p className="text-lg font-medium">No results found</p>
+                    <p className="text-sm">Try a different search term</p>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="productivity" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="communication" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="creativity" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="development" className="mt-6">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
+                  {getFilteredActions().map((action, index) => (
+                    <ActionCard
+                      key={index}
+                      title={action.title}
+                      description={action.description}
+                      icon={action.icon}
+                      onClick={action.onClick}
+                      color={action.color}
+                      shortcut={!isMobile ? action.shortcut : undefined}
+                      badge={action.badge}
+                      badgeColor={action.badgeColor}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="layouts" className="mt-6">
+                <div className="mb-4">
+                  <h3 className="text-white text-lg font-medium mb-2">Workspace Layouts</h3>
+                  <p className="text-white/70 text-sm">Select a layout template to automatically arrange your workspace</p>
+                </div>
+                <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-5 gap-4'}`}>
+                  {layoutTemplates.map((template, index) => (
+                    <LayoutTemplateCard
+                      key={index}
+                      title={template.title}
+                      description={template.description}
+                      type={template.type}
+                      onClick={() => applyLayout(template.type)}
+                    />
+                  ))}
+                </div>
+                
+                <div className="mt-8 py-4 border-t border-white/10">
+                  <div className="flex items-center mb-2">
+                    <MousePointer className="h-4 w-4 mr-2 text-white/70" />
+                    <h3 className="text-white font-medium">Pro Tips</h3>
+                  </div>
+                  <ul className="text-sm text-white/70 space-y-2">
+                    <li>• Use keyboard shortcuts for quick access to agents (Shift+C for Clara, Shift+N for Notes)</li>
+                    <li>• Press Ctrl+F (or Cmd+F) to search for agents</li>
+                    <li>• Press Cmd+K or Ctrl+K to open the Command Palette for more options</li>
+                    <li>• Hold Shift while moving windows to snap to grid positions</li>
+                  </ul>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </motion.div>
       </div>
-      
-      {/* Tagline rotator at bottom */}
-      <div className="mt-10 text-center">
-        <RotatingTagline
-          phrases={[
-            "Organize your AI workspace",
-            "Customize your agent experience",
-            "Discover new AI capabilities",
-            "Connect your digital assistants",
-            "Design your perfect workflow"
-          ]}
-          interval={5000}
-          className="text-sm text-muted-foreground"
-        />
-      </div>
-    </div>
+    </motion.div>
   );
 };
 
