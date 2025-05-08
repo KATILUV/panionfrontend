@@ -1,506 +1,597 @@
-/**
- * Collaboration System Routes
- * Endpoints for agent collaboration and team management functionality
- */
-
-import express, { Router, Request, Response } from 'express';
+import express, { Request, Response } from 'express';
+import { z } from 'zod';
 import axios from 'axios';
 
-// Logger utility 
-function log(message: string, category: string = 'collaboration') {
-  const timestamp = new Date().toLocaleTimeString();
-  console.log(`${timestamp} [${category}] ${message}`);
-}
+const router = express.Router();
 
-// Create router
-const router = Router();
+// Schema for agent registration
+const agentSchema = z.object({
+  name: z.string().min(1, "Agent name is required"),
+  capabilities: z.array(z.string()).optional().default([])
+});
 
-// Common Panion API middleware
-const PANION_API_URL = 'http://localhost:8000';
+// Schema for team creation
+const teamSchema = z.object({
+  name: z.string().min(1, "Team name is required"),
+  description: z.string().optional().default(""),
+  coordinator_id: z.string().min(1, "Coordinator ID is required")
+});
 
-// Middleware to ensure Panion API is available
-function checkPanionAPIMiddleware(req: Request, res: Response, next: Function) {
-  axios.get(`${PANION_API_URL}/health`)
-    .then(() => next())
-    .catch(error => {
-      log(`Panion API not available: ${error}`, 'panion');
-      res.status(503).json({ 
-        error: 'Service unavailable',
-        message: 'Panion API service is not available' 
-      });
-    });
-}
+// Schema for message sending
+const messageSchema = z.object({
+  sender_id: z.string().min(1, "Sender ID is required"),
+  receiver_id: z.string().min(1, "Receiver ID is required"),
+  message_type: z.string().min(1, "Message type is required"),
+  content: z.any(),
+  priority: z.enum(["low", "medium", "high", "critical"]).default("medium")
+});
 
-// Agent Collaboration API endpoints
+// Schema for knowledge item
+const knowledgeSchema = z.object({
+  source_agent_id: z.string().min(1, "Source agent ID is required"),
+  category: z.string().min(1, "Category is required"),
+  content: z.any(),
+  tags: z.array(z.string()).optional().default([]),
+  confidence: z.number().min(0).max(1).default(1.0)
+});
 
-// Register agent
-router.post('/agents/register', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+// Get all registered agents
+router.get('/agents', async (_req: Request, res: Response) => {
   try {
-    const { agentId, agentName, capabilities = [] } = req.body;
-    
-    if (!agentName) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Agent name is required' 
-      });
-    }
-    
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/agents/register`, {
-      agent_id: agentId,
-      agent_name: agentName,
-      capabilities
+    // In a real implementation, you'd query the database or API
+    // For now, use sample data
+    res.json({
+      success: true,
+      agents: [
+        {
+          agent_id: "research_agent",
+          name: "Research Agent",
+          capabilities: ["research", "data_collection", "analysis"],
+          registered_at: "2025-05-01T10:00:00Z",
+          last_active: "2025-05-08T09:30:00Z"
+        },
+        {
+          agent_id: "planning_agent",
+          name: "Planning Agent",
+          capabilities: ["planning", "scheduling", "coordination"],
+          registered_at: "2025-05-02T14:30:00Z",
+          last_active: "2025-05-08T10:15:00Z"
+        },
+        {
+          agent_id: "development_agent",
+          name: "Development Agent",
+          capabilities: ["coding", "testing", "debugging"],
+          registered_at: "2025-05-03T09:45:00Z",
+          last_active: "2025-05-08T08:20:00Z"
+        },
+        {
+          agent_id: "creative_agent",
+          name: "Creative Agent",
+          capabilities: ["design", "content_creation", "ideation"],
+          registered_at: "2025-05-04T11:20:00Z",
+          last_active: "2025-05-07T16:40:00Z"
+        }
+      ]
     });
-    
-    res.json(response.data);
   } catch (error) {
-    log(`Error registering agent: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
+    console.error('Error fetching agents:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch agents"
     });
   }
 });
 
-// Unregister agent
-router.post('/agents/unregister', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+// Register a new agent
+router.post('/agents', async (req: Request, res: Response) => {
   try {
-    const { agentId } = req.body;
+    const validation = agentSchema.safeParse(req.body);
     
-    if (!agentId) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Agent ID is required' 
-      });
-    }
-    
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/agents/unregister`, {
-      agent_id: agentId
-    });
-    
-    res.json(response.data);
-  } catch (error) {
-    log(`Error unregistering agent: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
-    });
-  }
-});
-
-// Get agent list
-router.get('/agents', checkPanionAPIMiddleware, async (_req: Request, res: Response) => {
-  try {
-    // Forward the request to the Panion API
-    const response = await axios.get(`${PANION_API_URL}/collaboration/agents`);
-    res.json(response.data);
-  } catch (error) {
-    log(`Error getting agents: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
-    });
-  }
-});
-
-// Get agents with capability
-router.get('/agents/capabilities/:capability', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { capability } = req.params;
-    
-    if (!capability) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Capability is required' 
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid agent data",
+        errors: validation.error.errors
       });
     }
     
-    // Forward the request to the Panion API
-    const response = await axios.get(`${PANION_API_URL}/collaboration/agents/capabilities/${capability}`);
-    res.json(response.data);
+    const { name, capabilities } = validation.data;
+    
+    // In a real implementation, you'd save to a database
+    // For now, just return success with a generated ID
+    
+    res.status(201).json({
+      success: true,
+      agent: {
+        agent_id: `agent_${Date.now()}`,
+        name,
+        capabilities,
+        registered_at: new Date().toISOString(),
+        last_active: new Date().toISOString()
+      }
+    });
   } catch (error) {
-    log(`Error getting agents with capability: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
+    console.error('Error registering agent:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to register agent"
     });
   }
 });
 
-// Send message
-router.post('/messages/send', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+// Get all teams
+router.get('/teams', async (_req: Request, res: Response) => {
   try {
-    const { senderId, receiverId, messageType, content, priority, referenceId, expiresInHours } = req.body;
+    // In a real implementation, you'd query the database or API
+    // For now, use sample data
+    res.json({
+      success: true,
+      teams: [
+        {
+          team_id: "research_team",
+          name: "Research Team",
+          description: "Team focused on research and data collection",
+          coordinator_id: "planning_agent",
+          members: [
+            {
+              agent_id: "research_agent",
+              role: "researcher",
+              joined_at: "2025-05-05T10:30:00Z"
+            },
+            {
+              agent_id: "development_agent",
+              role: "data_analyst",
+              joined_at: "2025-05-05T11:15:00Z"
+            }
+          ],
+          active_tasks: [
+            {
+              task_id: "task_1",
+              task_type: "market_research",
+              coordinator_id: "planning_agent",
+              assigned_at: "2025-05-06T09:00:00Z",
+              deadline: "2025-05-10T17:00:00Z",
+              assignments: ["research_agent", "development_agent"],
+              status: "in_progress"
+            }
+          ]
+        },
+        {
+          team_id: "development_team",
+          name: "Development Team",
+          description: "Team focused on development and implementation",
+          coordinator_id: "planning_agent",
+          members: [
+            {
+              agent_id: "development_agent",
+              role: "lead_developer",
+              joined_at: "2025-05-05T14:00:00Z"
+            },
+            {
+              agent_id: "creative_agent",
+              role: "ui_designer",
+              joined_at: "2025-05-05T14:30:00Z"
+            }
+          ],
+          active_tasks: []
+        }
+      ]
+    });
+  } catch (error) {
+    console.error('Error fetching teams:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch teams"
+    });
+  }
+});
+
+// Create a new team
+router.post('/teams', async (req: Request, res: Response) => {
+  try {
+    const validation = teamSchema.safeParse(req.body);
     
-    if (!senderId || !receiverId || !messageType) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Sender ID, receiver ID, and message type are required' 
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid team data",
+        errors: validation.error.errors
       });
     }
     
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/messages/send`, {
-      sender_id: senderId,
-      receiver_id: receiverId,
-      message_type: messageType,
-      content,
-      priority,
-      reference_id: referenceId,
-      expires_in_hours: expiresInHours
-    });
+    const { name, description, coordinator_id } = validation.data;
     
-    res.json(response.data);
+    // In a real implementation, you'd save to a database
+    // For now, just return success with a generated ID
+    
+    res.status(201).json({
+      success: true,
+      team: {
+        team_id: `team_${Date.now()}`,
+        name,
+        description,
+        coordinator_id,
+        members: [],
+        active_tasks: []
+      }
+    });
   } catch (error) {
-    log(`Error sending message: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
+    console.error('Error creating team:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create team"
     });
   }
 });
 
-// Get agent messages
-router.get('/messages/agent/:agentId', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+// Add a member to a team
+router.post('/teams/:team_id/members', async (req: Request, res: Response) => {
   try {
-    const { agentId } = req.params;
+    const { team_id } = req.params;
+    const { agent_id, role } = req.body;
     
-    if (!agentId) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Agent ID is required' 
+    if (!agent_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Agent ID is required"
       });
     }
     
-    // Forward the request to the Panion API
-    const response = await axios.get(`${PANION_API_URL}/collaboration/messages/agent/${agentId}`);
-    res.json(response.data);
+    // In a real implementation, you'd update the team in the database
+    // For now, just return success
+    
+    res.status(200).json({
+      success: true,
+      member: {
+        agent_id,
+        role: role || "member",
+        joined_at: new Date().toISOString()
+      }
+    });
   } catch (error) {
-    log(`Error getting agent messages: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
+    console.error('Error adding team member:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add team member"
     });
   }
 });
 
-// Process message
-router.post('/messages/process', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+// Get messages for an agent
+router.get('/messages/:agent_id', async (req: Request, res: Response) => {
   try {
-    const { messageId, responseContent } = req.body;
+    const { agent_id } = req.params;
     
-    if (!messageId) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Message ID is required' 
+    // In a real implementation, you'd query the database or API
+    // For now, use sample data
+    res.json({
+      success: true,
+      messages: [
+        {
+          message_id: "msg_1",
+          message_type: "task_request",
+          sender_id: "planning_agent",
+          receiver_id: "research_agent",
+          content: {
+            text: "Please conduct market research on AI productivity tools. Focus on usage patterns and key features that drive user engagement."
+          },
+          priority: "high",
+          created_at: "2025-05-07T10:30:00Z",
+          delivered: true,
+          read: true,
+          processed: false
+        },
+        {
+          message_id: "msg_2",
+          message_type: "knowledge_share",
+          sender_id: "research_agent",
+          receiver_id: "planning_agent",
+          content: {
+            text: "I've completed the preliminary analysis of AI tools in the productivity space. Key finding: 78% of users prioritize integration with existing workflows over advanced features."
+          },
+          priority: "medium",
+          created_at: "2025-05-07T14:45:00Z",
+          delivered: true,
+          read: true,
+          processed: true
+        },
+        {
+          message_id: "msg_3",
+          message_type: "coordination",
+          sender_id: "planning_agent",
+          receiver_id: "development_agent",
+          content: {
+            text: "Based on research findings, we should prioritize API integrations with common productivity tools in the next sprint."
+          },
+          priority: "medium",
+          created_at: "2025-05-07T16:20:00Z",
+          delivered: true,
+          read: false,
+          processed: false
+        }
+      ].filter(msg => msg.sender_id === agent_id || msg.receiver_id === agent_id)
+    });
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch messages"
+    });
+  }
+});
+
+// Send a message
+router.post('/messages', async (req: Request, res: Response) => {
+  try {
+    const validation = messageSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid message data",
+        errors: validation.error.errors
       });
     }
     
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/messages/process`, {
-      message_id: messageId,
-      response_content: responseContent
-    });
+    const { sender_id, receiver_id, message_type, content, priority } = validation.data;
     
-    res.json(response.data);
+    // In a real implementation, you'd save to a database
+    // For now, just return success with a generated ID
+    
+    res.status(201).json({
+      success: true,
+      message: {
+        message_id: `msg_${Date.now()}`,
+        message_type,
+        sender_id,
+        receiver_id,
+        content,
+        priority,
+        created_at: new Date().toISOString(),
+        delivered: false,
+        read: false,
+        processed: false
+      }
+    });
   } catch (error) {
-    log(`Error processing message: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
+    console.error('Error sending message:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send message"
     });
   }
 });
 
-// Knowledge endpoints 
-
-// Add knowledge
-router.post('/knowledge/add', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+// Get knowledge base items
+router.get('/knowledge', async (_req: Request, res: Response) => {
   try {
-    const { agentId, content, category, confidence, tags, expiresInHours } = req.body;
+    // In a real implementation, you'd query the database or API
+    // For now, use sample data
+    res.json({
+      success: true,
+      knowledge: [
+        {
+          item_id: "knowledge_1",
+          content: {
+            text: "User research indicates that 78% of users prioritize seamless integration with existing workflows over advanced features. This should inform our product development strategy."
+          },
+          source_agent_id: "research_agent",
+          category: "factual",
+          confidence: 0.95,
+          tags: ["user_research", "product_strategy", "market_insights"],
+          created_at: "2025-05-07T15:00:00Z"
+        },
+        {
+          item_id: "knowledge_2",
+          content: {
+            text: "Common development challenges in AI assistants include maintaining context across sessions, handling ambiguous queries, and managing computational resources effectively."
+          },
+          source_agent_id: "development_agent",
+          category: "technical",
+          confidence: 0.9,
+          tags: ["development", "challenges", "best_practices"],
+          created_at: "2025-05-06T11:30:00Z"
+        },
+        {
+          item_id: "knowledge_3",
+          content: {
+            text: "Effective team coordination in multi-agent systems requires clear role definition, structured communication protocols, and shared knowledge repositories."
+          },
+          source_agent_id: "planning_agent",
+          category: "procedural",
+          confidence: 0.85,
+          tags: ["coordination", "team_management", "best_practices"],
+          created_at: "2025-05-05T16:45:00Z"
+        }
+      ]
+    });
+  } catch (error) {
+    console.error('Error fetching knowledge:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch knowledge"
+    });
+  }
+});
+
+// Add a knowledge item
+router.post('/knowledge', async (req: Request, res: Response) => {
+  try {
+    const validation = knowledgeSchema.safeParse(req.body);
     
-    if (!agentId || !category) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Agent ID and category are required' 
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid knowledge data",
+        errors: validation.error.errors
       });
     }
     
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/knowledge/add`, {
-      agent_id: agentId,
-      content,
-      category,
-      confidence,
-      tags,
-      expires_in_hours: expiresInHours
-    });
+    const { source_agent_id, category, content, tags, confidence } = validation.data;
     
-    res.json(response.data);
+    // In a real implementation, you'd save to a database
+    // For now, just return success with a generated ID
+    
+    res.status(201).json({
+      success: true,
+      knowledge: {
+        item_id: `knowledge_${Date.now()}`,
+        source_agent_id,
+        category,
+        content,
+        tags,
+        confidence,
+        created_at: new Date().toISOString()
+      }
+    });
   } catch (error) {
-    log(`Error adding knowledge: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
+    console.error('Error adding knowledge:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add knowledge"
     });
   }
 });
 
-// Search knowledge
-router.post('/knowledge/search', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+// Search knowledge base
+router.get('/knowledge/search', async (req: Request, res: Response) => {
   try {
-    const { query, category, tags, minConfidence } = req.body;
+    const { query, category } = req.query;
     
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/knowledge/search`, {
-      query,
-      category,
-      tags,
-      min_confidence: minConfidence
-    });
-    
-    res.json(response.data);
-  } catch (error) {
-    log(`Error searching knowledge: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
-    });
-  }
-});
-
-// Team endpoints
-
-// Create team
-router.post('/teams/create', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { teamId, name, description, coordinatorId } = req.body;
-    
-    if (!name) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Team name is required' 
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required"
       });
     }
     
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/teams/create`, {
-      team_id: teamId,
-      name,
-      description,
-      coordinator_id: coordinatorId
-    });
+    // In a real implementation, you'd query the database or API
+    // For now, just return all knowledge items
     
-    res.json(response.data);
+    // Get all knowledge items
+    const allKnowledge = [
+      {
+        item_id: "knowledge_1",
+        content: {
+          text: "User research indicates that 78% of users prioritize seamless integration with existing workflows over advanced features. This should inform our product development strategy."
+        },
+        source_agent_id: "research_agent",
+        category: "factual",
+        confidence: 0.95,
+        tags: ["user_research", "product_strategy", "market_insights"],
+        created_at: "2025-05-07T15:00:00Z"
+      },
+      {
+        item_id: "knowledge_2",
+        content: {
+          text: "Common development challenges in AI assistants include maintaining context across sessions, handling ambiguous queries, and managing computational resources effectively."
+        },
+        source_agent_id: "development_agent",
+        category: "technical",
+        confidence: 0.9,
+        tags: ["development", "challenges", "best_practices"],
+        created_at: "2025-05-06T11:30:00Z"
+      },
+      {
+        item_id: "knowledge_3",
+        content: {
+          text: "Effective team coordination in multi-agent systems requires clear role definition, structured communication protocols, and shared knowledge repositories."
+        },
+        source_agent_id: "planning_agent",
+        category: "procedural",
+        confidence: 0.85,
+        tags: ["coordination", "team_management", "best_practices"],
+        created_at: "2025-05-05T16:45:00Z"
+      }
+    ];
+    
+    // Filter by category if provided
+    const filteredByCategory = category 
+      ? allKnowledge.filter(item => item.category === category)
+      : allKnowledge;
+    
+    // Simple search by content
+    const searchQuery = String(query).toLowerCase();
+    const searchResults = filteredByCategory.filter(item => 
+      (item.content.text && item.content.text.toLowerCase().includes(searchQuery)) ||
+      item.tags.some(tag => tag.toLowerCase().includes(searchQuery))
+    );
+    
+    res.json({
+      success: true,
+      results: searchResults,
+      count: searchResults.length
+    });
   } catch (error) {
-    log(`Error creating team: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
+    console.error('Error searching knowledge:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to search knowledge"
     });
   }
 });
 
-// Add team member
-router.post('/teams/members/add', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+// Get tasks for a team
+router.get('/teams/:team_id/tasks', async (req: Request, res: Response) => {
   try {
-    const { teamId, agentId, role } = req.body;
+    const { team_id } = req.params;
     
-    if (!teamId || !agentId) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Team ID and agent ID are required' 
-      });
-    }
-    
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/teams/members/add`, {
-      team_id: teamId,
-      agent_id: agentId,
-      role
+    // For now, return sample tasks
+    res.json({
+      success: true,
+      tasks: [
+        {
+          task_id: "task_1",
+          task_type: "market_research",
+          coordinator_id: "planning_agent",
+          assigned_at: "2025-05-06T09:00:00Z",
+          deadline: "2025-05-10T17:00:00Z",
+          assignments: ["research_agent", "development_agent"],
+          status: "in_progress"
+        }
+      ]
     });
-    
-    res.json(response.data);
   } catch (error) {
-    log(`Error adding team member: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
+    console.error('Error fetching team tasks:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch team tasks"
     });
   }
 });
 
-// Remove team member
-router.post('/teams/members/remove', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+// Create a task for a team
+router.post('/teams/:team_id/tasks', async (req: Request, res: Response) => {
   try {
-    const { teamId, agentId } = req.body;
+    const { team_id } = req.params;
+    const { task_type, coordinator_id, deadline, assignments } = req.body;
     
-    if (!teamId || !agentId) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Team ID and agent ID are required' 
+    if (!task_type || !coordinator_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Task type and coordinator ID are required"
       });
     }
     
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/teams/members/remove`, {
-      team_id: teamId,
-      agent_id: agentId
-    });
+    // In a real implementation, you'd save to a database
     
-    res.json(response.data);
+    res.status(201).json({
+      success: true,
+      task: {
+        task_id: `task_${Date.now()}`,
+        task_type,
+        coordinator_id,
+        assigned_at: new Date().toISOString(),
+        deadline: deadline || null,
+        assignments: assignments || [],
+        status: "pending"
+      }
+    });
   } catch (error) {
-    log(`Error removing team member: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
-    });
-  }
-});
-
-// Get agent teams
-router.get('/teams/agent/:agentId', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { agentId } = req.params;
-    
-    if (!agentId) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Agent ID is required' 
-      });
-    }
-    
-    // Forward the request to the Panion API
-    const response = await axios.get(`${PANION_API_URL}/collaboration/teams/agent/${agentId}`);
-    res.json(response.data);
-  } catch (error) {
-    log(`Error getting agent teams: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
-    });
-  }
-});
-
-// Broadcast to team
-router.post('/teams/broadcast', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { teamId, senderId, messageType, content, priority, excludeAgents } = req.body;
-    
-    if (!teamId || !senderId || !messageType) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Team ID, sender ID, and message type are required' 
-      });
-    }
-    
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/teams/broadcast`, {
-      team_id: teamId,
-      sender_id: senderId,
-      message_type: messageType,
-      content,
-      priority,
-      exclude_agents: excludeAgents
-    });
-    
-    res.json(response.data);
-  } catch (error) {
-    log(`Error broadcasting to team: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
-    });
-  }
-});
-
-// Assign team task
-router.post('/teams/assign-task', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { teamId, coordinatorId, taskType, taskData, assignments, priority, deadlineHours } = req.body;
-    
-    if (!teamId || !coordinatorId || !taskType || !assignments) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Team ID, coordinator ID, task type, and assignments are required' 
-      });
-    }
-    
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/teams/assign-task`, {
-      team_id: teamId,
-      coordinator_id: coordinatorId,
-      task_type: taskType,
-      task_data: taskData,
-      assignments,
-      priority,
-      deadline_hours: deadlineHours
-    });
-    
-    res.json(response.data);
-  } catch (error) {
-    log(`Error assigning team task: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
-    });
-  }
-});
-
-// Update task status
-router.post('/teams/update-task-status', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { teamId, taskId, status } = req.body;
-    
-    if (!teamId || !taskId || !status) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Team ID, task ID, and status are required' 
-      });
-    }
-    
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/teams/update-task-status`, {
-      team_id: teamId,
-      task_id: taskId,
-      status
-    });
-    
-    res.json(response.data);
-  } catch (error) {
-    log(`Error updating task status: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
-    });
-  }
-});
-
-// Disband team
-router.post('/teams/disband', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { teamId, notifyMembers } = req.body;
-    
-    if (!teamId) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Team ID is required' 
-      });
-    }
-    
-    // Forward the request to the Panion API
-    const response = await axios.post(`${PANION_API_URL}/collaboration/teams/disband`, {
-      team_id: teamId,
-      notify_members: notifyMembers
-    });
-    
-    res.json(response.data);
-  } catch (error) {
-    log(`Error disbanding team: ${error}`);
-    res.status(500).json({ 
-      error: 'Collaboration API error',
-      message: 'Error communicating with Collaboration API' 
+    console.error('Error creating team task:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create team task"
     });
   }
 });

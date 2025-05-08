@@ -11,6 +11,7 @@ import DesktopPage from "./pages/desktop-page";
 import LandingPage from "./pages/landing-page";
 import AuthPage from "./pages/auth-page";
 import MarketplacePage from "./pages/marketplace-page";
+import CollaborationPage from "./pages/CollaborationPage";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
@@ -50,6 +51,13 @@ function Router() {
         <Route path="/marketplace">
           <PageTransition type="slideLeft" duration={0.3}>
             <MarketplacePage />
+          </PageTransition>
+        </Route>
+        
+        {/* Collaboration Dashboard */}
+        <Route path="/collaboration">
+          <PageTransition type="slideUp" duration={0.4}>
+            <CollaborationPage />
           </PageTransition>
         </Route>
         
