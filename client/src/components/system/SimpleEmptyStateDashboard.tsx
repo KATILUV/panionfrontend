@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAgentStore } from '../../state/agentStore';
-import { MessageSquare, FileText, Settings, PlusCircle } from 'lucide-react';
+import { MessageSquare, FileText, Settings, PlusCircle, BrainCircuit } from 'lucide-react';
 import { useLocation } from 'wouter';
 import SimpleActionCard from './SimpleActionCard';
 import { useThemeStore } from '../../state/themeStore';
@@ -33,6 +33,16 @@ const SimpleEmptyStateDashboard: React.FC = () => {
       colorIndex: 0  // Use index instead of hardcoded color
     },
     {
+      title: "Panion Chat",
+      description: "Interact with the Panion multi-agent system",
+      icon: <BrainCircuit className="h-5 w-5" />,
+      onClick: () => {
+        console.log("Opening Panion Chat agent");
+        openAgent('panion');
+      },
+      colorIndex: 1  // Use index instead of hardcoded color
+    },
+    {
       title: "Take Notes",
       description: "Open the Notes agent to capture your thoughts",
       icon: <FileText className="h-5 w-5" />,
@@ -40,7 +50,7 @@ const SimpleEmptyStateDashboard: React.FC = () => {
         console.log("Opening Notes agent");
         openAgent('notes');
       },
-      colorIndex: 1  // Use index instead of hardcoded color
+      colorIndex: 2  // Use index instead of hardcoded color
     },
     {
       title: "Settings",
@@ -50,7 +60,7 @@ const SimpleEmptyStateDashboard: React.FC = () => {
         console.log("Opening Settings agent");
         openAgent('settings');
       },
-      colorIndex: 2  // Use index instead of hardcoded color
+      colorIndex: 0  // Use index instead of hardcoded color
     },
     {
       title: "Marketplace",
@@ -60,7 +70,7 @@ const SimpleEmptyStateDashboard: React.FC = () => {
         console.log("Navigating to marketplace");
         navigate('/marketplace');
       },
-      colorIndex: 0  // Use index instead of hardcoded color (different pattern)
+      colorIndex: 1  // Use index instead of hardcoded color (different pattern)
     }
   ];
 

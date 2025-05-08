@@ -74,6 +74,16 @@ function App() {
   useEffect(() => {
     const agentStore = useAgentStore.getState();
     
+    // Force open the Panion agent after a delay to ensure it's properly registered
+    setTimeout(() => {
+      try {
+        console.log('App: Forcing open Panion agent');
+        agentStore.openAgent('panion');
+      } catch (err) {
+        console.error('App: Error opening Panion agent', err);
+      }
+    }, 3000);
+    
     // Clara Agent
     const claraIcon = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

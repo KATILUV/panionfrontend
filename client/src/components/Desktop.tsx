@@ -243,9 +243,12 @@ const Desktop: React.FC = () => {
         // Use our simplified layout utility to show basic functionality
         ApplyLayout.splitView('clara', 'notes');
         
+        // Open the Panion chat agent
+        openAgent('panion');
+        
         toast({
           title: "Welcome to Panion",
-          description: "Split view layout applied as a demonstration"
+          description: "Split view layout applied and Panion Chat opened"
         });
       } catch (err) {
         console.error("Error applying initial layout:", err);
