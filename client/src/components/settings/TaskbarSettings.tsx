@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useTaskbarStore, TaskbarWidgetType } from '../../state/taskbarStore';
-import { Check, ChevronDown, ChevronUp, LayoutGrid, Minus, Plus, Settings } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, LayoutGrid, Minus, Plus, Settings, Pin, PinOff, X, MessageSquare, Database, BrainCircuit, FlaskConical, Clock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { useAgentStore, AgentId } from '@/state/agentStore';
+import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -50,6 +52,7 @@ export function TaskbarSettings() {
     enableBlur,
     showLabels,
     autohide,
+    pinnedAgents,
     toggleWidget,
     setPosition,
     setEnableBlur,
@@ -57,8 +60,15 @@ export function TaskbarSettings() {
     setAutohide,
     applyMinimalPreset,
     applyFullPreset,
-    applyClassicPreset
+    applyClassicPreset,
+    pinAgent,
+    unpinAgent,
+    clearPinnedAgents
   } = useTaskbarStore();
+  
+  // Get agent registry from agent store
+  const registry = useAgentStore(state => state.registry);
+  const { toast } = useToast();
 
   // List of available widgets
   const allWidgets: TaskbarWidgetType[] = [
@@ -110,13 +120,166 @@ export function TaskbarSettings() {
         </div>
       </div>
 
-      <Tabs defaultValue="widgets" className="w-full">
+      <Tabs defaultValue="pinned" className="w-full">
         <TabsList className="w-full mb-4">
+          <TabsTrigger value="pinned" className="flex-1">Pinned Agents</TabsTrigger>
           <TabsTrigger value="widgets" className="flex-1">Widgets</TabsTrigger>
           <TabsTrigger value="appearance" className="flex-1">Appearance</TabsTrigger>
           <TabsTrigger value="behavior" className="flex-1">Behavior</TabsTrigger>
         </TabsList>
-
+        
+        {/* Pinned Agents Tab */}
+        <TabsContent value="pinned">
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Select which agents should appear in your taskbar for quick access.
+            </p>
+            
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium">Currently Pinned Agents</h3>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  clearPinnedAgents();
+                  toast({
+                    title: "Taskbar cleared",
+                    description: "All agents have been removed from the taskbar",
+                  });
+                }}
+                className="text-destructive hover:bg-destructive/10"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear All
+              </Button>
+            </div>
+            
+            <div className="space-y-2 mb-6">
+              {pinnedAgents.length > 0 ? (
+                pinnedAgents.map((agentId) => {
+                  const agent = registry[agentId];
+                  if (!agent) return null;
+                  
+                  let AgentIcon;
+                  switch (agentId) {
+                    case 'panion':
+                      AgentIcon = MessageSquare;
+                      break;
+                    case 'database':
+                      AgentIcon = Database;
+                      break;
+                    case 'brain-circuit':
+                      AgentIcon = BrainCircuit;
+                      break;
+                    case 'scientist':
+                      AgentIcon = FlaskConical;
+                      break;
+                    case 'scheduler':
+                      AgentIcon = Clock;
+                      break;
+                    default:
+                      AgentIcon = MessageSquare;
+                  }
+                  
+                  return (
+                    <div 
+                      key={agentId}
+                      className="flex items-center justify-between p-2 bg-background/30 rounded-md border"
+                    >
+                      <div className="flex items-center">
+                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                          <AgentIcon className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{agent.name}</div>
+                          <div className="text-xs text-muted-foreground">{agent.description || 'AI Agent'}</div>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => {
+                          unpinAgent(agentId);
+                          toast({
+                            title: "Agent unpinned",
+                            description: `${agent.name} has been removed from the taskbar`,
+                          });
+                        }}
+                        className="text-destructive hover:bg-destructive/10 h-8 w-8"
+                      >
+                        <PinOff className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  No agents pinned to the taskbar yet.
+                </div>
+              )}
+            </div>
+            
+            <h3 className="text-sm font-medium mt-8 mb-2">Available Agents</h3>
+            <div className="space-y-2">
+              {Object.entries(registry)
+                .filter(([id]) => !pinnedAgents.includes(id))
+                .map(([id, agent]) => {
+                  let AgentIcon;
+                  switch (id) {
+                    case 'panion':
+                      AgentIcon = MessageSquare;
+                      break;
+                    case 'database':
+                      AgentIcon = Database;
+                      break;
+                    case 'brain-circuit':
+                      AgentIcon = BrainCircuit;
+                      break;
+                    case 'scientist':
+                      AgentIcon = FlaskConical;
+                      break;
+                    case 'scheduler':
+                      AgentIcon = Clock;
+                      break;
+                    default:
+                      AgentIcon = MessageSquare;
+                  }
+                  
+                  return (
+                    <div 
+                      key={id}
+                      className="flex items-center justify-between p-2 bg-background/30 rounded-md border"
+                    >
+                      <div className="flex items-center">
+                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                          <AgentIcon className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{agent.name}</div>
+                          <div className="text-xs text-muted-foreground">{agent.description || 'AI Agent'}</div>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => {
+                          pinAgent(id);
+                          toast({
+                            title: "Agent pinned",
+                            description: `${agent.name} has been added to the taskbar`,
+                          });
+                        }}
+                        className="text-primary hover:bg-primary/10 h-8 w-8"
+                      >
+                        <Pin className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </TabsContent>
+        
         {/* Widgets Tab */}
         <TabsContent value="widgets">
           <div className="space-y-4">
