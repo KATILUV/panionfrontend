@@ -458,7 +458,7 @@ const PanionChatAgent: React.FC = () => {
     // Notify the user about creating specialized agents
     const botMessage: ChatMessage = {
       id: generateId(),
-      content: `I need to create specialized agent(s) with the following capabilities to help with your request: ${missingCapabilities.join(', ')}. Please wait a moment...`,
+      content: `I need specialized capabilities to help with your request: ${missingCapabilities.join(', ')}. Would you like me to assist with this?`,
       isUser: false,
       timestamp: formatTime(new Date()),
     };
@@ -466,84 +466,105 @@ const PanionChatAgent: React.FC = () => {
     setMessages(prev => [...prev, botMessage]);
     
     try {
-      // Determine which kind of specialized agent to create based on capabilities
-      let agentCreated = false;
-      
-      // Create specialized agents based on the specific capabilities needed
+      // Determine which kind of specialized agent to create or use based on capabilities
       if (missingCapabilities.includes(CAPABILITIES.BUSINESS_DIRECTORY) || 
           missingCapabilities.includes(CAPABILITIES.BUSINESS_RESEARCH)) {
         // Use existing Daddy Data agent instead of creating new ones
-        const confirmMessage: ChatMessage = {
+        const suggestMessage: ChatMessage = {
           id: generateId(),
-          content: 'I\'ll use the Daddy Data agent to help find the business information you need. Opening it now in your workspace.',
+          content: 'I can use the Daddy Data agent to help find the business information you need. Would you like me to open it in your workspace?',
           isUser: false,
           timestamp: formatTime(new Date()),
         };
         
-        setMessages(prev => [...prev, confirmMessage]);
+        setMessages(prev => [...prev, suggestMessage]);
         
-        // Open the Daddy Data agent instead of creating a new one
-        useAgentStore.getState().openAgent('daddy-data');
-        agentCreated = true;
+        // Create a pending action for user approval
+        setPendingAction({
+          type: 'use_agent',
+          data: {
+            agent: registry.find(a => a.id === 'daddy-data'),
+            coveredCapabilities: [CAPABILITIES.BUSINESS_DIRECTORY, CAPABILITIES.BUSINESS_RESEARCH],
+            stillMissingCapabilities: []
+          }
+        });
+        
+        return false; // No new agents created, waiting for user approval
       } else if (missingCapabilities.includes(CAPABILITIES.DATA_ANALYSIS)) {
-        // Create a data analysis agent
-        await createDynamicAgent({
-          name: 'Data Analysis Agent',
-          description: 'Specialized agent for analyzing data sets and extracting insights.',
-          capabilities: [CAPABILITIES.DATA_ANALYSIS],
-          icon: 'BarChart'
-        });
-        
-        // Add confirmation message
-        const confirmMessage: ChatMessage = {
+        // Ask to create a data analysis agent
+        const suggestMessage: ChatMessage = {
           id: generateId(),
-          content: 'I\'ve created a Data Analysis Agent to help analyze the information you need. It\'s now available in your workspace.',
+          content: 'I recommend creating a Data Analysis Agent to help with this task. Would you like me to create this specialized agent?',
           isUser: false,
           timestamp: formatTime(new Date()),
         };
         
-        setMessages(prev => [...prev, confirmMessage]);
-        agentCreated = true;
+        setMessages(prev => [...prev, suggestMessage]);
+        
+        // Create a pending action for user approval
+        setPendingAction({
+          type: 'create_agent',
+          data: {
+            capabilities: [CAPABILITIES.DATA_ANALYSIS],
+            agentInfo: {
+              name: 'Data Analysis Agent',
+              description: 'Specialized agent for analyzing data sets and extracting insights.',
+              icon: 'BarChart'
+            }
+          }
+        });
+        
+        return false; // No new agents created, waiting for user approval
       } else if (missingCapabilities.includes(CAPABILITIES.WEB_RESEARCH)) {
-        // Create a web research agent
-        await createDynamicAgent({
-          name: 'Web Research Agent',
-          description: 'Specialized agent for finding and organizing information from the web.',
-          capabilities: [CAPABILITIES.WEB_RESEARCH],
-          icon: 'Globe'
-        });
-        
-        // Add confirmation message
-        const confirmMessage: ChatMessage = {
+        // Ask to create a web research agent
+        const suggestMessage: ChatMessage = {
           id: generateId(),
-          content: 'I\'ve created a Web Research Agent to help find the information you need. It\'s now available in your workspace.',
+          content: 'I recommend creating a Web Research Agent to help find the information you need. Would you like me to create this specialized agent?',
           isUser: false,
           timestamp: formatTime(new Date()),
         };
         
-        setMessages(prev => [...prev, confirmMessage]);
-        agentCreated = true;
-      }
-      
-      // If we didn't create any specific agent but have missing capabilities,
-      // create a general purpose plugin/agent
-      if (!agentCreated && missingCapabilities.length > 0) {
-        await createDynamicAgent({
-          name: `Specialized ${missingCapabilities[0]} Plugin`,
-          description: `Plugin to handle ${missingCapabilities.join(', ')} capabilities.`,
-          capabilities: missingCapabilities,
-          icon: 'Puzzle'
+        setMessages(prev => [...prev, suggestMessage]);
+        
+        // Create a pending action for user approval
+        setPendingAction({
+          type: 'create_agent',
+          data: {
+            capabilities: [CAPABILITIES.WEB_RESEARCH],
+            agentInfo: {
+              name: 'Web Research Agent',
+              description: 'Specialized agent for finding and organizing information from the web.',
+              icon: 'Globe'
+            }
+          }
         });
         
-        // Add confirmation message
-        const confirmMessage: ChatMessage = {
+        return false; // No new agents created, waiting for user approval
+      } else if (missingCapabilities.length > 0) {
+        // Ask to create a general purpose plugin/agent
+        const suggestMessage: ChatMessage = {
           id: generateId(),
-          content: `I've created a specialized plugin to handle ${missingCapabilities.join(', ')}. It's now available in your workspace.`,
+          content: `I recommend creating a specialized agent to handle ${missingCapabilities.join(', ')}. Would you like me to create this agent?`,
           isUser: false,
           timestamp: formatTime(new Date()),
         };
         
-        setMessages(prev => [...prev, confirmMessage]);
+        setMessages(prev => [...prev, suggestMessage]);
+        
+        // Create a pending action for user approval
+        setPendingAction({
+          type: 'create_agent',
+          data: {
+            capabilities: missingCapabilities,
+            agentInfo: {
+              name: `Specialized ${missingCapabilities[0]} Plugin`,
+              description: `Plugin to handle ${missingCapabilities.join(', ')} capabilities.`,
+              icon: 'Puzzle'
+            }
+          }
+        });
+        
+        return false; // No new agents created, waiting for user approval
       }
       
       return true; // Successfully created needed agents
@@ -576,6 +597,60 @@ const PanionChatAgent: React.FC = () => {
     // Clear input and update messages
     setInputValue('');
     setMessages(prev => [...prev, userMessage]);
+    
+    // Check if we have a pending action and this is a response to it
+    if (pendingAction) {
+      const message = userMessage.content.toLowerCase();
+      
+      // Check for affirmative/confirmatory responses
+      if (
+        message.includes('yes') || 
+        message.includes('sure') || 
+        message.includes('okay') || 
+        message.includes('ok') || 
+        message.includes('go ahead') || 
+        message.includes('proceed') || 
+        message.includes('confirm') || 
+        message.includes('do it') ||
+        message.includes('approved') ||
+        message.includes('fine') ||
+        message.includes('sounds good')
+      ) {
+        // User has confirmed the action
+        await handleActionAcceptance();
+        return;
+      }
+      
+      // Check for negative/rejecting responses
+      if (
+        message.includes('no') || 
+        message.includes('don\'t') || 
+        message.includes('do not') || 
+        message.includes('stop') || 
+        message.includes('cancel') || 
+        message.includes('wait') ||
+        message.includes('hold on') ||
+        message.includes('nope') ||
+        message.includes('decline')
+      ) {
+        // User has rejected the action
+        handleActionRejection();
+        return;
+      }
+      
+      // If the message doesn't clearly accept or reject, but we have a pending action,
+      // ask the user for a clearer response
+      const clarificationMessage: ChatMessage = {
+        id: generateId(),
+        content: "I'm not sure if you want me to proceed with the suggested action. Could you please respond with 'yes' to approve or 'no' to cancel?",
+        isUser: false,
+        timestamp: formatTime(new Date()),
+      };
+      
+      setMessages(prev => [...prev, clarificationMessage]);
+      return;
+    }
+    
     setAgentStatus('thinking');
     setIsLoading(true);
     setProcessingProgress(0);
