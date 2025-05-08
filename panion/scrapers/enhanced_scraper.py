@@ -573,6 +573,8 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
         1. Check if there's an owner response in reviews
         2. Look for contact info in the website description or title
         3. Check the business description for owner mentions
+        4. Parse business name for potential owner info
+        5. Extract social media links if available
         """
         owner_info = {}
         
@@ -586,13 +588,42 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                     owner_info['owner_website'] = website
                 
                 # Extract possible owner name from the business name if it looks like a person's name
-                if business_name and " - " in business_name:
-                    parts = business_name.split(" - ")
-                    if len(parts) == 2:
-                        possible_owner = parts[0].strip()
-                        # Simple check if this looks like a person's name
-                        if " " in possible_owner and possible_owner.count(" ") < 3:
-                            owner_info['owner_name'] = possible_owner
+                if business_name:
+                    # Check for common patterns in business names
+                    name_patterns = [
+                        r"([\w']+)'s\s+(?:smoke|vape|tobacco)",  # John's Smoke Shop
+                        r"([\w']+)\s+&\s+(?:[\w']+)'s",  # John & Mary's
+                        r"([\w']+)\s+and\s+(?:[\w']+)'s",  # John and Mary's
+                        r"^([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)'s",  # John's or John Smith's at start
+                        r"^([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+(?:smoke|vape)",  # John Smith Smoke Shop
+                    ]
+                    
+                    for pattern in name_patterns:
+                        match = re.search(pattern, business_name, re.IGNORECASE)
+                        if match:
+                            possible_owner = match.group(1)
+                            # Validate this looks like a person's name - not a place name
+                            common_place_names = ["new york", "chicago", "brooklyn", "manhattan", "city", "town", "village"]
+                            if possible_owner.lower() not in common_place_names:
+                                owner_info['owner_name'] = possible_owner
+                                owner_info['owner_name_source'] = "business_name"
+                                break
+                
+                # Check for any social media links
+                if 'website' in details and details['website']:
+                    website_url = details['website']
+                    # Extract social media handles from website url
+                    social_patterns = {
+                        'facebook': r'facebook\.com/([^/?&]+)',
+                        'instagram': r'instagram\.com/([^/?&]+)',
+                        'twitter': r'twitter\.com/([^/?&]+)',
+                        'linkedin': r'linkedin\.com/(?:in|company)/([^/?&]+)'
+                    }
+                    
+                    for platform, pattern in social_patterns.items():
+                        match = re.search(pattern, website_url)
+                        if match:
+                            owner_info[f'social_{platform}'] = match.group(1)
                 
                 # Look for owner responses in reviews
                 if 'reviews' in details:
@@ -601,32 +632,76 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                             owner_response = review.get('owner_response').get('text', '')
                             # Look for signature patterns like "- John, Owner" or "Thanks, John (Owner)"
                             signature_patterns = [
-                                r'[-—]\s*(\w+)[\s,]*(?:Owner|Manager)',  # - John, Owner
-                                r'Thanks,\s*(\w+)[\s,]*\(?(?:Owner|Manager)',  # Thanks, John (Owner)
-                                r'Best[\s,]+(\w+)[\s,]*(?:Owner|Manager)',  # Best, John - Owner
-                                r'Regards[\s,]+(\w+)[\s,]*(?:Owner|Manager)',  # Regards, John (Owner)
+                                r'[-—]\s*([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]*(?:Owner|Manager|Proprietor)',  # - John Smith, Owner
+                                r'Thanks,\s*([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]*\(?(?:Owner|Manager|Proprietor)',  # Thanks, John Smith (Owner)
+                                r'Best[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]*(?:Owner|Manager|Proprietor)',  # Best, John Smith - Owner
+                                r'Regards[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]*(?:Owner|Manager|Proprietor)',  # Regards, John Smith (Owner)
+                                r'Sincerely[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]*(?:Owner|Manager|Proprietor)',  # Sincerely, John Smith (Owner)
+                                r'From[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]*(?:Owner|Manager|Proprietor)',  # From John Smith, Owner
+                                r'([A-Z][a-z]+(?:\s[A-Z][a-z]+)?),\s*Owner',  # John Smith, Owner
                             ]
                             
                             for pattern in signature_patterns:
                                 match = re.search(pattern, owner_response, re.IGNORECASE)
                                 if match:
-                                    owner_info['owner_name'] = match.group(1)
+                                    potential_name = match.group(1)
+                                    # Validate name length and format
+                                    if len(potential_name) > 2 and re.match(r'^[A-Z][a-z]', potential_name):
+                                        owner_info['owner_name'] = potential_name
+                                        owner_info['owner_name_source'] = "owner_response"
+                                    
                                     # Also search for email or phone patterns in the response
                                     email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', owner_response)
                                     if email_match:
                                         owner_info['owner_email'] = email_match.group(0)
                                     
                                     # Look for phone patterns
-                                    phone_match = re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', owner_response)
+                                    phone_match = re.search(r'\(?(?:\d{3})\)?[-.\s]?(?:\d{3})[-.\s]?(?:\d{4})', owner_response)
                                     if phone_match:
                                         owner_info['owner_phone'] = phone_match.group(0)
                                     
                                     break
+                            
+                            # Look for social media mentions in owner responses
+                            social_mentions = [
+                                (r'(?:find|follow|contact)(?:\s+\w+){0,3}\s+on\s+instagram\s+@?([a-zA-Z0-9._]+)', 'instagram'),
+                                (r'(?:find|follow|contact)(?:\s+\w+){0,3}\s+on\s+facebook\s+@?([a-zA-Z0-9._]+)', 'facebook'),
+                                (r'instagram\s+@?([a-zA-Z0-9._]+)', 'instagram'),
+                                (r'facebook\s+@?([a-zA-Z0-9._]+)', 'facebook'),
+                                (r'@([a-zA-Z0-9._]+)\s+on\s+instagram', 'instagram'),
+                                (r'@([a-zA-Z0-9._]+)\s+on\s+facebook', 'facebook'),
+                            ]
+                            
+                            for pattern, platform in social_mentions:
+                                match = re.search(pattern, owner_response, re.IGNORECASE)
+                                if match:
+                                    owner_info[f'social_{platform}'] = match.group(1)
             
+            # Enhanced quality indicators
             if owner_info:
                 owner_info['owner_notes'] = "Information extracted from business details and reviews"
                 owner_info['owner_status'] = "available"
-                owner_info['data_quality'] = "enhanced"
+                
+                # Rate the quality of the data
+                quality_score = 0
+                if 'owner_name' in owner_info:
+                    quality_score += 2
+                if 'owner_email' in owner_info:
+                    quality_score += 2
+                if 'owner_phone' in owner_info:
+                    quality_score += 2
+                if 'owner_website' in owner_info:
+                    quality_score += 1
+                if any(key.startswith('social_') for key in owner_info):
+                    quality_score += 1
+                
+                # Assign quality tier based on score
+                if quality_score >= 5:
+                    owner_info['data_quality'] = "premium"
+                elif quality_score >= 3:
+                    owner_info['data_quality'] = "enhanced"
+                else:
+                    owner_info['data_quality'] = "basic"
                 
         except Exception as e:
             logger.error(f"Error extracting owner info: {str(e)}")
@@ -644,40 +719,151 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
             # Combine all review text into one searchable string
             all_text = " ".join([review.get('text', '') for review in reviews])
             
-            # Look for mentions of the owner with possible names
+            # Look for mentions of the owner with possible names - enhanced patterns
             owner_patterns = [
-                r'(?:owner|manager)[\s,]+(?:is|named|called)[\s,]+([A-Z][a-z]+)',  # owner is John
-                r'([A-Z][a-z]+)[\s,]+(?:is|was)[\s,]+(?:the|their)[\s,]+(?:owner|manager)',  # John is the owner
-                r'met[\s,]+(?:the|their)[\s,]+(?:owner|manager)[\s,]+([A-Z][a-z]+)',  # met the owner John
-                r'([A-Z][a-z]+)[\s,]+(?:the|their)[\s,]+(?:owner|manager)[\s,]+(?:was|is)',  # John the owner was
+                # Single name patterns
+                r'(?:owner|manager|proprietor)[\s,]+(?:is|named|called)[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)',  # owner is John Smith
+                r'([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]+(?:is|was)[\s,]+(?:the|their)[\s,]+(?:owner|manager|proprietor)',  # John Smith is the owner
+                r'met[\s,]+(?:the|their)[\s,]+(?:owner|manager|proprietor)[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)',  # met the owner John Smith
+                r'([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]+(?:the|their)[\s,]+(?:owner|manager|proprietor)[\s,]+(?:was|is)',  # John Smith the owner was
+                # More complex name extraction patterns
+                r'(?:owner|manager|proprietor)[\s,]*([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)',  # owner John Smith
+                r'([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]*(?:owner|manager|proprietor)',  # John Smith owner
+                r'(?:owned|managed|run)[\s,]+by[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)',  # owned by John Smith
+                r'(?:owner|manager|proprietor)\'s[\s,]+name[\s,]+is[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)',  # owner's name is John Smith
+                # First name only patterns as fallback
+                r'(?:owner|manager|proprietor)[\s,]+(?:is|named|called)[\s,]+([A-Z][a-z]{2,})',  # owner is John
+                r'(?:owner|manager|proprietor)[\s,]*([A-Z][a-z]{2,})',  # owner John
             ]
             
-            for pattern in owner_patterns:
+            # First try to find full names (first and last)
+            full_name_found = False
+            for pattern in owner_patterns[:8]:  # First 8 patterns look for full names
                 matches = re.finditer(pattern, all_text, re.IGNORECASE)
                 for match in matches:
                     potential_name = match.group(1)
-                    if potential_name and len(potential_name) > 2:  # Avoid abbreviations
-                        contact_info['owner_name'] = potential_name
-                        break
+                    # Validate name format and avoid common words
+                    if potential_name and len(potential_name) > 3 and " " in potential_name:
+                        # Check if this looks like a real name
+                        name_parts = potential_name.split()
+                        if all(len(part) > 1 for part in name_parts):
+                            contact_info['owner_name'] = potential_name
+                            contact_info['owner_name_confidence'] = "high"
+                            full_name_found = True
+                            break
                 
-                if 'owner_name' in contact_info:
+                if full_name_found:
                     break
             
-            # Look for email addresses
-            email_matches = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', all_text)
-            if email_matches:
-                contact_info['owner_email'] = email_matches[0]  # Use the first email found
+            # If no full name found, try finding just first names
+            if not full_name_found:
+                for pattern in owner_patterns[8:]:  # Last patterns look for single names
+                    matches = re.finditer(pattern, all_text, re.IGNORECASE)
+                    for match in matches:
+                        potential_name = match.group(1)
+                        # More strict validation for single names to avoid false positives
+                        common_words = ["great", "nice", "best", "good", "bad", "the", "this", "that", "here", "there"]
+                        if (potential_name and len(potential_name) > 2 and 
+                            potential_name.lower() not in common_words):
+                            contact_info['owner_name'] = potential_name
+                            contact_info['owner_name_confidence'] = "medium"
+                            break
+                    
+                    if 'owner_name' in contact_info:
+                        break
             
-            # Look for additional phone numbers not matching the business number
-            phone_matches = re.findall(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', all_text)
-            if phone_matches:
-                contact_info['owner_phone'] = phone_matches[0]  # Use the first phone found
+            # Look for social media handles in reviews
+            social_patterns = [
+                (r'(?:find|follow|contact)(?:\s+\w+){0,3}\s+on\s+instagram\s+@?([a-zA-Z0-9._]+)', 'instagram'),
+                (r'(?:find|follow|contact)(?:\s+\w+){0,3}\s+on\s+facebook\s+@?([a-zA-Z0-9._]+)', 'facebook'),
+                (r'instagram\s+@?([a-zA-Z0-9._]+)', 'instagram'),
+                (r'facebook\s+@?([a-zA-Z0-9._]+)', 'facebook'),
+                (r'@([a-zA-Z0-9._]+)\s+on\s+instagram', 'instagram'),
+                (r'@([a-zA-Z0-9._]+)\s+on\s+facebook', 'facebook'),
+            ]
+            
+            for pattern, platform in social_patterns:
+                match = re.search(pattern, all_text, re.IGNORECASE)
+                if match:
+                    contact_info[f'social_{platform}'] = match.group(1)
+            
+            # Look for email addresses - improved pattern for business emails
+            email_patterns = [
+                r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',  # standard email
+                r'(?:email|contact|reach)(?:\s+\w+){0,3}\s+at\s+([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})',  # email us at x@y.com
+                r'(?:email|contact|reach)(?:\s+\w+){0,3}\s+(?:is|:)\s+([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})',  # email is x@y.com
+            ]
+            
+            for pattern in email_patterns:
+                email_matches = re.findall(pattern, all_text, re.IGNORECASE)
+                if email_matches:
+                    # If it's a tuple (from groups), get the first group
+                    email = email_matches[0]
+                    if isinstance(email, tuple):
+                        email = email[0]
+                    contact_info['owner_email'] = email
+                    break
+            
+            # Look for additional phone numbers with context
+            phone_contexts = [
+                r'(?:owner|manager|proprietor)(?:\s+\w+){0,5}\s+(?:phone|number|cell|mobile)(?:\s+\w+){0,3}\s+(?:is|:)?\s*(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})',  # owner's phone is 555-555-5555
+                r'(?:call|contact|reach)(?:\s+\w+){0,3}\s+(?:at|on)(?:\s+\w+){0,2}\s+(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})',  # contact at 555-555-5555
+                r'(?:direct|cell|mobile|personal)(?:\s+\w+){0,2}\s+(?:line|number|phone)(?:\s+\w+){0,3}\s+(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})',  # direct line 555-555-5555
+                r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',  # Generic fallback pattern for any phone number
+            ]
+            
+            for pattern in phone_contexts:
+                matches = re.findall(pattern, all_text, re.IGNORECASE)
+                if matches:
+                    # If it's a tuple (from groups), get the first group
+                    phone = matches[0]
+                    if isinstance(phone, tuple):
+                        phone = phone[0]
+                    contact_info['owner_phone'] = phone
+                    break
+            
+            # Look for website mentions that might differ from the business website
+            website_patterns = [
+                r'(?:personal|my|our)(?:\s+\w+){0,2}\s+(?:website|site|page)(?:\s+\w+){0,3}\s+(?:is|:)?\s+(https?://[^\s,]+)',  # personal website is http://x.com
+                r'(?:visit|check|find)(?:\s+\w+){0,3}\s+(?:at|on)(?:\s+\w+){0,2}\s+(https?://[^\s,]+)',  # visit us at http://x.com
+            ]
+            
+            for pattern in website_patterns:
+                matches = re.findall(pattern, all_text, re.IGNORECASE)
+                if matches:
+                    contact_info['owner_personal_website'] = matches[0]
+                    break
                 
+            # Enhanced quality indicators
             if contact_info:
                 contact_info['owner_notes'] = "Information extracted from customer reviews"
+                contact_info['owner_status'] = "available"
+                
+                # Rate the quality of the data
+                quality_score = 0
                 if 'owner_name' in contact_info:
-                    contact_info['owner_status'] = "available"
+                    # Higher score for high confidence names
+                    if contact_info.get('owner_name_confidence') == "high":
+                        quality_score += 3
+                    else:
+                        quality_score += 2
+                        
+                if 'owner_email' in contact_info:
+                    quality_score += 2
+                if 'owner_phone' in contact_info:
+                    quality_score += 2
+                if 'owner_personal_website' in contact_info:
+                    quality_score += 2
+                if any(key.startswith('social_') for key in contact_info):
+                    quality_score += 1
+                
+                # Assign quality tier based on score
+                if quality_score >= 5:
+                    contact_info['data_quality'] = "premium"
+                elif quality_score >= 3:
                     contact_info['data_quality'] = "enhanced"
+                else:
+                    contact_info['data_quality'] = "basic"
                     
         except Exception as e:
             logger.error(f"Error extracting contact from reviews: {str(e)}")

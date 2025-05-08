@@ -1,0 +1,323 @@
+[
+  {
+    "name": "The City Smoke Shop",
+    "address": "6301 Rainier Ave S #1, Seattle, WA 98118, United States",
+    "phone": "(206) 414-5566",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.4,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJPabTvAFqkFQRZTtshfKB9zQ",
+    "scraped_at": "2025-05-08T22:32:36.699739",
+    "place_id": "ChIJPabTvAFqkFQRZTtshfKB9zQ",
+    "website": null
+  },
+  {
+    "name": "Lucky\u2019s Smoke Shop",
+    "address": "13510 Aurora Ave N, Seattle, WA 98133, United States",
+    "phone": "(206) 899-7659",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.6,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJqb4obqoRkFQRjxSZSJ-Ynoo",
+    "scraped_at": "2025-05-08T22:32:37.408813",
+    "place_id": "ChIJqb4obqoRkFQRjxSZSJ-Ynoo",
+    "website": "https://luckyssmokeshopwa.com/",
+    "owner_website": "https://luckyssmokeshopwa.com/",
+    "owner_notes": "Information extracted from business details and reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced"
+  },
+  {
+    "name": "World of Smoke & Vape - Queen Anne",
+    "address": "519 Queen Anne Ave N, Seattle, WA 98109, United States",
+    "phone": "(206) 257-1853",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 5,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJ8fQJQkcVkFQRKp26tClNzs4",
+    "scraped_at": "2025-05-08T22:32:38.097563",
+    "place_id": "ChIJ8fQJQkcVkFQRKp26tClNzs4",
+    "website": "https://worldofsmokenvape.com/?utm_source=google&utm_medium=organic&utm_campaign=queenanne",
+    "owner_website": "https://worldofsmokenvape.com/?utm_source=google&utm_medium=organic&utm_campaign=queenanne",
+    "owner_notes": "Information extracted from business details and reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced"
+  },
+  {
+    "name": "Broadway Smoke Shop",
+    "address": "219 Broadway E UNIT 17, Seattle, WA 98102, United States",
+    "phone": "(206) 324-6707",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJL2gQeTIVkFQREV4_SNLxYqk",
+    "scraped_at": "2025-05-08T22:32:38.790317",
+    "place_id": "ChIJL2gQeTIVkFQREV4_SNLxYqk",
+    "website": null,
+    "owner_name": "who",
+    "owner_notes": "Information extracted from customer reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced"
+  },
+  {
+    "name": "Lake City Smoke Shop",
+    "address": "8014 Lake City Way NE, Seattle, WA 98115, United States",
+    "phone": "(206) 708-7752",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.7,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJLUzPvgoUkFQRL-SOyXjuNi0",
+    "scraped_at": "2025-05-08T22:32:39.483424",
+    "place_id": "ChIJLUzPvgoUkFQRL-SOyXjuNi0",
+    "website": null
+  },
+  {
+    "name": "King Smoke Shop",
+    "address": "7758 15th Ave NW, Seattle, WA 98117, United States",
+    "phone": "(206) 783-0633",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.4,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJ39CqPCoUkFQRSX7fCuS_JIc",
+    "scraped_at": "2025-05-08T22:32:40.171655",
+    "place_id": "ChIJ39CqPCoUkFQRSX7fCuS_JIc",
+    "website": "http://www.facebook.com/KingSmokeShopWA",
+    "owner_website": "http://www.facebook.com/KingSmokeShopWA",
+    "owner_notes": "Information extracted from business details and reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced"
+  },
+  {
+    "name": "Superior Smoke Glass & Vape",
+    "address": "2756 NE 45th St Suite 101, Seattle, WA 98105, United States",
+    "phone": "(206) 681-4323",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.8,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJ-QMggTUVkFQRojMkOMfj7PI",
+    "scraped_at": "2025-05-08T22:32:40.879689",
+    "place_id": "ChIJ-QMggTUVkFQRojMkOMfj7PI",
+    "website": "https://linktr.ee/superiorsmoke",
+    "owner_website": "https://linktr.ee/superiorsmoke",
+    "owner_notes": "Information extracted from business details and reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced"
+  },
+  {
+    "name": "Golden Smoke House",
+    "address": "5963 Corson Ave S, Seattle, WA 98108, United States",
+    "phone": "(206) 453-5938",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.5,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJk4AMpt5BkFQRXAixal16tYw",
+    "scraped_at": "2025-05-08T22:32:41.586992",
+    "place_id": "ChIJk4AMpt5BkFQRXAixal16tYw",
+    "website": null
+  },
+  {
+    "name": "Seattle Smoke Shop",
+    "address": "2719 E Main Ave, Puyallup, WA 98372, United States",
+    "phone": "(253) 446-6272",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.5,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJaSi0v8r7kFQRfRCxy5N6IC0",
+    "scraped_at": "2025-05-08T22:32:42.292630",
+    "place_id": "ChIJaSi0v8r7kFQRfRCxy5N6IC0",
+    "website": null
+  },
+  {
+    "name": "Pioneer Smoke Shop",
+    "address": "313A 1st Ave S, Seattle, WA 98104, United States",
+    "phone": "(206) 682-1691",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.1,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJHwGGIKVqkFQRaLP4MCrHQ-A",
+    "scraped_at": "2025-05-08T22:32:43.013172",
+    "place_id": "ChIJHwGGIKVqkFQRaLP4MCrHQ-A",
+    "website": "https://pioneersquare.org/businesses/pioneer-smoke-shop/",
+    "owner_website": "https://pioneersquare.org/businesses/pioneer-smoke-shop/",
+    "owner_notes": "Information extracted from customer reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced",
+    "owner_name": "extremely"
+  },
+  {
+    "name": "JDM Smoke Shop",
+    "address": "6410 Latona Ave NE, Seattle, WA 98115, United States",
+    "phone": "(206) 604-5869",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 5,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJr9au2D4VkFQRCJOUt4SUs00",
+    "scraped_at": "2025-05-08T22:32:43.716242",
+    "place_id": "ChIJr9au2D4VkFQRCJOUt4SUs00",
+    "website": null
+  },
+  {
+    "name": "Choice Tobacco",
+    "address": "603 Broadway E, Seattle, WA 98102, United States",
+    "phone": "(206) 322-1414",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.7,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJK4CFXy4VkFQR4BPY1N6aBBY",
+    "scraped_at": "2025-05-08T22:32:44.405270",
+    "place_id": "ChIJK4CFXy4VkFQR4BPY1N6aBBY",
+    "website": null
+  },
+  {
+    "name": "University Smoke Shop",
+    "address": "4519 University Wy NE, Seattle, WA 98105, United States",
+    "phone": "(206) 632-8891",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.3,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJmSE184oUkFQRcfAgsU0KnBc",
+    "scraped_at": "2025-05-08T22:32:45.095349",
+    "place_id": "ChIJmSE184oUkFQRcfAgsU0KnBc",
+    "website": null
+  },
+  {
+    "name": "RIZN Smoke Shop",
+    "address": "7820 Rainier Ave S, Seattle, WA 98118, United States",
+    "phone": "(206) 853-3076",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 5,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJdznQ2HhDkFQRsNNJ00t4PFc",
+    "scraped_at": "2025-05-08T22:32:45.807609",
+    "place_id": "ChIJdznQ2HhDkFQRsNNJ00t4PFc",
+    "website": null
+  },
+  {
+    "name": "Sam's Smoke & Vape",
+    "address": "4239 University Wy NE, Seattle, WA 98105, United States",
+    "phone": "(206) 547-5344",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.4,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJb4s4w2MUkFQRZSw_jnju7uM",
+    "scraped_at": "2025-05-08T22:32:46.504166",
+    "place_id": "ChIJb4s4w2MUkFQRZSw_jnju7uM",
+    "website": null,
+    "owner_name": "very",
+    "owner_notes": "Information extracted from customer reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced"
+  },
+  {
+    "name": "XG Gallery",
+    "address": "127 N 85th St, Seattle, WA 98103, United States",
+    "phone": "(206) 789-1413",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.7,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJ2Z104iAUkFQR1XaPTllpWW4",
+    "scraped_at": "2025-05-08T22:32:47.202447",
+    "place_id": "ChIJ2Z104iAUkFQR1XaPTllpWW4",
+    "website": "http://www.xggallery.com/",
+    "owner_website": "http://www.xggallery.com/",
+    "owner_notes": "Information extracted from business details and reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced"
+  },
+  {
+    "name": "Vapester smoke shop (near woodland Park Zoo Seattle)",
+    "address": "6003 Phinney Ave N, Seattle, WA 98103, United States",
+    "phone": "(206) 913-2687",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 5,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJgy8ZBOIVkFQRKoS35M3J69k",
+    "scraped_at": "2025-05-08T22:32:47.883893",
+    "place_id": "ChIJgy8ZBOIVkFQRKoS35M3J69k",
+    "website": "http://www.vapestersmokeshop.com/",
+    "owner_website": "http://www.vapestersmokeshop.com/",
+    "owner_notes": "Information extracted from business details and reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced"
+  },
+  {
+    "name": "Empire Smoke Shop",
+    "address": "12354 15th Ave NE Suite A, Seattle, WA 98125, United States",
+    "phone": "(206) 362-2766",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.2,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJY6Vzz3gRkFQR1XMbIWskupE",
+    "scraped_at": "2025-05-08T22:32:48.578364",
+    "place_id": "ChIJY6Vzz3gRkFQR1XMbIWskupE",
+    "website": null
+  },
+  {
+    "name": "Smoke Town",
+    "address": "9616 16th Ave SW, Seattle, WA 98106, United States",
+    "phone": "(206) 658-0355",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.7,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJV-HM8zxDkFQR8q0iZB09yOY",
+    "scraped_at": "2025-05-08T22:32:49.273005",
+    "place_id": "ChIJV-HM8zxDkFQR8q0iZB09yOY",
+    "website": null,
+    "owner_name": "all",
+    "owner_notes": "Information extracted from customer reviews",
+    "owner_status": "available",
+    "data_quality": "enhanced"
+  },
+  {
+    "name": "Dream Smoke Shop",
+    "address": "9817 16th Ave SW, Seattle, WA 98106, United States",
+    "phone": "(206) 637-6683",
+    "categories": [
+      "smoke shop"
+    ],
+    "rating": 4.9,
+    "source": "google_maps_api",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJT6eYZVFDkFQRtCjZjKw09a4",
+    "scraped_at": "2025-05-08T22:32:49.938240",
+    "place_id": "ChIJT6eYZVFDkFQRtCjZjKw09a4",
+    "website": null
+  }
+]
