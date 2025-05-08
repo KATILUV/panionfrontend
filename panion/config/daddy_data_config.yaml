@@ -1,55 +1,72 @@
 # Daddy Data Agent Configuration
 
-# Task management
-max_concurrent_tasks: 5
-request_delay: 1.0  # Delay between requests in seconds
+# Task Concurrency Configuration
+max_concurrent_tasks: 10
+request_delay: 0.5  # Delay between requests in seconds
 
-# Data verification settings
-verification_sources: 3      # Number of sources to verify information
-confidence_threshold: 0.7    # Minimum confidence to consider data valid
+# Verification Configuration
+verification_sources: 3  # Number of sources to verify information
+confidence_threshold: 0.7  # Minimum confidence to consider data valid
 
-# Search settings
-search_limit_default: 100    # Default limit for search results
-search_timeout: 60           # Maximum search time in seconds
-
-# API usage throttling
-api_rate_limits:
-  google_maps: 100   # Queries per day
-  yelp: 500          # Queries per day
-  yellow_pages: 1000 # Queries per day
-
-# Data sources configuration
+# Data Sources Configuration
 data_sources:
   business_directories:
     - google_maps
     - yelp
     - yellow_pages
-    - better_business_bureau
-    - local_chambers_commerce
+    - local_business_directory
   review_sites:
     - trustpilot
     - bbb
-    - google_reviews
     - yelp_reviews
   social_media:
     - facebook
     - linkedin
-    - twitter
+    - instagram
 
-# Data export formats
-export_formats:
-  - excel
-  - csv
-  - json
-  - pdf
+# Specialized Search Configuration
+specialized_searches:
+  smoke_shop:
+    sources:
+      - google_maps
+      - yelp
+      - yellow_pages
+      - smokeshop_directory
+    fields:
+      - name
+      - phone
+      - address
+      - website
+      - hours
+      - products
+      - ratings
+    keywords:
+      - smoke shop
+      - tobacco shop
+      - vape store
+      - pipe shop
+      - cigar shop
+      - cbd shop
+  coffee_shop:
+    sources:
+      - google_maps 
+      - yelp
+      - coffee_directory
+    fields:
+      - name
+      - phone
+      - address
+      - website
+      - hours
+      - menu
+      - ratings
+    keywords:
+      - coffee shop
+      - cafe
+      - coffee house
+      - espresso bar
 
-# Data cleaning rules
-data_cleaning:
-  normalize_phone: true     # Standardize phone number formats
-  verify_addresses: true    # Validate address formats
-  check_duplicates: true    # Remove duplicate entries
-  standardize_names: true   # Standardize business name formats
-
-# File outputs
-output_directory: "data/daddy_data"
-max_storage_days: 30        # Number of days to keep generated files
+# Output Configuration
+default_output_dir: "./data/daddy_data"
+default_output_format: "json"
+generate_excel_report: true

@@ -68,6 +68,18 @@ const PanionChatAgent: React.FC = () => {
   const [needsMoreInfo, setNeedsMoreInfo] = useState<string | null>(null); // For asking clarifying questions
   const [showThinking, setShowThinking] = useState(false); // Toggle for thinking process display
   const [processingProgress, setProcessingProgress] = useState(0); // Progress indicator
+  // Tasks tracking
+  const [activeTasks, setActiveTasks] = useState<Array<{
+    id: string;
+    type: string;
+    status: string;
+    progress: number;
+    description: string;
+    location?: string;
+    created: string;
+  }>>([]);
+  const [taskPollingEnabled, setTaskPollingEnabled] = useState(false);
+  
   // Strategic mode is now controlled by the global store
   const strategicMode = isStrategicModeEnabled;
   
@@ -132,7 +144,8 @@ const PanionChatAgent: React.FC = () => {
       lowerMessage.includes('smokeshop') || 
       lowerMessage.includes('smoke shop') || 
       lowerMessage.includes('dispensary') ||
-      lowerMessage.includes('tobacco')
+      lowerMessage.includes('tobacco') ||
+      lowerMessage.includes('vape')
     ) {
       requiredCapabilities.push(CAPABILITIES.SMOKESHOP_DATA);
     }
