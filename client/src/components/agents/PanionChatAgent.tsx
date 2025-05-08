@@ -573,13 +573,88 @@ const PanionChatAgent: React.FC = () => {
         };
       }
       
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      // Check if this is a smoke shop search request
+      let response;
+      if (requiredCapabilities.includes(CAPABILITIES.SMOKESHOP_DATA) && 
+          (inputValue.toLowerCase().includes('smoke shop') || 
+           inputValue.toLowerCase().includes('smokeshop') ||
+           inputValue.toLowerCase().includes('vape') ||
+           inputValue.toLowerCase().includes('tobacco') ||
+           inputValue.toLowerCase().includes('dispensary'))) {
+        
+        // Extract location from message if present
+        let location = 'New York';  // Default location
+        const locationRegex = /\b(?:in|near|around|at)\s+([A-Za-z\s,]+?)(?:\.|,|\s+and|\s+or|\s+with|\s+that|\s+for|\s+$)/i;
+        const locationMatch = inputValue.match(locationRegex);
+        
+        if (locationMatch && locationMatch[1]) {
+          location = locationMatch[1].trim();
+        }
+        
+        // Create a task for this search
+        const taskId = generateId();
+        const taskDescription = `Finding smoke shops in ${location}`;
+        
+        // Add a message that we're starting a background task
+        const taskMessage: ChatMessage = {
+          id: generateId(),
+          content: `I'm starting a background task to search for smoke shops in ${location}. This will continue running even if you close this window. You'll be notified when results are ready.`,
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, taskMessage]);
+        
+        // Create the task through a special endpoint
+        response = await fetch('/api/panion/smokeshop/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            location: location,
+            task_id: taskId,
+            query: inputValue
+          })
+        });
+        
+        if (response.ok) {
+          const taskData = await response.json();
+          
+          // Start tracking this task
+          const newTask = {
+            id: taskId,
+            type: 'smokeshop_search',
+            status: 'in_progress',
+            progress: 0,
+            description: taskDescription,
+            location: location,
+            created: formatTime(new Date())
+          };
+          
+          setActiveTasks(prevTasks => [...prevTasks, newTask]);
+          setTaskPollingEnabled(true);
+          
+          // Add a specific progress message
+          const progressMessage: ChatMessage = {
+            id: generateId(),
+            content: `I've started gathering information on smoke shops in ${location}. This process will run in the background and may take a few minutes. I'll notify you when results are available.`,
+            isUser: false,
+            timestamp: formatTime(new Date()),
+          };
+          
+          setMessages(prev => [...prev, progressMessage]);
+        }
+      } else {
+        // For regular requests, use the standard endpoint
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+      }
       
       if (!response.ok) {
         throw new Error(`Failed to send message to Panion using ${strategicMode ? 'strategic' : 'standard'} mode`);
