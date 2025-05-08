@@ -118,83 +118,78 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
   // Access taskbar settings
   const { position, showLabels } = useTaskbarStore(state => ({
     position: state.position,
-    showLabels: state.showLabels
+    showLabels: state.showLabels,
   }));
   
-  // Determine if we're in a vertical taskbar
+  // Determine if we're using a vertical layout
   const isVertical = position.location === 'left' || position.location === 'right';
   
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <div className="relative group">
-          <button
-            onClick={() => onClick(id)}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            className={`
-              group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
-              ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
-              ${isActive ? 'bg-primary/20 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'} 
-              transition-colors duration-200 relative ${bounceClass}
-            `}
-            title={title}
-          >
+        <button
+          onClick={() => onClick(id)}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className={`
+            group relative flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
+            ${isVertical ? 'py-2 px-1 my-1' : 'py-1 px-2 mx-0.5'} rounded-md
+            ${isActive ? 'bg-primary/20 text-white' : 'text-white/80 hover:text-white'} 
+            border border-transparent hover:border-primary/30
+            transition-all ${bounceClass}
+            hover:scale-110 hover:z-10
+          `}
+          title={title}
+        >
+          <span className="relative">
             <span className={`text-xl ${showLabels && isVertical ? 'mb-1' : (showLabels && !isVertical ? 'mr-1.5' : '')}`}>{icon}</span>
-            {showLabels && <span className="text-xs font-medium whitespace-nowrap">{title}</span>}
-            
-            {/* Active indicator */}
-            {isActive && <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>}
             
             {/* Running indicator dot */}
             {hasRunningIndicator && !isActive && (
-              <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-primary rounded-full"></div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full"></span>
             )}
-            
-            {/* Pin indicator */}
-            {isPinned && (
-              <div className="absolute -top-1 -right-1 text-[8px] text-primary">
-                <Pin size={8} className="text-primary/70" />
-              </div>
-            )}
-          </button>
+          </span>
           
-          {/* Added unpin button that appears on hover */}
-          {isPinned && (
-            <button 
-              onClick={handleDirectUnpin}
-              className="absolute -top-2 -right-2 bg-black/80 rounded-full p-0.5 text-white/70 hover:text-white hover:bg-red-900/80 opacity-0 group-hover:opacity-100 transition-opacity"
-              title="Unpin from taskbar"
-            >
-              <X size={12} />
-            </button>
+          {showLabels && <span className="text-xs font-medium whitespace-nowrap">{title}</span>}
+          
+          {/* Active indicator - bottom bar for horizontal taskbars */}
+          {isActive && !isVertical && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
           )}
-        </div>
+          
+          {/* Active indicator - side bar for vertical taskbars */}
+          {isActive && isVertical && (
+            <div className={`absolute ${position.location === 'left' ? 'left-0' : 'right-0'} top-0 bottom-0 w-0.5 bg-primary`}></div>
+          )}
+          
+          {/* X button for unpinning - only visible on hover and only for pinned items */}
+          {isPinned && (
+            <div className="absolute -top-1.5 -right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={handleDirectUnpin}
+                className="bg-black/40 backdrop-blur-sm text-red-500 hover:text-red-400 hover:bg-black/60 rounded-full w-4 h-4 flex items-center justify-center"
+                title={`Unpin ${title}`}
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+        </button>
       </ContextMenuTrigger>
       
       <ContextMenuContent className="min-w-[180px] bg-black/80 backdrop-blur-md border border-primary/20">
-        <ContextMenuItem onClick={() => onClick(id)} className="flex items-center cursor-pointer">
+        <ContextMenuItem 
+          onClick={() => onClick(id)} 
+          className="flex items-center cursor-pointer"
+        >
           <AppWindow size={15} className="mr-2" />
-          {isActive ? "Focus Window" : "Open Window"}
+          {isActive ? 'Focus Window' : 'Open Window'}
         </ContextMenuItem>
         
-        {isActive && (
-          <ContextMenuItem onClick={() => minimizeAgent(id)} className="flex items-center cursor-pointer">
-            <span className="mr-2">🗕</span>
-            Minimize
-          </ContextMenuItem>
-        )}
-        
-        {isActive && (
-          <ContextMenuItem onClick={() => closeAgent(id)} className="flex items-center cursor-pointer">
-            <X size={15} className="mr-2" />
-            Close
-          </ContextMenuItem>
-        )}
-        
-        <ContextMenuSeparator />
-        
-        <ContextMenuItem onClick={handlePinUnpin} className="flex items-center cursor-pointer">
+        <ContextMenuItem 
+          onClick={handlePinUnpin} 
+          className="flex items-center cursor-pointer"
+        >
           {isPinned ? (
             <>
               <PinOff size={15} className="mr-2" />
@@ -213,11 +208,18 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
 };
 
 // Main Taskbar component
-interface TaskbarProps {
+interface TaskbarFixedProps {
+  position?: {
+    location: 'top' | 'bottom' | 'left' | 'right';
+    alignment: 'start' | 'center' | 'end' | 'space-between';
+  };
   className?: string;
 }
 
-const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
+export function TaskbarFixed({ position: propPosition, className = '' }: TaskbarFixedProps) {
+  // Add local state for force rendering on store changes
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
   // State for custom layout name input
   const [customLayoutName, setCustomLayoutName] = useState('');
   const [isQuickSaveOpen, setIsQuickSaveOpen] = useState(false);
@@ -260,15 +262,65 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
+  // Subscribe to changes in the taskbar store
+  useEffect(() => {
+    // This will re-render when any part of the taskbar store changes
+    const unsubscribe = useTaskbarStore.subscribe(
+      // Deep selector to watch all relevant properties
+      (state) => ({
+        pinnedAgents: state.pinnedAgents,
+        visibleWidgets: state.visibleWidgets,
+        position: state.position,
+        enableBlur: state.enableBlur,
+        showLabels: state.showLabels,
+        autohide: state.autohide
+      }),
+      () => {
+        // Force a re-render by incrementing state
+        console.log("TaskbarFixed - Store changed, forcing update");
+        setForceUpdate(prev => prev + 1);
+      }
+    );
+    
+    // Cleanup subscription on unmount
+    return unsubscribe;
+  }, []);
+  
   // Hooks for accessing store states
   const { registry, windows, focusAgent, openAgent, restoreAgent } = useAgentStore();
-  const { position, visibleWidgets, enableBlur, showLabels, autohide } = useTaskbarStore(state => ({
+  const { 
+    position = propPosition, 
+    visibleWidgets, 
+    enableBlur, 
+    showLabels, 
+    autohide,
+    pinnedAgents 
+  } = useTaskbarStore(state => ({
     position: state.position,
     visibleWidgets: state.visibleWidgets,
     enableBlur: state.enableBlur,
     showLabels: state.showLabels,
     autohide: state.autohide,
+    pinnedAgents: state.pinnedAgents
   }));
+  
+  // Log current position for debugging
+  useEffect(() => {
+    console.log("Setting taskbar position to:", position.location);
+  }, [position.location]);
+  
+  // Function to clear all pinned agents
+  const handleClearAllPins = () => {
+    console.log("TaskbarFixed - Clearing all pins");
+    const clearPinnedAgentsFn = useTaskbarStore.getState().clearPinnedAgents;
+    clearPinnedAgentsFn();
+    // Force a re-render after clearing
+    setForceUpdate(prev => prev + 1);
+    toast({
+      title: "Taskbar Cleared",
+      description: "All agents have been unpinned from the taskbar",
+    });
+  };
   
   // Get system log visibility state
   const isSystemLogVisible = useSystemLogStore(state => state.isVisible);
@@ -407,10 +459,9 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         left: 0,
         right: 0,
         [position.location]: 0, // 'top: 0' or 'bottom: 0'
-        height: '3.5rem',
-        width: '100%',
+        height: showLabels ? '3.5rem' : '2.75rem',
         flexDirection: 'row',
-        padding: '0.375rem 0.75rem',
+        padding: '0.375rem 1rem',
         borderTop: position.location === 'bottom' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
         borderBottom: position.location === 'top' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
         alignItems: 'center',
@@ -420,39 +471,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       };
     }
   };
-
-  // Log position change for debugging
-  React.useEffect(() => {
-    console.log("Setting taskbar position to:", position.location);
-  }, [position.location]);
-
-  // Function to clear all pinned agents
-  const handleClearAllPins = () => {
-    console.log("TaskbarFixed - Clearing all pins");
-    const clearPinnedAgents = useTaskbarStore.getState().clearPinnedAgents;
-    clearPinnedAgents();
-    // Force a re-render of the component
-    setState({ ...state });
-    toast({
-      title: "Taskbar Cleared",
-      description: "All agents have been unpinned from the taskbar",
-    });
-  };
-  
-  // Subscribe to changes in the store
-  React.useEffect(() => {
-    // This will force a re-render when pinnedAgents change
-    const unsubscribe = useTaskbarStore.subscribe(
-      (state) => state.pinnedAgents,
-      (pinnedAgents) => {
-        console.log("TaskbarFixed - Pinned agents changed:", pinnedAgents);
-        // Force a re-render by updating component state
-        setState({ ...state });
-      }
-    );
-    
-    return unsubscribe;
-  }, []);
 
   return (
     <>
@@ -469,10 +487,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
             `}>
               {/* Get pinned agents from taskbar store */}
               {(() => {
-                // Get pinned agents list and use direct store access
-                // This helps ensure we're getting the most up-to-date state
-                const pinnedAgents = useTaskbarStore.getState().pinnedAgents;
-                console.log("TaskbarFixed - Current pinned agents:", pinnedAgents);
+                // Get pinned agents list directly from store
+                console.log("TaskbarFixed - Current pinned agents:", pinnedAgents, "Force update:", forceUpdate);
                 
                 // Create a map of all agents by ID for quicker access
                 const agentsMap = registry.reduce((map, agent) => {
@@ -507,8 +523,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
               
               {/* Separator between pinned and running non-pinned agents */}
               {(() => {
-                const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
-                
                 // Check if there are any running non-pinned agents
                 const hasRunningNonPinned = registry.some(agent => {
                   const isOpen = windows[agent.id]?.isOpen;
@@ -529,8 +543,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
               
               {/* Show running non-pinned agents */}
               {(() => {
-                const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
-                
                 return registry
                   .filter(agent => {
                     const isOpen = windows[agent.id]?.isOpen;
@@ -595,7 +607,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                     <div className="mb-2 px-2 text-xs font-semibold text-primary/80">ADD TO TASKBAR</div>
                     <div className="max-h-[calc(100vh-150px)] overflow-y-auto">
                       {(() => {
-                        const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
                         const pinAgent = useTaskbarStore(state => state.pinAgent);
                         
                         // Show agents that aren't pinned yet
@@ -705,23 +716,26 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                                 )}
                               </div>
                               <div className="flex-1">
-                                <p className="text-sm text-white">
-                                  {i === 1 ? "New agent available in Marketplace" : 
-                                   i === 2 ? "System update available" : 
-                                   "Layout 'Productivity Setup' created"}
-                                </p>
-                                <p className="text-xs text-white/60 mt-1">
-                                  {i === 1 ? "2 minutes ago" : 
-                                   i === 2 ? "10 minutes ago" : 
-                                   "15 minutes ago"}
+                                <div className="flex items-center justify-between mb-1">
+                                  <h4 className="text-sm font-medium">
+                                    {i === 1 ? 'System Update' : i === 2 ? 'Security Alert' : 'Task Completed'}
+                                  </h4>
+                                  <span className="text-xs text-primary/70">5m ago</span>
+                                </div>
+                                <p className="text-xs text-gray-300">
+                                  {i === 1 
+                                    ? 'New features have been added to the Dashboard.' 
+                                    : i === 2 
+                                      ? 'Unusual login attempt detected from a new location.' 
+                                      : 'Your data analysis task has completed successfully.'}
                                 </p>
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div className="p-2 border-t border-primary/10 flex justify-center">
-                        <button className="text-xs text-primary hover:text-primary/80 transition-colors">
+                      <div className="p-2">
+                        <button className="w-full text-center text-xs text-primary hover:text-primary/80 p-2 transition-colors">
                           View all notifications
                         </button>
                       </div>
@@ -730,19 +744,11 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                 </Popover>
               )}
               
-              {/* AI Status Widget */}
-              {visibleWidgets.includes('aiStatus') && (
-                <div className="flex items-center space-x-1 bg-primary/10 px-2 py-1 rounded-full">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  {showLabels && <span className="text-xs text-white/80">AI Active</span>}
-                </div>
-              )}
-              
-              {/* System Console Widget */}
+              {/* System Console Toggle */}
               {visibleWidgets.includes('systemConsole') && (
                 <TaskbarButton
                   icon={<Terminal size={16} />}
-                  label="System Console"
+                  label="Console"
                   isActive={isSystemLogVisible}
                   onClick={toggleSystemLog}
                 />
@@ -750,153 +756,45 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
               
               {/* Layout Manager Widget */}
               {visibleWidgets.includes('layoutManager') && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <TaskbarButton
-                      icon={<Layout size={16} />}
-                      label="Layouts"
-                      isActive={false}
-                      onClick={() => {}}
-                    />
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    className="w-64 p-0 bg-black/80 backdrop-blur-md border border-primary/20 shadow-lg"
-                    side={getPopoverSide()}
-                  >
-                    <div className="p-3 border-b border-primary/10 flex flex-col">
-                      <div className="text-xs uppercase tracking-wide text-primary/60 mb-1">Active Layout</div>
-                      <div className="text-sm font-medium text-white">{getActiveLayoutName() || "Default Layout"}</div>
-                    </div>
-                    
-                    <div className="p-2 max-h-[300px] overflow-y-auto thin-scrollbar">
-                      <div className="text-xs text-white/70 mb-2 px-1">Quick Save</div>
-                      <div className="flex space-x-2 mb-3">
-                        <button 
-                          onClick={handleQuickSave}
-                          className="flex-1 flex items-center justify-center space-x-1 bg-primary/20 hover:bg-primary/30 transition-colors py-1.5 px-2 rounded-md text-white text-xs font-medium"
-                        >
-                          <Save size={12} />
-                          <span>Quick Save</span>
-                        </button>
-                        
-                        <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
-                          <PopoverTrigger asChild>
-                            <button 
-                              className="flex items-center justify-center space-x-1 bg-gray-700/50 hover:bg-gray-700/70 transition-colors py-1.5 px-2 rounded-md text-white text-xs font-medium"
-                            >
-                              <span>Custom</span>
-                            </button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-60 p-3" side="top">
-                            <Label htmlFor="customName" className="text-xs text-white/80 mb-2 block">
-                              Name your layout
-                            </Label>
-                            <div className="flex space-x-2">
-                              <Input
-                                id="customName"
-                                ref={inputRef}
-                                value={customLayoutName}
-                                onChange={(e) => setCustomLayoutName(e.target.value)}
-                                placeholder="e.g., Productivity Setup"
-                                className="flex-1 h-8 text-sm bg-black/20"
-                              />
-                              <button
-                                onClick={handleCustomSave}
-                                disabled={!customLayoutName.trim()}
-                                className="bg-primary/70 hover:bg-primary transition-colors text-white rounded-md px-2 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                Save
-                              </button>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      
-                      <div className="text-xs text-white/70 my-2 px-1">Saved Layouts</div>
-                      {(() => {
-                        const layouts = useAgentStore.getState().layouts;
-                        if (layouts.length === 0) {
-                          return (
-                            <div className="py-2 px-1 text-xs text-white/50 italic">
-                              No saved layouts yet
-                            </div>
-                          );
-                        }
-                        
-                        return layouts.map(layout => (
-                          <button
-                            key={layout.id}
-                            onClick={() => {
-                              useAgentStore.getState().loadLayout(layout.id);
-                              toast({
-                                title: "Layout Loaded",
-                                description: `Loaded "${layout.name}" layout`,
-                              });
-                            }}
-                            className={`
-                              w-full text-left px-2 py-1.5 rounded mb-1
-                              ${layout.id === activeLayoutId ? 'bg-primary/30 text-white' : 'hover:bg-primary/10 text-white/80'} 
-                              transition-colors flex items-center justify-between group
-                            `}
-                          >
-                            <span className="flex items-center">
-                              {layout.id === activeLayoutId && <CheckCircle size={12} className="text-primary mr-1.5" />}
-                              <span className="text-sm">{layout.name}</span>
-                            </span>
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
-                              <Copy size={12} className="text-white/60 hover:text-white cursor-pointer" onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(JSON.stringify(layout));
-                                toast({
-                                  title: "Layout Copied",
-                                  description: `Layout data copied to clipboard`,
-                                  variant: "default",
-                                });
-                              }} />
-                              <X size={12} className="text-white/60 hover:text-white cursor-pointer" onClick={(e) => {
-                                e.stopPropagation();
-                                useAgentStore.getState().deleteLayout(layout.id);
-                                toast({
-                                  title: "Layout Deleted",
-                                  description: `"${layout.name}" layout deleted`,
-                                  variant: "destructive",
-                                });
-                              }} />
-                            </span>
-                          </button>
-                        ));
-                      })()}
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <TaskbarButton
+                  icon={<Layout size={16} />}
+                  label="Layouts"
+                  isActive={false}
+                  onClick={() => toast({
+                    title: "Layout Manager",
+                    description: "Layout manager will be implemented in a future update",
+                    variant: "default",
+                  })}
+                />
               )}
-                            
+              
               {/* Quick Save Widget */}
               {visibleWidgets.includes('quickSave') && (
-                <Popover>
+                <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
                   <PopoverTrigger asChild>
                     <TaskbarButton
                       icon={<Save size={16} />}
                       label="Save Layout"
-                      isActive={false}
+                      isActive={isQuickSaveOpen}
                       onClick={() => {}}
                     />
                   </PopoverTrigger>
                   <PopoverContent 
-                    className="w-64 p-4 bg-black/80 backdrop-blur-md border border-primary/20"
+                    className="w-80 p-4 bg-black/80 backdrop-blur-md border border-primary/20" 
                     side={getPopoverSide()}
                   >
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="quickSaveName" className="text-sm text-white/90 block mb-1">
-                          Save current layout
-                        </Label>
-                        <div className="text-xs text-white/60 mb-2">
-                          Save the current window arrangement
-                        </div>
+                        <h4 className="text-sm font-medium mb-2 flex items-center">
+                          <CheckCircle size={14} className="mr-1.5 text-primary" />
+                          Save Current Layout
+                        </h4>
+                        <p className="text-xs text-gray-300 mb-3">
+                          Save your current window arrangement so you can quickly restore it later.
+                        </p>
                         <div className="flex space-x-2">
                           <Input
-                            id="quickSaveName"
+                            ref={inputRef}
                             placeholder="Layout name"
                             value={customLayoutName}
                             onChange={(e) => setCustomLayoutName(e.target.value)}
@@ -1038,6 +936,4 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       )}
     </>
   );
-};
-
-export default Taskbar;
+}
