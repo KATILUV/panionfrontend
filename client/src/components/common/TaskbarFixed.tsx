@@ -101,17 +101,28 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
   const { unpinAgent, pinAgent } = useTaskbarStore();
   
   // Function to handle pin/unpin
-  const handlePinUnpin = () => {
+  const handlePinUnpin = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent window open/focus
+    console.log("Pin/Unpin clicked for agent:", id, "Current pin status:", isPinned);
+    
+    // Always get fresh functions from store to avoid stale closures
+    const store = useTaskbarStore.getState();
+    
     if (isPinned) {
-      unpinAgent(id);
+      console.log("Unpinning agent:", id);
+      store.unpinAgent(id);
     } else {
-      pinAgent(id);
+      console.log("Pinning agent:", id);
+      store.pinAgent(id);
     }
   };
 
   // Function to directly unpin on click for the X button
   const handleDirectUnpin = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the button's onClick
+    console.log("Directly unpinning agent:", id);
+    // Get the function directly from the store to ensure freshness
+    const { unpinAgent } = useTaskbarStore.getState();
     unpinAgent(id);
   };
   
@@ -275,16 +286,27 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
         showLabels: state.showLabels,
         autohide: state.autohide
       }),
-      () => {
-        // Force a re-render by incrementing state
-        console.log("TaskbarFixed - Store changed, forcing update");
-        setForceUpdate(prev => prev + 1);
+      (newState, prevState) => {
+        // Only force updates when pinnedAgents change
+        if (JSON.stringify(newState.pinnedAgents) !== JSON.stringify(prevState.pinnedAgents)) {
+          console.log("TaskbarFixed - PinnedAgents changed, forcing update", newState.pinnedAgents);
+          setForceUpdate(prev => prev + 1);
+        } else {
+          // Other state changes
+          console.log("TaskbarFixed - Other store state changed, forcing update");
+          setForceUpdate(prev => prev + 1);
+        }
       }
     );
     
     // Cleanup subscription on unmount
     return unsubscribe;
   }, []);
+  
+  // Add an additional effect specifically for pinnedAgents that triggers on every render
+  useEffect(() => {
+    console.log("TaskbarFixed - Current pinned agents from useEffect:", pinnedAgents);
+  }, [pinnedAgents]);
   
   // Hooks for accessing store states
   const { registry, windows, focusAgent, openAgent, restoreAgent } = useAgentStore();
@@ -312,9 +334,10 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
   // Function to clear all pinned agents
   const handleClearAllPins = () => {
     console.log("TaskbarFixed - Clearing all pins");
-    const clearPinnedAgentsFn = useTaskbarStore.getState().clearPinnedAgents;
-    clearPinnedAgentsFn();
-    // Force a re-render after clearing
+    // Use the direct function from props rather than getState()
+    const { clearPinnedAgents } = useTaskbarStore.getState();
+    clearPinnedAgents();
+    // Force a re-render immediately
     setForceUpdate(prev => prev + 1);
     toast({
       title: "Taskbar Cleared",
@@ -607,7 +630,8 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
                     <div className="mb-2 px-2 text-xs font-semibold text-primary/80">ADD TO TASKBAR</div>
                     <div className="max-h-[calc(100vh-150px)] overflow-y-auto">
                       {(() => {
-                        const pinAgent = useTaskbarStore(state => state.pinAgent);
+                        // Get pinAgent function directly from store to ensure freshness
+                        const { pinAgent } = useTaskbarStore.getState();
                         
                         // Show agents that aren't pinned yet
                         return registry
@@ -616,7 +640,10 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
                             <button
                               key={agent.id}
                               onClick={() => {
+                                console.log("Pinning agent from popup:", agent.id);
                                 pinAgent(agent.id);
+                                // Force a re-render immediately
+                                setForceUpdate(prev => prev + 1);
                                 toast({
                                   title: "Agent Pinned",
                                   description: `Added ${agent.title} to taskbar`,
