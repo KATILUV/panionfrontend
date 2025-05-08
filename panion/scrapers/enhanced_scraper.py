@@ -1956,6 +1956,93 @@ class EnhancedScraper:
         
         return businesses
     
+    def enhance_business_data_with_linkedin(self, business_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Enhance business data by adding LinkedIn profiles of potential owners/managers.
+        
+        Args:
+            business_data: List of business records to enhance
+            
+        Returns:
+            The enhanced business records
+        """
+        if not business_data:
+            return business_data
+            
+        for business in business_data:
+            try:
+                business_name = business.get('name', '')
+                business_location = business.get('city', '') or business.get('location', {}).get('city', '')
+                
+                if not business_name:
+                    continue
+                
+                # Skip if we already have good owner info
+                if business.get('owner_info', {}).get('owner_name') and (
+                   business.get('owner_info', {}).get('owner_phone') or 
+                   business.get('owner_info', {}).get('owner_email')):
+                    continue
+                    
+                # Look up LinkedIn profiles for this business
+                profiles = self.find_linkedin_profiles(business_name, business_location)
+                
+                if profiles:
+                    if 'owner_info' not in business:
+                        business['owner_info'] = {}
+                        
+                    # Add LinkedIn data to owner_info
+                    for profile in profiles:
+                        # Look for owner/manager titles in job titles
+                        is_key_person = False
+                        job_title = profile.get('job_title', '').lower()
+                        
+                        if job_title:
+                            if any(title in job_title for title in ['owner', 'founder', 'president', 'ceo', 'partner']):
+                                business['owner_info']['owner_name'] = profile.get('name')
+                                business['owner_info']['owner_linkedin'] = profile.get('url')
+                                business['owner_info']['owner_title'] = profile.get('job_title')
+                                business['owner_info']['owner_name_confidence'] = profile.get('confidence', 'medium')
+                                business['owner_info']['owner_name_source'] = "linkedin_profile"
+                                is_key_person = True
+                                break
+                            elif any(title in job_title for title in ['manager', 'director', 'supervisor']):
+                                business['owner_info']['manager_name'] = profile.get('name')
+                                business['owner_info']['manager_linkedin'] = profile.get('url')
+                                business['owner_info']['manager_title'] = profile.get('job_title')
+                                business['owner_info']['manager_name_confidence'] = profile.get('confidence', 'medium')
+                                business['owner_info']['manager_name_source'] = "linkedin_profile"
+                                is_key_person = True
+                                # Don't break here as we might still find an owner
+                        
+                    # If no key person found but we have LinkedIn profiles, use the first one
+                    if not is_key_person and profiles and not business['owner_info'].get('owner_name') and not business['owner_info'].get('manager_name'):
+                        profile = profiles[0]
+                        # Assume this might be an employee or owner
+                        business['owner_info']['linkedin_contact'] = profile.get('name')
+                        business['owner_info']['linkedin_url'] = profile.get('url')
+                        business['owner_info']['linkedin_confidence'] = profile.get('confidence', 'low')
+                        
+                    # Add company LinkedIn if available
+                    company_profiles = [p for p in profiles if p.get('source') == 'linkedin_company']
+                    if company_profiles:
+                        business['owner_info']['company_linkedin'] = company_profiles[0].get('url')
+                        
+                    # Update quality score based on LinkedIn data
+                    if 'data_quality' in business['owner_info']:
+                        current_quality = business['owner_info']['data_quality']
+                        
+                        # Upgrade quality if we found owner/manager on LinkedIn
+                        if business['owner_info'].get('owner_linkedin') or business['owner_info'].get('manager_linkedin'):
+                            if current_quality == 'basic':
+                                business['owner_info']['data_quality'] = 'enhanced'
+                            elif current_quality == 'enhanced':
+                                business['owner_info']['data_quality'] = 'premium'
+            
+            except Exception as e:
+                logger.error(f"Error enhancing business with LinkedIn: {str(e)}")
+                
+        return business_data
+    
     def scrape_news(self, topic: str, limit: int = 10) -> List[Dict[str, Any]]:
         """
         Scrape news articles related to a specific topic.
