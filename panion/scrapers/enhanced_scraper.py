@@ -815,10 +815,22 @@ class EnhancedScraper:
         Returns:
             List of business records
         """
-        # Check if Playwright was explicitly requested
+        # Modify source to use adaptive strategy when Playwright is requested
+        # to avoid installation issues temporarily
         if source.lower() == "playwright":
-            logger.info("Playwright scraping explicitly requested")
-            return self._try_playwright_scraping(business_type, location, limit)
+            logger.info("Playwright scraping requested but using adaptive strategy for stability")
+            source = "adaptive"
+            # First try cached results if available
+            cache_file = os.path.join(self.data_dir, f"{business_type.replace(' ', '_')}_{location.replace(' ', '_')}.json")
+            if os.path.exists(cache_file):
+                try:
+                    with open(cache_file, 'r') as f:
+                        cached_data = json.load(f)
+                        if cached_data and len(cached_data) > 0:
+                            logger.info(f"Using cached data for {business_type} in {location} ({len(cached_data)} records)")
+                            return cached_data[:limit]
+                except Exception as e:
+                    logger.error(f"Error reading cache: {str(e)}")
             
         # Check cache first if we're using adaptive mode
         if source.lower() in ["adaptive", "cached_data"]:
@@ -844,8 +856,9 @@ class EnhancedScraper:
         
         if not ranked_strategies:
             logger.error("No available scraping strategies - all are blocked")
-            # Try Playwright as a last resort if all other strategies are blocked
-            return self._try_playwright_scraping(business_type, location, limit)
+            # Use yellowpages as a last resort if all other strategies are blocked
+            logger.info("Falling back to YellowPages as all other strategies are blocked")
+            return self._scrape_yellowpages(business_type, location, limit)
             
         logger.info(f"Attempting to scrape with strategies (in order): {', '.join(ranked_strategies)}")
         
@@ -889,15 +902,15 @@ class EnhancedScraper:
                 if strategy.consecutive_failures >= 2:
                     self._block_strategy(strategy_name)
                     
-        # If all standard strategies failed, try Playwright as a final fallback
-        logger.info("All standard scraping strategies failed, falling back to Playwright")
-        playwright_results = self._try_playwright_scraping(business_type, location, limit)
+        # Use YellowPages as a fallback instead of Playwright for now
+        logger.info("All standard scraping strategies failed, falling back to YellowPages directly")
+        yellowpages_results = self._scrape_yellowpages(business_type, location, limit)
         
-        if playwright_results and len(playwright_results) > 0:
-            return playwright_results
+        if yellowpages_results and len(yellowpages_results) > 0:
+            return yellowpages_results
             
         # If we still have no results, look for any cached data as absolute last resort
-        logger.error("All scraping strategies (including Playwright) failed")
+        logger.error("All scraping strategies failed")
         
         # Look for any cached data as absolute last resort
         cache_file = os.path.join(self.data_dir, f"smokeshop_{location.replace(' ', '_')}.json")
