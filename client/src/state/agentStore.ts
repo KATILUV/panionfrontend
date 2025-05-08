@@ -63,6 +63,10 @@ interface AgentState {
   autoSaveInterval: number;
   lastAutoSave: number | null;
   
+  // Strategic mode settings
+  isStrategicModeEnabled: boolean;
+  toggleStrategicMode: () => void;
+  
   // Dynamic agent capabilities
   capabilities: Record<string, AgentCapability>;
   dynamicAgentCreationInProgress: boolean;
@@ -162,7 +166,17 @@ export const useAgentStore = create<AgentState>()(
       // Auto-save settings
       autoSaveEnabled: true, // Enable auto-save by default
       autoSaveInterval: 60000, // Auto-save every 60 seconds by default
-      lastAutoSave: null, // Timestamp of last auto-save,
+      lastAutoSave: null, // Timestamp of last auto-save
+      
+      // Strategic mode settings
+      isStrategicModeEnabled: false, // Initially disabled, will auto-detect when needed
+      
+      // Toggle strategic mode function
+      toggleStrategicMode: () => set(state => {
+        const newValue = !state.isStrategicModeEnabled;
+        log.info(`Strategic mode ${newValue ? 'enabled' : 'disabled'}`);
+        return { isStrategicModeEnabled: newValue };
+      }),
 
       // Dynamic agent capability management
       registerCapability: (capability) => set((state) => {
