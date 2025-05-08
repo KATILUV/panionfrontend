@@ -78,6 +78,8 @@ const PanionChatAgent: React.FC = () => {
     description: string;
     location?: string;
     created: string;
+    isPolling?: boolean;
+    errorCount?: number;
   }>>([]);
   const [taskPollingEnabled, setTaskPollingEnabled] = useState(false);
   
@@ -100,6 +102,121 @@ const PanionChatAgent: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
   
+  // Start task polling function for individual tasks
+  const startTaskPolling = (taskId: string) => {
+    console.log('Starting individual task polling for task:', taskId);
+    
+    // Set this task as being polled
+    setActiveTasks((prevTasks) => {
+      return prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, isPolling: true } 
+          : task
+      );
+    });
+    
+    // Start polling interval
+    const pollingInterval = setInterval(async () => {
+      // Find the task
+      const task = activeTasks.find(t => t.id === taskId);
+      
+      if (!task) {
+        clearInterval(pollingInterval);
+        return;
+      }
+      
+      try {
+        // Determine the endpoint based on task type
+        let endpoint = `/api/panion/task/${taskId}`;
+        if (task.type === 'strategic_plan') {
+          endpoint = `/api/strategic/plans/${taskId}`;
+        }
+        
+        // Poll for task status
+        const response = await fetch(endpoint);
+        
+        if (!response.ok) {
+          throw new Error('Failed to poll task status');
+        }
+        
+        const data = await response.json();
+        
+        // Update task status based on response
+        let isCompleted = false;
+        let progress = 0;
+        let result = null;
+        
+        if (task.type === 'strategic_plan') {
+          progress = data.progress * 100;
+          isCompleted = data.status === 'completed';
+          result = data.results;
+          
+          // Update progress in our active tasks list
+          setActiveTasks(prevTasks => 
+            prevTasks.map(t => 
+              t.id === taskId 
+                ? { ...t, progress, status: data.status } 
+                : t
+            )
+          );
+        } else {
+          // Standard task status handling
+          isCompleted = data.status === 'completed' || data.status === 'failed';
+          progress = data.progress || 0;
+          result = data.result;
+          
+          // Update progress in our active tasks list
+          setActiveTasks(prevTasks => 
+            prevTasks.map(t => 
+              t.id === taskId 
+                ? { ...t, progress, status: data.status } 
+                : t
+            )
+          );
+        }
+        
+        // If task is completed, stop polling and handle completion
+        if (isCompleted) {
+          clearInterval(pollingInterval);
+          
+          // Create and dispatch task completion event
+          const taskCompletionEvent = new CustomEvent('taskCompleted', {
+            detail: {
+              taskId,
+              result,
+              error: data.status === 'failed' ? data.error : null
+            }
+          });
+          
+          window.dispatchEvent(taskCompletionEvent);
+        }
+      } catch (error) {
+        console.error('Error polling task status:', error);
+        
+        // After several consecutive errors, stop polling
+        const task = activeTasks.find(t => t.id === taskId);
+        if (task) {
+          const updatedTask = { 
+            ...task, 
+            errorCount: (task.errorCount || 0) + 1 
+          };
+          
+          setActiveTasks(prevTasks => 
+            prevTasks.map(t => t.id === taskId ? updatedTask : t)
+          );
+          
+          if (updatedTask.errorCount > 5) {
+            clearInterval(pollingInterval);
+            console.error('Stopped polling due to consecutive errors');
+          }
+        }
+      }
+    }, 2000); // Poll every 2 seconds
+    
+    // Store the interval ID for cleanup on component unmount
+    return pollingInterval;
+  };
+
   // Task polling effect
   useEffect(() => {
     let pollingInterval: NodeJS.Timeout | null = null;
@@ -186,7 +303,7 @@ const PanionChatAgent: React.FC = () => {
                       
                       // If we searched for owner info but didn't find much, add a follow-up message
                       if (hasOwnerInfo) {
-                        const hasCompleteOwnerInfo = shopData.some(shop => 
+                        const hasCompleteOwnerInfo = shopData.some((shop: any) => 
                           shop.owner_name || shop.owner_email || 
                           (shop.owner_phone && shop.owner_phone !== shop.phone)
                         );
@@ -541,8 +658,25 @@ const PanionChatAgent: React.FC = () => {
                 created: formatTime(new Date())
               };
               
-              setActiveTasks(prevTasks => [...prevTasks, newTask]);
+              const taskObj = {
+                id: taskId,
+                type: taskData.taskType,
+                status: 'in_progress',
+                progress: 0,
+                description: taskData.description,
+                location: location,
+                created: formatTime(new Date()),
+                isPolling: false,
+                errorCount: 0
+              };
+              
+              setActiveTasks(prevTasks => [...prevTasks, taskObj]);
               setTaskPollingEnabled(true);
+              
+              // Start individual task polling for strategic plans
+              if (taskData.taskType === 'strategic_plan') {
+                startTaskPolling(taskId);
+              }
               
               // Prepare confirmation message based on task type
               let confirmationContent = '';
