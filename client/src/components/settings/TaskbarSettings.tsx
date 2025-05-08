@@ -177,10 +177,14 @@ export function TaskbarSettings() {
                 size="sm" 
                 onClick={() => {
                   console.log("Before clearing pinned agents:", pinnedAgents);
-                  // Use the function from the props
+                  // Get fresh function directly from store to avoid stale closures
+                  const { clearPinnedAgents } = useTaskbarStore.getState();
                   clearPinnedAgents();
-                  // Force a re-render of this component
-                  // This ensures the component's state is updated right away
+                  // Force a re-render of this component immediately
+                  setForceUpdate(prev => prev + 1);
+                  // Also force a direct state update for all components
+                  useTaskbarStore.setState({ pinnedAgents: [] });
+                  // Verify changes were applied
                   setTimeout(() => {
                     const currentPinned = useTaskbarStore.getState().pinnedAgents;
                     console.log("After clearing pinned agents:", currentPinned);
