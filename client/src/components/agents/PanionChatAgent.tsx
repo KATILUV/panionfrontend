@@ -139,7 +139,7 @@ const PanionChatAgent: React.FC = () => {
                   setMessages(prev => [...prev, completionMessage]);
                   
                   // If this is a smoke shop search, format the results nicely
-                  if (task.type === 'smokeshop_search' && taskData.data) {
+                  if ((task.type === 'smokeshop_search' || task.type === 'smokeshop_research') && taskData.data) {
                     try {
                       // Add data to messages in a readable format
                       let formattedData = "Here's what I found:\n\n";
@@ -613,26 +613,29 @@ const PanionChatAgent: React.FC = () => {
           },
           body: JSON.stringify({
             location: location,
-            task_id: taskId,
-            query: inputValue
+            limit: 20,
+            additionalKeywords: inputValue.toLowerCase().includes('vape') ? ['vape'] : []
           })
         });
         
         if (response.ok) {
           const taskData = await response.json();
           
-          // Start tracking this task
-          const newTask = {
-            id: taskId,
-            type: 'smokeshop_search',
-            status: 'in_progress',
-            progress: 0,
-            description: taskDescription,
-            location: location,
-            created: formatTime(new Date())
-          };
-          
-          setActiveTasks(prevTasks => [...prevTasks, newTask]);
+          // Use the task ID and data returned from the server
+          if (taskData && taskData.taskId) {
+            // Start tracking this task
+            const newTask = {
+              id: taskData.taskId,
+              type: 'smokeshop_research',
+              status: 'in_progress',
+              progress: 0,
+              description: taskDescription,
+              location: location,
+              created: formatTime(new Date())
+            };
+            
+            setActiveTasks(prevTasks => [...prevTasks, newTask]);
+          }
           setTaskPollingEnabled(true);
           
           // Add a specific progress message

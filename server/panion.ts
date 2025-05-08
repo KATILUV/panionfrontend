@@ -878,8 +878,8 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
     // Return the task ID immediately
     res.json({
       success: true,
-      message: 'Smoke shop search task created',
       taskId,
+      message: 'Smoke shop search task created',
       task
     });
   } catch (error: any) {
