@@ -118,6 +118,7 @@ const ThemeAwareButton: FC<ThemeAwareButtonProps> = ({
 
 // Component rendering helper
 const renderAgentContent = (agentId: string) => {
+  // First check for standard agents
   switch (agentId) {
     case 'clara':
       return <ClaraAgent />;
@@ -132,7 +133,23 @@ const renderAgentContent = (agentId: string) => {
     case 'daddy-data':
       return <DaddyDataAgent />;
     default:
-      return <div>Unknown agent type: {agentId}</div>;
+      // For dynamic agents, check if it's in the registry
+      const registry = useAgentStore.getState().registry;
+      const agent = registry.find(a => a.id === agentId);
+      
+      if (agent && agent.component) {
+        // If it has a component, use it
+        return agent.component();
+      } else if (agentId.startsWith('dynamic_')) {
+        // Remove any dynamic agents that don't have proper components
+        setTimeout(() => {
+          useAgentStore.getState().closeAgent(agentId);
+          console.log(`Removed invalid dynamic agent: ${agentId}`);
+        }, 100);
+        return <div>This agent is no longer available</div>;
+      } else {
+        return <div>Unknown agent type: {agentId}</div>;
+      }
   }
 };
 
