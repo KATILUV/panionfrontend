@@ -37,7 +37,7 @@ const CAPABILITIES = {
   DATA_ANALYSIS: 'data_analysis',
   CONTACT_FINDER: 'contact_finder',
   BUSINESS_RESEARCH: 'business_research',
-  SMOKESHOP_DATA: 'smokeshop_data',
+  BUSINESS_DIRECTORY: 'business_directory',
 };
 
 const PanionChatAgent: React.FC = () => {
@@ -246,15 +246,18 @@ const PanionChatAgent: React.FC = () => {
       requiredCapabilities.push(CAPABILITIES.BUSINESS_RESEARCH);
     }
     
-    // Detect smokeshop related queries (specific use case)
+    // Detect business directory related queries (including smoke shops)
     if (
       lowerMessage.includes('smokeshop') || 
       lowerMessage.includes('smoke shop') || 
       lowerMessage.includes('dispensary') ||
       lowerMessage.includes('tobacco') ||
-      lowerMessage.includes('vape')
+      lowerMessage.includes('vape') ||
+      lowerMessage.includes('businesses') ||
+      lowerMessage.includes('directory') ||
+      lowerMessage.includes('locations')
     ) {
-      requiredCapabilities.push(CAPABILITIES.SMOKESHOP_DATA);
+      requiredCapabilities.push(CAPABILITIES.BUSINESS_DIRECTORY);
     }
     
     // Detect contact finding requirements
@@ -340,7 +343,7 @@ const PanionChatAgent: React.FC = () => {
       let agentCreated = false;
       
       // Create specialized agents based on the specific capabilities needed
-      if (missingCapabilities.includes(CAPABILITIES.SMOKESHOP_DATA) || 
+      if (missingCapabilities.includes(CAPABILITIES.BUSINESS_DIRECTORY) || 
           missingCapabilities.includes(CAPABILITIES.BUSINESS_RESEARCH)) {
         // Use existing Daddy Data agent instead of creating new ones
         const confirmMessage: ChatMessage = {
@@ -573,9 +576,9 @@ const PanionChatAgent: React.FC = () => {
         };
       }
       
-      // Check if this is a smoke shop search request
+      // Check if this is a business directory search request (including smoke shops)
       let response;
-      if (requiredCapabilities.includes(CAPABILITIES.SMOKESHOP_DATA) && 
+      if (requiredCapabilities.includes(CAPABILITIES.BUSINESS_DIRECTORY) && 
           (inputValue.toLowerCase().includes('smoke shop') || 
            inputValue.toLowerCase().includes('smokeshop') ||
            inputValue.toLowerCase().includes('vape') ||
