@@ -605,6 +605,34 @@ router.post('/api/panion/analyze', checkPanionAPIMiddleware, async (req: Request
   }
 });
 
+// In-memory task storage for tracking background tasks
+const tasks: Record<string, Task> = {};
+
+//  Endpoint for creating a smoke shop search task is defined further down
+
+// Endpoint to check task status
+router.get('/api/panion/task/:taskId', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    
+    if (!taskId || !tasks[taskId]) {
+      return res.status(404).json({ 
+        error: 'Task not found',
+        message: 'The specified task does not exist' 
+      });
+    }
+    
+    // Return the current task status
+    res.json(tasks[taskId]);
+  } catch (error) {
+    log(`Error getting task status: ${error}`, 'panion');
+    res.status(500).json({ 
+      error: 'Task status error',
+      message: 'Error retrieving task status' 
+    });
+  }
+});
+
 // Dynamic agent creation endpoint
 // Process messages for dynamic agents
 router.post('/api/panion/agents/process', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
@@ -811,7 +839,7 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
     // Generate task ID
     const taskId = `smokeshop-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
-    // Create a new task and add it to activeTasks
+    // Create a new task and add it to tasks storage
     const task: Task = {
       id: taskId,
       type: 'smokeshop_research',
@@ -826,7 +854,7 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
       }
     };
     
-    activeTasks[taskId] = task;
+    tasks[taskId] = task;
     
     log(`Created smoke shop search task: ${taskId} for ${location}`, 'panion');
     
@@ -842,8 +870,8 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
       }
     }).catch(error => {
       // Update task if there was an error initiating it
-      activeTasks[taskId].status = 'failed';
-      activeTasks[taskId].error = `Failed to initiate task: ${error.message}`;
+      tasks[taskId].status = 'failed';
+      tasks[taskId].error = `Failed to initiate task: ${error.message}`;
       log(`Error initiating task ${taskId}: ${error.message}`, 'panion');
     });
     
@@ -870,16 +898,16 @@ router.get('/api/panion/task/:taskId', checkPanionAPIMiddleware, async (req: Req
     const { taskId } = req.params;
     
     // Check if task exists in our local tracking
-    if (activeTasks[taskId]) {
+    if (tasks[taskId]) {
       // If task is not completed, check with Python API for updates
-      if (activeTasks[taskId].status !== 'completed' && activeTasks[taskId].status !== 'failed') {
+      if (tasks[taskId].status !== 'completed' && tasks[taskId].status !== 'failed') {
         try {
           const response = await axios.get(`${PANION_API_URL}/task/${taskId}`);
           
           // Update our local task tracking with the latest information
           if (response.data && response.data.status) {
-            activeTasks[taskId] = {
-              ...activeTasks[taskId],
+            tasks[taskId] = {
+              ...tasks[taskId],
               ...response.data
             };
           }
@@ -891,7 +919,7 @@ router.get('/api/panion/task/:taskId', checkPanionAPIMiddleware, async (req: Req
       
       return res.json({
         success: true,
-        task: activeTasks[taskId]
+        task: tasks[taskId]
       });
     }
     
@@ -900,7 +928,7 @@ router.get('/api/panion/task/:taskId', checkPanionAPIMiddleware, async (req: Req
       const response = await axios.get(`${PANION_API_URL}/task/${taskId}`);
       if (response.data && response.data.status) {
         // Add to our local tracking
-        activeTasks[taskId] = response.data;
+        tasks[taskId] = response.data;
         return res.json({
           success: true,
           task: response.data

@@ -114,7 +114,7 @@ const PanionChatAgent: React.FC = () => {
             const task = updatedTasks[i];
             if (task.status === 'completed' || task.status === 'failed') continue;
             
-            const response = await fetch(`/api/panion/tasks/${task.id}`, {
+            const response = await fetch(`/api/panion/task/${task.id}`, {
               method: 'GET',
               headers: { 'Content-Type': 'application/json' }
             });
