@@ -868,7 +868,22 @@ const PanionChatAgent: React.FC = () => {
               // Prepare confirmation message based on task type
               let confirmationContent = '';
               
-              if (taskData.taskType === 'strategic_plan') {
+              if (taskData.taskType === 'autonomous_request') {
+                // This is an autonomous task that will continue running even when user is offline
+                confirmationContent = `I've created an autonomous task based on your request. This task will continue running in the background even when you're not online. You can monitor its progress and results on the autonomous agent dashboard.`;
+                
+                // Add a follow-up message asking if they want to view the dashboard
+                setTimeout(() => {
+                  const navigationSuggestionMessage: ChatMessage = {
+                    id: generateId(),
+                    content: `Would you like to view the autonomous agent dashboard now to monitor the task's progress?`,
+                    isUser: false,
+                    timestamp: formatTime(new Date()),
+                  };
+                  setMessages(prev => [...prev, navigationSuggestionMessage]);
+                }, 1000);
+              }
+              else if (taskData.taskType === 'strategic_plan') {
                 confirmationContent = `I'm executing the strategic plan now. This will involve multiple steps that I'll work through systematically. I'll update you as I make progress.`;
                 
                 // For strategic plans, we'll also add information about the steps if available
@@ -1301,6 +1316,53 @@ const PanionChatAgent: React.FC = () => {
       setProcessingStage("Checking required capabilities...");
       setProcessingProgress(10);
       const requiredCapabilities = detectRequiredCapabilities(inputValue);
+      
+      // Check if this should be delegated to autonomous agent
+      if (shouldDelegate) {
+        setProcessingStage("Analyzing autonomous task potential...");
+        setProcessingProgress(15);
+        
+        // Create an autonomous task description
+        const taskDescription = `Autonomous task: ${inputValue}`;
+        const taskType = 'autonomous_request';
+        
+        // Ask for user confirmation with appropriate message
+        const confirmationMessage: ChatMessage = {
+          id: generateId(),
+          content: `I've determined this would work best as an autonomous task that can continue running in the background even when you're offline. Would you like me to create this as an autonomous task?`,
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, confirmationMessage]);
+        
+        // Create a pending action for user approval
+        setPendingAction({
+          type: 'start_task',
+          data: {
+            endpoint: '/api/panion/autonomous-task',
+            taskType: taskType,
+            description: taskDescription,
+            params: {
+              prompt: inputValue,
+              strategicMode: shouldEnableStrategicMode,
+              advancedPlanning: shouldUseAdvancedPlannerMode,
+              capabilities: requiredCapabilities,
+              additionalContext: {
+                sessionId,
+                timestamp: new Date().toISOString()
+              }
+            }
+          }
+        });
+        
+        // We'll wait for user confirmation before proceeding with the task
+        setAgentStatus('idle');
+        setIsLoading(false);
+        clearInterval(progressInterval);
+        setProcessingProgress(100);
+        return;
+      }
       
       // Handle missing capabilities if any are detected
       if (requiredCapabilities.length > 0) {
