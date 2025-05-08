@@ -19,6 +19,7 @@ import {
   formatFileSize
 } from "./utils/fileCleanup";
 import agentRoutes from "./routes/agentRoutes";
+import collaborationRoutes from "./routes/collaborationRoutes";
 import panionRoutes, { startPanionAPI, shutdownPanionAPI } from "./panion";
 
 // Configure multer for handling file uploads
@@ -53,6 +54,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use Panion routes
   app.use(panionRoutes);
+  
+  // Use collaboration routes under /api/collaboration prefix
+  app.use('/api/collaboration', collaborationRoutes);
   
   // Try to start the Panion API
   try {

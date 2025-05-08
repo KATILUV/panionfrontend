@@ -29,6 +29,21 @@ except ImportError as e:
         def save_to_json(self, *args, **kwargs):
             return "Error: Scraper not available"
 
+# Import the collaboration API
+try:
+    from core.agent_collaboration import (
+        AgentCollaborationSystem, 
+        CollaborationMessageType,
+        CollaborationPriority,
+        AgentTeamCoordinator
+    )
+    from core.collaboration_api import CollaborationAPIHandler
+    collaboration_available = True
+    logging.info("Agent collaboration system available")
+except ImportError as e:
+    logging.warning(f"Agent collaboration system not available: {e}")
+    collaboration_available = False
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -522,6 +537,104 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     ],
                     "message": "I love how you're expanding your vision! These new possibilities could really enhance your goal."
                 }).encode())
+            
+            # Agent Collaboration API endpoints
+            elif collaboration_available and path.startswith("/collaboration/"):
+                # Extract the specific collaboration endpoint
+                collab_path = path.replace("/collaboration", "")
+                
+                # Handle the request using the collaboration API handler
+                try:
+                    response_data = CollaborationAPIHandler.handle_request(
+                        handler=self,
+                        path=collab_path,
+                        method="POST",
+                        data=data
+                    )
+                    
+                    self._set_headers()
+                    self.wfile.write(json.dumps(response_data).encode())
+                except Exception as e:
+                    logger.error(f"Error in collaboration API: {str(e)}")
+                    self._set_headers(500)
+                    self.wfile.write(json.dumps({
+                        "error": "Collaboration API error",
+                        "message": str(e)
+                    }).encode())
+            
+            # Register agent endpoint
+            elif collaboration_available and path == "/agents/register":
+                agent_id = data.get("agent_id", str(uuid.uuid4()))
+                agent_name = data.get("agent_name", "")
+                capabilities = data.get("capabilities", [])
+                
+                if not agent_name:
+                    self._set_headers(400)
+                    self.wfile.write(json.dumps({
+                        "error": "Bad request",
+                        "message": "agent_name is required"
+                    }).encode())
+                    return
+                
+                try:
+                    # Register the agent with the collaboration system
+                    success = collaboration_system.register_agent(
+                        agent_id=agent_id,
+                        agent_name=agent_name,
+                        capabilities=capabilities
+                    )
+                    
+                    self._set_headers()
+                    self.wfile.write(json.dumps({
+                        "status": "success" if success else "error",
+                        "message": f"Agent {agent_name} registered successfully" if success else f"Failed to register agent {agent_name}",
+                        "agent_id": agent_id
+                    }).encode())
+                except Exception as e:
+                    logger.error(f"Error registering agent: {str(e)}")
+                    self._set_headers(500)
+                    self.wfile.write(json.dumps({
+                        "error": "Registration error",
+                        "message": str(e)
+                    }).encode())
+            
+            # Create team endpoint
+            elif collaboration_available and path == "/teams/create":
+                team_id = data.get("team_id", str(uuid.uuid4()))
+                team_name = data.get("name", "")
+                description = data.get("description", "")
+                coordinator_id = data.get("coordinator_id")
+                
+                if not team_name:
+                    self._set_headers(400)
+                    self.wfile.write(json.dumps({
+                        "error": "Bad request",
+                        "message": "team name is required"
+                    }).encode())
+                    return
+                
+                try:
+                    # Create the team
+                    success = team_coordinator.create_team(
+                        team_id=team_id,
+                        name=team_name,
+                        description=description,
+                        coordinator_id=coordinator_id
+                    )
+                    
+                    self._set_headers()
+                    self.wfile.write(json.dumps({
+                        "status": "success" if success else "error",
+                        "message": f"Team {team_name} created successfully" if success else f"Failed to create team {team_name}",
+                        "team_id": team_id
+                    }).encode())
+                except Exception as e:
+                    logger.error(f"Error creating team: {str(e)}")
+                    self._set_headers(500)
+                    self.wfile.write(json.dumps({
+                        "error": "Team creation error",
+                        "message": str(e)
+                    }).encode())
             
             else:
                 # Not found
