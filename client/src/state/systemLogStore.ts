@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type LogType = 'thinking' | 'memory' | 'action' | 'error' | 'info' | 'warn';
+export type LogType = 'thinking' | 'memory' | 'action' | 'error' | 'info' | 'warn' | 'success';
 
 export interface LogEntry {
   id: string;
@@ -54,5 +54,6 @@ export const log = {
   action: (message: string) => useSystemLogStore.getState().addLog('action', message),
   error: (message: string) => useSystemLogStore.getState().addLog('error', message),
   info: (message: string) => useSystemLogStore.getState().addLog('info', message),
-  warn: (message: string) => useSystemLogStore.getState().addLog('warn', message)
+  warn: (message: string) => useSystemLogStore.getState().addLog('warn', message),
+  success: (message: string) => useSystemLogStore.getState().addLog('success', message)
 };
