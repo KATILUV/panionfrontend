@@ -567,8 +567,17 @@ class EnhancedScraper:
                       params: Dict[str, Any] = None, 
                       headers: Dict[str, str] = None,
                       timeout: int = 15,
-                      verify: bool = True) -> Optional[str]:
+                      verify: bool = True,
+                      use_proxy: bool = True) -> Optional[str]:
         """Make an HTTP request with error handling and retries."""
+        # Import proxy manager (only when needed to avoid circular imports)
+        try:
+            from scrapers.proxy_manager import proxy_manager
+        except ImportError:
+            proxy_manager = None
+            logger.warning("Proxy manager not available, proceeding without proxies")
+            use_proxy = False
+            
         # Generate a realistic browser-like user agent
         chrome_version = f"{random.randint(90, 120)}.0.{random.randint(1000, 9999)}.{random.randint(10, 999)}"
         default_user_agent = f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version} Safari/537.36"
@@ -617,6 +626,15 @@ class EnhancedScraper:
         retries = 5
         backoff_factor = 1.5
         
+        # Setup proxy if requested and available
+        current_proxy = None
+        if use_proxy and proxy_manager:
+            proxy_dict = proxy_manager.get_proxy_dict()
+            if proxy_dict:
+                logger.info(f"Using proxy: {proxy_dict}")
+                local_session.proxies.update(proxy_dict)
+                current_proxy = proxy_dict.get('http', '')
+        
         # Keep track of current attempt
         attempt = 0
         
@@ -629,6 +647,19 @@ class EnhancedScraper:
                 if attempt > 0:
                     # Rotate user agent on retry
                     local_session.headers['User-Agent'] = self._get_random_user_agent()
+                    
+                    # Rotate proxy on retry
+                    if use_proxy and proxy_manager and attempt > 1:
+                        # Mark current proxy as failed
+                        if current_proxy:
+                            proxy_manager.mark_proxy_failed(current_proxy)
+                            
+                        # Get a new proxy
+                        proxy_dict = proxy_manager.get_proxy_dict()
+                        if proxy_dict:
+                            logger.info(f"Switching to new proxy: {proxy_dict}")
+                            local_session.proxies.update(proxy_dict)
+                            current_proxy = proxy_dict.get('http', '')
                     
                     # Add some jitter to the request timing to appear more human-like
                     time.sleep(random.uniform(0.5, 1.5))
@@ -655,6 +686,12 @@ class EnhancedScraper:
                 # Check for rate limiting or blocking
                 if response.status_code == 403:
                     logger.warning(f"Received 403 Forbidden - we may be blocked. Attempt {attempt+1}/{retries}")
+                    
+                    # Mark proxy as failed if we're using one
+                    if current_proxy and proxy_manager:
+                        proxy_manager.mark_proxy_failed(current_proxy)
+                        current_proxy = None
+                    
                     # Wait longer between retries if we're being rate limited
                     time.sleep(wait_time * 2)
                     attempt += 1
@@ -662,6 +699,10 @@ class EnhancedScraper:
                     
                 # Proceed if successful
                 response.raise_for_status()
+                
+                # Mark proxy as successful if we're using one
+                if current_proxy and proxy_manager:
+                    proxy_manager.mark_proxy_success(current_proxy)
                 
                 # Return response with encoding properly set
                 if response.encoding is None:
@@ -671,6 +712,12 @@ class EnhancedScraper:
                 
             except requests.exceptions.RequestException as e:
                 logger.error(f"Error fetching {url} (attempt {attempt+1}/{retries}): {str(e)}")
+                
+                # Mark proxy as failed if we're using one
+                if current_proxy and proxy_manager:
+                    proxy_manager.mark_proxy_failed(current_proxy)
+                    current_proxy = None
+                
                 attempt += 1
                 time.sleep(wait_time)  # Wait before retrying with exponential backoff
         
