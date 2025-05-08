@@ -68,6 +68,7 @@ const PanionChatAgent: React.FC = () => {
   const [needsMoreInfo, setNeedsMoreInfo] = useState<string | null>(null); // For asking clarifying questions
   const [showThinking, setShowThinking] = useState(false); // Toggle for thinking process display
   const [processingProgress, setProcessingProgress] = useState(0); // Progress indicator
+  const [pendingAction, setPendingAction] = useState<{ type: string, data: any } | null>(null); // For actions requiring approval
   // Tasks tracking
   const [activeTasks, setActiveTasks] = useState<Array<{
     id: string;
@@ -273,6 +274,126 @@ const PanionChatAgent: React.FC = () => {
     return requiredCapabilities;
   };
   
+  // Function to handle action acceptance
+  const handleActionAcceptance = async () => {
+    if (!pendingAction) return;
+    
+    try {
+      switch (pendingAction.type) {
+        case 'use_agent':
+          // Open the agent specified in pendingAction.data
+          const agent = pendingAction.data.agent;
+          openAgent(agent.id);
+          
+          const confirmMessage: ChatMessage = {
+            id: generateId(),
+            content: `Using ${agent.title} to help with your request.`,
+            isUser: false,
+            timestamp: formatTime(new Date()),
+          };
+          setMessages(prev => [...prev, confirmMessage]);
+          break;
+          
+        case 'create_agent':
+          // Create a new agent with the specified capabilities
+          const capabilities = pendingAction.data.capabilities;
+          const agentInfo = pendingAction.data.agentInfo;
+          
+          await createDynamicAgent({
+            name: agentInfo.name,
+            description: agentInfo.description,
+            capabilities: capabilities,
+            icon: agentInfo.icon
+          });
+          
+          const newAgentMessage: ChatMessage = {
+            id: generateId(),
+            content: `Created a new ${agentInfo.name} to help with your request.`,
+            isUser: false,
+            timestamp: formatTime(new Date()),
+          };
+          setMessages(prev => [...prev, newAgentMessage]);
+          break;
+          
+        case 'start_task':
+          // Start a background task
+          const taskData = pendingAction.data;
+          
+          // Make the API call to start the task
+          const response = await fetch(taskData.endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(taskData.params)
+          });
+          
+          if (response.ok) {
+            const responseData = await response.json();
+            
+            // Add the task to our tracking
+            if (responseData && responseData.taskId) {
+              const newTask = {
+                id: responseData.taskId,
+                type: taskData.taskType,
+                status: 'in_progress',
+                progress: 0,
+                description: taskData.description,
+                location: taskData.params.location,
+                created: formatTime(new Date())
+              };
+              
+              setActiveTasks(prevTasks => [...prevTasks, newTask]);
+              setTaskPollingEnabled(true);
+              
+              // Confirmation message
+              const taskStartMessage: ChatMessage = {
+                id: generateId(),
+                content: `Started task: ${taskData.description}. I'll notify you when results are available.`,
+                isUser: false,
+                timestamp: formatTime(new Date()),
+              };
+              setMessages(prev => [...prev, taskStartMessage]);
+            }
+          } else {
+            throw new Error('Failed to start task');
+          }
+          break;
+          
+        default:
+          console.error('Unknown pending action type:', pendingAction.type);
+      }
+    } catch (error) {
+      console.error('Error handling action acceptance:', error);
+      const errorMessage: ChatMessage = {
+        id: generateId(),
+        content: `I encountered an error while trying to process your request. Please try again or provide more details.`,
+        isUser: false,
+        timestamp: formatTime(new Date()),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+    
+    // Clear the pending action
+    setPendingAction(null);
+  };
+  
+  // Function to handle action rejection
+  const handleActionRejection = () => {
+    if (!pendingAction) return;
+    
+    const rejectionMessage: ChatMessage = {
+      id: generateId(),
+      content: `Understood. I won't proceed with the ${pendingAction.type.replace('_', ' ')}. Is there something else I can help with?`,
+      isUser: false,
+      timestamp: formatTime(new Date()),
+    };
+    setMessages(prev => [...prev, rejectionMessage]);
+    
+    // Clear the pending action
+    setPendingAction(null);
+  };
+
   // Function to handle missing capabilities using a hybrid approach
   const handleMissingCapabilities = async (requiredCapabilities: string[]): Promise<boolean> => {
     // Filter out capabilities that we already have
@@ -295,23 +416,29 @@ const PanionChatAgent: React.FC = () => {
         !bestMatchingAgent.capabilities?.includes(cap)
       );
       
-      // If agent covers at least 70% of the required capabilities, use it
+      // If agent covers at least 70% of the required capabilities, propose it to the user
       if (coveredCapabilities.length / requiredCapabilities.length >= 0.7) {
-        // Notify the user we're using an existing agent
+        // Ask user if they want to use this agent
         const agentMessage: ChatMessage = {
           id: generateId(),
-          content: `I'll use ${bestMatchingAgent.title} to help with this request, as it has the capabilities you need: ${coveredCapabilities.join(', ')}.`,
+          content: `I recommend using ${bestMatchingAgent.title} to help with this request, as it has the capabilities you need: ${coveredCapabilities.join(', ')}. Would you like me to proceed?`,
           isUser: false,
           timestamp: formatTime(new Date()),
         };
         
         setMessages(prev => [...prev, agentMessage]);
         
-        // Open the existing agent
-        openAgent(bestMatchingAgent.id);
+        // Create a pending action for the user to approve
+        setPendingAction({
+          type: 'use_agent',
+          data: {
+            agent: bestMatchingAgent,
+            coveredCapabilities,
+            stillMissingCapabilities
+          }
+        });
         
-        // If there are still some missing capabilities but not enough to warrant a new agent,
-        // we'll just note it but proceed with the existing agent
+        // If there are still some missing capabilities, mention them
         if (stillMissingCapabilities.length > 0) {
           const capabilitiesNote: ChatMessage = {
             id: generateId(),
@@ -323,7 +450,7 @@ const PanionChatAgent: React.FC = () => {
           setMessages(prev => [...prev, capabilitiesNote]);
         }
         
-        return false; // No new agents created, using existing one
+        return false; // No new agents created yet, waiting for user approval
       }
     }
     
