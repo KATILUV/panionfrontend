@@ -247,6 +247,115 @@ const PanionChatAgent: React.FC = () => {
     };
   }, [taskPollingEnabled, activeTasks]);
 
+  // Handle task completion events
+  useEffect(() => {
+    const handleTaskCompletion = (event: CustomEvent) => {
+      const { taskId, result, error } = event.detail;
+      
+      console.log('Task completed:', taskId, result, error);
+      
+      if (error) {
+        const errorMessage: ChatMessage = {
+          id: generateId(),
+          content: `Task error: ${error}`,
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        return;
+      }
+      
+      // Format result based on task type
+      const task = activeTasks.find(t => t.id === taskId);
+      
+      if (!task) return;
+      
+      let messageContent = '';
+      
+      if (task.type === 'smokeshop_research') {
+        const shops = result.data || [];
+        const location = task.location;
+        
+        if (shops.length === 0) {
+          messageContent = `I couldn't find any smoke shops in ${location}. Would you like me to try with a different search term or location?`;
+        } else {
+          messageContent = `I found ${shops.length} smoke shops in ${location}.\n\n`;
+          
+          shops.slice(0, 5).forEach((shop: any, index: number) => {
+            messageContent += `${index + 1}. **${shop.name || 'Unnamed Shop'}**\n`;
+            if (shop.address) messageContent += `   Address: ${shop.address}\n`;
+            if (shop.phone) messageContent += `   Phone: ${shop.phone}\n`;
+            if (shop.website) messageContent += `   Website: ${shop.website}\n`;
+            if (shop.owner) messageContent += `   Owner: ${shop.owner}\n`;
+            if (shop.email) messageContent += `   Email: ${shop.email}\n`;
+            messageContent += '\n';
+          });
+          
+          if (shops.length > 5) {
+            messageContent += `... and ${shops.length - 5} more results. Would you like me to show more?`;
+          }
+        }
+      } else if (task.type === 'strategic_plan') {
+        // Format strategic plan results
+        const planResult = result || {};
+        
+        messageContent = `I've completed the strategic plan: "${task.description}"\n\n`;
+        
+        if (planResult.summary) {
+          messageContent += `**Summary:** ${planResult.summary}\n\n`;
+        }
+        
+        if (planResult.steps && Array.isArray(planResult.steps)) {
+          messageContent += `**Executed Steps:**\n`;
+          planResult.steps.forEach((step: any, index: number) => {
+            const status = step.status === 'completed' ? '✓' : step.status === 'failed' ? '✗' : '⧖';
+            messageContent += `${index + 1}. ${status} ${step.description}\n`;
+            if (step.result) {
+              messageContent += `   Result: ${typeof step.result === 'object' ? JSON.stringify(step.result) : step.result}\n`;
+            }
+          });
+        }
+        
+        if (planResult.conclusions && Array.isArray(planResult.conclusions)) {
+          messageContent += `\n**Conclusions:**\n`;
+          planResult.conclusions.forEach((conclusion: string, index: number) => {
+            messageContent += `${index + 1}. ${conclusion}\n`;
+          });
+        }
+        
+        if (planResult.next_steps && Array.isArray(planResult.next_steps)) {
+          messageContent += `\n**Recommended Next Steps:**\n`;
+          planResult.next_steps.forEach((step: string, index: number) => {
+            messageContent += `${index + 1}. ${step}\n`;
+          });
+        }
+      } else {
+        // Default task result formatting
+        messageContent = `Task "${task.description}" completed. Result: ${JSON.stringify(result)}`;
+      }
+      
+      const completionMessage: ChatMessage = {
+        id: generateId(),
+        content: messageContent,
+        isUser: false,
+        timestamp: formatTime(new Date()),
+        thinking: result.thinking || result.thought_process || '',
+      };
+      
+      setMessages(prev => [...prev, completionMessage]);
+      
+      // Remove task from active tasks
+      setActiveTasks(prevTasks => prevTasks.filter(t => t.id !== taskId));
+    };
+    
+    // Listen for task completion events
+    window.addEventListener('taskCompleted', handleTaskCompletion as EventListener);
+    
+    return () => {
+      window.removeEventListener('taskCompleted', handleTaskCompletion as EventListener);
+    };
+  }, [activeTasks]);
+
   // Focus input on load
   useEffect(() => {
     inputRef.current?.focus();
