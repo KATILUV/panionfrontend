@@ -23,6 +23,7 @@ import collaborationRoutes from "./routes/collaborationRoutes";
 import daddyDataRoutes from "./routes/daddyDataRoutes";
 import scheduledTaskRoutes from "./routes/scheduledTaskRoutes";
 import strategicPlannerRoutes from "./routes/strategicPlannerRoutes";
+import autonomousAgentRoutes from "./routes/autonomousAgentRoutes";
 import panionRoutes, { startPanionAPI, shutdownPanionAPI } from "./panion";
 
 // Configure multer for handling file uploads
@@ -75,6 +76,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use Strategic Planner routes
   app.use(strategicPlannerRoutes);
+  
+  // Use Autonomous Agent routes
+  app.use(autonomousAgentRoutes);
   
   // Try to start the Panion API
   try {
