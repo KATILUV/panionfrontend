@@ -248,6 +248,7 @@ export const useScheduledTaskStore = create<ScheduledTaskState>()(
               parameters: task.parameters,
               scheduledFor: Date.now() + 30000, // Retry after 30 seconds
               result: null,
+              error: null,
               estimatedDuration: task.estimatedDuration,
               parentTaskId: task.parentTaskId,
               notifyOnCompletion: task.notifyOnCompletion
@@ -426,7 +427,7 @@ export const processScheduledTasks = async () => {
           default:
             log.warn(`No implementation for executing tasks on agent type: ${task.targetAgent}`);
         }
-      } catch (error) {
+      } catch (error: any) {
         log.error(`Error executing task ${task.id}: ${error.message}`);
         const { failTask } = useScheduledTaskStore.getState();
         failTask(task.id, error.message);
@@ -464,9 +465,9 @@ export const initializeTaskProcessor = () => {
   }
   
   // Subscribe to changes in the isRunningTasks state
-  useScheduledTaskStore.subscribe(
-    state => state.isRunningTasks,
-    isRunning => {
+  const unsubscribe = useScheduledTaskStore.subscribe(
+    (state) => state.isRunningTasks,
+    (isRunning: boolean) => {
       if (isRunning) {
         startTaskProcessor();
       } else {
@@ -474,4 +475,7 @@ export const initializeTaskProcessor = () => {
       }
     }
   );
+  
+  // Return unsubscribe function for cleanup
+  return unsubscribe;
 };
