@@ -4,6 +4,13 @@ import { log } from './systemLogStore';
 
 export type AgentId = string;
 
+export interface AgentCapability {
+  id: string;
+  name: string;
+  description: string;
+  icon?: string;
+}
+
 export interface Agent {
   id: AgentId;
   title: string;
@@ -11,6 +18,8 @@ export interface Agent {
   component: () => React.ReactNode;
   defaultPosition?: { x: number, y: number };
   defaultSize?: { width: number, height: number };
+  capabilities?: string[]; // List of capabilities this agent provides
+  isDynamic?: boolean;     // Whether this agent was dynamically generated
 }
 
 export type WindowGroupId = string;
@@ -52,6 +61,10 @@ interface AgentState {
   autoSaveEnabled: boolean; 
   autoSaveInterval: number;
   lastAutoSave: number | null;
+  
+  // Dynamic agent capabilities
+  capabilities: Record<string, AgentCapability>;
+  dynamicAgentCreationInProgress: boolean;
 
   // Window Actions
   registerAgent: (agent: Agent) => void;
@@ -128,6 +141,10 @@ export const useAgentStore = create<AgentState>()(
       layouts: [], // Stored window layouts
       activeLayoutId: null, // Currently active layout
       windowGroups: {}, // Window groups storage
+      
+      // Agent capabilities & dynamic creation
+      capabilities: {}, // Registry of all available capabilities
+      dynamicAgentCreationInProgress: false, // Flag to indicate if a new agent is being created
       
       // Auto-save settings
       autoSaveEnabled: true, // Enable auto-save by default
