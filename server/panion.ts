@@ -961,18 +961,36 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
             }
           } else if (responseData.data) {
             results = responseData.data;
-          } else if (responseData.result_count && responseData.result_count > 0) {
-            // If we know there are results but can't find them, try looking in the standard location
+          } else {
+            // If we still don't have results, try looking in the standard location
             try {
               const filename = `smoke_shop_${location.replace(' ', '_')}.json`;
               const possibleFilepath = `./data/scraped/${filename}`;
               log(`Trying to find results in default location: ${possibleFilepath}`, 'panion');
               const fs = require('fs');
-              const fileContent = fs.readFileSync(possibleFilepath, 'utf8');
-              results = JSON.parse(fileContent);
-              log(`Found ${results.length} results in default location`, 'panion');
+              // Check if file exists by trying to access it
+              try {
+                fs.accessSync(possibleFilepath);
+                // File exists
+                const fileContent = fs.readFileSync(possibleFilepath, 'utf8');
+                results = JSON.parse(fileContent);
+                log(`Found ${results.length} results in default location`, 'panion');
+              } catch (e: any) {
+                log(`No file found at ${possibleFilepath}: ${e.message}`, 'panion');
+                // Try alternative format
+                const alternateFilepath = `./data/scraped/smokeshop_${location.replace(' ', '_')}.json`;
+                try {
+                  fs.accessSync(alternateFilepath);
+                  const fileContent = fs.readFileSync(alternateFilepath, 'utf8');
+                  results = JSON.parse(fileContent);
+                  log(`Found ${results.length} results in alternate location: ${alternateFilepath}`, 'panion');
+                } catch (e2: any) {
+                  log(`No file found at ${alternateFilepath} either: ${e2.message}`, 'panion');
+                  results = [];
+                }
+              }
             } catch (fileError: any) {
-              log(`Could not find results in default location: ${fileError.message}`, 'panion');
+              log(`Error reading default location: ${fileError.message}`, 'panion');
               results = [];
             }
           }
