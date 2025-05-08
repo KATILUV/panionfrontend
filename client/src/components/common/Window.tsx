@@ -402,15 +402,20 @@ const Window: React.FC<WindowProps> = ({
     throttle((newPosition: { x: number, y: number }) => {
       // Apply optimistic UI update before propagating to store
       // This creates the perception of instant response while the actual state update happens in background
-      debouncedUpdatePosition(newPosition);
-    }, 8), // More responsive throttling
+      requestAnimationFrame(() => {
+        debouncedUpdatePosition(newPosition);
+      });
+    }, 16), // Using requestAnimationFrame timing (60fps) for smoother updates
     [debouncedUpdatePosition]
   );
   
   const throttledUpdateSize = useCallback(
     throttle((newSize: { width: number, height: number }) => {
-      updateAgentSize(id, newSize);
-    }, 24), // Slightly faster resize response
+      // Use requestAnimationFrame to sync with browser rendering cycle
+      requestAnimationFrame(() => {
+        updateAgentSize(id, newSize);
+      });
+    }, 16), // Match with browser frame rate for smoother resize
     [updateAgentSize, id]
   );
   
@@ -1165,10 +1170,11 @@ const Window: React.FC<WindowProps> = ({
           perspective: '1000px', // For better 3D perception
           transformStyle: 'preserve-3d', // Better 3D effects
           isolation: 'isolate', // Create a new stacking context
+          contain: 'layout paint', // Optimize rendering
           boxShadow: isActive 
-            ? `0 0 0 2px var(--primary), 0 8px 30px 0 rgba(0, 0, 0, 0.3)` 
+            ? `0 0 0 ${isDragging ? '0' : '2px'} var(--primary), 0 8px 30px 0 rgba(0, 0, 0, 0.3)` 
             : '0 4px 15px 0 rgba(0, 0, 0, 0.2)',
-          transition: 'box-shadow 0.3s ease' // Smooth transition for shadow changes
+          transition: isActive && !isDragging ? 'box-shadow 0.3s ease' : 'none' // Only animate when not dragging
         }}
         default={{
           ...position,

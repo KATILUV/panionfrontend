@@ -244,20 +244,45 @@ const SnapGuides: React.FC<SnapGuidesProps> = ({
           animate="animate"
           exit="exit"
           variants={guideAnimation}
+          style={{
+            transform: 'translateZ(0)', // Force hardware acceleration
+            willChange: 'opacity', // Hint to browser for optimization
+            contain: 'paint layout', // Improve performance
+            backfaceVisibility: 'hidden' // Prevent flickering
+          }}
           onAnimationComplete={(definition) => {
             // Clean up after exit animation completes
             if (definition === 'exit') {
-              // This helps clean up any lingering elements
-              // Force removal from DOM after exit animation
-              setTimeout(() => {
-                document.querySelectorAll('.snap-guide-highlight').forEach(el => el.remove());
-              }, 50);
+              // Force hardware-accelerated cleanup with requestAnimationFrame
+              requestAnimationFrame(() => {
+                document.querySelectorAll('.snap-guide-highlight').forEach(el => {
+                  // Apply style change first, then remove
+                  Object.assign(el.style, { 
+                    opacity: 0, 
+                    transition: 'none',
+                    visibility: 'hidden'
+                  });
+                  
+                  // Use another RAF to ensure style changes are applied before removal
+                  requestAnimationFrame(() => {
+                    el.remove();
+                  });
+                });
+              });
               return { display: 'none' };
             }
           }}
         >
-          {/* Highlight area */}
-          <div className={`snap-guide-highlight ${getHighlightStyles()}`} style={{ animationFillMode: 'forwards' }} />
+          {/* Highlight area - with optimized rendering properties */}
+          <div 
+            className={`snap-guide-highlight ${getHighlightStyles()}`} 
+            style={{ 
+              animationFillMode: 'forwards',
+              transform: 'translateZ(0)',
+              willChange: 'transform, opacity',
+              backfaceVisibility: 'hidden'
+            }} 
+          />
           
           {/* Edge guides */}
           {getEdgeGuides()}
