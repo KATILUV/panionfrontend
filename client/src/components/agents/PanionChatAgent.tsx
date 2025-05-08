@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Settings, BrainCircuit, RotateCcw, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AgentStatus } from '@/components/agents/AgentStatus';
+import { AgentStatus } from './AgentStatus';
 
 interface ChatMessage {
   id: string;
