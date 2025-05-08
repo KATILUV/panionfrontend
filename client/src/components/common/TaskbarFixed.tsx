@@ -273,39 +273,35 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
-  // Subscribe to changes in the taskbar store
+  // Subscribe to changes in the taskbar store - simplified for better state management
   useEffect(() => {
-    // This will re-render when any part of the taskbar store changes
-    const unsubscribe = useTaskbarStore.subscribe(
-      // Deep selector to watch all relevant properties
-      (state) => ({
-        pinnedAgents: state.pinnedAgents,
-        visibleWidgets: state.visibleWidgets,
-        position: state.position,
-        enableBlur: state.enableBlur,
-        showLabels: state.showLabels,
-        autohide: state.autohide
-      }),
-      (newState, prevState) => {
-        // Only force updates when pinnedAgents change
-        if (JSON.stringify(newState.pinnedAgents) !== JSON.stringify(prevState.pinnedAgents)) {
-          console.log("TaskbarFixed - PinnedAgents changed, forcing update", newState.pinnedAgents);
-          setForceUpdate(prev => prev + 1);
-        } else {
-          // Other state changes
-          console.log("TaskbarFixed - Other store state changed, forcing update");
-          setForceUpdate(prev => prev + 1);
-        }
-      }
-    );
+    const handleStoreChange = () => {
+      // Get fresh state from the store
+      const pinnedAgentsState = useTaskbarStore.getState().pinnedAgents;
+      console.log("TaskbarFixed - Store changed, current pinned agents:", pinnedAgentsState);
+      // Force a re-render
+      setForceUpdate(prev => prev + 1);
+    };
+    
+    // Subscribe to store changes
+    const unsubscribe = useTaskbarStore.subscribe(handleStoreChange);
     
     // Cleanup subscription on unmount
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
   
-  // Add an additional effect specifically for pinnedAgents that triggers on every render
+  // Add a separate effect to monitor pinnedAgents changes
   useEffect(() => {
-    console.log("TaskbarFixed - Current pinned agents from useEffect:", pinnedAgents);
+    console.log("TaskbarFixed - Current pinned agents state:", pinnedAgents);
+    // Log the full current store state for debugging
+    const storeState = useTaskbarStore.getState();
+    console.log("TaskbarFixed - Full store state:", {
+      pinnedAgents: storeState.pinnedAgents,
+      position: storeState.position,
+      visibleWidgets: storeState.visibleWidgets
+    });
   }, [pinnedAgents]);
   
   // Hooks for accessing store states

@@ -150,17 +150,28 @@ export const useTaskbarStore = create<TaskbarState>()(
       pinAgent: (agentId) => {
         const current = get().pinnedAgents;
         if (!current.includes(agentId)) {
-          log.info(`Pinned agent ${agentId} to taskbar`);
-          set({ pinnedAgents: [...current, agentId] });
+          log.info(`Pinning agent ${agentId} to taskbar`);
+          // Make a deep copy to ensure we're not modifying the original array
+          const updatedPinned = [...current, agentId];
+          console.log("New pinned agents list:", updatedPinned);
+          set({ pinnedAgents: updatedPinned });
+        } else {
+          log.info(`Agent ${agentId} is already pinned to taskbar`);
         }
       },
       
       // Unpin an agent from the taskbar
       unpinAgent: (agentId) => {
         const current = get().pinnedAgents;
+        console.log("Current pinned agents before unpinning:", current);
         if (current.includes(agentId)) {
-          log.info(`Unpinned agent ${agentId} from taskbar`);
-          set({ pinnedAgents: current.filter(id => id !== agentId) });
+          log.info(`Unpinning agent ${agentId} from taskbar`);
+          // Create a new array with the filtered items
+          const updatedPinned = current.filter(id => id !== agentId);
+          console.log("New pinned agents list after unpinning:", updatedPinned);
+          set({ pinnedAgents: updatedPinned });
+        } else {
+          log.info(`Cannot unpin agent ${agentId}, not found in pinnedAgents`);
         }
       },
       
@@ -233,8 +244,12 @@ export const useTaskbarStore = create<TaskbarState>()(
       
       // Clear all pinned agents (empty the taskbar)
       clearPinnedAgents: () => {
-        log.info("Cleared all pinned agents from taskbar");
+        const current = get().pinnedAgents;
+        console.log("Current pinned agents before clearing:", current);
+        log.info("Clearing all pinned agents from taskbar");
+        // Explicit empty array to ensure clean state
         set({ pinnedAgents: [] });
+        console.log("Pinned agents after clearing:", get().pinnedAgents);
       },
       
       // Check if a widget is visible

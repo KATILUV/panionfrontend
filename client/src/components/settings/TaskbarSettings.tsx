@@ -46,6 +46,30 @@ const widgetDescriptions: Record<TaskbarWidgetType, string> = {
 };
 
 export function TaskbarSettings() {
+  // Force update mechanism for consistent render on state changes
+  const [forceUpdate, setForceUpdate] = React.useState(0);
+
+  // Subscribe to taskbar store changes
+  React.useEffect(() => {
+    const handleStoreChange = () => {
+      console.log("TaskbarSettings - Store changed, forcing update");
+      setForceUpdate(prev => prev + 1);
+    };
+    
+    // Set up subscription
+    const unsubscribe = useTaskbarStore.subscribe(handleStoreChange);
+    
+    // Log current state
+    console.log("TaskbarSettings - Initial state:", {
+      pinnedAgents: useTaskbarStore.getState().pinnedAgents,
+      position: useTaskbarStore.getState().position
+    });
+    
+    // Cleanup
+    return () => unsubscribe();
+  }, []);
+
+  // Get store state with selector
   const { 
     visibleWidgets,
     position,
@@ -65,6 +89,11 @@ export function TaskbarSettings() {
     unpinAgent,
     clearPinnedAgents
   } = useTaskbarStore();
+  
+  // Log when pinnedAgents change
+  React.useEffect(() => {
+    console.log("TaskbarSettings - Current pinned agents:", pinnedAgents, "Force update count:", forceUpdate);
+  }, [pinnedAgents, forceUpdate]);
   
   // Get agent registry from agent store
   const registry = useAgentStore(state => state.registry);
@@ -208,8 +237,13 @@ export function TaskbarSettings() {
                         size="icon" 
                         onClick={() => {
                           console.log("Before unpinning agent:", agentId, pinnedAgents);
-                          // Use the function from props 
+                          // Get fresh function from store to avoid stale closures
+                          const { unpinAgent } = useTaskbarStore.getState();
+                          // Execute with current agentId
                           unpinAgent(agentId);
+                          // Force update to immediately reflect changes
+                          setForceUpdate(prev => prev + 1);
+                          // Verify changes were applied
                           setTimeout(() => {
                             console.log("After unpinning agent:", agentId, useTaskbarStore.getState().pinnedAgents);
                           }, 0);
@@ -277,8 +311,13 @@ export function TaskbarSettings() {
                         size="icon" 
                         onClick={() => {
                           console.log("Before pinning agent:", agent.id, pinnedAgents);
-                          // Use the function from props
+                          // Get fresh function from store to avoid stale closures
+                          const { pinAgent } = useTaskbarStore.getState();
+                          // Execute with current agent id
                           pinAgent(agent.id);
+                          // Force update to immediately reflect changes
+                          setForceUpdate(prev => prev + 1);
+                          // Verify changes were applied
                           setTimeout(() => {
                             console.log("After pinning agent:", agent.id, useTaskbarStore.getState().pinnedAgents);
                           }, 0);
