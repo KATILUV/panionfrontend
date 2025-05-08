@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTaskbarStore, TaskbarWidgetType } from '../../state/taskbarStore';
-import { Check, ChevronDown, ChevronUp, LayoutGrid, Minus, Plus, Settings, Pin, PinOff, X, MessageSquare, Database, BrainCircuit, FlaskConical, Clock, Move } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, LayoutGrid, Minus, Plus, Settings, Pin, PinOff, X, Clock, Move, MessageCircle, Database, Brain, FlaskConical } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -238,22 +238,22 @@ export function TaskbarSettings() {
                   let AgentIcon;
                   switch (agentId) {
                     case 'panion':
-                      AgentIcon = MessageSquare;
+                      AgentIcon = MessageCircle;
                       break;
                     case 'database':
                       AgentIcon = Database;
                       break;
                     case 'brain-circuit':
-                      AgentIcon = BrainCircuit;
+                      AgentIcon = Brain;
                       break;
                     case 'scientist':
-                      AgentIcon = FlaskConical;
+                      AgentIcon = Flask;
                       break;
                     case 'scheduler':
                       AgentIcon = Clock;
                       break;
                     default:
-                      AgentIcon = MessageSquare;
+                      AgentIcon = MessageCircle;
                   }
                   
                   return (
@@ -312,13 +312,13 @@ export function TaskbarSettings() {
                   let AgentIcon;
                   switch (agent.id) {
                     case 'panion':
-                      AgentIcon = MessageSquare;
+                      AgentIcon = MessageCircle;
                       break;
                     case 'database':
                       AgentIcon = Database;
                       break;
                     case 'brain-circuit':
-                      AgentIcon = BrainCircuit;
+                      AgentIcon = Brain;
                       break;
                     case 'scientist':
                       AgentIcon = FlaskConical;
@@ -327,7 +327,7 @@ export function TaskbarSettings() {
                       AgentIcon = Clock;
                       break;
                     default:
-                      AgentIcon = MessageSquare;
+                      AgentIcon = MessageCircle;
                   }
                   
                   return (
