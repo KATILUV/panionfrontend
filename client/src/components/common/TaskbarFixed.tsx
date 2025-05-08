@@ -196,8 +196,8 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
             ${isVertical ? 'py-2 px-1 my-1' : 'py-1 px-2 mx-0.5'} rounded-md
             ${isActive ? 'bg-primary/20 text-white' : 'text-white/80 hover:text-white'} 
             border border-transparent hover:border-primary/30
-            transition-all ${bounceClass}
-            hover:scale-110 hover:z-10
+            transition-all ${getAnimationClass()}
+            hover:z-10
           `}
           title={title}
         >
@@ -206,7 +206,7 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
             
             {/* Running indicator dot */}
             {hasRunningIndicator && !isActive && (
-              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full"></span>
+              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full animate-pulse"></span>
             )}
           </span>
           
@@ -214,12 +214,12 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
           
           {/* Active indicator - bottom bar for horizontal taskbars */}
           {isActive && !isVertical && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary animate-fade-in"></div>
           )}
           
           {/* Active indicator - side bar for vertical taskbars */}
           {isActive && isVertical && (
-            <div className={`absolute ${position.location === 'left' ? 'left-0' : 'right-0'} top-0 bottom-0 w-0.5 bg-primary`}></div>
+            <div className={`absolute ${position.location === 'left' ? 'left-0' : 'right-0'} top-0 bottom-0 w-0.5 bg-primary animate-fade-in`}></div>
           )}
           
           {/* X button for unpinning - only visible on hover and only for pinned items */}
@@ -227,12 +227,21 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
             <div className="absolute -top-1.5 -right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={handleDirectUnpin}
-                className="bg-black/40 backdrop-blur-sm text-red-500 hover:text-red-400 hover:bg-black/60 rounded-full w-4 h-4 flex items-center justify-center"
-                title={`Unpin ${title}`}
+                className={`
+                  bg-black/40 backdrop-blur-sm 
+                  ${showUnpinConfirm ? 'text-red-400 ring-1 ring-red-500 animate-pulse' : 'text-red-500 hover:text-red-400'} 
+                  hover:bg-black/60 rounded-full w-4 h-4 flex items-center justify-center
+                `}
+                title={showUnpinConfirm ? `Click again to confirm unpinning ${title}` : `Unpin ${title}`}
               >
                 <X size={12} />
               </button>
             </div>
+          )}
+          
+          {/* Success animation overlay - only shown when animating a pin action */}
+          {animateAction === 'pin' && (
+            <div className="absolute inset-0 bg-green-500/10 rounded-md animate-success-flash"></div>
           )}
         </button>
       </ContextMenuTrigger>
