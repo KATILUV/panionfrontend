@@ -24,7 +24,9 @@ import {
   Linkedin,
   Mail,
   Phone,
-  User
+  Star,
+  User,
+  Users
 } from 'lucide-react';
 import {
   Dialog,
@@ -288,44 +290,56 @@ export const BusinessResultsSheet: React.FC<BusinessResultsSheetProps> = ({
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[525px]">
-                        <DialogHeader>
-                          <DialogTitle>{business.name}</DialogTitle>
-                          <DialogDescription>
+                        <DialogHeader className="bg-slate-50 dark:bg-slate-900/50 -mx-6 px-6 -mt-6 pt-6 pb-4 border-b mb-4">
+                          <DialogTitle className="text-primary font-bold">{business.name}</DialogTitle>
+                          <DialogDescription className="text-muted-foreground mt-1">
                             {business.address}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <span className="text-sm font-medium">Phone:</span>
-                            <span className="col-span-3">{business.phone || 'N/A'}</span>
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <span className="text-sm font-medium">Website:</span>
-                            <span className="col-span-3">
-                              {business.website ? (
-                                <a 
-                                  href={business.website.startsWith('http') ? business.website : `https://${business.website}`}
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:underline"
-                                >
-                                  {business.website}
-                                </a>
-                              ) : 'N/A'}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <span className="text-sm font-medium">Rating:</span>
-                            <span className="col-span-3">{business.rating || 'N/A'}</span>
+                          <div className="grid gap-4 p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-lg border border-slate-100 dark:border-slate-800">
+                            <h3 className="font-semibold text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wide">Business Information</h3>
+                            
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <span className="text-sm font-medium flex items-center gap-1">
+                                <Phone className="h-4 w-4 text-slate-400" /> Phone:
+                              </span>
+                              <span className="col-span-3">{business.phone || 'N/A'}</span>
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <span className="text-sm font-medium flex items-center gap-1">
+                                <ExternalLink className="h-4 w-4 text-slate-400" /> Website:
+                              </span>
+                              <span className="col-span-3">
+                                {business.website ? (
+                                  <a 
+                                    href={business.website.startsWith('http') ? business.website : `https://${business.website}`}
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline"
+                                  >
+                                    {business.website}
+                                  </a>
+                                ) : 'N/A'}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <span className="text-sm font-medium flex items-center gap-1">
+                                <Star className="h-4 w-4 text-slate-400" /> Rating:
+                              </span>
+                              <span className="col-span-3">{business.rating || 'N/A'}</span>
+                            </div>
                           </div>
                           
-                          <div className="border-t pt-4">
-                            <h3 className="font-semibold mb-2">Owner Information</h3>
+                          <div className="grid gap-4 p-4 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                            <h3 className="font-semibold text-sm text-blue-500 dark:text-blue-400 uppercase tracking-wide flex items-center gap-2">
+                              <User className="h-4 w-4" /> Owner Information
+                            </h3>
                             {business.owner_info ? (
-                              <div className="grid gap-2">
+                              <div className="grid gap-3">
                                 <div className="grid grid-cols-4 items-center gap-4">
                                   <span className="text-sm font-medium">Name:</span>
-                                  <span className="col-span-3">{business.owner_info.name || 'N/A'}</span>
+                                  <span className="col-span-3 font-medium">{business.owner_info.name || 'N/A'}</span>
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                   <span className="text-sm font-medium">Title:</span>
@@ -393,36 +407,40 @@ export const BusinessResultsSheet: React.FC<BusinessResultsSheetProps> = ({
                           </div>
                           
                           {business.manager_info && business.manager_info.length > 0 && (
-                            <div className="border-t pt-4">
-                              <h3 className="font-semibold mb-2">Manager Information</h3>
-                              {business.manager_info.map((manager, idx) => (
-                                <div key={idx} className="grid gap-2 mb-4">
-                                  <div className="grid grid-cols-4 items-center gap-4">
-                                    <span className="text-sm font-medium">Name:</span>
-                                    <span className="col-span-3">{manager.name || 'N/A'}</span>
-                                  </div>
-                                  <div className="grid grid-cols-4 items-center gap-4">
-                                    <span className="text-sm font-medium">Title:</span>
-                                    <span className="col-span-3">{manager.title || 'N/A'}</span>
-                                  </div>
-                                  {manager.linkedin_url && (
+                            <div className="grid gap-4 p-4 bg-green-50/50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/50">
+                              <h3 className="font-semibold text-sm text-green-500 dark:text-green-400 uppercase tracking-wide flex items-center gap-2">
+                                <Users className="h-4 w-4" /> Manager Information
+                              </h3>
+                              <div className="divide-y divide-green-100 dark:divide-green-900/50">
+                                {business.manager_info.map((manager, idx) => (
+                                  <div key={idx} className="grid gap-3 py-3 first:pt-0 last:pb-0">
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                      <span className="text-sm font-medium">LinkedIn:</span>
-                                      <span className="col-span-3">
-                                        <a 
-                                          href={manager.linkedin_url} 
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
-                                          className="text-blue-600 hover:underline flex items-center gap-1"
-                                        >
-                                          <Linkedin className="h-3 w-3 text-blue-700" />
-                                          {formatLinkedInUrl(manager.linkedin_url)}
-                                        </a>
-                                      </span>
+                                      <span className="text-sm font-medium">Name:</span>
+                                      <span className="col-span-3 font-medium">{manager.name || 'N/A'}</span>
                                     </div>
-                                  )}
-                                </div>
-                              ))}
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <span className="text-sm font-medium">Title:</span>
+                                      <span className="col-span-3">{manager.title || 'N/A'}</span>
+                                    </div>
+                                    {manager.linkedin_url && (
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <span className="text-sm font-medium">LinkedIn:</span>
+                                        <span className="col-span-3">
+                                          <a 
+                                            href={manager.linkedin_url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:underline flex items-center gap-1"
+                                          >
+                                            <Linkedin className="h-3 w-3 text-blue-700" />
+                                            {formatLinkedInUrl(manager.linkedin_url)}
+                                          </a>
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
