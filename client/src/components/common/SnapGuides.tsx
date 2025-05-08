@@ -248,12 +248,16 @@ const SnapGuides: React.FC<SnapGuidesProps> = ({
             // Clean up after exit animation completes
             if (definition === 'exit') {
               // This helps clean up any lingering elements
+              // Force removal from DOM after exit animation
+              setTimeout(() => {
+                document.querySelectorAll('.snap-guide-highlight').forEach(el => el.remove());
+              }, 50);
               return { display: 'none' };
             }
           }}
         >
           {/* Highlight area */}
-          <div className={getHighlightStyles()} style={{ animationFillMode: 'both' }} />
+          <div className={`snap-guide-highlight ${getHighlightStyles()}`} style={{ animationFillMode: 'forwards' }} />
           
           {/* Edge guides */}
           {getEdgeGuides()}

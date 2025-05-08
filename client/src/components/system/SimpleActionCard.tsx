@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useThemeStore, ThemeAccent } from '../../state/themeStore';
 
@@ -27,6 +27,14 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
 }) => {
   // IMPORTANT: Get theme accent directly in the component
   const accent = useThemeStore(state => state.accent);
+  
+  // Wrap onClick in useCallback to prevent unnecessary re-renders and maintain reference stability
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log(`SimpleActionCard: Clicked ${title}`);
+    onClick();
+  }, [title, onClick]);
   
   // If color is provided directly, use it, otherwise calculate based on accent theme
   const getColorGradient = () => {
@@ -80,10 +88,9 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
   const gradientColor = getColorGradient();
   
   return (
-    <button 
-      type="button"
-      onClick={onClick}
-      className={`w-full text-left rounded-xl bg-gradient-to-br ${gradientColor} p-[1.5px] shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-1 focus:ring-offset-transparent`}
+    <div 
+      className={`w-full text-left rounded-xl bg-gradient-to-br ${gradientColor} p-[1.5px] shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] cursor-pointer border-0 focus-within:outline-none focus-within:ring-2 focus-within:ring-white/30 focus-within:ring-offset-1 focus-within:ring-offset-transparent`}
+      onClick={handleClick}
     >
       <Card className="bg-black/20 backdrop-blur-lg border-none h-full overflow-hidden relative rounded-xl">
         {badge && (
@@ -110,7 +117,7 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
           )}
         </CardContent>
       </Card>
-    </button>
+    </div>
   );
 };
 

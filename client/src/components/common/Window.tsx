@@ -985,7 +985,11 @@ const Window: React.FC<WindowProps> = ({
         stiffness: 380, // Stiffer for more precise movement
         damping: 30,    // Higher damping for faster settling
         mass: 0.7,      // More substantial feel
-        velocity: 3     // Smoother start
+        velocity: 3,    // Smoother start
+        onComplete: () => {
+          // Remove any lingering ghost outlines 
+          document.querySelectorAll('.snap-guide-highlight').forEach(el => el.remove());
+        }
       }
     },
     closed: {
@@ -998,7 +1002,11 @@ const Window: React.FC<WindowProps> = ({
         stiffness: 450,
         damping: 35,
         mass: 0.5,
-        restDelta: 0.001 // More precise animation ending
+        restDelta: 0.001, // More precise animation ending
+        onComplete: () => {
+          // Ensure clean removal of window elements on close
+          document.querySelectorAll('.snap-guide-highlight').forEach(el => el.remove());
+        }
       }
     },
     minimized: {
@@ -1006,6 +1014,7 @@ const Window: React.FC<WindowProps> = ({
       scale: 0.8,
       y: 20,
       filter: "blur(4px)",
+      display: "none", // Force remove from render tree when minimized
       transition: {
         type: "spring",
         stiffness: 500,
