@@ -935,11 +935,24 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
           // Handle different response formats
           if (responseData.results) {
             results = responseData.results;
-          } else if (responseData.file_path) {
+          } else if (responseData.filepath) {
             try {
               // Read file if data was saved to disk
-              const fs = require('fs').promises;
-              const fileContent = await fs.readFile(responseData.file_path, 'utf8');
+              log(`Attempting to read data from file: ${responseData.filepath}`, 'panion');
+              const fs = require('fs');
+              const fileContent = fs.readFileSync(responseData.filepath, 'utf8');
+              results = JSON.parse(fileContent);
+              log(`Successfully loaded ${results.length} results from ${responseData.filepath}`, 'panion');
+            } catch (fileError: any) {
+              log(`Error reading file ${responseData.filepath}: ${fileError.message}`, 'panion');
+              // Continue with any partial data we might have
+              results = responseData.data || [];
+            }
+          } else if (responseData.file_path) {
+            try {
+              // Legacy format - read file if data was saved to disk
+              const fs = require('fs');
+              const fileContent = fs.readFileSync(responseData.file_path, 'utf8');
               results = JSON.parse(fileContent);
             } catch (fileError: any) {
               log(`Error reading file ${responseData.file_path}: ${fileError.message}`, 'panion');
@@ -948,6 +961,20 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
             }
           } else if (responseData.data) {
             results = responseData.data;
+          } else if (responseData.result_count && responseData.result_count > 0) {
+            // If we know there are results but can't find them, try looking in the standard location
+            try {
+              const filename = `smoke_shop_${location.replace(' ', '_')}.json`;
+              const possibleFilepath = `./data/scraped/${filename}`;
+              log(`Trying to find results in default location: ${possibleFilepath}`, 'panion');
+              const fs = require('fs');
+              const fileContent = fs.readFileSync(possibleFilepath, 'utf8');
+              results = JSON.parse(fileContent);
+              log(`Found ${results.length} results in default location`, 'panion');
+            } catch (fileError: any) {
+              log(`Could not find results in default location: ${fileError.message}`, 'panion');
+              results = [];
+            }
           }
           
           // Verify results if requested
