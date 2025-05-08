@@ -196,6 +196,95 @@ router.get('/api/panion/system/stats', checkPanionAPIMiddleware, async (_req: Re
 });
 
 // Additional Panion API endpoints for new features
+
+// Inter-agent communication endpoint for Panion to dispatch tasks to other agents
+router.post('/api/panion/dispatch', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { targetAgent, task, parameters, priority = 'normal', callbackEndpoint = null } = req.body;
+    
+    if (!targetAgent || !task) {
+      return res.status(400).json({ 
+        error: 'Invalid request',
+        message: 'Target agent and task are required' 
+      });
+    }
+    
+    // Currently handling Daddy Data agent specifically
+    if (targetAgent.toLowerCase() === 'daddy_data') {
+      try {
+        log(`Dispatching task ${task} to Daddy Data agent with priority ${priority}`, 'panion');
+        let response;
+        
+        switch (task) {
+          case 'search':
+            response = await axios.post('/api/daddy-data/search', {
+              query: parameters.query,
+              location: parameters.location,
+              limit: parameters.limit
+            });
+            break;
+            
+          case 'verify':
+            response = await axios.post('/api/daddy-data/verify', {
+              data: parameters.data,
+              fields_to_verify: parameters.fields_to_verify
+            });
+            break;
+            
+          case 'organize':
+            response = await axios.post('/api/daddy-data/organize', {
+              data: parameters.data,
+              format: parameters.format,
+              structure: parameters.structure
+            });
+            break;
+            
+          default:
+            throw new Error(`Unknown task type: ${task}`);
+        }
+        
+        // If a callback endpoint is provided, send the results back to the source agent
+        if (callbackEndpoint && response.data.success) {
+          await axios.post(callbackEndpoint, {
+            source: 'daddy_data',
+            task,
+            taskId: response.data.task_id,
+            status: response.data.status,
+            result: response.data
+          });
+        }
+        
+        res.json({
+          success: true,
+          taskId: response.data.task_id,
+          status: response.data.status,
+          message: `Task dispatched to Daddy Data agent: ${task}`
+        });
+      } catch (error: any) {
+        log(`Error dispatching to Daddy Data: ${error.message}`, 'panion');
+        res.status(500).json({ 
+          success: false,
+          error: 'Dispatch error',
+          message: `Error dispatching task to Daddy Data: ${error.message}` 
+        });
+      }
+    } else {
+      // For future implementation of other agent targets
+      res.status(400).json({ 
+        success: false,
+        error: 'Unsupported agent',
+        message: `Agent ${targetAgent} is not supported for direct task dispatch yet` 
+      });
+    }
+  } catch (error: any) {
+    log(`Error in inter-agent dispatch: ${error.message}`, 'panion');
+    res.status(500).json({ 
+      success: false,
+      error: 'Panion API error',
+      message: 'Error processing inter-agent communication' 
+    });
+  }
+});
 router.post('/api/panion/scrape', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
   try {
     const { targetType, location, limit = 20, additionalParams = {} } = req.body;
