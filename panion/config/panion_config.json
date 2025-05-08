@@ -1,0 +1,39 @@
+{
+    "system": {
+        "log_level": "INFO",
+        "auto_save": true,
+        "save_interval": 60
+    },
+    "memory": {
+        "max_size": 10000,
+        "retention_days": 30
+    },
+    "plugins": {
+        "auto_update": false,
+        "update_interval": 24,
+        "enabled": true,
+        "plugin_dir": "plugins"
+    },
+    "ui": {
+        "theme": "darkly",
+        "font_size": 12,
+        "chat_window": {
+            "width": 600,
+            "height": 800,
+            "refresh_rate": 50
+        }
+    },
+    "conversation": {
+        "max_concurrent_conversations": 10,
+        "state_persistence": true,
+        "state_sync_interval": 60,
+        "max_history": 10,
+        "context_window": 5
+    },
+    "openai": {
+        "model": "gpt-4-turbo-preview",
+        "temperature": 0.7,
+        "max_tokens": 1000,
+        "api_key_env": "OPENAI_API_KEY"
+    }
+} 

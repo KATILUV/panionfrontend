@@ -1,0 +1,4 @@
+version_manager:
+  check_interval: 24
+  auto_update: true
+  notify_on_update: true 

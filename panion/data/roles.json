@@ -1,0 +1,36 @@
+{
+    "admin": [
+        "orchestrator:start",
+        "goal:process:*",
+        "subtask:process:*",
+        "plugin:execute:*",
+        "resource:manage",
+        "user:manage",
+        "role:manage",
+        "system:configure"
+    ],
+    "user": [
+        "goal:process:*",
+        "subtask:process:*",
+        "plugin:execute:text_analysis",
+        "plugin:execute:content_extraction"
+    ],
+    "reader": [
+        "goal:view",
+        "subtask:view",
+        "plugin:view"
+    ],
+    "plugin_developer": [
+        "plugin:develop",
+        "plugin:test",
+        "plugin:deploy",
+        "goal:process:test_*",
+        "subtask:process:test_*"
+    ],
+    "system_monitor": [
+        "system:view",
+        "resource:view",
+        "metrics:view",
+        "logs:view"
+    ]
+} 

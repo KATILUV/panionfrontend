@@ -1,0 +1,16 @@
+self_repair:
+  enabled: true
+  check_interval: 300  # seconds
+  max_retries: 3
+  timeout: 60  # seconds
+  backup:
+    enabled: true
+    directory: "backups"
+    max_backups: 5
+  monitoring:
+    cpu_threshold: 80
+    memory_threshold: 80
+    disk_threshold: 90
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s" 

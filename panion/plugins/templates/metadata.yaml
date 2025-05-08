@@ -1,0 +1,33 @@
+# Plugin Metadata
+# Required fields
+name: "plugin_name"
+version: "1.0.0"
+description: "Description of what the plugin does"
+author: "Plugin Author Name"
+
+# Version compatibility
+compatible_with:
+  - "1.0.0"
+  - "1.1.0"
+
+# Dependencies
+requires:
+  panion_core: ">=1.0.0"
+  other_plugin: ">=2.0.0"
+
+# Security settings
+security_level: "low"  # low, medium, high
+rate_limit: 60  # requests per minute, null for no limit
+requires_auth: false
+requires_encryption: false
+
+# Optional fields
+tags:
+  - "category1"
+  - "category2"
+
+# Plugin configuration
+config:
+  setting1: "default_value"
+  setting2: 42
+  setting3: true 

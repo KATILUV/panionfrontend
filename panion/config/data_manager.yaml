@@ -1,0 +1,21 @@
+data_manager:
+  storage:
+    type: "local"  # or "s3", "gcs", etc.
+    local:
+      directory: "data"
+      max_size: 1073741824  # 1GB
+    backup:
+      enabled: true
+      interval: 86400  # 24 hours
+      max_backups: 7
+  caching:
+    enabled: true
+    max_size: 104857600  # 100MB
+    ttl: 3600  # 1 hour
+  indexing:
+    enabled: true
+    batch_size: 1000
+    interval: 300  # 5 minutes
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s" 

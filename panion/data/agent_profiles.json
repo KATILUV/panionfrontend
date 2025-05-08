@@ -1,0 +1,59 @@
+{
+  "agent1": {
+    "name": "Alice",
+    "skills": {
+      "coding": 0.9,
+      "testing": 0.8,
+      "problem_solving": 0.9,
+      "communication": 0.8
+    },
+    "capabilities": [
+      "development",
+      "testing",
+      "planning"
+    ],
+    "availability": true,
+    "current_team": null,
+    "performance_metrics": {
+      "success_rate": 0.95
+    }
+  },
+  "agent2": {
+    "name": "Bob",
+    "skills": {
+      "coding": 0.7,
+      "testing": 0.9,
+      "problem_solving": 0.8,
+      "communication": 0.7
+    },
+    "capabilities": [
+      "testing",
+      "debugging",
+      "analysis"
+    ],
+    "availability": true,
+    "current_team": null,
+    "performance_metrics": {
+      "success_rate": 0.88
+    }
+  },
+  "agent3": {
+    "name": "Charlie",
+    "skills": {
+      "coding": 0.8,
+      "testing": 0.7,
+      "problem_solving": 0.9,
+      "communication": 0.9
+    },
+    "capabilities": [
+      "planning",
+      "coordination",
+      "development"
+    ],
+    "availability": true,
+    "current_team": null,
+    "performance_metrics": {
+      "success_rate": 0.92
+    }
+  }
+}

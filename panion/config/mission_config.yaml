@@ -1,0 +1,91 @@
+# Mission System Configuration
+
+# Goal Management
+goals:
+  types:
+    - name: "strategic"
+      priority: 1
+      max_duration: 2592000  # 30 days
+      required_skills: ["strategic_planning", "analysis"]
+    
+    - name: "tactical"
+      priority: 2
+      max_duration: 604800  # 7 days
+      required_skills: ["execution", "coordination"]
+    
+    - name: "operational"
+      priority: 3
+      max_duration: 86400  # 1 day
+      required_skills: ["implementation", "monitoring"]
+
+  status:
+    - "pending"
+    - "in_progress"
+    - "completed"
+    - "failed"
+    - "cancelled"
+
+  scoring:
+    impact_weight: 0.4
+    feasibility_weight: 0.3
+    urgency_weight: 0.3
+    min_score: 0.5
+    max_score: 1.0
+
+# Mission Planning
+planning:
+  max_concurrent_missions: 5
+  resource_allocation:
+    cpu_limit: 0.8
+    memory_limit: 0.8
+    max_agents_per_mission: 3
+  
+  scheduling:
+    check_interval: 300  # seconds
+    max_retries: 3
+    retry_delay: 60  # seconds
+
+# Collaboration
+collaboration:
+  message_timeout: 300  # seconds
+  negotiation_timeout: 600  # seconds
+  max_collaborators: 5
+  
+  protocols:
+    - name: "consensus"
+      min_approvals: 2
+      timeout: 300  # seconds
+    
+    - name: "delegation"
+      max_delegations: 3
+      timeout: 600  # seconds
+
+# Monitoring
+monitoring:
+  metrics:
+    - name: "mission_success_rate"
+      interval: 3600  # seconds
+      threshold: 0.85
+    
+    - name: "goal_completion_rate"
+      interval: 3600  # seconds
+      threshold: 0.90
+    
+    - name: "resource_utilization"
+      interval: 300  # seconds
+      threshold: 0.75
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/mission_system.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+
+# Storage
+storage:
+  type: "sqlite"
+  path: "data/missions"
+  retention_days: 90
+  cleanup_interval: 86400  # seconds 

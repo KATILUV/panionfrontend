@@ -1,0 +1,26 @@
+name: web_scraper
+version: 1.0.0
+description: A web scraping plugin that can extract data from websites
+author: Panion Team
+dependencies:
+  plugins: {}  # No plugin dependencies
+  packages:
+    requests: ">=2.25.0"
+    beautifulsoup4: ">=4.9.0"
+security_level: restricted
+rate_limit: 10  # requests per minute
+requires_encryption: false
+tags:
+  - web
+  - scraping
+  - data-extraction
+documentation_url: https://github.com/panion/web-scraper-plugin
+repository_url: https://github.com/panion/web-scraper-plugin
+license: MIT
+min_panion_version: 1.0.0
+config:
+  user_agent: "Panion Web Scraper/1.0.0"
+  timeout: 30
+  max_retries: 3
+  respect_robots_txt: true
+  default_encoding: "utf-8" 

@@ -1,0 +1,120 @@
+# System Configuration
+name: "panion"
+version: "0.1.0"
+
+# Core Settings
+debug_mode: false
+log_level: "INFO"
+
+# Performance
+max_concurrent_tasks: 5
+task_timeout_seconds: 300
+
+# Resource Limits
+memory_limit_mb: 1024
+cpu_limit_percent: 80
+
+# Paths
+data_dir: "data"
+log_dir: "logs"
+temp_dir: "temp"
+
+# Health Check
+health_check_interval_seconds: 60
+max_retry_attempts: 3
+
+# System Manager Configuration
+
+# Backup Configuration
+backup:
+  backup_dir: "backups"
+  max_backups: 10
+  backup_interval: 3600  # seconds
+  retention_days: 30
+  include_patterns:
+    - "*.py"
+    - "*.json"
+    - "*.yaml"
+    - "*.md"
+  exclude_patterns:
+    - "*.log"
+    - "*.tmp"
+    - "*.bak"
+
+# Metrics Configuration
+metrics:
+  collection_interval: 300  # seconds
+  retention_days: 7
+  alert_thresholds:
+    cpu_usage: 90
+    memory_usage: 85
+    disk_usage: 80
+    response_time: 1.0  # seconds
+
+# Service Configuration
+services:
+  - name: "autonomous_system"
+    port: 8000
+    health_check_url: "http://localhost:8000/health"
+    dependencies: []
+  
+  - name: "resource_manager"
+    port: 8001
+    health_check_url: "http://localhost:8001/health"
+    dependencies: []
+  
+  - name: "memory_hub"
+    port: 8002
+    health_check_url: "http://localhost:8002/health"
+    dependencies: []
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/system_manager.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+
+# Network Configuration
+network:
+  timeout: 5  # seconds
+  retry_attempts: 3
+  retry_delay: 1  # seconds
+
+# Security Configuration
+security:
+  api_key_rotation_days: 30
+  ssl_enabled: true
+  allowed_origins:
+    - "http://localhost:8000"
+    - "http://localhost:8001"
+    - "http://localhost:8002"
+
+logging_level: INFO
+test_mode: true
+
+components:
+  episodic_memory:
+    enabled: true
+    config_path: config/episodic_memory_config.yaml
+    memory_retention_days: 30
+    importance_threshold: 0.5
+    
+  capability_evolution:
+    enabled: true
+    config_path: config/capability_evolution_config.yaml
+    min_impact_threshold: 0.7
+    min_feasibility_threshold: 0.6
+    max_concurrent_plans: 3
+    growth_rate_target: 0.1
+    
+  team_formation:
+    enabled: true
+    config_path: config/team_formation_config.yaml
+    min_team_size: 2
+    max_team_size: 5
+    capability_threshold: 0.7
+    preference_weight: 0.3
+    communication_weight: 0.2
+    learning_weight: 0.1 

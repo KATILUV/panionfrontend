@@ -1,0 +1,417 @@
+{
+    "functions": {
+        "load_memory": {
+            "lines_of_code": 6,
+            "calls": [],
+            "called_by": [
+                "save_memory",
+                "recall_memory",
+                "update_memory",
+                "forget_memory"
+            ],
+            "complexity": "low"
+        },
+        "save_memory": {
+            "lines_of_code": 5,
+            "calls": [
+                "load_memory"
+            ],
+            "called_by": [
+                "handle_command"
+            ],
+            "complexity": "low"
+        },
+        "recall_memory": {
+            "lines_of_code": 3,
+            "calls": [
+                "load_memory"
+            ],
+            "called_by": [
+                "handle_command"
+            ],
+            "complexity": "low"
+        },
+        "update_memory": {
+            "lines_of_code": 6,
+            "calls": [
+                "load_memory"
+            ],
+            "called_by": [
+                "handle_command"
+            ],
+            "complexity": "low"
+        },
+        "forget_memory": {
+            "lines_of_code": 6,
+            "calls": [
+                "load_memory"
+            ],
+            "called_by": [
+                "handle_command"
+            ],
+            "complexity": "low"
+        },
+        "ask_clara": {
+            "lines_of_code": 37,
+            "calls": [],
+            "called_by": [],
+            "complexity": "medium"
+        },
+        "speak_reply": {
+            "lines_of_code": 2,
+            "calls": [],
+            "called_by": [
+                "handle_command"
+            ],
+            "complexity": "low"
+        },
+        "type_text": {
+            "lines_of_code": 4,
+            "calls": [],
+            "called_by": [
+                "handle_command",
+                "handle_command"
+            ],
+            "complexity": "low"
+        },
+        "analyze_and_remember_plugin": {
+            "lines_of_code": 28,
+            "calls": [],
+            "called_by": [
+                "handle_command",
+                "handle_command"
+            ],
+            "complexity": "medium"
+        },
+        "test_syntax_validity": {
+            "lines_of_code": 10,
+            "calls": [],
+            "called_by": [
+                "review_and_patch",
+                "review_and_patch"
+            ],
+            "complexity": "low"
+        },
+        "log_patch": {
+            "lines_of_code": 22,
+            "calls": [],
+            "called_by": [
+                "review_and_patch",
+                "review_and_patch"
+            ],
+            "complexity": "medium"
+        },
+        "review_and_patch": {
+            "lines_of_code": 82,
+            "calls": [
+                "test_syntax_validity",
+                "log_patch",
+                "test_syntax_validity",
+                "log_patch"
+            ],
+            "called_by": [
+                "run_independent_loop",
+                "run_task"
+            ],
+            "complexity": "high"
+        },
+        "load_goals": {
+            "lines_of_code": 5,
+            "calls": [],
+            "called_by": [
+                "load_active_goals",
+                "handle_command",
+                "handle_command",
+                "handle_command"
+            ],
+            "complexity": "low"
+        },
+        "save_goals": {
+            "lines_of_code": 3,
+            "calls": [],
+            "called_by": [
+                "handle_command",
+                "handle_command"
+            ],
+            "complexity": "low"
+        },
+        "load_goal_history": {
+            "lines_of_code": 5,
+            "calls": [],
+            "called_by": [
+                "load_active_goals",
+                "mark_goal_as_completed"
+            ],
+            "complexity": "low"
+        },
+        "load_active_goals": {
+            "lines_of_code": 5,
+            "calls": [
+                "load_goals",
+                "load_goal_history"
+            ],
+            "called_by": [
+                "run_independent_loop"
+            ],
+            "complexity": "low"
+        },
+        "mark_goal_as_completed": {
+            "lines_of_code": 5,
+            "calls": [
+                "load_goal_history"
+            ],
+            "called_by": [
+                "run_independent_loop",
+                "run_independent_loop"
+            ],
+            "complexity": "low"
+        },
+        "log_context_entry": {
+            "lines_of_code": 16,
+            "calls": [],
+            "called_by": [
+                "generate_screen_file",
+                "generate_component_file",
+                "daily_summary",
+                "handle_error_trace",
+                "chain_and_execute"
+            ],
+            "complexity": "low"
+        },
+        "load_taskcat_state": {
+            "lines_of_code": 5,
+            "calls": [],
+            "called_by": [
+                "build_from_state",
+                "build_components_from_state",
+                "promote_suggestions"
+            ],
+            "complexity": "low"
+        },
+        "save_taskcat_state": {
+            "lines_of_code": 3,
+            "calls": [],
+            "called_by": [
+                "build_from_state",
+                "build_components_from_state",
+                "promote_suggestions"
+            ],
+            "complexity": "low"
+        },
+        "generate_screen_file": {
+            "lines_of_code": 22,
+            "calls": [
+                "log_context_entry"
+            ],
+            "called_by": [
+                "build_from_state",
+                "run_task"
+            ],
+            "complexity": "medium"
+        },
+        "build_from_state": {
+            "lines_of_code": 11,
+            "calls": [
+                "load_taskcat_state",
+                "generate_screen_file",
+                "save_taskcat_state"
+            ],
+            "called_by": [
+                "run_independent_loop"
+            ],
+            "complexity": "low"
+        },
+        "generate_component_file": {
+            "lines_of_code": 19,
+            "calls": [
+                "log_context_entry"
+            ],
+            "called_by": [
+                "build_components_from_state"
+            ],
+            "complexity": "low"
+        },
+        "build_components_from_state": {
+            "lines_of_code": 11,
+            "calls": [
+                "load_taskcat_state",
+                "generate_component_file",
+                "save_taskcat_state"
+            ],
+            "called_by": [
+                "run_independent_loop"
+            ],
+            "complexity": "low"
+        },
+        "load_project_state": {
+            "lines_of_code": 5,
+            "calls": [],
+            "called_by": [
+                "suggest_features",
+                "review_project_status",
+                "promote_suggestions",
+                "run_independent_loop"
+            ],
+            "complexity": "low"
+        },
+        "save_project_state": {
+            "lines_of_code": 3,
+            "calls": [],
+            "called_by": [
+                "suggest_features",
+                "promote_suggestions"
+            ],
+            "complexity": "low"
+        },
+        "suggest_features": {
+            "lines_of_code": 28,
+            "calls": [
+                "load_project_state",
+                "save_project_state"
+            ],
+            "called_by": [
+                "run_independent_loop"
+            ],
+            "complexity": "medium"
+        },
+        "review_project_status": {
+            "lines_of_code": 5,
+            "calls": [
+                "load_project_state"
+            ],
+            "called_by": [
+                "run_independent_loop"
+            ],
+            "complexity": "low"
+        },
+        "promote_suggestions": {
+            "lines_of_code": 44,
+            "calls": [
+                "load_project_state",
+                "load_taskcat_state",
+                "save_taskcat_state",
+                "save_project_state"
+            ],
+            "called_by": [
+                "handle_command",
+                "run_independent_loop"
+            ],
+            "complexity": "medium"
+        },
+        "daily_summary": {
+            "lines_of_code": 42,
+            "calls": [
+                "log_context_entry"
+            ],
+            "called_by": [],
+            "complexity": "medium"
+        },
+        "handle_error_trace": {
+            "lines_of_code": 15,
+            "calls": [
+                "log_context_entry"
+            ],
+            "called_by": [
+                "run_independent_loop"
+            ],
+            "complexity": "low"
+        },
+        "handle_command": {
+            "lines_of_code": 372,
+            "calls": [
+                "type_text",
+                "type_text",
+                "analyze_and_remember_plugin",
+                "analyze_and_remember_plugin",
+                "speak_reply",
+                "promote_suggestions",
+                "save_memory",
+                "recall_memory",
+                "update_memory",
+                "forget_memory",
+                "load_goals",
+                "save_goals",
+                "load_goals",
+                "load_goals",
+                "save_goals"
+            ],
+            "called_by": [
+                "chain_and_execute",
+                "run_independent_loop",
+                "run_independent_loop",
+                "run_independent_loop",
+                "run_independent_loop",
+                "run_independent_loop",
+                "run_independent_loop"
+            ],
+            "complexity": "high"
+        },
+        "chain_and_execute": {
+            "lines_of_code": 45,
+            "calls": [
+                "handle_command",
+                "log_context_entry"
+            ],
+            "called_by": [
+                "run_independent_loop"
+            ],
+            "complexity": "medium"
+        },
+        "sync_plugin_registry": {
+            "lines_of_code": 35,
+            "calls": [],
+            "called_by": [],
+            "complexity": "medium"
+        },
+        "run_independent_loop": {
+            "lines_of_code": 163,
+            "calls": [
+                "build_from_state",
+                "build_components_from_state",
+                "suggest_features",
+                "review_project_status",
+                "load_project_state",
+                "promote_suggestions",
+                "handle_error_trace",
+                "handle_command",
+                "handle_command",
+                "handle_command",
+                "handle_command",
+                "handle_command",
+                "load_active_goals",
+                "chain_and_execute",
+                "mark_goal_as_completed",
+                "review_and_patch",
+                "mark_goal_as_completed",
+                "handle_command"
+            ],
+            "called_by": [],
+            "complexity": "high"
+        },
+        "run_task": {
+            "lines_of_code": 16,
+            "calls": [
+                "generate_screen_file",
+                "review_and_patch"
+            ],
+            "called_by": [],
+            "complexity": "low"
+        }
+    },
+    "imports": [
+        "subprocess",
+        "pyperclip",
+        "pyautogui",
+        "flask",
+        "json",
+        "dotenv",
+        "plugins.strategy_memory",
+        "openai",
+        "os",
+        "re",
+        "time",
+        "datetime",
+        "threading"
+    ],
+    "file": "clara_agent.py"
+}

@@ -1,0 +1,106 @@
+# Enhanced Goal Decomposer Configuration
+
+# GPT-4 Integration
+gpt4:
+  model: "gpt-4-turbo-preview"
+  temperature: 0.7
+  max_tokens: 2000
+  timeout: 30  # seconds
+
+# Decomposition Settings
+decomposition:
+  refinement_iterations: 3
+  min_confidence: 0.7
+  max_subgoals: 20
+  strategy_weights:
+    hierarchical: 0.3
+    sequential: 0.3
+    parallel: 0.2
+    adaptive: 0.2
+
+# Dynamic Subgoal Spawning
+dynamic_spawning:
+  enabled: true
+  max_additional_subgoals: 5
+  spawn_triggers:
+    - missing_dependencies
+    - error_handling
+    - validation
+    - cleanup
+  confidence_threshold: 0.6
+
+# Plugin Recommendation
+plugin_recommendation:
+  enabled: true
+  min_confidence: 0.7
+  max_plugins_per_subgoal: 5
+  consider_factors:
+    - functionality
+    - performance
+    - error_handling
+    - integration
+  cache:
+    enabled: true
+    ttl: 3600  # seconds
+    max_size: 1000
+
+# Memory Management
+memory:
+  max_history_size: 1000
+  cleanup_interval: 3600  # seconds
+  persist_history: true
+  history_file: "data/goal_decomposition_history.json"
+
+# Performance
+performance:
+  max_concurrent_analyses: 5
+  analysis_timeout: 300  # seconds
+  cache_size: 1000
+  cache_ttl: 3600  # seconds
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/goal_decomposer.log"
+  rotation:
+    max_size: 10485760  # 10MB
+    backup_count: 5
+
+# Error Handling
+error_handling:
+  max_retries: 3
+  retry_delay: 5  # seconds
+  fallback_strategy: "sequential"
+  notify_on_failure: true
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics:
+    - name: "decomposition_count"
+      type: "counter"
+      labels: ["strategy"]
+      
+    - name: "subgoal_count"
+      type: "gauge"
+      labels: ["goal_id"]
+      
+    - name: "decomposition_duration"
+      type: "histogram"
+      labels: ["strategy"]
+      
+    - name: "refinement_improvement"
+      type: "gauge"
+      labels: ["goal_id", "iteration"]
+  
+  alerting:
+    error_rate_threshold: 0.1
+    max_consecutive_failures: 3
+    notification_channels:
+      - type: "log"
+        level: "ERROR"
+      - type: "email"
+        recipients: ["admin@example.com"]
+      - type: "slack"
+        channel: "#alerts" 

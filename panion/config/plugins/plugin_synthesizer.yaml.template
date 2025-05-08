@@ -1,0 +1,3 @@
+# Plugin Synthesizer Configuration
+# Copy this file to plugin_synthesizer.yaml and replace the API key
+openai_api_key: "YOUR_API_KEY_HERE"  # Replace with your OpenAI API key 

@@ -1,0 +1,10 @@
+author: Panion
+created_at: '2025-05-06T10:04:34.660343'
+description: Auto-generated plugin for Test subgoal
+name: auto_test_task_test_subgoal
+requirements:
+- Handle ValueError errors
+- Implement Mock fix 1
+- Implement Mock fix 2
+type: synthesized
+version: 0.1.0

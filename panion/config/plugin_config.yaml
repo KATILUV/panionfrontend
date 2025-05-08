@@ -1,0 +1,9 @@
+enabled: true
+auto_update: false
+update_interval: 3600  # 1 hour
+max_plugins: 100
+allowed_sources: []
+blacklist: []
+whitelist: []
+plugin_dir: "plugins"
+scan_interval: 300  # 5 minutes 

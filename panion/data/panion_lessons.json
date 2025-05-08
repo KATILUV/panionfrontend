@@ -1,0 +1,7 @@
+[
+  {
+    "lesson": "Remove markdown ```python syntax blocks from generated GPT code to prevent syntax errors.",
+    "source": "spawn_auto_fix",
+    "timestamp": "2025-04-26T11:44:21.219050"
+  }
+]

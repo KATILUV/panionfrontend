@@ -1,0 +1,42 @@
+# Goal Builder Configuration
+
+# Goal generation settings
+goal_generation:
+  max_goals_per_run: 10
+  min_confidence: 0.7
+  max_priority: 5
+
+# Resource limits
+resource_limits:
+  cpu: 1.0
+  memory: 1024
+  disk: 1000
+
+# Goal categories
+categories:
+  - system_maintenance
+  - performance_optimization
+  - security
+  - feature_development
+  - bug_fixes
+
+# Default goal templates
+templates:
+  system_maintenance:
+    priority: 3
+    deadline: 24h
+    required_capabilities:
+      - system_monitoring
+      - maintenance_tasks
+  performance_optimization:
+    priority: 2
+    deadline: 48h
+    required_capabilities:
+      - performance_analysis
+      - optimization
+  security:
+    priority: 1
+    deadline: 12h
+    required_capabilities:
+      - security_scanning
+      - vulnerability_assessment 

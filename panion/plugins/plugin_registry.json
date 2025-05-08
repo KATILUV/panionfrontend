@@ -1,0 +1,206 @@
+{
+  "plugins": {
+    "timeline_visualizer": {
+      "name": "timeline_visualizer",
+      "summary": "Visualizes system timeline and events",
+      "file": "timeline_visualizer.py",
+      "category": "tools",
+      "status": "available",
+      "capabilities": [
+        "visualization",
+        "timeline_management"
+      ],
+      "last_updated": "2025-04-30T22:27:24.133987",
+      "dependencies": [
+        "world_model_manager"
+      ]
+    },
+    "goal_plugin_system": {
+      "name": "goal_plugin_system",
+      "summary": "Manages goal-oriented plugin system",
+      "file": "goal_plugin_system.py",
+      "category": "goals",
+      "status": "available",
+      "capabilities": [
+        "goal_management",
+        "plugin_coordination"
+      ],
+      "dependencies": [
+        "world_model_manager",
+        "team_formation_manager"
+      ]
+    },
+    "code_conflict_resolver": {
+      "name": "code_conflict_resolver",
+      "summary": "Resolves code conflicts and inconsistencies",
+      "file": "code_conflict_resolver.py",
+      "category": "tools",
+      "status": "available",
+      "capabilities": [
+        "conflict_resolution",
+        "code_analysis"
+      ],
+      "dependencies": [
+        "data_consistency_manager"
+      ]
+    },
+    "plugin_synthesizer": {
+      "name": "plugin_synthesizer",
+      "summary": "Synthesizes new plugins based on needs",
+      "file": "plugin_synthesizer.py",
+      "category": "tools",
+      "status": "available",
+      "capabilities": [
+        "plugin_generation",
+        "synthesis"
+      ],
+      "dependencies": [
+        "plugin_manager",
+        "world_model_manager"
+      ]
+    },
+    "meta_learning_manager": {
+      "name": "meta_learning_manager",
+      "summary": "Manages meta-learning capabilities",
+      "file": "meta_learning_manager.py",
+      "category": "learning",
+      "status": "available",
+      "capabilities": [
+        "learning_optimization",
+        "strategy_adaptation"
+      ],
+      "dependencies": [
+        "world_model_manager",
+        "data_consistency_manager"
+      ]
+    },
+    "brain_selfscanner": {
+      "name": "brain_selfscanner",
+      "summary": "Scans and analyzes system state",
+      "file": "brain_selfscanner.py",
+      "category": "learning",
+      "status": "available",
+      "capabilities": [
+        "system_analysis",
+        "state_scanning"
+      ],
+      "dependencies": [
+        "world_model_manager",
+        "data_consistency_manager"
+      ]
+    },
+    "self_diagnose": {
+      "name": "self_diagnose",
+      "summary": "Performs self-diagnosis and health checks",
+      "file": "self_diagnose.py",
+      "category": "learning",
+      "status": "available",
+      "capabilities": [
+        "diagnostics",
+        "health_monitoring"
+      ],
+      "dependencies": [
+        "brain_selfscanner",
+        "data_consistency_manager"
+      ]
+    },
+    "missing_skills_analyzer": {
+      "name": "missing_skills_analyzer",
+      "summary": "Analyzes and identifies missing capabilities",
+      "file": "missing_skills_analyzer.py",
+      "category": "learning",
+      "status": "available",
+      "capabilities": [
+        "skill_analysis",
+        "gap_detection"
+      ],
+      "dependencies": [
+        "world_model_manager",
+        "brain_selfscanner"
+      ]
+    },
+    "goal_auto_builder": {
+      "name": "goal_auto_builder",
+      "summary": "Automatically builds and manages goals",
+      "file": "goal_auto_builder.py",
+      "category": "goals",
+      "status": "available",
+      "capabilities": [
+        "goal_generation",
+        "automation"
+      ],
+      "dependencies": [
+        "goal_plugin_system",
+        "world_model_manager"
+      ]
+    },
+    "resource_budget_manager": {
+      "name": "resource_budget_manager",
+      "summary": "Manages resource allocation and budgeting",
+      "file": "resource_budget_manager.py",
+      "category": "core",
+      "status": "available",
+      "capabilities": [
+        "resource_management",
+        "budgeting"
+      ],
+      "dependencies": [
+        "data_consistency_manager"
+      ]
+    },
+    "world_model_manager": {
+      "name": "world_model_manager",
+      "summary": "Manages the system's world model and state",
+      "file": "world_model_manager.py",
+      "category": "core",
+      "status": "available",
+      "capabilities": [
+        "state_management",
+        "model_updates"
+      ],
+      "dependencies": [
+        "data_consistency_manager"
+      ]
+    },
+    "data_consistency_manager": {
+      "name": "data_consistency_manager",
+      "summary": "Ensures data consistency across the system",
+      "file": "data_consistency_manager.py",
+      "category": "tools",
+      "status": "available",
+      "capabilities": [
+        "data_validation",
+        "consistency_checks"
+      ],
+      "dependencies": []
+    },
+    "team_formation_manager": {
+      "name": "team_formation_manager",
+      "summary": "Manages team formation and collaboration",
+      "file": "team_formation_manager.py",
+      "category": "core",
+      "status": "available",
+      "capabilities": [
+        "team_management",
+        "collaboration"
+      ],
+      "dependencies": [
+        "world_model_manager"
+      ]
+    },
+    "echo_agent": {
+      "name": "echo_agent",
+      "summary": "Echo agent for testing and debugging",
+      "file": "echo_agent.py",
+      "category": "agents",
+      "status": "available",
+      "capabilities": [
+        "echo",
+        "debugging"
+      ],
+      "dependencies": []
+    }
+  },
+  "last_updated": "2025-04-30T22:27:24.133831",
+  "total_plugins": 18
+}

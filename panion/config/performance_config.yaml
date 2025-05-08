@@ -1,0 +1,127 @@
+# Performance Manager Configuration
+
+# Performance thresholds
+thresholds:
+  cpu: 80  # CPU usage percentage
+  memory: 80  # Memory usage percentage
+  error_rate: 0.1  # Error rate threshold
+  response_time: 1.0  # Response time in seconds
+
+# Components to monitor
+components:
+  - system
+  - api
+  - database
+  - cache
+  - plugins
+
+# Monitoring intervals
+intervals:
+  system_check: 5  # seconds
+  component_check: 10  # seconds
+  optimization_check: 60  # seconds
+
+# Caching Configuration
+caching:
+  enabled: true
+  default_ttl: 300  # seconds
+  max_size: 104857600  # 100MB
+  compression_enabled: true
+  compression_level: 6
+  strategies:
+    - name: "response_cache"
+      ttl: 300
+    - name: "rate_limit"
+      ttl: 60
+    - name: "api_keys"
+      ttl: 86400  # 24 hours
+
+# Connection Pool Configuration
+pool:
+  max_size: 100
+  timeout: 30  # seconds
+  retry_attempts: 3
+  retry_delay: 1  # seconds
+  health_check_interval: 60  # seconds
+
+# Load Balancer Configuration
+load_balancer:
+  enabled: true
+  algorithm: "round_robin"  # or "random" or "least_connections"
+  health_check_interval: 30  # seconds
+  failover_threshold: 3
+  recovery_time: 300  # seconds
+
+# Servers Configuration
+servers:
+  - name: "server1"
+    host: "localhost"
+    port: 8000
+    weight: 1
+  - name: "server2"
+    host: "localhost"
+    port: 8001
+    weight: 1
+  - name: "server3"
+    host: "localhost"
+    port: 8002
+    weight: 1
+
+# Redis Configuration
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+  password: ""  # Set in production
+  ssl: false
+
+# Metrics Configuration
+metrics:
+  collection_interval: 60  # seconds
+  retention_days: 7
+  alert_thresholds:
+    error_rate: 5  # percentage
+    response_time: 1.0  # seconds
+    cache_hit_ratio: 0.8  # 80%
+
+# Performance Optimization
+optimization:
+  enabled: true
+  strategies:
+    - name: "connection_pooling"
+      enabled: true
+    - name: "caching"
+      enabled: true
+    - name: "compression"
+      enabled: true
+    - name: "load_balancing"
+      enabled: true
+  max_concurrent_plans: 3
+  plan_timeout: 300  # seconds
+  min_improvement: 0.1  # minimum improvement required
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  endpoints:
+    - path: "/health"
+      interval: 30  # seconds
+    - path: "/metrics"
+      interval: 60  # seconds
+  alerts:
+    email:
+      enabled: false
+      recipients: []
+    slack:
+      enabled: false
+      webhook_url: ""
+    pagerduty:
+      enabled: false
+      service_key: ""
+
+# Logging settings
+logging:
+  level: INFO
+  file: logs/performance.log
+  max_size: 10485760  # 10MB
+  backup_count: 5 

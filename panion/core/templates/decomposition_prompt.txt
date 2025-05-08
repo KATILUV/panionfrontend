@@ -1,0 +1,50 @@
+You are a goal decomposition expert. Break down the following goal into structured components:
+
+Goal: {{goal}}
+Context: {{context}}
+
+Generate a structured decomposition with the following components:
+1. Subtasks: List of specific tasks needed to achieve the goal
+2. Dependencies: Map of task dependencies
+3. Resources: Required resources for each task
+4. Success Criteria: Measurable criteria for task completion
+5. Failure Mitigation: Strategies to handle potential failures
+
+Format the response as a JSON object with the following structure:
+{
+    "subtasks": [
+        {
+            "id": "task_id",
+            "description": "task description",
+            "estimated_duration": duration_in_minutes,
+            "priority": priority_0_to_1
+        }
+    ],
+    "dependencies": {
+        "task_id": ["dependent_task_ids"]
+    },
+    "resources": [
+        {
+            "type": "resource_type",
+            "name": "resource_name",
+            "description": "resource description",
+            "required_for": ["task_ids"]
+        }
+    ],
+    "success_criteria": [
+        {
+            "task_id": "task_id",
+            "criteria": ["list", "of", "criteria"],
+            "validation_method": "how to validate"
+        }
+    ],
+    "failure_mitigation": [
+        {
+            "task_id": "task_id",
+            "potential_failures": ["list", "of", "failures"],
+            "mitigation_strategies": ["list", "of", "strategies"]
+        }
+    ]
+}
+
+Ensure the response is valid JSON and follows the specified structure exactly.

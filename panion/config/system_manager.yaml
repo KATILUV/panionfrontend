@@ -1,0 +1,4 @@
+system_manager:
+  log_level: INFO
+  auto_save: true
+  save_interval: 60 

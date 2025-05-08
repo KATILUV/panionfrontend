@@ -1,0 +1,21 @@
+name: world_model_manager
+version: "1.0.0"
+description: "Manages the system's world model and state"
+author: "Panion Team"
+dependencies:
+  data_consistency_manager: ">=1.0.0"
+security_level: "trusted"
+rate_limit: 100
+requires_encryption: true
+tags:
+  - core
+  - state_management
+  - model_updates
+documentation_url: "https://panion.io/docs/plugins/world_model_manager"
+repository_url: "https://github.com/panion/plugins"
+license: "MIT"
+min_panion_version: "1.0.0"
+config:
+  update_interval: 60
+  max_state_size: 1000
+  enable_compression: true 

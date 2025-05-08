@@ -1,0 +1,22 @@
+# Version Control Configuration
+current_version: "0.1.0"
+min_compatible_version: "0.1.0"
+
+# Update Settings
+check_for_updates: true
+update_check_interval_hours: 24
+auto_update: false
+
+# Component Versions
+components:
+  brain: "0.1.0"
+  goal_system: "0.1.0"
+  memory_system: "0.1.0"
+  action_system: "0.1.0"
+
+# Version Control
+version_control:
+  enabled: true
+  backup_before_update: true
+  max_backups: 5
+  backup_dir: "backups" 

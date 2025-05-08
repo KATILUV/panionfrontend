@@ -1,0 +1,34 @@
+{
+    "data_dir": "data/teams",
+    "roles": {
+        "planner": {
+            "required_capabilities": ["strategic_thinking", "task_decomposition"],
+            "min_skill_level": 0.7
+        },
+        "executor": {
+            "required_capabilities": ["task_execution", "problem_solving"],
+            "min_skill_level": 0.6
+        },
+        "reviewer": {
+            "required_capabilities": ["code_review", "quality_assurance"],
+            "min_skill_level": 0.8
+        }
+    },
+    "skill_requirements": {
+        "programming": 0.7,
+        "communication": 0.6,
+        "problem_solving": 0.7,
+        "collaboration": 0.6
+    },
+    "team_formation_rules": {
+        "min_team_size": 2,
+        "max_team_size": 5,
+        "required_role_diversity": true,
+        "allow_role_switching": true
+    },
+    "performance_metrics": {
+        "goal_success_weight": 0.4,
+        "completion_time_weight": 0.3,
+        "collaboration_score_weight": 0.3
+    }
+} 

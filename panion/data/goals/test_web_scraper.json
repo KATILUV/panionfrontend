@@ -1,0 +1,18 @@
+{
+    "id": "test_web_scraper",
+    "description": "Test the web scraper plugin by scraping example.com",
+    "priority": 1.0,
+    "status": "pending",
+    "required_plugins": ["web_scraper"],
+    "parameters": {
+        "url": "https://example.com",
+        "extract_title": true,
+        "extract_meta": true,
+        "extract_links": true,
+        "extract_text": true,
+        "selectors": {
+            "headings": "h1, h2, h3",
+            "paragraphs": "p"
+        }
+    }
+} 

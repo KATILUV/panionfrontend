@@ -1,0 +1,85 @@
+# Alert Manager Configuration
+
+# Alert Levels
+alert_levels:
+  - name: "critical"
+    priority: 1
+    color: "#FF0000"
+    notification_channels: ["email", "slack", "pagerduty"]
+  
+  - name: "high"
+    priority: 2
+    color: "#FFA500"
+    notification_channels: ["email", "slack"]
+  
+  - name: "medium"
+    priority: 3
+    color: "#FFFF00"
+    notification_channels: ["slack"]
+  
+  - name: "low"
+    priority: 4
+    color: "#00FF00"
+    notification_channels: ["slack"]
+
+# Notification Channels
+notification:
+  email:
+    enabled: false
+    smtp_server: ""
+    smtp_port: 587
+    sender: ""
+    recipients: []
+    subject_prefix: "[Panion Alert]"
+  
+  slack:
+    enabled: false
+    webhook_url: ""
+    channel: "#alerts"
+    username: "Panion Alert Bot"
+  
+  pagerduty:
+    enabled: false
+    service_key: ""
+    api_key: ""
+
+# Alert Thresholds
+thresholds:
+  system:
+    cpu_usage: 90
+    memory_usage: 90
+    disk_usage: 90
+    response_time: 2.0
+  
+  api:
+    error_rate: 5
+    latency: 1.0
+    rate_limit_hits: 10
+  
+  database:
+    connection_pool: 80
+    query_time: 1.0
+    error_rate: 2
+
+# Alert Processing
+processing:
+  batch_size: 100
+  processing_interval: 60  # seconds
+  max_retries: 3
+  retry_delay: 300  # seconds
+  deduplication_window: 3600  # seconds
+
+# Alert Storage
+storage:
+  type: "redis"
+  retention_days: 30
+  max_alerts: 10000
+  cleanup_interval: 86400  # seconds
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/alert_manager.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5 

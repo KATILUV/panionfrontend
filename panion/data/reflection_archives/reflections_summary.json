@@ -1,0 +1,187 @@
+{
+  "summaries": {
+    "error_patterns": {
+      "most_common_errors": {},
+      "highest_impact_errors": {}
+    },
+    "plugin_performance": {
+      "test_plugin": {
+        "total_executions": 6,
+        "successful_executions": 3,
+        "total_duration": 4.5,
+        "success_rate": 0.5,
+        "avg_duration": 0.75
+      }
+    },
+    "goal_completion": {
+      "test_goal": {
+        "total_attempts": 6,
+        "successful_attempts": 3,
+        "completion_rate": 0.5
+      }
+    },
+    "system_health": {
+      "total_reflections": 6,
+      "error_rate": 0.0,
+      "success_rate": 0.5,
+      "active_plugins": 1,
+      "active_goals": 1
+    }
+  },
+  "reflections": [
+    {
+      "id": "test_reflection_1",
+      "timestamp": "2025-05-06T18:46:35.892298",
+      "context": "test_context",
+      "event": "test_event",
+      "type": "success",
+      "content": {
+        "test": "content"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "success": true,
+        "duration": 1.5
+      },
+      "tags": [
+        "test"
+      ],
+      "importance": 0.8,
+      "related_reflections": [],
+      "version": 1
+    },
+    {
+      "id": "test_reflection_2",
+      "timestamp": "2025-05-06T18:46:35.893197",
+      "context": "test_context",
+      "event": "test_error",
+      "type": "error",
+      "content": {
+        "error": "test error"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "error_type": "TestError",
+        "error_message": "Test error message",
+        "impact": 0.7
+      },
+      "tags": [
+        "test",
+        "error"
+      ],
+      "importance": 0.9,
+      "related_reflections": [],
+      "version": 1
+    },
+    {
+      "id": "test_reflection_1",
+      "timestamp": "2025-05-06T18:46:35.903048",
+      "context": "test_context",
+      "event": "test_event",
+      "type": "success",
+      "content": {
+        "test": "content"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "success": true,
+        "duration": 1.5
+      },
+      "tags": [
+        "test"
+      ],
+      "importance": 0.8,
+      "related_reflections": [],
+      "version": 1
+    },
+    {
+      "id": "test_reflection_2",
+      "timestamp": "2025-05-06T18:46:35.903073",
+      "context": "test_context",
+      "event": "test_error",
+      "type": "error",
+      "content": {
+        "error": "test error"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "error_type": "TestError",
+        "error_message": "Test error message",
+        "impact": 0.7
+      },
+      "tags": [
+        "test",
+        "error"
+      ],
+      "importance": 0.9,
+      "related_reflections": [],
+      "version": 1
+    },
+    {
+      "id": "test_reflection_1",
+      "timestamp": "2025-05-06T18:46:35.905453",
+      "context": "test_context",
+      "event": "test_event",
+      "type": "success",
+      "content": {
+        "test": "content"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "success": true,
+        "duration": 1.5
+      },
+      "tags": [
+        "test"
+      ],
+      "importance": 0.8,
+      "related_reflections": [],
+      "version": 1
+    },
+    {
+      "id": "test_reflection_2",
+      "timestamp": "2025-05-06T18:46:35.905470",
+      "context": "test_context",
+      "event": "test_error",
+      "type": "error",
+      "content": {
+        "error": "test error"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "error_type": "TestError",
+        "error_message": "Test error message",
+        "impact": 0.7
+      },
+      "tags": [
+        "test",
+        "error"
+      ],
+      "importance": 0.9,
+      "related_reflections": [],
+      "version": 1
+    }
+  ],
+  "goals": {
+    "test_goal": {
+      "total_attempts": 6,
+      "successful_attempts": 3,
+      "completion_rate": 0.5
+    }
+  },
+  "plugins": {
+    "test_plugin": {
+      "total_executions": 6,
+      "successful_executions": 3,
+      "total_duration": 4.5,
+      "success_rate": 0.5,
+      "avg_duration": 0.75
+    }
+  }
+}

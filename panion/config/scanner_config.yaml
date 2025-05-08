@@ -1,0 +1,45 @@
+# Brain Scanner Configuration
+
+# Scanning settings
+scanning:
+  root_directories:
+    - core
+    - plugins
+    - agents
+  file_extensions:
+    - .py
+  exclude_patterns:
+    - __pycache__
+    - .git
+    - .idea
+    - venv
+
+# Skill analysis settings
+analysis:
+  min_confidence: 0.6
+  min_usage_count: 1
+  max_dependencies: 5
+
+# Skill categories
+categories:
+  - communication
+  - processing
+  - storage
+  - security
+  - monitoring
+  - optimization
+
+# Default skill templates
+templates:
+  communication:
+    required_capabilities:
+      - message_handling
+      - protocol_implementation
+  processing:
+    required_capabilities:
+      - data_processing
+      - algorithm_implementation
+  storage:
+    required_capabilities:
+      - data_persistence
+      - cache_management 

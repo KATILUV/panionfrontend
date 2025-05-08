@@ -1,0 +1,10 @@
+memory_retention_days: 30
+importance_threshold: 0.5
+max_memories_per_agent: 1000
+narrative_update_interval_hours: 24
+theme_extraction_threshold: 0.7
+story_arc_min_memories: 5
+impact_score_weights:
+  connected_goals: 0.4
+  memory_importance: 0.3
+  time_recency: 0.3 

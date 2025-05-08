@@ -1,0 +1,38 @@
+system:
+  name: "panion"
+  version: "1.0.0"
+  environment: "development"
+  debug: false
+  data_dir: "panion_data"
+  config_dir: "config"
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  filename: "logs/panion.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+
+memory:
+  max_entries: 1000
+  cleanup_threshold: 800
+  backup_interval: 3600  # 1 hour
+  categories:
+    - "system"
+    - "user"
+    - "task"
+    - "error"
+
+plugins:
+  enabled_plugins: []
+  plugin_dir: "plugins"
+  auto_load: true
+  max_plugins: 50
+
+alerts:
+  enabled: true
+  email: null
+  subject_prefix: "[Panion Alert]"
+  username: "Panion Alert Bot"
+  retry_attempts: 3
+  retry_delay: 5  # seconds 

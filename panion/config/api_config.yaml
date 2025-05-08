@@ -1,0 +1,15 @@
+api:
+  host: "localhost"
+  port: 8000
+  debug: false
+  cors_origins: ["*"]
+  rate_limit:
+    requests: 100
+    period: 60  # seconds
+  auth:
+    enabled: true
+    jwt_secret: "your-secret-key"
+    token_expiry: 3600  # seconds
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s" 

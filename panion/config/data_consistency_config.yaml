@@ -1,0 +1,98 @@
+# Data Consistency Manager Configuration
+
+# Consistency Checks
+checks:
+  - name: "schema_validation"
+    enabled: true
+    interval: 3600  # seconds
+    severity: "high"
+  
+  - name: "data_integrity"
+    enabled: true
+    interval: 1800  # seconds
+    severity: "critical"
+  
+  - name: "relationship_validation"
+    enabled: true
+    interval: 7200  # seconds
+    severity: "medium"
+  
+  - name: "index_validation"
+    enabled: true
+    interval: 86400  # seconds
+    severity: "low"
+
+# Validation Rules
+validation:
+  schema:
+    strict_mode: true
+    allow_extra_fields: false
+    validate_types: true
+    validate_required: true
+  
+  data:
+    min_length: 1
+    max_length: 1000
+    allowed_patterns: []
+    forbidden_patterns: []
+  
+  relationships:
+    enforce_foreign_keys: true
+    cascade_delete: false
+    validate_references: true
+
+# Repair Strategies
+repair:
+  auto_repair: false
+  backup_before_repair: true
+  max_repair_attempts: 3
+  repair_timeout: 300  # seconds
+  
+  strategies:
+    - name: "schema_fix"
+      priority: 1
+      conditions:
+        - "schema_mismatch"
+        - "missing_field"
+    
+    - name: "data_cleanup"
+      priority: 2
+      conditions:
+        - "invalid_data"
+        - "duplicate_entry"
+    
+    - name: "relationship_repair"
+      priority: 3
+      conditions:
+        - "broken_reference"
+        - "orphaned_record"
+
+# Monitoring
+monitoring:
+  metrics:
+    - name: "consistency_score"
+      interval: 300  # seconds
+      threshold: 0.95
+    
+    - name: "repair_success_rate"
+      interval: 3600  # seconds
+      threshold: 0.90
+    
+    - name: "validation_time"
+      interval: 3600  # seconds
+      threshold: 5.0  # seconds
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/data_consistency.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+
+# Storage
+storage:
+  type: "sqlite"
+  path: "data/consistency"
+  retention_days: 90
+  cleanup_interval: 86400  # seconds 

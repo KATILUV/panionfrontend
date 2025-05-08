@@ -1,0 +1,143 @@
+"""
+Service Plugin Template
+A template for creating service-based Panion plugins.
+"""
+
+import logging
+from typing import Dict, Any, List, Optional
+from core.base_plugin import BasePlugin
+from core.reflection import reflection_system
+from core.service_locator import service_locator
+
+# Template variables:
+# PLUGIN_NAME: The name of the plugin
+# PLUGIN_DESCRIPTION: A description of the plugin's functionality
+# REQUIREMENTS: Implementation requirements and notes
+
+class ServicePluginTemplate(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.logger = logging.getLogger(__name__)
+        self.name = "auto_test_task_test_subgoal"
+        self.description = "Auto-generated plugin for Test subgoal"
+        self.version = "0.1.0"
+        self.required_parameters = []  # List of required parameter names
+        self.optional_parameters = {}  # Dict of optional parameters with default values
+        self._initialize_service()
+        
+    def _initialize_service(self) -> None:
+        """Initialize the service."""
+        try:
+            reflection_system.log_thought(
+                self.name,
+                f"Initializing {self.name} service",
+                {"version": self.version}
+            )
+            
+            # TODO: Implement service initialization
+            #     # Handle Exception errors
+    # Implement Mock fix 1
+    # Implement Mock fix 2
+            
+            # Register service with service locator
+            service_locator.register_service(
+                f"{self.name.lower()}_service",
+                self
+            )
+            
+            self.logger.info(f"Initialized {self.name} service")
+            reflection_system.log_thought(
+                self.name,
+                f"Initialized {self.name} service successfully",
+                {"status": "active"}
+            )
+            
+        except Exception as e:
+            error_msg = f"Error initializing service: {e}"
+            self.logger.error(error_msg)
+            reflection_system.log_thought(
+                self.name,
+                error_msg,
+                {"error": str(e)}
+            )
+            raise
+        
+    async def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute the service."""
+        try:
+            reflection_system.log_thought(
+                self.name,
+                f"Executing {self.name} service",
+                {"parameters": parameters}
+            )
+            
+            # Validate parameters
+            self._validate_parameters(parameters)
+            
+            # TODO: Implement service functionality
+            #     # Handle Exception errors
+    # Implement Mock fix 1
+    # Implement Mock fix 2
+            
+            result = {
+                "status": "success",
+                "result": "Service executed successfully"
+            }
+            
+            reflection_system.log_thought(
+                self.name,
+                f"Completed {self.name} service execution",
+                {"result": result}
+            )
+            
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error executing service: {e}"
+            self.logger.error(error_msg)
+            reflection_system.log_thought(
+                self.name,
+                error_msg,
+                {"error": str(e)}
+            )
+            return {
+                "status": "failure",
+                "error": str(e)
+            }
+            
+    def _validate_parameters(self, parameters: Dict[str, Any]) -> None:
+        """Validate input parameters."""
+        errors = []
+        
+        # Check required parameters
+        for param in self.required_parameters:
+            if param not in parameters:
+                errors.append(f"Missing required parameter: {param}")
+        
+        # Set default values for optional parameters
+        for param, default in self.optional_parameters.items():
+            if param not in parameters:
+                parameters[param] = default
+        
+        # Validate parameter types and values
+        # TODO: Add type and value validation
+        # Example:
+        # if 'max_retries' in parameters and not isinstance(parameters['max_retries'], int):
+        #     errors.append("max_retries must be an integer")
+        
+        if errors:
+            raise ValueError("\n".join(errors))
+        
+    def get_service_info(self) -> Dict[str, Any]:
+        """Get service information."""
+        return {
+            "name": self.name,
+            "description": self.description,
+            "version": self.version,
+            "status": "active",
+            "required_parameters": self.required_parameters,
+            "optional_parameters": self.optional_parameters
+        }
+
+# Template for singleton instance:
+# {{PLUGIN_NAME.lower()}}_service = auto_test_task_test_subgoalService() 

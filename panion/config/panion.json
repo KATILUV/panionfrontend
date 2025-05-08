@@ -1,0 +1,35 @@
+{
+  "system": {
+    "update_interval": 1.0,
+    "error_retry_interval": 5.0,
+    "max_errors": 3,
+    "log_level": "INFO",
+    "log_file": "logs/panion.log"
+  },
+  "memory": {
+    "storage_path": "data/memory",
+    "max_memories": 1000,
+    "cleanup_interval": 3600.0,
+    "categories": ["system", "user", "plugin", "temp"]
+  },
+  "plugins": {
+    "plugin_dir": "plugins",
+    "auto_load": true,
+    "security_level": "medium",
+    "max_plugins": 100,
+    "allowed_imports": [],
+    "forbidden_imports": ["os", "sys", "subprocess"]
+  },
+  "goals": {
+    "goals_file": "data/goals.json",
+    "max_goals": 1000,
+    "default_timeout": 300.0,
+    "priority_levels": ["low", "medium", "high", "critical"]
+  },
+  "state": {
+    "state_file": "data/state.json",
+    "save_interval": 300.0,
+    "max_history": 100,
+    "categories": ["system", "plugin", "memory", "goal", "user", "temp"]
+  }
+} 

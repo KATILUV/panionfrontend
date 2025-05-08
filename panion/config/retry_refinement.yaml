@@ -1,0 +1,157 @@
+# Retry and Refinement Loop Configuration
+
+# Retry Settings
+retry:
+  default_strategy: "adaptive"
+  max_attempts: 3
+  base_delay: 5.0  # seconds
+  max_delay: 300.0  # seconds
+  jitter: true
+  jitter_factor: 0.1
+
+# Strategy Settings
+strategies:
+  linear:
+    enabled: true
+    delay_multiplier: 1.0
+    
+  exponential:
+    enabled: true
+    base_multiplier: 2.0
+    max_multiplier: 32.0
+    
+  adaptive:
+    enabled: true
+    min_delay: 1.0
+    max_delay: 60.0
+    learning_rate: 0.1
+    history_window: 10
+    
+  smart:
+    enabled: false  # Requires ML model
+    model_path: "models/retry_predictor.pkl"
+    confidence_threshold: 0.7
+    update_interval: 3600  # seconds
+
+# Failure Analysis
+failure_analysis:
+  enabled: true
+  gpt4:
+    model: "gpt-4-turbo-preview"
+    temperature: 0.7
+    max_tokens: 1000
+    timeout: 30  # seconds
+  
+  analysis_depth:
+    root_cause: true
+    impact_assessment: true
+    fix_suggestions: true
+    prevention_strategies: true
+  
+  confidence_thresholds:
+    high: 0.8
+    medium: 0.5
+    low: 0.3
+
+# Self-Healing
+self_healing:
+  enabled: true
+  strategies:
+    - name: "retry_with_backoff"
+      priority: 1
+      conditions:
+        error_types: ["TimeoutError", "ConnectionError"]
+        max_attempts: 3
+        
+    - name: "alternative_implementation"
+      priority: 2
+      conditions:
+        error_types: ["NotImplementedError", "UnsupportedOperation"]
+        confidence_threshold: 0.7
+        
+    - name: "resource_scaling"
+      priority: 3
+      conditions:
+        error_types: ["ResourceExhaustedError", "MemoryError"]
+        min_attempts: 2
+        
+    - name: "plugin_synthesis"
+      priority: 5  # Highest priority for last resort
+      conditions:
+        error_types: ["*"]  # Any error type
+        confidence_threshold: 0.7
+        min_attempts: 3
+        max_attempts: 5
+      settings:
+        plugin_type: "service"  # Default plugin type
+        sandbox_testing: true
+        auto_register: true
+        cleanup_on_failure: true
+        
+    - name: "fallback_mode"
+      priority: 4
+      conditions:
+        error_types: ["*"]  # Any error type
+        max_attempts: 5
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics:
+    - name: "retry_attempts"
+      type: "counter"
+      labels: ["task_id", "error_type"]
+      
+    - name: "retry_delay"
+      type: "histogram"
+      labels: ["task_id", "strategy"]
+      
+    - name: "failure_analysis_time"
+      type: "histogram"
+      labels: ["task_id", "error_type"]
+      
+    - name: "plugin_synthesis_time"
+      type: "histogram"
+      labels: ["task_id", "plugin_type"]
+      
+    - name: "plugin_synthesis_success"
+      type: "counter"
+      labels: ["task_id", "plugin_type"]
+      
+    - name: "plugin_synthesis_failure"
+      type: "counter"
+      labels: ["task_id", "error_type"]
+  
+  alerting:
+    error_rate_threshold: 0.2
+    max_consecutive_failures: 3
+    notification_channels:
+      - type: "log"
+        level: "ERROR"
+      - type: "email"
+        recipients: ["admin@example.com"]
+      - type: "slack"
+        channel: "#alerts"
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/retry_refinement.log"
+  rotation:
+    max_size: 10485760  # 10MB
+    backup_count: 5
+
+# Memory Management
+memory:
+  max_history_size: 1000
+  cleanup_interval: 3600  # seconds
+  persist_history: true
+  history_file: "data/failure_history.json"
+
+# Performance
+performance:
+  max_concurrent_analyses: 5
+  analysis_timeout: 300  # seconds
+  cache_size: 1000
+  cache_ttl: 3600  # seconds 

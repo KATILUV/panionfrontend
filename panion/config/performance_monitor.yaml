@@ -1,0 +1,28 @@
+performance_monitor:
+  enabled: true
+  check_interval: 60  # seconds
+  metrics:
+    cpu: true
+    memory: true
+    disk: true
+    network: true
+    processes: true
+  thresholds:
+    cpu_usage: 80
+    memory_usage: 80
+    disk_usage: 90
+    network_bandwidth: 1000000  # 1MB/s
+  alerting:
+    enabled: true
+    email:
+      enabled: false
+      smtp_server: ""
+      smtp_port: 587
+      sender: ""
+      recipients: []
+    slack:
+      enabled: false
+      webhook_url: ""
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s" 

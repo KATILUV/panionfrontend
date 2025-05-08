@@ -1,0 +1,15 @@
+min_team_size: 2
+max_team_size: 5
+capability_threshold: 0.7
+preference_weight: 0.3
+communication_weight: 0.2
+learning_weight: 0.1
+role_assignment_weights:
+  capability_strength: 0.5
+  preference_match: 0.3
+  collaboration_history: 0.2
+metrics_update_interval_minutes: 15
+performance_thresholds:
+  communication_frequency: 10
+  avg_response_time: 300
+  success_rate: 0.8 

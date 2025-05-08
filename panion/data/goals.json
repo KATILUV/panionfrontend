@@ -1,0 +1,152 @@
+{
+  "goals": [
+    {
+      "id": "goal_003",
+      "description": "Scrape and analyze information about Florida smoke shops",
+      "priority": "high",
+      "status": "failed",
+      "subtasks": [
+        {
+          "id": "subtask_003_1",
+          "type": "web_scraping",
+          "description": "Search and collect smoke shop listings from Google Maps",
+          "parameters": {
+            "search_query": "smoke shops in Florida",
+            "location": "Florida",
+            "extract_data": {
+              "name": true,
+              "address": true,
+              "phone": true,
+              "website": true,
+              "rating": true,
+              "reviews": true,
+              "hours": true
+            },
+            "max_results": 1000
+          }
+        },
+        {
+          "id": "subtask_003_2",
+          "type": "web_scraping",
+          "description": "Scrape business directories for additional smoke shops",
+          "parameters": {
+            "target_sites": [
+              "yelp.com",
+              "yellowpages.com",
+              "weedmaps.com"
+            ],
+            "location": "Florida",
+            "business_type": "smoke shop",
+            "extract_data": {
+              "name": true,
+              "address": true,
+              "phone": true,
+              "website": true,
+              "rating": true,
+              "reviews": true,
+              "hours": true,
+              "products": true
+            }
+          }
+        },
+        {
+          "id": "subtask_003_3",
+          "type": "data_processing",
+          "description": "Process and deduplicate collected data",
+          "parameters": {
+            "remove_duplicates": true,
+            "validate_data": true,
+            "format": "json",
+            "fields": [
+              "name",
+              "address",
+              "city",
+              "state",
+              "zip",
+              "phone",
+              "website",
+              "rating",
+              "review_count",
+              "hours",
+              "products",
+              "last_updated"
+            ]
+          }
+        },
+        {
+          "id": "subtask_003_4",
+          "type": "data_analysis",
+          "description": "Analyze and generate insights from collected data",
+          "parameters": {
+            "analyze": {
+              "geographic_distribution": true,
+              "ratings_distribution": true,
+              "popular_products": true,
+              "business_hours_patterns": true,
+              "density_by_city": true
+            },
+            "generate_visualizations": true,
+            "export_format": [
+              "json",
+              "csv",
+              "pdf"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "goal_001",
+      "description": "Analyze sample text for key insights",
+      "priority": "high",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "subtask_001",
+          "type": "text_analysis",
+          "content": "The Panion system is an advanced AI platform designed to process and analyze various types of data. It uses machine learning algorithms to identify patterns and extract meaningful insights. The system is built with scalability and performance in mind, utilizing modern technologies and best practices.",
+          "parameters": {
+            "extract_key_phrases": true,
+            "identify_entities": true,
+            "analyze_sentiment": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "goal_002",
+      "description": "Analyze codebase and generate documentation",
+      "priority": "high",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "subtask_002_1",
+          "type": "code_analysis",
+          "description": "Analyze core system components",
+          "parameters": {
+            "target_directories": [
+              "core/"
+            ],
+            "analyze_dependencies": true,
+            "identify_patterns": true
+          }
+        },
+        {
+          "id": "subtask_002_2",
+          "type": "documentation_generation",
+          "description": "Generate system documentation",
+          "parameters": {
+            "output_format": "markdown",
+            "include_diagrams": true,
+            "include_examples": true
+          }
+        }
+      ]
+    }
+  ],
+  "active_goals": [],
+  "completed_goals": [],
+  "failed_goals": [
+    "goal_003"
+  ]
+}

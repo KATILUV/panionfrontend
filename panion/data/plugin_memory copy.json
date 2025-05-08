@@ -1,0 +1,77 @@
+{
+    "plugins": {
+        "taskcat_agent": {
+            "name": "TaskCat Agent",
+            "version": "1.0.0",
+            "description": "Specialized agent for AWS CloudFormation template testing and validation",
+            "capabilities": [
+                "cloudformation_template_validation",
+                "aws_resource_testing",
+                "infrastructure_as_code_testing"
+            ],
+            "dependencies": [
+                "taskcat",
+                "boto3",
+                "awscli"
+            ],
+            "tags": [
+                "aws",
+                "cloudformation",
+                "testing",
+                "infrastructure",
+                "validation"
+            ],
+            "summary": "A specialized agent that uses TaskCat to validate AWS CloudFormation templates and test infrastructure deployments. It provides automated testing of CloudFormation templates across multiple AWS regions and accounts.",
+            "last_used": "2024-03-20T10:00:00Z",
+            "usage_count": 15,
+            "success_rate": 0.92,
+            "error_history": [],
+            "performance_metrics": {
+                "average_execution_time": 120,
+                "resource_usage": {
+                    "cpu": 25,
+                    "memory": 512
+                }
+            }
+        },
+        "timeline_visualizer": {
+            "name": "Timeline Visualizer",
+            "version": "1.0.0",
+            "description": "Visualization tool for Clara's activity timeline",
+            "capabilities": [
+                "timeline_visualization",
+                "activity_tracking",
+                "data_export"
+            ],
+            "dependencies": [
+                "plotly",
+                "aiohttp",
+                "python-dateutil"
+            ],
+            "tags": [
+                "visualization",
+                "timeline",
+                "monitoring",
+                "reporting"
+            ],
+            "summary": "Provides interactive timeline visualizations of Clara's activities, including goals, missions, and tasks. Supports HTML and JSON export formats with color-coded status indicators.",
+            "last_used": "2024-03-20T11:00:00Z",
+            "usage_count": 8,
+            "success_rate": 0.95,
+            "error_history": [],
+            "performance_metrics": {
+                "average_execution_time": 45,
+                "resource_usage": {
+                    "cpu": 15,
+                    "memory": 256
+                }
+            }
+        }
+    },
+    "metadata": {
+        "last_updated": "2024-03-20T12:00:00Z",
+        "total_plugins": 2,
+        "active_plugins": 2,
+        "version": "1.0.0"
+    }
+} 

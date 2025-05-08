@@ -1,0 +1,126 @@
+backup:
+  enabled: true
+  backup_dir: "backups"
+  max_backups: 10
+  backup_interval: 86400  # 24 hours in seconds
+  retention_days: 30
+  include_patterns:
+    - "*.json"
+    - "*.yaml"
+    - "*.csv"
+    - "*.sql"
+  exclude_patterns:
+    - "*.tmp"
+    - "*.log"
+    - "*.bak"
+
+archive:
+  enabled: true
+  archive_dir: "archives"
+  retention_days: 365
+  compression: "gzip"  # Options: gzip, bzip2, lzma
+  encryption: true
+
+validation:
+  enabled: true
+  max_depth: 10
+  max_items: 1000
+  schemas:
+    user:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        username:
+          type: "string"
+          minLength: 3
+          maxLength: 50
+        email:
+          type: "string"
+          format: "email"
+        role:
+          type: "string"
+          enum: ["admin", "user", "guest"]
+      required: ["id", "username", "email", "role"]
+    
+    product:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          pattern: "^[A-Z0-9]{8}$"
+        name:
+          type: "string"
+          minLength: 1
+          maxLength: 100
+        price:
+          type: "number"
+          minimum: 0
+        category:
+          type: "string"
+          enum: ["electronics", "clothing", "food", "other"]
+        in_stock:
+          type: "boolean"
+      required: ["id", "name", "price", "category"]
+
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+  password: ""  # Set in environment variable
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/data_manager.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+
+data_cleaning:
+  rules:
+    numeric:
+      handle_missing: "mean"  # Options: mean, median, mode, drop
+      handle_outliers: true
+      min_value: null
+      max_value: null
+    
+    categorical:
+      handle_missing: "mode"  # Options: mode, drop
+      valid_categories: []
+      default_value: null
+
+database:
+  source:
+    url: "postgresql://user:password@localhost:5432/source_db"
+    pool_size: 5
+    max_overflow: 10
+    timeout: 30
+  
+  target:
+    url: "postgresql://user:password@localhost:5432/target_db"
+    pool_size: 5
+    max_overflow: 10
+    timeout: 30
+
+encryption:
+  algorithm: "AES-256-GCM"
+  key_derivation:
+    algorithm: "PBKDF2"
+    iterations: 100000
+    salt_size: 16
+  password: ""  # Set in environment variable
+
+monitoring:
+  enabled: true
+  metrics:
+    - backup_size
+    - backup_duration
+    - archive_size
+    - validation_errors
+    - migration_duration
+  alert_thresholds:
+    backup_size: 1073741824  # 1GB
+    backup_duration: 3600  # 1 hour
+    validation_errors: 10
+    migration_duration: 7200  # 2 hours 

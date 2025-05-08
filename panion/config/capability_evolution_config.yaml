@@ -1,0 +1,30 @@
+min_impact_threshold: 0.7
+min_feasibility_threshold: 0.6
+max_concurrent_plans: 3
+evaluation_period_days: 7
+growth_rate_target: 0.1
+min_mutation_impact: 0.6
+skill_confidence_weights:
+  success_rate: 0.4
+  efficiency: 0.3
+  quality: 0.3
+learning_path_weights:
+  skill_dependencies: 0.4
+  resource_availability: 0.3
+  time_requirements: 0.3
+enabled: true
+learning_rate: 0.1
+learning:
+  enabled: true
+  min_samples: 10
+  max_samples: 1000
+  batch_size: 32
+evolution:
+  mutation_rate: 0.01
+  selection_pressure: 0.5
+  population_size: 100
+max_capabilities: 50
+min_capability_score: 0.3
+track_performance: true
+performance_history_size: 1000
+save_interval_minutes: 60 

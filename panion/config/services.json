@@ -1,0 +1,36 @@
+{
+    "services": {
+        "service_locator": {
+            "class": "core.service_locator.ServiceLocator",
+            "dependencies": ["error_handler"],
+            "config": {
+                "auto_register": true,
+                "service_discovery": true
+            }
+        },
+        "error_handler": {
+            "class": "core.error_handling.ErrorHandler",
+            "dependencies": [],
+            "config": {
+                "log_errors": true,
+                "notify_on_critical": true
+            }
+        },
+        "plugin_manager": {
+            "class": "core.plugin_manager.PluginManager",
+            "dependencies": ["service_locator", "error_handler"],
+            "config": {
+                "auto_load": true,
+                "plugin_dir": "plugins"
+            }
+        },
+        "dependency_manager": {
+            "class": "core.plugin.dependency_manager.DependencyManager",
+            "dependencies": ["service_locator", "error_handler"],
+            "config": {
+                "auto_resolve": true,
+                "cache_dependencies": true
+            }
+        }
+    }
+} 

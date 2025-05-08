@@ -1,0 +1,135 @@
+{
+  "group_id": "test_plugin_TestError_test_goal",
+  "total_reflections": 15,
+  "failure_count": 0,
+  "retry_success_rate": 0.0,
+  "avg_importance": 0.86,
+  "common_errors": [],
+  "recent_reflections": [
+    {
+      "id": "test_reflection_3",
+      "timestamp": "2025-05-06T18:46:07.231964",
+      "context": "test_context",
+      "event": "test_event_3",
+      "type": "error",
+      "content": {
+        "test": "content_3"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "success": false,
+        "duration": 1.0,
+        "error_type": "TestError"
+      },
+      "tags": [
+        "test"
+      ],
+      "importance": 0.8,
+      "related_reflections": [],
+      "version": 1
+    },
+    {
+      "id": "test_reflection_1",
+      "timestamp": "2025-05-06T18:46:07.231961",
+      "context": "test_context",
+      "event": "test_event_1",
+      "type": "error",
+      "content": {
+        "test": "content_1"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "success": false,
+        "duration": 1.0,
+        "error_type": "TestError"
+      },
+      "tags": [
+        "test"
+      ],
+      "importance": 0.8,
+      "related_reflections": [],
+      "version": 1
+    },
+    {
+      "id": "test_reflection_2",
+      "timestamp": "2025-05-06T18:46:07.226472",
+      "context": "test_context",
+      "event": "test_error",
+      "type": "error",
+      "content": {
+        "error": "test error"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "error_type": "TestError",
+        "error_message": "Test error message",
+        "impact": 0.7
+      },
+      "tags": [
+        "test",
+        "error"
+      ],
+      "importance": 0.9,
+      "related_reflections": [],
+      "version": 1
+    },
+    {
+      "id": "test_reflection_2",
+      "timestamp": "2025-05-06T18:46:07.224351",
+      "context": "test_context",
+      "event": "test_error",
+      "type": "error",
+      "content": {
+        "error": "test error"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "error_type": "TestError",
+        "error_message": "Test error message",
+        "impact": 0.7
+      },
+      "tags": [
+        "test",
+        "error"
+      ],
+      "importance": 0.9,
+      "related_reflections": [],
+      "version": 1
+    },
+    {
+      "id": "test_reflection_2",
+      "timestamp": "2025-05-06T18:46:07.221977",
+      "context": "test_context",
+      "event": "test_error",
+      "type": "error",
+      "content": {
+        "error": "test error"
+      },
+      "metadata": {
+        "goal_id": "test_goal",
+        "plugin_id": "test_plugin",
+        "error_type": "TestError",
+        "error_message": "Test error message",
+        "impact": 0.7
+      },
+      "tags": [
+        "test",
+        "error"
+      ],
+      "importance": 0.9,
+      "related_reflections": [],
+      "version": 1
+    }
+  ],
+  "metadata": {
+    "plugin_id": "test",
+    "error_type": "plugin",
+    "goal_id": "TestError",
+    "first_reflection": "2025-05-06T18:40:42.154650",
+    "last_reflection": "2025-05-06T18:46:07.231964"
+  }
+}

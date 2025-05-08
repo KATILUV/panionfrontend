@@ -1,0 +1,20 @@
+name: data_consistency_manager
+version: "1.0.0"
+description: "Ensures data consistency across the system"
+author: "Panion Team"
+dependencies: {}
+security_level: "trusted"
+rate_limit: 100
+requires_encryption: true
+tags:
+  - core
+  - data_management
+  - consistency
+documentation_url: "https://panion.io/docs/plugins/data_consistency_manager"
+repository_url: "https://github.com/panion/plugins"
+license: "MIT"
+min_panion_version: "1.0.0"
+config:
+  check_interval: 30
+  max_retries: 3
+  validation_timeout: 10 

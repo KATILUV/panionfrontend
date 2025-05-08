@@ -1,0 +1,21 @@
+goal_manager:
+  storage:
+    type: "local"
+    directory: "data/goals"
+    backup:
+      enabled: true
+      interval: 86400  # 24 hours
+      max_backups: 7
+  scheduling:
+    check_interval: 60  # seconds
+    max_concurrent: 10
+    timeout: 3600  # 1 hour
+  prioritization:
+    weights:
+      urgency: 0.4
+      importance: 0.3
+      complexity: 0.2
+      dependencies: 0.1
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s" 
