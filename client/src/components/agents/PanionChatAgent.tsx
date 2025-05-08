@@ -1943,29 +1943,41 @@ const PanionChatAgent: React.FC = () => {
             </div>
           </div>
           
-          <button 
-            className="flex items-center hover:text-foreground transition-colors mt-1 sm:mt-0" 
-            onClick={() => {
-              setMessages([{
-                id: generateId(),
-                content: "Hello! I'm your Panion assistant. I can help with your tasks directly or delegate to specialized agents when needed. I work closely with Clara for personal assistance. How can I help you today?",
-                isUser: false,
-                timestamp: formatTime(new Date()),
-              }]);
-              setSessionId(`session_${Date.now()}`);
-              setProcessingStage(null);
-              setProcessingProgress(0);
-              setNeedsMoreInfo(null);
-              
-              // Reset strategic mode on new chat - if it was enabled
-              if (strategicMode) {
-                toggleStrategicMode();
-              }
-            }}
-          >
-            <RotateCcw className="h-3 w-3 mr-1" />
-            <span>Reset chat</span>
-          </button>
+          <div className="flex space-x-4">
+            <button 
+              className="flex items-center hover:text-foreground transition-colors mt-1 sm:mt-0" 
+              onClick={() => {
+                window.location.href = '/autonomous-agent';
+              }}
+            >
+              <ZapIcon className="h-3 w-3 mr-1" />
+              <span>Autonomous Agent</span>
+            </button>
+
+            <button 
+              className="flex items-center hover:text-foreground transition-colors mt-1 sm:mt-0" 
+              onClick={() => {
+                setMessages([{
+                  id: generateId(),
+                  content: "Hello! I'm your Panion assistant. I can help with your tasks directly or delegate to specialized agents when needed. I work closely with Clara for personal assistance. How can I help you today?",
+                  isUser: false,
+                  timestamp: formatTime(new Date()),
+                }]);
+                setSessionId(`session_${Date.now()}`);
+                setProcessingStage(null);
+                setProcessingProgress(0);
+                setNeedsMoreInfo(null);
+                
+                // Reset strategic mode on new chat - if it was enabled
+                if (strategicMode) {
+                  toggleStrategicMode();
+                }
+              }}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              <span>Reset chat</span>
+            </button>
+          </div>
         </div>
       </div>
     </Card>
