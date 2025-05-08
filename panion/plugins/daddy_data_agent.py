@@ -47,17 +47,17 @@ class DaddyDataAgent(BasePlugin):
         self.data_dir = os.path.join("data", "daddy_data")
         os.makedirs(self.data_dir, exist_ok=True)
         
-    async def execute(self, action_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Execute a specific action with the given parameters.
         
         Args:
-            action_name: The action to execute
-            parameters: Parameters for the action
+            parameters: Parameters for the action, including 'action' that specifies what to do
             
         Returns:
             Result of the action
         """
+        action_name = parameters.get('action', '')
         try:
             if action_name == "search":
                 return await self.search_businesses(
@@ -113,7 +113,7 @@ class DaddyDataAgent(BasePlugin):
     
     async def search_businesses(self, 
                          query: str, 
-                         location: str = None, 
+                         location: str = "", 
                          limit: int = 100) -> Dict[str, Any]:
         """
         Search for businesses based on query and location.
@@ -197,7 +197,7 @@ class DaddyDataAgent(BasePlugin):
     
     async def verify_data(self, 
                     data: List[Dict[str, Any]], 
-                    fields_to_verify: List[str] = None) -> Dict[str, Any]:
+                    fields_to_verify: List[str] = []) -> Dict[str, Any]:
         """
         Verify data accuracy by cross-referencing multiple sources.
         
@@ -298,7 +298,7 @@ class DaddyDataAgent(BasePlugin):
     async def organize_data(self, 
                       data: List[Dict[str, Any]], 
                       format: str = "excel", 
-                      structure: Dict[str, Any] = None) -> Dict[str, Any]:
+                      structure: Dict[str, Any] = {}) -> Dict[str, Any]:
         """
         Organize verified data into structured formats.
         

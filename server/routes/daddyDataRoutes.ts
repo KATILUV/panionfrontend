@@ -156,7 +156,7 @@ router.post('/api/daddy-data/search', async (req: Request, res: Response) => {
       success: true,
       ...result
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in /api/daddy-data/search:', error);
     return res.status(500).json({
       success: false,
@@ -183,7 +183,7 @@ router.post('/api/daddy-data/verify', async (req: Request, res: Response) => {
       success: true,
       ...result
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in /api/daddy-data/verify:', error);
     return res.status(500).json({
       success: false,
@@ -210,7 +210,7 @@ router.post('/api/daddy-data/organize', async (req: Request, res: Response) => {
       success: true,
       ...result
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in /api/daddy-data/organize:', error);
     return res.status(500).json({
       success: false,
