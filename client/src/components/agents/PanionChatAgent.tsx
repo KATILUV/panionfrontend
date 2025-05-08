@@ -873,13 +873,48 @@ const PanionChatAgent: React.FC = () => {
            inputValue.toLowerCase().includes('tobacco') ||
            inputValue.toLowerCase().includes('dispensary'))) {
         
-        // Extract location from message if present
-        let location = 'New York';  // Default location
-        const locationRegex = /\b(?:in|near|around|at)\s+([A-Za-z\s,]+?)(?:\.|,|\s+and|\s+or|\s+with|\s+that|\s+for|\s+$)/i;
-        const locationMatch = inputValue.match(locationRegex);
+        // Extract location from message with improved pattern matching
+        let location = '';  // No default location - we'll determine it more intelligently
         
-        if (locationMatch && locationMatch[1]) {
-          location = locationMatch[1].trim();
+        // Try multiple patterns to capture location with higher accuracy
+        // Pattern 1: Standard preposition-based location detection
+        const standardLocationRegex = /\b(?:in|near|around|at)\s+([A-Za-z\s,]+?)(?:\.|,|\s+and|\s+or|\s+with|\s+that|\s+for|\s+$)/i;
+        // Pattern 2: Direct city/state mention
+        const directLocationRegex = /\b(Chicago|Seattle|New York|Los Angeles|Boston|Philadelphia|Miami|Houston|Detroit|Denver|Portland|Austin|Atlanta|San Francisco|Dallas|Washington DC|Nashville|Phoenix|San Diego|Las Vegas)(?:\s+area)?(?:\.|,|\s|$)/i;
+        // Pattern 3: More general format for any location mention
+        const generalLocationRegex = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)(?:,\s*[A-Z]{2})?(?:\.|,|\s|$)/;
+        
+        // Try the most specific pattern first, then fall back to more general ones
+        const locationMatch1 = inputValue.match(standardLocationRegex);
+        const locationMatch2 = inputValue.match(directLocationRegex);
+        const locationMatch3 = inputValue.match(generalLocationRegex);
+        
+        if (locationMatch1 && locationMatch1[1]) {
+          location = locationMatch1[1].trim();
+          console.log('Location detected with standard pattern:', location);
+        } else if (locationMatch2 && locationMatch2[1]) {
+          location = locationMatch2[1].trim();
+          console.log('Location detected with direct city pattern:', location);
+        } else if (locationMatch3 && locationMatch3[1]) {
+          location = locationMatch3[1].trim();
+          console.log('Location detected with general pattern:', location);
+        }
+        
+        // If still no location detected, ask the user directly
+        if (!location) {
+          const locationRequestMessage: ChatMessage = {
+            id: generateId(),
+            content: `I'd be happy to find smoke shop information for you, but I need to know which location you're interested in. Could you please specify a city or area?`,
+            isUser: false,
+            timestamp: formatTime(new Date()),
+          };
+          
+          setMessages(prev => [...prev, locationRequestMessage]);
+          setAgentStatus('idle');
+          setIsLoading(false);
+          clearInterval(progressInterval);
+          setProcessingProgress(100);
+          return;
         }
         
         // Determine if we need owner information (contact details) based on capabilities

@@ -838,70 +838,201 @@ router.post('/api/panion/schedule', checkPanionAPIMiddleware, async (req: Reques
 // Dedicated smoke shop search endpoint using Daddy Data
 router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
   try {
-    const { location = 'New York', limit = 20, additionalKeywords = [] } = req.body;
+    const { 
+      location, 
+      limit = 20, 
+      includeOwnerInfo = false, 
+      deepSearch = false,
+      verifyResults = true,
+      additionalKeywords = [] 
+    } = req.body;
+    
+    // Verify we have a location - no default anymore to avoid incorrect assumptions
+    if (!location) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Missing location',
+        message: 'A location must be specified for smoke shop searches'
+      });
+    }
+    
+    // Enhanced task description based on request type
+    const taskDescription = includeOwnerInfo 
+      ? `Finding smoke shop owner contact information in ${location}` 
+      : `Searching for smoke shops in ${location}`;
     
     // Generate task ID
     const taskId = `smokeshop-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
-    // Create a new task and add it to tasks storage
+    // Create a new task and add it to tasks storage with enhanced properties
     const task: Task = {
       id: taskId,
-      type: 'smokeshop_research',
+      type: includeOwnerInfo ? 'smokeshop_research' : 'smokeshop_search',
       status: 'pending',
       progress: 0,
-      description: `Searching for smoke shops in ${location}`,
+      description: taskDescription,
       location,
       created: new Date().toISOString(),
       data: {
         limit,
-        additionalKeywords
+        includeOwnerInfo,
+        deepSearch,
+        verifyResults,
+        additionalKeywords,
+        params: { // Store original request parameters for context
+          location,
+          includeOwnerInfo,
+          deepSearch,
+          verifyResults
+        }
       }
     };
     
     tasks[taskId] = task;
     
-    log(`Created smoke shop search task: ${taskId} for ${location}`, 'panion');
+    log(`Created ${includeOwnerInfo ? 'owner info' : 'smoke shop'} search task: ${taskId} for ${location}`, 'panion');
     
-    // We'll process this task locally since the Python API doesn't have a task endpoint
-    // Update the task status
+    // Process this task with progressive updates and verification
     setTimeout(() => {
       try {
-        // Mock processing - this would normally be done by the Python API
+        // Update to in-progress
         tasks[taskId].status = 'in_progress';
-        tasks[taskId].progress = 50;
+        tasks[taskId].progress = 10;
+        tasks[taskId].description = `${taskDescription} - Initializing search`;
         
-        // After a bit, complete the task
-        setTimeout(() => {
-          // Try to run a search using the existing endpoint
-          axios.post(`${PANION_API_URL}/scrape/enhanced`, {
-            business_type: 'smoke shop',
-            location: location,
-            limit: limit
-          }).then(response => {
-            // Success
-            tasks[taskId].status = 'completed';
-            tasks[taskId].progress = 100;
-            tasks[taskId].result = response.data;
-          }).catch(error => {
-            // Failed to get data
-            tasks[taskId].status = 'failed';
-            tasks[taskId].error = `Failed to get data: ${error.message}`;
-            log(`Error getting smoke shop data for task ${taskId}: ${error.message}`, 'panion');
+        // Build search parameters
+        const searchKeywords = ['smoke shop'];
+        
+        // Add any additional keywords from the request
+        if (additionalKeywords && additionalKeywords.length) {
+          searchKeywords.push(...additionalKeywords);
+        }
+        
+        // Update progress
+        tasks[taskId].progress = 25;
+        tasks[taskId].description = `${taskDescription} - Searching data sources`;
+        
+        // Execute the search using the enhanced scraper
+        axios.post(`${PANION_API_URL}/scrape/enhanced`, {
+          business_type: searchKeywords.join(' '),
+          location: location,
+          limit: Math.max(limit, includeOwnerInfo ? 15 : limit), // Get more results for owner searches
+          source: deepSearch ? 'comprehensive' : 'adaptive',
+          use_proxy: true,
+          use_playwright: deepSearch || includeOwnerInfo, // Use more advanced techniques for owner searches
+          use_selenium: false, // Keep selenium off by default
+          include_owner_info: includeOwnerInfo
+        }).then(async response => {
+          // Update progress 
+          tasks[taskId].progress = 60;
+          tasks[taskId].description = `${taskDescription} - Processing results`;
+          
+          // Process the response data
+          const responseData = response.data;
+          let results = [];
+          
+          // Handle different response formats
+          if (responseData.results) {
+            results = responseData.results;
+          } else if (responseData.file_path) {
+            try {
+              // Read file if data was saved to disk
+              const fs = require('fs').promises;
+              const fileContent = await fs.readFile(responseData.file_path, 'utf8');
+              results = JSON.parse(fileContent);
+            } catch (fileError: any) {
+              log(`Error reading file ${responseData.file_path}: ${fileError.message}`, 'panion');
+              // Continue with any partial data we might have
+              results = responseData.data || [];
+            }
+          } else if (responseData.data) {
+            results = responseData.data;
+          }
+          
+          // Verify results if requested
+          if (verifyResults && results.length > 0) {
+            tasks[taskId].progress = 80;
+            tasks[taskId].description = `${taskDescription} - Verifying data quality`;
+            
+            // Basic validation function for shop data
+            const isValidShopData = (shop: any) => {
+              // Basic shop info validation
+              const hasBasicInfo = shop.name && (shop.address || shop.phone || shop.website);
+              
+              // For owner info, validate owner-specific fields
+              if (includeOwnerInfo) {
+                return hasBasicInfo && (
+                  shop.owner_name || 
+                  shop.owner_email || 
+                  (shop.owner_phone && shop.owner_phone !== shop.phone) ||
+                  shop.contact_person
+                );
+              }
+              
+              return hasBasicInfo;
+            };
+            
+            // Filter out invalid results
+            const validResults = results.filter(isValidShopData);
+            
+            // Calculate quality score (0-100)
+            const qualityScore = results.length > 0 ? (validResults.length / results.length) * 100 : 0;
+            
+            // Log quality information
+            log(`Results quality for ${location}: ${qualityScore.toFixed(1)}% (${validResults.length}/${results.length} valid)`, 'panion');
+            
+            // If we have enough valid results, use those; otherwise keep the original set
+            if (validResults.length >= Math.min(3, limit)) {
+              results = validResults;
+            }
+            
+            // Limit to requested number after filtering
+            results = results.slice(0, limit);
+          }
+          
+          // Final data preparation and validation
+          results.forEach((shop: any) => {
+            // Ensure consistent field naming
+            if (shop.business_name && !shop.name) shop.name = shop.business_name;
+            if (shop.phone_number && !shop.phone) shop.phone = shop.phone_number;
           });
-        }, 3000);
+          
+          // Successful completion
+          tasks[taskId].status = 'completed';
+          tasks[taskId].progress = 100;
+          tasks[taskId].description = `${taskDescription} - Complete`;
+          tasks[taskId].data = results;
+          tasks[taskId].params = {
+            location,
+            includeOwnerInfo,
+            deepSearch,
+            additionalKeywords
+          };
+          
+          log(`Completed ${includeOwnerInfo ? 'owner info' : 'smoke shop'} search task: ${taskId} with ${results.length} results`, 'panion');
+        }).catch(error => {
+          // Failed to get data
+          tasks[taskId].status = 'failed';
+          tasks[taskId].progress = 100;
+          tasks[taskId].error = `Failed to get data: ${error.message}`;
+          log(`Error getting smoke shop data for task ${taskId}: ${error.message}`, 'panion');
+        });
       } catch (error: any) {
         // Update task if there was an error
         tasks[taskId].status = 'failed';
+        tasks[taskId].progress = 100;
         tasks[taskId].error = `Failed to process task: ${error.message}`;
         log(`Error processing task ${taskId}: ${error.message}`, 'panion');
       }
-    }, 1000);
+    }, 500);
     
     // Return the task ID immediately
     res.json({
       success: true,
       taskId,
-      message: 'Smoke shop search task created',
+      message: includeOwnerInfo 
+        ? 'Smoke shop owner information search task created' 
+        : 'Smoke shop search task created',
       task
     });
   } catch (error: any) {
