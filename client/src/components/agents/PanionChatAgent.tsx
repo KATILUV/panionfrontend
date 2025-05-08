@@ -3,10 +3,11 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Settings, BrainCircuit, RotateCcw, Activity } from 'lucide-react';
+import { Send, Settings, BrainCircuit, RotateCcw, Activity, HelpCircle, Search, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AgentStatus } from './AgentStatus';
 import { useAgentStore, Agent } from '../../state/agentStore';
+import { Spinner } from '@/components/ui/spinner';
 
 interface ChatMessage {
   id: string;
@@ -52,6 +53,10 @@ const PanionChatAgent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(`session_${Date.now()}`);
   const [agentStatus, setAgentStatus] = useState<'idle' | 'thinking' | 'active' | 'error'>('idle');
+  const [processingStage, setProcessingStage] = useState<string | null>(null); // Shows what Panion is currently doing
+  const [needsMoreInfo, setNeedsMoreInfo] = useState<string | null>(null); // For asking clarifying questions
+  const [showThinking, setShowThinking] = useState(false); // Toggle for thinking process display
+  const [processingProgress, setProcessingProgress] = useState(0); // Progress indicator
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -303,17 +308,39 @@ const PanionChatAgent: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setAgentStatus('thinking');
     setIsLoading(true);
+    setProcessingProgress(0);
+    
+    // Reset processing stages
+    setProcessingStage("Analyzing your request...");
+    
+    // This simulates progress updates during processing
+    const progressInterval = setInterval(() => {
+      setProcessingProgress(prev => {
+        // Don't go to 100% automatically, leave that for when done
+        return prev < 90 ? prev + 5 : prev;
+      });
+    }, 600);
     
     try {
       // Check for required capabilities
+      setProcessingStage("Checking required capabilities...");
+      setProcessingProgress(10);
       const requiredCapabilities = detectRequiredCapabilities(inputValue);
       
       // Handle missing capabilities if any are detected
+      if (requiredCapabilities.length > 0) {
+        setProcessingStage("Determining optimal agent for your request...");
+        setProcessingProgress(20);
+      }
+      
       const createdNewAgents = requiredCapabilities.length > 0 ? 
         await handleMissingCapabilities(requiredCapabilities) : false;
       
       // If we're creating new agents and they're in progress, show a loading message
       if (createdNewAgents && dynamicAgentCreationInProgress) {
+        setProcessingStage("Setting up specialized agents...");
+        setProcessingProgress(40);
+        
         const loadingMessage: ChatMessage = {
           id: generateId(),
           content: "I'm still setting up the specialized agent(s). This should only take a moment...",
@@ -327,7 +354,33 @@ const PanionChatAgent: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
       
+      // Check if we need more information from the user
+      const needsMoreInfo = checkIfNeedsMoreInfo(inputValue);
+      if (needsMoreInfo) {
+        setProcessingStage("Requesting additional information...");
+        setProcessingProgress(95);
+        clearInterval(progressInterval);
+        
+        // Ask user for more information
+        const infoRequestMessage: ChatMessage = {
+          id: generateId(),
+          content: needsMoreInfo,
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, infoRequestMessage]);
+        setNeedsMoreInfo(needsMoreInfo);
+        setAgentStatus('idle');
+        setIsLoading(false);
+        setProcessingProgress(100);
+        return;
+      }
+      
       // Send message to Panion API
+      setProcessingStage("Processing with Panion API...");
+      setProcessingProgress(60);
+      
       const response = await fetch('/api/panion/chat', {
         method: 'POST',
         headers: {
@@ -345,6 +398,9 @@ const PanionChatAgent: React.FC = () => {
         throw new Error('Failed to send message to Panion');
       }
       
+      setProcessingStage("Formatting response...");
+      setProcessingProgress(80);
+      
       const data = await response.json();
       
       // Create bot message
@@ -359,10 +415,12 @@ const PanionChatAgent: React.FC = () => {
       // Update messages
       setMessages(prev => [...prev, botMessage]);
       setAgentStatus('active');
+      setProcessingProgress(100);
       
       // Reset status after a short delay
       setTimeout(() => {
         setAgentStatus('idle');
+        setProcessingStage(null);
       }, 2000);
       
     } catch (error) {
@@ -374,8 +432,32 @@ const PanionChatAgent: React.FC = () => {
       });
       setAgentStatus('error');
     } finally {
+      clearInterval(progressInterval);
       setIsLoading(false);
     }
+  };
+  
+  // Helper function to check if we need more information from the user
+  const checkIfNeedsMoreInfo = (message: string): string | null => {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check for vague queries that need more details
+    if (lowerMessage.includes('find') && lowerMessage.length < 15) {
+      return "I'd like to help you find that. Could you provide more details about what specific information you're looking for?";
+    }
+    
+    // For smoke shop research, ask for specific location if not provided
+    if ((lowerMessage.includes('smoke shop') || lowerMessage.includes('smokeshop')) && 
+        !lowerMessage.includes('in ') && !lowerMessage.includes('near') && !lowerMessage.includes('around')) {
+      return "I can help research smoke shops. Could you specify which city or location you're interested in?";
+    }
+    
+    // For data analysis, check if data source is specified
+    if (lowerMessage.includes('analyze') && !lowerMessage.includes('data from') && !lowerMessage.includes('dataset')) {
+      return "I'd be happy to help with data analysis. Could you specify which dataset or data source you'd like me to analyze?";
+    }
+    
+    return null;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -419,9 +501,13 @@ const PanionChatAgent: React.FC = () => {
                     : 'bg-muted'}
                 `}
               >
-                {message.thinking && !message.isUser && (
-                  <div className="text-xs italic text-muted-foreground mb-1">
-                    {message.thinking}
+                {showThinking && message.thinking && !message.isUser && (
+                  <div className="text-xs border-l-2 border-primary/30 pl-2 text-muted-foreground mb-2 py-1">
+                    <div className="font-medium mb-1 flex items-center">
+                      <Search className="h-3 w-3 mr-1" /> 
+                      <span>Thinking Process</span>
+                    </div>
+                    <div className="italic">{message.thinking}</div>
                   </div>
                 )}
                 <div className="whitespace-pre-wrap">{message.content}</div>
@@ -434,6 +520,27 @@ const PanionChatAgent: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
+      
+      {/* Processing Indicator */}
+      {isLoading && (
+        <div className="mx-3 mb-3">
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-xs text-muted-foreground flex items-center">
+              <Spinner variant="dots" size="xs" className="mr-2 text-primary" />
+              {processingStage && <span>{processingStage}</span>}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {processingProgress}%
+            </div>
+          </div>
+          <div className="w-full bg-muted rounded-full h-1.5">
+            <div 
+              className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-in-out" 
+              style={{ width: `${processingProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
       
       {/* Input */}
       <div className="border-t p-3">
@@ -455,13 +562,35 @@ const PanionChatAgent: React.FC = () => {
             <Send className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-          <div className="flex items-center">
-            <Activity className="h-3 w-3 mr-1" />
-            <span>Connected to Panion API</span>
+        
+        <div className="flex flex-wrap justify-between items-center mt-2 text-xs text-muted-foreground">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              <Activity className="h-3 w-3 mr-1" />
+              <span>Connected to Panion API</span>
+            </div>
+            
+            {/* Thinking Toggle Switch */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="thinking-toggle"
+                checked={showThinking}
+                onChange={() => setShowThinking(!showThinking)}
+                className="sr-only peer"
+              />
+              <label 
+                htmlFor="thinking-toggle" 
+                className="relative inline-flex items-center h-4 w-7 rounded-full bg-muted peer-checked:bg-primary cursor-pointer transition-colors"
+              >
+                <span className="inline-block h-3 w-3 transform translate-x-0.5 rounded-full bg-background peer-checked:translate-x-3.5 transition-transform"></span>
+              </label>
+              <span className="ml-1">Show thinking</span>
+            </div>
           </div>
+          
           <button 
-            className="flex items-center hover:text-foreground transition-colors" 
+            className="flex items-center hover:text-foreground transition-colors mt-1 sm:mt-0" 
             onClick={() => {
               setMessages([{
                 id: generateId(),
@@ -470,6 +599,9 @@ const PanionChatAgent: React.FC = () => {
                 timestamp: formatTime(new Date()),
               }]);
               setSessionId(`session_${Date.now()}`);
+              setProcessingStage(null);
+              setProcessingProgress(0);
+              setNeedsMoreInfo(null);
             }}
           >
             <RotateCcw className="h-3 w-3 mr-1" />
