@@ -350,18 +350,6 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
     };
   }, []);
   
-  // Add a separate effect to monitor pinnedAgents changes
-  useEffect(() => {
-    console.log("TaskbarFixed - Current pinned agents state:", pinnedAgents);
-    // Log the full current store state for debugging
-    const storeState = useTaskbarStore.getState();
-    console.log("TaskbarFixed - Full store state:", {
-      pinnedAgents: storeState.pinnedAgents,
-      position: storeState.position,
-      visibleWidgets: storeState.visibleWidgets
-    });
-  }, [pinnedAgents]);
-  
   // Hooks for accessing store states
   const { registry, windows, focusAgent, openAgent, restoreAgent } = useAgentStore();
   const { 
@@ -380,10 +368,24 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
     pinnedAgents: state.pinnedAgents
   }));
   
+  // Add a separate effect to monitor pinnedAgents changes
+  useEffect(() => {
+    console.log("TaskbarFixed - Current pinned agents state:", pinnedAgents);
+    // Log the full current store state for debugging
+    const storeState = useTaskbarStore.getState();
+    console.log("TaskbarFixed - Full store state:", {
+      pinnedAgents: storeState.pinnedAgents,
+      position: storeState.position,
+      visibleWidgets: storeState.visibleWidgets
+    });
+  }, [pinnedAgents]);
+  
   // Log current position for debugging
   useEffect(() => {
-    console.log("Setting taskbar position to:", position.location);
-  }, [position.location]);
+    if (position?.location) {
+      console.log("Setting taskbar position to:", position.location);
+    }
+  }, [position?.location]);
   
   // Function to clear all pinned agents
   const handleClearAllPins = () => {
