@@ -1,46 +1,48 @@
 /**
- * Storage helper functions for persistent storage
+ * Storage utility functions
+ * 
+ * Provides functions for storing and retrieving data from localStorage
+ * with proper type safety and error handling.
  */
 
-// Get an item from localStorage with error handling
-export function getLocalStorage(key: string): string | null {
+/**
+ * Get an item from localStorage with type safety
+ */
+export function getLocalStorage<T>(key: string): T | null {
   try {
-    return localStorage.getItem(key);
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
   } catch (e) {
-    console.error(`Error accessing localStorage for key "${key}":`, e);
+    console.error(`Error retrieving ${key} from localStorage:`, e);
     return null;
   }
 }
 
-// Set an item in localStorage with error handling
-export function setLocalStorage(key: string, value: string): void {
+/**
+ * Set an item in localStorage with type safety
+ */
+export function setLocalStorage<T>(key: string, value: T): void {
   try {
-    localStorage.setItem(key, value);
+    localStorage.setItem(key, JSON.stringify(value));
   } catch (e) {
-    console.error(`Error setting localStorage for key "${key}":`, e);
+    console.error(`Error setting ${key} in localStorage:`, e);
   }
 }
 
-// Remove an item from localStorage with error handling
+/**
+ * Remove an item from localStorage
+ */
 export function removeLocalStorage(key: string): void {
   try {
     localStorage.removeItem(key);
   } catch (e) {
-    console.error(`Error removing localStorage for key "${key}":`, e);
+    console.error(`Error removing ${key} from localStorage:`, e);
   }
 }
 
-// Check if an item exists in localStorage
-export function hasLocalStorage(key: string): boolean {
-  try {
-    return localStorage.getItem(key) !== null;
-  } catch (e) {
-    console.error(`Error checking localStorage for key "${key}":`, e);
-    return false;
-  }
-}
-
-// Clear all items in localStorage with error handling
+/**
+ * Clear all data from localStorage
+ */
 export function clearLocalStorage(): void {
   try {
     localStorage.clear();
@@ -49,35 +51,14 @@ export function clearLocalStorage(): void {
   }
 }
 
-// Get all keys in localStorage with error handling
-export function getLocalStorageKeys(): string[] {
+/**
+ * Check if an item exists in localStorage
+ */
+export function existsInLocalStorage(key: string): boolean {
   try {
-    return Object.keys(localStorage);
+    return localStorage.getItem(key) !== null;
   } catch (e) {
-    console.error('Error getting localStorage keys:', e);
-    return [];
-  }
-}
-
-// Get object from localStorage with automatic parsing
-export function getObjectFromLocalStorage<T>(key: string): T | null {
-  const value = getLocalStorage(key);
-  if (!value) return null;
-  
-  try {
-    return JSON.parse(value) as T;
-  } catch (e) {
-    console.error(`Error parsing localStorage value for key "${key}":`, e);
-    return null;
-  }
-}
-
-// Set object in localStorage with automatic stringification
-export function setObjectInLocalStorage<T>(key: string, value: T): void {
-  try {
-    const stringValue = JSON.stringify(value);
-    setLocalStorage(key, stringValue);
-  } catch (e) {
-    console.error(`Error stringifying object for localStorage key "${key}":`, e);
+    console.error(`Error checking if ${key} exists in localStorage:`, e);
+    return false;
   }
 }

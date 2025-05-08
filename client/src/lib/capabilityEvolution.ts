@@ -1,309 +1,406 @@
 /**
  * Capability Evolution System
  * 
- * This system tracks agent capabilities and helps them evolve based on usage,
- * success rates, and user feedback. It serves as the backbone for creating
- * a learning system where agent capabilities improve over time.
+ * This module provides a framework for tracking and evolving AI capabilities
+ * based on usage patterns and performance.
  */
 
+import { debounce } from './utils';
 import { getLocalStorage, setLocalStorage } from './storage';
 
-// Types
+// Storage key for capability data
+const STORAGE_KEY = 'panion_capabilities';
+
+// Interface for capability statistics
 export interface CapabilityStats {
-  usageCount: number;         // Number of times used
-  successRate: number;        // Success rate (0-1)
-  feedbackScore: number;      // Average user feedback score (0-5)
-  lastUsed: number;           // Timestamp
-  evolutionStage: number;     // Current evolution stage (0-5)
-  specializations: string[];  // Areas where this capability has specialized
+  usageCount: number;
+  successCount: number;
+  failureCount: number;
+  lastUsed: number;
+  feedbackScores: number[];
+  averageFeedback: number;
+  successRate: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
+// Interface for capability data
 export interface CapabilityData {
-  id: string;                 // Unique capability ID
-  name: string;               // Display name
-  description: string;        // Description of what it does
-  icon?: string;              // Icon to represent it
-  category: string;           // Category (analysis, communication, code, etc.)
-  stats: CapabilityStats;     // Usage statistics
-  requiredCapabilities?: string[]; // Dependencies on other capabilities
-  compatibleAgents: string[]; // Agent types compatible with this capability
+  id: string;
+  name: string;
+  description: string;
+  version: number;
+  importance: number; // 0-1 scale, how important this capability is
+  complexity: number; // 0-1 scale, how complex this capability is
+  masteryLevel: number; // 0-1 scale, how well the system has mastered this capability
+  evolutionPoints: number; // Points that can be spent on improving this capability
+  tags: string[];
+  stats: CapabilityStats;
+  dependencies: string[]; // IDs of other capabilities this one depends on
+  isCore: boolean; // Whether this is a core capability or learned
+  icon?: string;
 }
 
-// Cache of capabilities to avoid excessive storage access
-let capabilitiesCache: Record<string, CapabilityData> | null = null;
+// Get all capabilities from storage
+export function getCapabilities(): Record<string, CapabilityData> {
+  const storedData = getLocalStorage<Record<string, CapabilityData>>(STORAGE_KEY);
+  return storedData || {};
+}
 
-/**
- * Load all capability data from storage
- */
-export function loadCapabilities(): Record<string, CapabilityData> {
-  if (capabilitiesCache) {
-    return capabilitiesCache;
+// Save all capabilities to storage
+const saveCapabilities = debounce((data: Record<string, CapabilityData>) => {
+  setLocalStorage(STORAGE_KEY, data);
+}, 1000);
+
+// Initialize the capability system with core capabilities
+export function initializeCapabilities(): void {
+  const existingCapabilities = getCapabilities();
+  
+  // Only initialize if we don't have capabilities already
+  if (Object.keys(existingCapabilities).length > 0) {
+    return;
   }
   
-  const storedData = getLocalStorage('agent_capabilities');
-  if (storedData) {
-    try {
-      capabilitiesCache = JSON.parse(storedData);
-      return capabilitiesCache;
-    } catch (e) {
-      console.error('Failed to parse capabilities data:', e);
+  const now = Date.now();
+  
+  // Core capabilities
+  const coreCapabilities: Record<string, CapabilityData> = {
+    'reasoning': {
+      id: 'reasoning',
+      name: 'Reasoning',
+      description: 'Logical reasoning and problem solving',
+      version: 1.0,
+      importance: 1.0,
+      complexity: 0.8,
+      masteryLevel: 0.7,
+      evolutionPoints: 0,
+      tags: ['core', 'intelligence', 'logic'],
+      stats: {
+        usageCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        lastUsed: now,
+        feedbackScores: [],
+        averageFeedback: 0,
+        successRate: 0,
+        createdAt: now,
+        updatedAt: now
+      },
+      dependencies: [],
+      isCore: true,
+      icon: 'brain'
+    },
+    
+    'internal-debate': {
+      id: 'internal-debate',
+      name: 'Internal Debate',
+      description: 'Discuss topics from multiple perspectives internally',
+      version: 1.0,
+      importance: 0.9,
+      complexity: 0.9,
+      masteryLevel: 0.6,
+      evolutionPoints: 0,
+      tags: ['core', 'intelligence', 'discussion'],
+      stats: {
+        usageCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        lastUsed: now,
+        feedbackScores: [],
+        averageFeedback: 0,
+        successRate: 0,
+        createdAt: now,
+        updatedAt: now
+      },
+      dependencies: ['reasoning'],
+      isCore: true,
+      icon: 'message-circle'
+    },
+    
+    'web-research': {
+      id: 'web-research',
+      name: 'Web Research',
+      description: 'Research information from web sources',
+      version: 1.0,
+      importance: 0.8,
+      complexity: 0.7,
+      masteryLevel: 0.5,
+      evolutionPoints: 0,
+      tags: ['core', 'data', 'research'],
+      stats: {
+        usageCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        lastUsed: now,
+        feedbackScores: [],
+        averageFeedback: 0,
+        successRate: 0,
+        createdAt: now,
+        updatedAt: now
+      },
+      dependencies: [],
+      isCore: true,
+      icon: 'globe'
+    },
+    
+    'data-analysis': {
+      id: 'data-analysis',
+      name: 'Data Analysis',
+      description: 'Analyze and interpret data sets',
+      version: 1.0,
+      importance: 0.8,
+      complexity: 0.8,
+      masteryLevel: 0.6,
+      evolutionPoints: 0,
+      tags: ['core', 'data', 'analysis'],
+      stats: {
+        usageCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        lastUsed: now,
+        feedbackScores: [],
+        averageFeedback: 0,
+        successRate: 0,
+        createdAt: now,
+        updatedAt: now
+      },
+      dependencies: ['reasoning'],
+      isCore: true,
+      icon: 'bar-chart'
+    },
+    
+    'planning': {
+      id: 'planning',
+      name: 'Planning',
+      description: 'Create and execute plans for complex goals',
+      version: 1.0,
+      importance: 0.9,
+      complexity: 0.8,
+      masteryLevel: 0.6,
+      evolutionPoints: 0,
+      tags: ['core', 'task', 'planning'],
+      stats: {
+        usageCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        lastUsed: now,
+        feedbackScores: [],
+        averageFeedback: 0,
+        successRate: 0,
+        createdAt: now,
+        updatedAt: now
+      },
+      dependencies: ['reasoning'],
+      isCore: true,
+      icon: 'list-checks'
     }
-  }
+  };
   
-  // Initialize with empty object if nothing stored
-  capabilitiesCache = {};
-  return capabilitiesCache;
+  // Save the initial capabilities
+  saveCapabilities(coreCapabilities);
 }
 
-/**
- * Save capability data to storage
- */
-export function saveCapabilities(capabilities: Record<string, CapabilityData>): void {
-  capabilitiesCache = capabilities;
-  setLocalStorage('agent_capabilities', JSON.stringify(capabilities));
-}
-
-/**
- * Get a specific capability
- */
+// Get a specific capability
 export function getCapability(id: string): CapabilityData | null {
-  const capabilities = loadCapabilities();
+  const capabilities = getCapabilities();
   return capabilities[id] || null;
 }
 
-/**
- * Register a new capability
- */
-export function registerCapability(capability: Omit<CapabilityData, 'stats'> & { stats?: Partial<CapabilityStats> }): CapabilityData {
-  const capabilities = loadCapabilities();
+// Record usage of a capability
+export function recordCapabilityUsage(
+  id: string, 
+  success: boolean = true, 
+  feedbackScore?: number
+): void {
+  const capabilities = getCapabilities();
+  const capability = capabilities[id];
   
-  // Create with default stats if not provided
-  const stats: CapabilityStats = {
-    usageCount: 0,
-    successRate: 0,
-    feedbackScore: 0,
-    lastUsed: Date.now(),
-    evolutionStage: 0,
-    specializations: [],
-    ...capability.stats
-  };
+  if (!capability) {
+    console.warn(`Capability ${id} not found`);
+    return;
+  }
   
+  const now = Date.now();
+  
+  // Update statistics
+  capability.stats.usageCount += 1;
+  capability.stats.lastUsed = now;
+  
+  if (success) {
+    capability.stats.successCount += 1;
+  } else {
+    capability.stats.failureCount += 1;
+  }
+  
+  // Add feedback score if provided
+  if (feedbackScore !== undefined) {
+    capability.stats.feedbackScores.push(feedbackScore);
+  }
+  
+  // Recalculate derived stats
+  capability.stats.successRate = capability.stats.usageCount > 0
+    ? capability.stats.successCount / capability.stats.usageCount
+    : 0;
+    
+  capability.stats.averageFeedback = capability.stats.feedbackScores.length > 0
+    ? capability.stats.feedbackScores.reduce((sum, score) => sum + score, 0) / capability.stats.feedbackScores.length
+    : 0;
+  
+  // Update mastery level based on usage and success
+  const usageBonus = Math.min(0.1, capability.stats.usageCount / 100);
+  const successBonus = capability.stats.successRate * 0.1;
+  const feedbackBonus = capability.stats.averageFeedback * 0.1;
+  
+  capability.masteryLevel = Math.min(
+    1.0,
+    capability.masteryLevel + usageBonus + successBonus + feedbackBonus
+  );
+  
+  // Add evolution points based on usage
+  capability.evolutionPoints += 1;
+  
+  // Update the capability in storage
+  capability.stats.updatedAt = now;
+  capabilities[id] = capability;
+  saveCapabilities(capabilities);
+}
+
+// Register a new capability
+export function registerCapability(capability: Omit<CapabilityData, 'stats'>): CapabilityData {
+  const capabilities = getCapabilities();
+  
+  // Check if the capability already exists
+  if (capabilities[capability.id]) {
+    throw new Error(`Capability ${capability.id} already exists`);
+  }
+  
+  const now = Date.now();
+  
+  // Create a new capability with default stats
   const newCapability: CapabilityData = {
     ...capability,
-    stats
+    stats: {
+      usageCount: 0,
+      successCount: 0,
+      failureCount: 0,
+      lastUsed: now,
+      feedbackScores: [],
+      averageFeedback: 0,
+      successRate: 0,
+      createdAt: now,
+      updatedAt: now
+    }
   };
   
+  // Save the new capability
   capabilities[capability.id] = newCapability;
   saveCapabilities(capabilities);
   
   return newCapability;
 }
 
-/**
- * Record capability usage
- */
-export function recordCapabilityUsage(
-  capabilityId: string, 
-  success: boolean = true, 
-  feedbackScore?: number
-): void {
-  const capabilities = loadCapabilities();
-  const capability = capabilities[capabilityId];
+// Evolve a capability by spending evolution points
+export function evolveCapability(id: string): CapabilityData | null {
+  const capabilities = getCapabilities();
+  const capability = capabilities[id];
   
   if (!capability) {
-    console.warn(`Tried to record usage for non-existent capability: ${capabilityId}`);
-    return;
+    console.warn(`Capability ${id} not found`);
+    return null;
   }
   
-  // Update stats
-  capability.stats.usageCount++;
-  capability.stats.lastUsed = Date.now();
-  
-  // Update success rate with running average
-  const prevSuccesses = capability.stats.successRate * (capability.stats.usageCount - 1);
-  const newSuccesses = prevSuccesses + (success ? 1 : 0);
-  capability.stats.successRate = newSuccesses / capability.stats.usageCount;
-  
-  // Update feedback score if provided
-  if (feedbackScore !== undefined) {
-    const prevScore = capability.stats.feedbackScore * (capability.stats.usageCount - 1);
-    const newScore = prevScore + feedbackScore;
-    capability.stats.feedbackScore = newScore / capability.stats.usageCount;
+  // Check if we have enough evolution points
+  if (capability.evolutionPoints < 10) {
+    console.warn(`Not enough evolution points for ${id}`);
+    return capability;
   }
   
-  // Check for evolution opportunity
-  checkForEvolution(capability);
+  // Spend points to increase mastery and version
+  capability.evolutionPoints -= 10;
+  capability.masteryLevel = Math.min(1.0, capability.masteryLevel + 0.1);
+  capability.version += 0.1;
   
-  // Save updates
-  capabilities[capabilityId] = capability;
+  // Update the capability in storage
+  capability.stats.updatedAt = Date.now();
+  capabilities[id] = capability;
   saveCapabilities(capabilities);
+  
+  return capability;
 }
 
-/**
- * Check if a capability should evolve to the next stage
- */
-function checkForEvolution(capability: CapabilityData): void {
-  const { stats } = capability;
+// Get suggested capabilities based on a query
+export function getSuggestedCapabilities(
+  query: string, 
+  count: number = 3,
+  requiredTags: string[] = []
+): CapabilityData[] {
+  const capabilities = getCapabilities();
   
-  // Evolution criteria
-  const canEvolve = 
-    stats.usageCount >= (10 * (stats.evolutionStage + 1)) && // More usage needed for higher stages
-    stats.successRate >= (0.7 + (stats.evolutionStage * 0.05)) && // Higher success rate needed
-    stats.feedbackScore >= (3.5 + (stats.evolutionStage * 0.3)); // Higher feedback needed
+  // Convert capabilities object to array
+  const capabilitiesArray = Object.values(capabilities);
   
-  if (canEvolve && stats.evolutionStage < 5) {
-    stats.evolutionStage++;
+  // Filter by required tags if provided
+  const tagFiltered = requiredTags.length > 0
+    ? capabilitiesArray.filter(cap => 
+        requiredTags.every(tag => cap.tags.includes(tag))
+      )
+    : capabilitiesArray;
+  
+  // Simple keyword matching for now
+  const keywords = query.toLowerCase().split(/\s+/);
+  
+  // Score each capability based on keyword matches and mastery level
+  const scored = tagFiltered.map(capability => {
+    const nameMatches = keywords.filter(kw => 
+      capability.name.toLowerCase().includes(kw)
+    ).length;
     
-    // Every other evolution level can develop a specialization
-    if (stats.evolutionStage % 2 === 0) {
-      detectSpecialization(capability);
-    }
-  }
-}
-
-/**
- * Try to detect a specialization for this capability based on usage patterns
- * In a real system, this would analyze actual usage data to find patterns
- */
-function detectSpecialization(capability: CapabilityData): void {
-  // In a full implementation, this would analyze history of usage
-  // For now, we'll just add a placeholder specialization
-  
-  const possibleSpecializations = {
-    'analysis': ['Data Visualization', 'Statistical Analysis', 'Predictive Modeling'],
-    'communication': ['Emotional Intelligence', 'Technical Writing', 'Persuasive Narrative'],
-    'research': ['Academic Research', 'Market Research', 'Technical Deep Dives'],
-    'coding': ['Frontend Development', 'Backend Systems', 'Data Processing'],
-    'design': ['UI Design', 'UX Flow Optimization', 'Visual Communication'],
-    'planning': ['Project Planning', 'Task Prioritization', 'Resource Allocation'],
-  };
-  
-  const categorySpecializations = possibleSpecializations[capability.category as keyof typeof possibleSpecializations] || [];
-  
-  if (categorySpecializations.length > 0) {
-    // Select a specialization not already present
-    const availableSpecializations = categorySpecializations.filter(
-      s => !capability.stats.specializations.includes(s)
-    );
+    const descMatches = keywords.filter(kw => 
+      capability.description.toLowerCase().includes(kw)
+    ).length;
     
-    if (availableSpecializations.length > 0) {
-      const newSpecialization = availableSpecializations[
-        Math.floor(Math.random() * availableSpecializations.length)
-      ];
-      
-      capability.stats.specializations.push(newSpecialization);
-    }
-  }
-}
-
-/**
- * Get all capabilities in a particular category
- */
-export function getCapabilitiesByCategory(category: string): CapabilityData[] {
-  const capabilities = loadCapabilities();
-  return Object.values(capabilities).filter(c => c.category === category);
-}
-
-/**
- * Get the most evolved capabilities
- */
-export function getMostEvolvedCapabilities(limit: number = 5): CapabilityData[] {
-  const capabilities = loadCapabilities();
-  return Object.values(capabilities)
-    .sort((a, b) => b.stats.evolutionStage - a.stats.evolutionStage)
-    .slice(0, limit);
-}
-
-/**
- * Add a compatibility relation between a capability and an agent type
- */
-export function addCapabilityAgentCompatibility(capabilityId: string, agentId: string): void {
-  const capabilities = loadCapabilities();
-  const capability = capabilities[capabilityId];
+    const tagMatches = keywords.filter(kw => 
+      capability.tags.some(tag => tag.toLowerCase().includes(kw))
+    ).length;
+    
+    // Calculate overall score
+    const matchScore = (nameMatches * 3 + descMatches * 2 + tagMatches) / keywords.length;
+    const masteryScore = capability.masteryLevel;
+    const importanceScore = capability.importance;
+    
+    const totalScore = (matchScore * 0.5) + (masteryScore * 0.3) + (importanceScore * 0.2);
+    
+    return {
+      capability,
+      score: totalScore
+    };
+  });
   
-  if (!capability) {
-    console.warn(`Tried to update non-existent capability: ${capabilityId}`);
-    return;
-  }
-  
-  if (!capability.compatibleAgents.includes(agentId)) {
-    capability.compatibleAgents.push(agentId);
-    saveCapabilities(capabilities);
-  }
+  // Sort by score and return top 'count' capabilities
+  return scored
+    .sort((a, b) => b.score - a.score)
+    .slice(0, count)
+    .map(item => item.capability);
 }
 
-/**
- * Get all capabilities compatible with a specific agent type
- */
-export function getCompatibleCapabilities(agentId: string): CapabilityData[] {
-  const capabilities = loadCapabilities();
-  return Object.values(capabilities).filter(c => c.compatibleAgents.includes(agentId));
-}
-
-/**
- * Initialize the system with some default capabilities
- */
-export function initializeCapabilities(): void {
-  const capabilities = loadCapabilities();
-  
-  // Only initialize if empty
-  if (Object.keys(capabilities).length === 0) {
-    // Core capabilities
-    registerCapability({
-      id: 'text-analysis',
-      name: 'Text Analysis',
-      description: 'Analyze and extract insights from text content',
-      icon: 'FileText',
-      category: 'analysis',
-      compatibleAgents: ['research', 'analyst', 'assistant']
-    });
-    
-    registerCapability({
-      id: 'web-research',
-      name: 'Web Research',
-      description: 'Find and synthesize information from web sources',
-      icon: 'Globe',
-      category: 'research',
-      compatibleAgents: ['research', 'analyst']
-    });
-    
-    registerCapability({
-      id: 'data-visualization',
-      name: 'Data Visualization',
-      description: 'Create visual representations of data',
-      icon: 'BarChart',
-      category: 'analysis',
-      compatibleAgents: ['analyst', 'data-scientist']
-    });
-    
-    registerCapability({
-      id: 'code-generation',
-      name: 'Code Generation',
-      description: 'Generate code based on requirements',
-      icon: 'Code',
-      category: 'coding',
-      compatibleAgents: ['developer', 'analyst']
-    });
-    
-    registerCapability({
-      id: 'content-creation',
-      name: 'Content Creation',
-      description: 'Create written content like articles and reports',
-      icon: 'FileEdit',
-      category: 'communication',
-      compatibleAgents: ['writer', 'assistant']
-    });
-    
-    registerCapability({
-      id: 'strategic-planning',
-      name: 'Strategic Planning',
-      description: 'Develop strategic plans and roadmaps',
-      icon: 'GitBranch',
-      category: 'planning',
-      compatibleAgents: ['strategist', 'manager']
-    });
-  }
-}
-
-// Export the types for use in other components
+// Export types that will be used elsewhere
 export type { CapabilityData, CapabilityStats };
+
+// Add storage helpers
+function getLocalStorage<T>(key: string): T | null {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+  } catch (e) {
+    console.error(`Error retrieving ${key} from localStorage:`, e);
+    return null;
+  }
+}
+
+function setLocalStorage<T>(key: string, value: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error(`Error setting ${key} in localStorage:`, e);
+  }
+}

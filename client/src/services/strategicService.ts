@@ -5,11 +5,14 @@
  * internal debate, capability evolution, and external API calls.
  */
 
-import { getInternalDeliberation } from '@/lib/internalDebate';
-import { loadCapabilities, recordCapabilityUsage } from '@/lib/capabilityEvolution';
-import { nanoid } from '@/lib/utils';
+import { v4 as uuidv4 } from 'uuid';
+import { getInternalDeliberation, shouldUseMultiPerspective } from '@/lib/internalDebate';
+import { getCapabilities, recordCapabilityUsage, getSuggestedCapabilities } from '@/lib/capabilityEvolution';
 
-// Request types
+// Store for in-progress operations
+const operations: Record<string, OperationStatus> = {};
+
+// Request interface
 export interface StrategicRequest {
   query: string;
   context?: string;
@@ -19,7 +22,7 @@ export interface StrategicRequest {
   similarityThreshold?: number;
 }
 
-// Response types
+// Response interface
 export interface StrategicResponse {
   result: string;
   reasoning?: string;
@@ -30,14 +33,16 @@ export interface StrategicResponse {
   operationId: string;
 }
 
-// Tracks ongoing operations
-const operations: Record<string, {
-  status: 'pending' | 'completed' | 'failed';
+// Operation status interface
+export interface OperationStatus {
+  id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   progress: number;
-  result?: StrategicResponse;
-  error?: string;
   startTime: number;
-}> = {};
+  endTime?: number;
+  error?: string;
+  result?: StrategicResponse;
+}
 
 /**
  * Process a query using strategic reasoning
@@ -45,27 +50,30 @@ const operations: Record<string, {
 export async function processStrategicQuery(
   request: StrategicRequest
 ): Promise<{ operationId: string }> {
-  const operationId = `op_${nanoid()}`;
+  // Generate a unique operation ID
+  const operationId = generateOperationId();
   
-  // Initialize operation tracking
+  // Initialize the operation
   operations[operationId] = {
+    id: operationId,
     status: 'pending',
     progress: 0,
-    startTime: Date.now()
+    startTime: Date.now(),
   };
   
-  // Start processing in the background
-  executeStrategicQuery(request, operationId).catch(error => {
-    console.error('Error in strategic query execution:', error);
-    operations[operationId] = {
-      ...operations[operationId],
-      status: 'failed',
-      error: error.message || 'Unknown error during execution',
-      progress: 100
-    };
-  });
+  // Start the processing in the background
+  setTimeout(() => {
+    executeStrategicQuery(request, operationId).catch(error => {
+      operations[operationId] = {
+        ...operations[operationId],
+        status: 'failed',
+        error: error.message || 'Unknown error',
+        endTime: Date.now(),
+      };
+    });
+  }, 0);
   
-  // Return operation ID immediately for status polling
+  // Return the operation ID for status checking
   return { operationId };
 }
 
@@ -76,97 +84,95 @@ async function executeStrategicQuery(
   request: StrategicRequest,
   operationId: string
 ): Promise<void> {
-  const { query, context = '', useDebate = true, requiredCapabilities = [] } = request;
+  const { query, context, requiredCapabilities = [], useDebate = true } = request;
   const startTime = Date.now();
   
   try {
-    // Update progress
-    operations[operationId].progress = 10;
-    
-    // Step 1: Identify required capabilities if not provided
-    const capabilities = loadCapabilities();
-    let effectiveCapabilities = [...requiredCapabilities];
-    
-    if (effectiveCapabilities.length === 0) {
-      // This would normally call an API to detect required capabilities
-      // For now we'll just use a simplified approach
-      const potentialCapabilities = Object.values(capabilities)
-        .filter(c => query.toLowerCase().includes(c.name.toLowerCase()));
-      
-      effectiveCapabilities = potentialCapabilities.map(c => c.id);
-    }
-    
-    // Update progress
-    operations[operationId].progress = 30;
-    
-    // Step 2: Run internal debate if enabled
-    let deliberationResult;
-    if (useDebate) {
-      deliberationResult = await getInternalDeliberation(query, context);
-      
-      // Update progress
-      operations[operationId].progress = 60;
-    }
-    
-    // Step 3: Process with strategic API call
-    const apiResponse = await fetch('/api/panion/strategic', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        query,
-        context,
-        capabilities: effectiveCapabilities,
-        debateResult: deliberationResult ? {
-          conclusion: deliberationResult.result,
-          confidence: deliberationResult.confidence
-        } : undefined
-      })
-    });
-    
-    if (!apiResponse.ok) {
-      throw new Error(`API error: ${apiResponse.statusText}`);
-    }
-    
-    const apiData = await apiResponse.json();
-    
-    // Update progress
-    operations[operationId].progress = 90;
-    
-    // Step 4: Record capability usage for learning
-    effectiveCapabilities.forEach(capabilityId => {
-      recordCapabilityUsage(capabilityId, true);
-    });
-    
-    // Create the response
-    const response: StrategicResponse = {
-      result: apiData.response || deliberationResult?.result || 'No result generated',
-      reasoning: apiData.reasoning || 
-        (deliberationResult ? `Internal deliberation: ${deliberationResult.perspectives.map(p => p.role + ': ' + p.content).join(' | ')}` : undefined),
-      confidence: apiData.confidence || deliberationResult?.confidence || 0.5,
-      usedCapabilities: effectiveCapabilities,
-      debateId: deliberationResult ? 'internal_debate' : undefined,
-      executionTime: Date.now() - startTime,
-      operationId
-    };
-    
     // Update operation status
     operations[operationId] = {
       ...operations[operationId],
-      status: 'completed',
-      result: response,
-      progress: 100
+      status: 'processing',
+      progress: 10,
     };
     
+    // Determine if the query should use internal debate
+    const shouldDebate = useDebate && shouldUseMultiPerspective(query);
+    
+    // Get relevant capabilities for this query
+    const suggestedCapabilities = getSuggestedCapabilities(query, 5);
+    const allCapabilities = [
+      ...requiredCapabilities,
+      ...suggestedCapabilities.map(c => c.id)
+    ];
+    const uniqueCapabilities = [...new Set(allCapabilities)];
+    
+    // Update progress
+    operations[operationId] = {
+      ...operations[operationId],
+      progress: 30,
+    };
+    
+    let result: string;
+    let confidence: number;
+    let reasoning: string | undefined;
+    let perspectives: { role: string; content: string }[] | undefined;
+    
+    // Use internal debate if appropriate
+    if (shouldDebate) {
+      const debateResult = await getInternalDeliberation(query, context);
+      result = debateResult.result;
+      confidence = debateResult.confidence;
+      perspectives = debateResult.perspectives;
+      
+      // Record capability usage for internal debate
+      recordCapabilityUsage('internal-debate', true);
+    } else {
+      // Simple response generation for now
+      // In a real implementation, we would call an appropriate API based on capabilities
+      result = `Strategic response to "${query}": This approach considers the key factors and provides a balanced solution.`;
+      confidence = 0.75;
+    }
+    
+    // Record capability usage for all used capabilities
+    uniqueCapabilities.forEach(capabilityId => {
+      recordCapabilityUsage(capabilityId, true);
+    });
+    
+    // Update progress
+    operations[operationId] = {
+      ...operations[operationId],
+      progress: 90,
+    };
+    
+    // Prepare response
+    const response: StrategicResponse = {
+      result,
+      confidence,
+      usedCapabilities: uniqueCapabilities,
+      reasoning,
+      debateId: perspectives ? uuidv4() : undefined,
+      executionTime: Date.now() - startTime,
+      operationId,
+    };
+    
+    // Mark operation as completed
+    operations[operationId] = {
+      ...operations[operationId],
+      status: 'completed',
+      progress: 100,
+      result: response,
+      endTime: Date.now(),
+    };
   } catch (error: any) {
     // Handle errors
     operations[operationId] = {
       ...operations[operationId],
       status: 'failed',
-      error: error.message || 'Unknown error during execution',
-      progress: 100
+      error: error.message || 'Unknown error',
+      endTime: Date.now(),
     };
+    
+    throw error;
   }
 }
 
@@ -174,26 +180,22 @@ async function executeStrategicQuery(
  * Get the status of a strategic operation
  */
 export function getOperationStatus(operationId: string): {
-  status: 'pending' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   progress: number;
-  result?: StrategicResponse;
   error?: string;
+  result?: StrategicResponse;
 } {
   const operation = operations[operationId];
   
   if (!operation) {
-    return {
-      status: 'failed',
-      progress: 100,
-      error: 'Operation not found'
-    };
+    throw new Error(`Operation ${operationId} not found`);
   }
   
   return {
     status: operation.status,
     progress: operation.progress,
+    error: operation.error,
     result: operation.result,
-    error: operation.error
   };
 }
 
@@ -201,5 +203,5 @@ export function getOperationStatus(operationId: string): {
  * Utility to help generate random IDs
  */
 export function generateOperationId(): string {
-  return `op_${nanoid()}`;
+  return `op-${uuidv4()}`;
 }

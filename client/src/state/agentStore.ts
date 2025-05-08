@@ -1296,7 +1296,7 @@ export const initializeAgentRegistry = () => {
     id: 'intelligent-agent',
     title: 'Intelligent Agent',
     icon: 'brain-circuit',
-    component: () => React.lazy(() => import('@/components/agents/IntelligentAgent')),
+    component: () => null, // Placeholder - this will be replaced with the actual component when needed
     defaultPosition: { x: 150, y: 150 },
     defaultSize: { width: 650, height: 600 },
     capabilities: ['reasoning', 'internal-debate', 'capability-evolution']

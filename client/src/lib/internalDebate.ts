@@ -1,325 +1,246 @@
 /**
- * Internal Debate Framework
+ * Internal Debate System
  * 
- * This system allows the AI to internally debate multiple approaches to a problem,
- * evaluate different perspectives, and arrive at a better decision through
- * structured deliberation.
+ * This module provides functionality for simulating internal debate
+ * between different perspectives to arrive at a more comprehensive answer.
  */
 
-// Define the different roles that can participate in the debate
-export enum DebateRole {
-  PROPOSER = 'proposer',          // Suggests initial ideas
-  CRITIC = 'critic',              // Finds flaws in proposals
-  RESEARCHER = 'researcher',      // Adds factual information
-  SYNTHESIZER = 'synthesizer',    // Combines different viewpoints
-  EXPLAINER = 'explainer',        // Makes complex ideas simple
-  ETHICIST = 'ethicist',          // Considers ethical implications
-  IMPLEMENTER = 'implementer',    // Focuses on how to implement
-}
+// The number of perspectives to generate
+const DEFAULT_PERSPECTIVE_COUNT = 3;
 
-// A perspective is one viewpoint in the debate
-export interface Perspective {
-  id: string;
-  role: DebateRole;
+// Type definition for debate roles
+type DebateRole = 'proposer' | 'critic' | 'synthesizer' | 'expert' | 'pragmatist';
+
+// Type definition for debate perspectives
+interface Perspective {
+  role: DebateRole | string;
+  viewpoint: string;
   content: string;
-  confidence: number; // 0-1
-  sources?: string[];
-  timestamp: number;
-  referencesIds?: string[]; // IDs of perspectives this one responds to
 }
 
-// A topic is the subject being debated
-export interface DebateTopic {
-  id: string;
-  title: string;
-  description: string;
+// Type definition for debate result
+interface DeliberationResult {
   perspectives: Perspective[];
-  conclusion?: string;
-  confidenceScore?: number; // Overall confidence in conclusion
-  createdAt: number;
-  updatedAt: number;
-  isActive: boolean;
-}
-
-// Track debates in memory (in a real system, this would use a database)
-const activeDebates: Record<string, DebateTopic> = {};
-
-/**
- * Start a new internal debate on a topic
- */
-export function startDebate(title: string, description: string): DebateTopic {
-  const id = `debate_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  
-  const newDebate: DebateTopic = {
-    id,
-    title,
-    description,
-    perspectives: [],
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    isActive: true
-  };
-  
-  activeDebates[id] = newDebate;
-  return newDebate;
+  result: string;
+  confidence: number;
+  reasoning: string;
 }
 
 /**
- * Add a perspective to an existing debate
+ * Get a deliberated response to a query by simulating internal debate
  */
-export function addPerspective(
-  debateId: string, 
-  role: DebateRole, 
-  content: string,
-  confidence: number,
-  sources: string[] = [],
-  referencesIds: string[] = []
-): Perspective | null {
-  const debate = activeDebates[debateId];
-  if (!debate) {
-    console.error(`Tried to add perspective to non-existent debate: ${debateId}`);
-    return null;
+export async function getInternalDeliberation(
+  query: string,
+  context?: string,
+  options: {
+    perspectiveCount?: number;
+    customRoles?: string[];
+  } = {}
+): Promise<{
+  result: string;
+  confidence: number;
+  perspectives: { role: string; content: string }[];
+}> {
+  const { perspectiveCount = DEFAULT_PERSPECTIVE_COUNT, customRoles = [] } = options;
+
+  try {
+    // In a real implementation, we would call an LLM or API here
+    // For now, we'll simulate it with a fake deliberation process
+    const deliberation = await simulateDeliberation(query, context, perspectiveCount, customRoles);
+    
+    // Map the perspectives to a simpler format
+    const simplePerspectives = deliberation.perspectives.map((p) => ({
+      role: p.role,
+      content: p.content,
+    }));
+    
+    return {
+      result: deliberation.result,
+      confidence: deliberation.confidence,
+      perspectives: simplePerspectives,
+    };
+  } catch (error) {
+    console.error('Error in internal deliberation:', error);
+    throw new Error('Failed to generate internal debate');
   }
-  
-  if (!debate.isActive) {
-    console.warn(`Tried to add perspective to closed debate: ${debateId}`);
-    return null;
-  }
-  
-  const id = `perspective_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  
-  const perspective: Perspective = {
-    id,
-    role,
-    content,
-    confidence,
-    sources,
-    referencesIds,
-    timestamp: Date.now()
-  };
-  
-  debate.perspectives.push(perspective);
-  debate.updatedAt = Date.now();
-  
-  return perspective;
 }
 
 /**
- * Conclude a debate with a final synthesis and confidence score
+ * Simulate a deliberation process by generating perspectives and a synthesis
+ * In a real implementation, this would call an LLM or API
  */
-export function concludeDebate(debateId: string, conclusion: string, confidenceScore: number): DebateTopic | null {
-  const debate = activeDebates[debateId];
-  if (!debate) {
-    console.error(`Tried to conclude non-existent debate: ${debateId}`);
-    return null;
-  }
+async function simulateDeliberation(
+  query: string,
+  context?: string,
+  perspectiveCount: number = DEFAULT_PERSPECTIVE_COUNT,
+  customRoles: string[] = []
+): Promise<DeliberationResult> {
+  // Combine default roles with any custom roles provided
+  const allPossibleRoles: (DebateRole | string)[] = [
+    'proposer',
+    'critic',
+    'synthesizer',
+    'expert',
+    'pragmatist',
+    ...customRoles,
+  ];
   
-  debate.conclusion = conclusion;
-  debate.confidenceScore = confidenceScore;
-  debate.isActive = false;
-  debate.updatedAt = Date.now();
+  // Determine which roles to use based on perspective count
+  const rolesToUse = allPossibleRoles.slice(0, perspectiveCount);
   
-  return debate;
-}
-
-/**
- * Get a debate by ID
- */
-export function getDebate(debateId: string): DebateTopic | null {
-  return activeDebates[debateId] || null;
-}
-
-/**
- * Get all active debates
- */
-export function getActiveDebates(): DebateTopic[] {
-  return Object.values(activeDebates).filter(d => d.isActive);
-}
-
-/**
- * Get all debates
- */
-export function getAllDebates(): DebateTopic[] {
-  return Object.values(activeDebates);
-}
-
-/**
- * Run a structured debate process on a given query
- * This integrates with the strategic mode
- */
-export async function runStructuredDebate(
-  query: string, 
-  context: string = '',
-  maxRounds: number = 3
-): Promise<{ conclusion: string, confidence: number, debateId: string }> {
-  // Start a new debate
-  const debate = startDebate(
-    `Debate on: ${query.substring(0, 100)}${query.length > 100 ? '...' : ''}`,
-    query
+  // Generate perspectives for each role
+  const perspectives: Perspective[] = await Promise.all(
+    rolesToUse.map(async (role) => {
+      return generatePerspective(query, role, context);
+    })
   );
   
-  // Initial perspective from the proposer
-  await addInitialPerspective(debate.id, query, context);
-  
-  // Run multiple rounds of debate
-  for (let round = 0; round < maxRounds; round++) {
-    await runDebateRound(debate.id, round);
-  }
-  
-  // Generate conclusion
-  const { conclusion, confidence } = await generateConclusion(debate.id);
-  
-  // Mark debate as concluded
-  concludeDebate(debate.id, conclusion, confidence);
+  // Synthesize a final result from all perspectives
+  const synthesis = await synthesizePerspectives(query, perspectives);
   
   return {
-    conclusion,
-    confidence,
-    debateId: debate.id
+    perspectives,
+    result: synthesis.result,
+    confidence: synthesis.confidence,
+    reasoning: synthesis.reasoning,
   };
 }
 
 /**
- * Add initial perspectives to start the debate
+ * Generate a perspective from a specific role
+ * In a real implementation, this would call an LLM or API
  */
-async function addInitialPerspective(debateId: string, query: string, context: string): Promise<void> {
-  // This would normally call the LLM API - we're mocking it for now
-  const debate = getDebate(debateId);
-  if (!debate) return;
-  
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
-  // Add proposer perspective
-  addPerspective(
-    debateId,
-    DebateRole.PROPOSER,
-    `I think the best approach for "${query}" would be to start by understanding the key requirements and then breaking it down into manageable steps.`,
-    0.8,
-    []
-  );
-  
-  // Add researcher perspective with a slightly different angle
-  addPerspective(
-    debateId,
-    DebateRole.RESEARCHER,
-    `Based on available information, there are several proven methods for addressing this type of request. We should consider a multi-strategy approach.`,
-    0.75,
-    ['Research database', 'Past successful approaches']
-  );
-}
-
-/**
- * Run a single round of debate
- */
-async function runDebateRound(debateId: string, roundNumber: number): Promise<void> {
-  const debate = getDebate(debateId);
-  if (!debate) return;
-  
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 150));
-  
-  // Get existing perspectives to reference
-  const existingPerspectives = debate.perspectives;
-  
-  // Different roles to involve based on the round
-  if (roundNumber === 0) {
-    // Round 1: Critic examines proposals
-    addPerspective(
-      debateId,
-      DebateRole.CRITIC,
-      `The current approach lacks consideration of potential edge cases. We should also consider alternative methods that might be more efficient.`,
-      0.7,
-      [],
-      [existingPerspectives[0]?.id].filter(Boolean)
-    );
-  } else if (roundNumber === 1) {
-    // Round 2: Implementer focuses on practical steps
-    addPerspective(
-      debateId,
-      DebateRole.IMPLEMENTER,
-      `From a practical standpoint, we need to ensure we have the right tools and capabilities for this task. I recommend starting with capability X and then using approach Y to achieve the goal.`,
-      0.85,
-      ['Implementation guidelines', 'Tool documentation'],
-      existingPerspectives.slice(-2).map(p => p.id)
-    );
-    
-    // Ethicist considers implications
-    addPerspective(
-      debateId,
-      DebateRole.ETHICIST,
-      `We should ensure our approach respects user privacy and provides transparent reasoning. This approach should be explainable and avoid any biases.`,
-      0.9,
-      ['Ethics guidelines'],
-      []
-    );
-  } else {
-    // Final round: Synthesizer combines perspectives
-    addPerspective(
-      debateId,
-      DebateRole.SYNTHESIZER,
-      `After considering all perspectives, a balanced approach would be to: 1) Start with understanding user requirements, 2) Apply capability X with approach Y, 3) Continuously validate against edge cases, and 4) Ensure all processes are transparent and ethical.`,
-      0.88,
-      [],
-      existingPerspectives.map(p => p.id)
-    );
-  }
-}
-
-/**
- * Generate a conclusion from the debate
- */
-async function generateConclusion(debateId: string): Promise<{ conclusion: string, confidence: number }> {
-  const debate = getDebate(debateId);
-  if (!debate) {
-    return { conclusion: 'No debate found', confidence: 0 };
-  }
+async function generatePerspective(
+  query: string,
+  role: DebateRole | string,
+  context?: string
+): Promise<Perspective> {
+  // In a real implementation, we would call an LLM or API here
+  // For now, we'll simulate it with pre-defined responses
   
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 200));
   
-  // In a real implementation, this would use an LLM to synthesize
-  // the perspectives and generate a conclusion
+  const roleViewpoints: Record<string, string> = {
+    proposer: 'Suggests initial ideas and approaches',
+    critic: 'Identifies potential flaws and challenges',
+    synthesizer: 'Combines different perspectives into a balanced view',
+    expert: 'Provides technical expertise and detailed knowledge',
+    pragmatist: 'Focuses on practical implementation and real-world constraints',
+  };
   
-  // For mock purposes, we'll use the synthesizer's perspective if available
-  const synthesizerPerspective = debate.perspectives.find(p => p.role === DebateRole.SYNTHESIZER);
+  const viewpoint = roleViewpoints[role] || `Perspective from ${role} viewpoint`;
   
-  if (synthesizerPerspective) {
-    return {
-      conclusion: synthesizerPerspective.content,
-      confidence: synthesizerPerspective.confidence
-    };
-  }
-  
-  // Fallback if no synthesizer perspective is found
   return {
-    conclusion: 'Based on the internal debate, a multi-faceted approach that considers all aspects of the problem is recommended.',
-    confidence: 0.75
+    role,
+    viewpoint,
+    content: generateContentForRole(query, role, context),
   };
 }
 
 /**
- * Interface for external use of the debate system
+ * Generate content for a specific role
+ * In a real implementation, this would use an LLM or API
  */
-export async function getInternalDeliberation(
+function generateContentForRole(
   query: string, 
-  context: string = ''
-): Promise<{ 
-  result: string, 
-  confidence: number, 
-  perspectives: { role: string, content: string }[] 
-}> {
-  const { conclusion, confidence, debateId } = await runStructuredDebate(query, context);
+  role: DebateRole | string, 
+  context?: string
+): string {
+  // In a real implementation, we would call an LLM or API here
+  // For now, we'll use template responses based on the role
   
-  const debate = getDebate(debateId);
-  const simplifiedPerspectives = debate?.perspectives.map(p => ({
-    role: p.role,
-    content: p.content
-  })) || [];
+  const contextPrefix = context ? `Considering the context: ${context}\n` : '';
+  const truncatedQuery = query.length > 50 ? query.substring(0, 50) + '...' : query;
+  
+  switch (role) {
+    case 'proposer':
+      return `${contextPrefix}For the query "${truncatedQuery}", I suggest we approach this by first understanding the key aspects. We should consider multiple angles and gather all relevant information before forming a conclusion.`;
+      
+    case 'critic':
+      return `${contextPrefix}I see potential issues with how we might approach "${truncatedQuery}". We need to be careful about making assumptions and should consider counterarguments to any initial theories.`;
+      
+    case 'synthesizer':
+      return `${contextPrefix}Looking at all perspectives on "${truncatedQuery}", we can find common ground. The balanced approach would consider both the benefits highlighted by the proposer while addressing the concerns raised by the critic.`;
+      
+    case 'expert':
+      return `${contextPrefix}From a technical standpoint, the query "${truncatedQuery}" has several important dimensions. Based on established knowledge in this domain, we should consider the following specific factors...`;
+      
+    case 'pragmatist':
+      return `${contextPrefix}When dealing with "${truncatedQuery}" in practice, we need to focus on implementable solutions. Let's consider what's actually feasible given real-world constraints and resources.`;
+      
+    default:
+      return `${contextPrefix}From the perspective of ${role}, the query "${truncatedQuery}" should be approached by considering both theoretical principles and practical applications.`;
+  }
+}
+
+/**
+ * Synthesize perspectives into a final result
+ * In a real implementation, this would call an LLM or API
+ */
+async function synthesizePerspectives(
+  query: string,
+  perspectives: Perspective[]
+): Promise<{
+  result: string;
+  confidence: number;
+  reasoning: string;
+}> {
+  // In a real implementation, we would call an LLM or API here
+  // For now, we'll simulate it with a fake synthesis
+  
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  // Create a detailed result that refers to the different perspectives
+  const result = `After considering multiple perspectives, the most balanced approach to "${query}" would involve understanding the key aspects while being mindful of potential assumptions. We should incorporate technical knowledge where relevant while focusing on practical, implementable solutions.`;
+  
+  // Calculate a confidence score based on the number and diversity of perspectives
+  const roleTypes = new Set(perspectives.map(p => p.role));
+  const confidence = Math.min(0.5 + (perspectives.length * 0.1) + (roleTypes.size * 0.05), 0.95);
+  
+  // Generate reasoning that explains how the synthesis was reached
+  const reasoning = `This conclusion was reached by synthesizing insights from ${perspectives.length} different perspectives, including ${perspectives.map(p => p.role).join(', ')}. The balanced view addresses both theoretical and practical considerations.`;
   
   return {
-    result: conclusion,
+    result,
     confidence,
-    perspectives: simplifiedPerspectives
+    reasoning,
   };
+}
+
+/**
+ * Get the available debate roles
+ */
+export function getAvailableDebateRoles(): DebateRole[] {
+  return ['proposer', 'critic', 'synthesizer', 'expert', 'pragmatist'];
+}
+
+/**
+ * Check if a query would benefit from multi-perspective analysis
+ */
+export function shouldUseMultiPerspective(query: string): boolean {
+  // Check for indicators of complexity or ambiguity
+  const complexityIndicators = [
+    'complex',
+    'complicated',
+    'analyze',
+    'compare',
+    'evaluate',
+    'versus',
+    'vs',
+    'debate',
+    'argument',
+    'perspective',
+    'opinion',
+    'pros and cons',
+    'advantages and disadvantages',
+    'multiple',
+    'different',
+    'various',
+  ];
+  
+  // Check if the query contains any of the indicators
+  const lowercaseQuery = query.toLowerCase();
+  return complexityIndicators.some(indicator => lowercaseQuery.includes(indicator));
 }
