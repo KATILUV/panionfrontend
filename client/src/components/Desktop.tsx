@@ -17,7 +17,6 @@ import MarketplaceAgent from './agents/MarketplaceAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
 import SimpleEmptyStateDashboard from './system/SimpleEmptyStateDashboard';
-import ParticleBackground from './effects/ParticleBackground';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence } from 'framer-motion';
 import { useScreenSize, useOrientation } from '../hooks/use-mobile';
@@ -256,119 +255,22 @@ const Desktop: React.FC = () => {
     const setVisibility = useSystemLogStore.getState().setVisibility;
     setVisibility(false);
   }, [toast]);
-  
-  // Particle settings based on theme
-  const getParticleSettings = () => {
-    const isDark = useThemeStore.getState().getCurrentTheme() === 'dark';
-    
-    if (isDark) {
-      return {
-        particleCount: 40,
-        particleOpacity: 0.5,
-        particleSize: 2,
-        particleSpeed: 0.5
-      };
-    } else {
-      return {
-        particleCount: 25,
-        particleOpacity: 0.2,
-        particleSize: 1.5,
-        particleSpeed: 0.3
-      };
-    }
-  };
 
   // Check if there are any visible windows (open and not minimized) or visible window groups
   const hasVisibleWindows = 
     Object.values(windows).some(window => window.isOpen && !window.isMinimized) ||
     Object.values(windowGroups).some(group => !group.isMinimized);
 
-  // Empty dashboard content with particle effects
+  // Simple empty dashboard without particle effects
   const EmptyDashboard = () => {
-    const particleSettings = getParticleSettings();
-    const userPrefsName = useUserPrefsStore(state => state.name);
-    
-    return (
-      <>
-        {/* Particle background effect only shown on empty desktop */}
-        <ParticleBackground 
-          particleCount={particleSettings.particleCount}
-          particleOpacity={particleSettings.particleOpacity * 1.5} // Make more visible on empty state
-          particleSize={particleSettings.particleSize}
-          particleSpeed={particleSettings.particleSpeed}
-          interactive={true}
-          className="z-0"
-        />
-        <div className="absolute inset-0 z-10 pointer-events-auto flex flex-col items-center justify-center p-4">
-          <div className="max-w-xl w-full mx-auto">
-            <div className="mb-8 text-center">
-              <h1 className="text-4xl font-light mb-2 text-white tracking-wide drop-shadow-lg">
-                Welcome <span className="font-semibold">{userPrefsName}</span>,
-              </h1>
-              <h2 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80">
-                this is Panion
-              </h2>
-              
-              {/* Layout buttons removed as requested */}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Theme-aware action cards */}
-              <ThemeAwareButton
-                onClick={() => {
-                  openAgent('clara');
-                  console.log("Clara button clicked");
-                }}
-                colorIndex={0}
-                icon={<MessageSquare className="h-5 w-5" />}
-                title="Chat with Clara"
-                description="Start a conversation with Clara, your AI assistant"
-              />
-
-              <ThemeAwareButton
-                onClick={() => {
-                  openAgent('notes');
-                  console.log("Notes button clicked");
-                }}
-                colorIndex={1}
-                icon={<FileText className="h-5 w-5" />}
-                title="Take Notes"
-                description="Open the Notes agent to capture your thoughts"
-              />
-
-              <ThemeAwareButton
-                onClick={() => {
-                  openAgent('settings');
-                  console.log("Settings button clicked");
-                }}
-                colorIndex={2}
-                icon={<Settings className="h-5 w-5" />}
-                title="Settings"
-                description="Configure your Panion desktop environment"
-              />
-
-              <ThemeAwareButton
-                onClick={() => {
-                  navigate('/marketplace');
-                  console.log("Marketplace page navigation clicked");
-                }}
-                colorIndex={0}
-                icon={<PlusCircle className="h-5 w-5" />}
-                title="Marketplace"
-                description="Discover and install new agents for your workspace"
-              />
-            </div>
-          </div>
-        </div>
-      </>
-    );
+    return <SimpleEmptyStateDashboard />;
   };
 
   return (
     <DesktopBackground>
       {/* Desktop Area - Adjusted for mobile responsiveness */}
       <div className={`flex-1 relative ${isMobile ? 'pt-2 pb-14' : ''}`}>
-        {/* Show empty dashboard with particles when no windows are open */}
+        {/* Show simple empty dashboard when no windows are open */}
         {!hasVisibleWindows && Object.keys(windowGroups).length === 0 && <EmptyDashboard />}
         
         {/* Render Individual Windows */}
