@@ -35,28 +35,252 @@ except ImportError as e:
             def save_to_json(self, *args, **kwargs):
                 return "Error: Scraper not available"
 
-# Import our new data gathering agent
+# Import the Daddy Data agent
 try:
-    from core.agent_management.agents.data_gathering_agent import data_gathering_agent
-    logging.info("Successfully imported data gathering agent")
+    from plugins.daddy_data_agent import DaddyDataAgent
+    daddy_data_agent = DaddyDataAgent()
+    daddy_data_available = True
+    logging.info("Daddy Data Agent successfully imported")
 except ImportError as e:
-    logging.error(f"Failed to import data gathering agent: {e}")
-    # Create a stub implementation if needed
-    class StubDataGatheringAgent:
-        def __init__(self):
-            self.active_tasks = {}
-            self.completed_tasks = {}
-        
-        def create_task(self, task_id, task_details):
-            return {"status": "error", "message": "Data gathering agent not available"}
-        
-        def get_task_status(self, task_id):
-            return {"status": "error", "message": "Data gathering agent not available"}
-        
-        def list_tasks(self, status_filter=None):
-            return {"active_tasks": [], "completed_tasks": [], "total_active": 0, "total_completed": 0}
+    logging.error(f"Failed to import Daddy Data Agent: {e}")
+    daddy_data_available = False
+
+# Create a task manager for background tasks
+class TaskManager:
+    def __init__(self):
+        self.active_tasks = {}
+        self.completed_tasks = {}
+        self.task_threads = {}
     
-    data_gathering_agent = StubDataGatheringAgent()
+    def create_task(self, task_id, task_details):
+        """Create a new background task and start it."""
+        import threading
+        import uuid
+        import datetime
+        
+        if not task_id:
+            task_id = f"task_{uuid.uuid4().hex[:8]}"
+            
+        if task_id in self.active_tasks:
+            return {
+                "status": "error", 
+                "message": f"Task with ID {task_id} already exists",
+                "task_id": task_id
+            }
+        
+        # Initialize task
+        self.active_tasks[task_id] = {
+            "id": task_id,
+            "details": task_details,
+            "status": "created",
+            "progress": 0,
+            "created_at": datetime.datetime.now().isoformat(),
+            "updated_at": datetime.datetime.now().isoformat(),
+            "result": None,
+            "messages": []
+        }
+        
+        # Start in background thread
+        thread = threading.Thread(
+            target=self._execute_task,
+            args=(task_id,),
+            daemon=True
+        )
+        self.task_threads[task_id] = thread
+        thread.start()
+        
+        return {
+            "status": "created",
+            "message": f"Task {task_id} created and started",
+            "task_id": task_id
+        }
+    
+    def _execute_task(self, task_id):
+        """Execute a task in a background thread."""
+        import time
+        import datetime
+        import uuid
+        import os
+        import json
+        import asyncio
+        
+        if task_id not in self.active_tasks:
+            return
+            
+        task = self.active_tasks[task_id]
+        details = task["details"]
+        
+        try:
+            # Update status
+            self._update_task(task_id, status="running", progress=10,
+                             message="Initializing task execution")
+            
+            # If this is a smoke shop research task
+            if details.get("type") == "smokeshop_research":
+                location = details.get("location", "New York")
+                limit = details.get("limit", 20)
+                
+                # Update status
+                self._update_task(task_id, progress=20,
+                                 message=f"Starting smoke shop research for {location}")
+                
+                if daddy_data_available:
+                    # Use the Daddy Data agent for searching
+                    self._update_task(task_id, progress=30,
+                                     message=f"Using Daddy Data agent to search for smoke shops in {location}")
+                    
+                    # Setup search parameters
+                    search_params = {
+                        'action': 'search',
+                        'query': 'smoke shop',
+                        'location': location,
+                        'limit': limit
+                    }
+                    
+                    # Execute the search (in event loop)
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    results = loop.run_until_complete(daddy_data_agent.execute(search_params))
+                    loop.close()
+                    
+                    # Check if search was successful
+                    if results.get('status') == 'completed':
+                        shop_data = results.get('results', [])
+                        
+                        # Update status
+                        self._update_task(task_id, progress=70,
+                                         message=f"Data collection complete. Found {len(shop_data)} businesses.")
+                        
+                        # Save to file
+                        os.makedirs("./data/daddy_data", exist_ok=True)
+                        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                        filename = f"smokeshop_{location.replace(' ', '_')}_{timestamp}.json"
+                        filepath = f"./data/daddy_data/{filename}"
+                        
+                        with open(filepath, 'w', encoding='utf-8') as f:
+                            json.dump(shop_data, f, indent=2)
+                        
+                        # Update status
+                        self._update_task(task_id, progress=90, status="finalizing",
+                                         message=f"Data saved to {filepath}")
+                        
+                        # Complete the task
+                        self._update_task(task_id, progress=100, status="completed",
+                                         message=f"Task completed successfully. Found {len(shop_data)} smoke shops.",
+                                         result={"filepath": filepath, "count": len(shop_data)})
+                    else:
+                        error_message = results.get('error', 'Unknown error in Daddy Data agent')
+                        self._update_task(task_id, status="error",
+                                         message=f"Daddy Data agent search failed: {error_message}")
+                        
+                else:
+                    # Try to use the legacy scraper
+                    try:
+                        self._update_task(task_id, progress=30,
+                                        message=f"Daddy Data agent not available. Falling back to legacy scraper.")
+                        
+                        from scrapers.smokeshop_scraper import SmokeshopScraper
+                        scraper = SmokeshopScraper()
+                        
+                        # Execute the scraping
+                        shops = scraper.scrape_multiple_sources(location=location, limit=limit)
+                        
+                        # Update status
+                        self._update_task(task_id, progress=70,
+                                        message=f"Data collection complete. Found {len(shops)} businesses.")
+                        
+                        # Save results to file
+                        os.makedirs("./data/scraped", exist_ok=True)
+                        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                        filename = f"smokeshop_{location.replace(' ', '_')}_{timestamp}.json"
+                        filepath = f"./data/scraped/{filename}"
+                        
+                        with open(filepath, 'w', encoding='utf-8') as f:
+                            json.dump(shops, f, indent=2)
+                        
+                        # Update status
+                        self._update_task(task_id, progress=100, status="completed",
+                                        message=f"Task completed successfully",
+                                        result={"filepath": filepath, "count": len(shops)})
+                                        
+                    except ImportError:
+                        self._update_task(task_id, status="error",
+                                        message="Neither Daddy Data agent nor legacy scraper is available")
+                
+            # Handle other task types here
+            else:
+                self._update_task(task_id, status="error",
+                                 message=f"Unknown task type: {details.get('type')}")
+                
+        except Exception as e:
+            import traceback
+            logging.error(f"Error in task {task_id}: {str(e)}")
+            logging.error(traceback.format_exc())
+            self._update_task(task_id, status="error",
+                             message=f"Task failed: {str(e)}")
+    
+    def _update_task(self, task_id, status=None, progress=None, message=None, result=None):
+        """Update a task's status and progress."""
+        import datetime
+        
+        if task_id not in self.active_tasks:
+            return
+            
+        task = self.active_tasks[task_id]
+        
+        if status:
+            task["status"] = status
+            
+        if progress is not None:
+            task["progress"] = progress
+            
+        if message:
+            task["messages"].append({
+                "time": datetime.datetime.now().isoformat(),
+                "content": message
+            })
+            
+        if result:
+            task["result"] = result
+            
+        task["updated_at"] = datetime.datetime.now().isoformat()
+        
+        # If task is complete, move to completed tasks
+        if status in ["completed", "error"]:
+            task["completed_at"] = datetime.datetime.now().isoformat()
+            self.completed_tasks[task_id] = task
+            del self.active_tasks[task_id]
+    
+    def get_task_status(self, task_id):
+        """Get the current status of a task."""
+        if task_id in self.active_tasks:
+            return {
+                "status": "active",
+                "task_data": self.active_tasks[task_id]
+            }
+            
+        if task_id in self.completed_tasks:
+            return {
+                "status": "completed",
+                "task_data": self.completed_tasks[task_id]
+            }
+            
+        return {
+            "status": "error",
+            "message": f"Task {task_id} not found"
+        }
+    
+    def list_tasks(self):
+        """List all tasks."""
+        return {
+            "active_tasks": list(self.active_tasks.values()),
+            "completed_tasks": list(self.completed_tasks.values()),
+            "total_active": len(self.active_tasks),
+            "total_completed": len(self.completed_tasks)
+        }
+
+# Initialize task manager
+task_manager = TaskManager()
 
 # Import the collaboration API
 try:
@@ -257,14 +481,30 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         location = location_match.group(1) if location_match else None
                         
                         if location:
-                            response = f"I'm searching for smoke shop data in {location}. I'll delegate this task to the Daddy Data agent, which specializes in business research and contact information. It will compile phone numbers, addresses, email addresses, business hours, and website URLs as requested."
+                            # Create a background task for the data gathering
+                            import uuid
+                            task_id = f"task_{uuid.uuid4().hex[:8]}"
+                            
+                            # Create the task
+                            task_details = {
+                                "type": "smokeshop_research",
+                                "location": location,
+                                "limit": 20,
+                                "requested_by": session_id
+                            }
+                            
+                            task_result = task_manager.create_task(task_id, task_details)
+                            
+                            # Prepare response
+                            response = f"I'm searching for smoke shop data in {location}. I've delegated this task to the Daddy Data agent, which specializes in business research and contact information. It will compile phone numbers, addresses, email addresses, business hours, and website URLs as requested. Task ID: {task_id}"
                             
                             # Add detailed thinking
                             thinking = f"Analyzing request: '{content}'\n\n"
                             thinking += f"Detected capabilities: {', '.join(capabilities)}\n\n"
                             thinking += f"Location detected: {location}\n\n"
+                            thinking += f"Created background task: {task_id}\n\n"
                             thinking += "Delegating to Daddy Data agent which has business_research, web_research, and contact_finder capabilities.\n\n"
-                            thinking += "Preparing to search business directories and smoke shop registries for this location."
+                            thinking += "Task is now running in the background and will continue even if the user disconnects."
                         else:
                             response = "I'd be happy to help you find smoke shop data. Could you please specify which city or location you're interested in?"
                             thinking = "Request requires location specification for smoke shop data."
