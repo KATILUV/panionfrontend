@@ -7,10 +7,10 @@
 /* Custom animation classes */
 @keyframes subtle-bounce {
   0%, 100% {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
   50% {
-    transform: translateY(-3px);
+    transform: translateY(-4px) scale(1.05);
   }
 }
 

@@ -142,6 +142,8 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
       <ContextMenuTrigger>
         <button
           onClick={() => onClick(id)}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
           className={`
             group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
             ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
