@@ -141,7 +141,10 @@ export function TaskbarSettings() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => {
-                  clearPinnedAgents();
+                  console.log("Before clearing pinned agents:", pinnedAgents);
+                  const clearPinnedAgentsFn = useTaskbarStore.getState().clearPinnedAgents;
+                  clearPinnedAgentsFn();
+                  console.log("After clearing pinned agents:", useTaskbarStore.getState().pinnedAgents);
                   toast({
                     title: "Taskbar cleared",
                     description: "All agents have been removed from the taskbar",
@@ -199,10 +202,13 @@ export function TaskbarSettings() {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => {
-                          unpinAgent(agentId);
+                          console.log("Before unpinning agent:", agentId, pinnedAgents);
+                          const unpinAgentFn = useTaskbarStore.getState().unpinAgent;
+                          unpinAgentFn(agentId);
+                          console.log("After unpinning agent:", agentId, useTaskbarStore.getState().pinnedAgents);
                           toast({
                             title: "Agent unpinned",
-                            description: `${agent.name} has been removed from the taskbar`,
+                            description: `${agent.name || 'Agent'} has been removed from the taskbar`,
                           });
                         }}
                         className="text-destructive hover:bg-destructive/10 h-8 w-8"
@@ -263,10 +269,13 @@ export function TaskbarSettings() {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => {
-                          pinAgent(id);
+                          console.log("Before pinning agent:", id, pinnedAgents);
+                          const pinAgentFn = useTaskbarStore.getState().pinAgent;
+                          pinAgentFn(id);
+                          console.log("After pinning agent:", id, useTaskbarStore.getState().pinnedAgents);
                           toast({
                             title: "Agent pinned",
-                            description: `${agent.name} has been added to the taskbar`,
+                            description: `${agent.name || 'Agent'} has been added to the taskbar`,
                           });
                         }}
                         className="text-primary hover:bg-primary/10 h-8 w-8"
