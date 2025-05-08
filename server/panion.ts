@@ -147,15 +147,19 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
   try {
     const { 
       message, 
+      content,
       sessionId = 'default',
       hasRequiredCapabilities = true, 
       capabilities = []
     } = req.body;
     
-    if (!message || typeof message !== 'string') {
+    // Support both 'message' and 'content' parameters for flexibility
+    const messageContent = content || message;
+    
+    if (!messageContent || typeof messageContent !== 'string') {
       return res.status(400).json({ 
         error: 'Invalid request',
-        message: 'Message is required and must be a string' 
+        message: 'Message content is required and must be a string' 
       });
     }
     
@@ -166,7 +170,7 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
     
     // Forward the request to the Panion API with additional info
     const response = await axios.post(`${PANION_API_URL}/chat`, {
-      content: message,
+      content: messageContent,
       session_id: sessionId,  // This is the correct format for the backend
       metadata: {
         hasRequiredCapabilities,
@@ -181,7 +185,7 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
     
     // If capabilities were detected, add related thinking
     if (capabilities && capabilities.length > 0) {
-      thinking = `Analyzing request: "${message}"\n\n`;
+      thinking = `Analyzing request: "${messageContent}"\n\n`;
       thinking += `Detected capabilities needed: ${capabilities.join(', ')}\n\n`;
       
       if (hasRequiredCapabilities) {
