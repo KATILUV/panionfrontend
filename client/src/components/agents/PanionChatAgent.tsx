@@ -43,6 +43,8 @@ const PanionChatAgent: React.FC = () => {
   const openAgent = useAgentStore(state => state.openAgent);
   const focusAgent = useAgentStore(state => state.focusAgent);
   const registry = useAgentStore(state => state.registry);
+  const isStrategicModeEnabled = useAgentStore(state => state.isStrategicModeEnabled);
+  const toggleStrategicMode = useAgentStore(state => state.toggleStrategicMode);
   
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -60,7 +62,8 @@ const PanionChatAgent: React.FC = () => {
   const [needsMoreInfo, setNeedsMoreInfo] = useState<string | null>(null); // For asking clarifying questions
   const [showThinking, setShowThinking] = useState(false); // Toggle for thinking process display
   const [processingProgress, setProcessingProgress] = useState(0); // Progress indicator
-  const [strategicMode, setStrategicMode] = useState(false); // Toggle for strategic orchestration
+  // Strategic mode is now controlled by the global store
+  const strategicMode = isStrategicModeEnabled;
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -317,6 +320,24 @@ const PanionChatAgent: React.FC = () => {
     // Reset processing stages
     setProcessingStage("Analyzing your request...");
     
+    // Automatically detect if strategic mode should be enabled based on the complexity of the request
+    const shouldEnableStrategicMode = shouldUseStrategicMode(userMessage.content);
+    
+    // If strategic mode should be enabled and it's not already enabled, turn it on
+    if (shouldEnableStrategicMode && !strategicMode) {
+      toggleStrategicMode();
+      
+      // Let the user know that strategic mode was automatically enabled
+      const strategicModeMessage: ChatMessage = {
+        id: generateId(),
+        content: "I've enabled strategic mode for this complex request. I'll use multiple approaches and provide a more thorough response.",
+        isUser: false,
+        timestamp: formatTime(new Date()),
+      };
+      
+      setMessages(prev => [...prev, strategicModeMessage]);
+    }
+    
     // This simulates progress updates during processing
     const progressInterval = setInterval(() => {
       setProcessingProgress(prev => {
@@ -515,6 +536,85 @@ const PanionChatAgent: React.FC = () => {
     
     return null;
   };
+  
+  // Function to detect tasks that would benefit from strategic mode
+  const shouldUseStrategicMode = (message: string): boolean => {
+    const lowerMessage = message.toLowerCase();
+    
+    // Indicators of complex tasks that need strategic thinking and multiple approaches
+    const complexityIndicators = [
+      // Task complexity indicators
+      { pattern: 'compare', weight: 0.7 },
+      { pattern: 'multi', weight: 0.6 },
+      { pattern: 'complex', weight: 0.8 },
+      { pattern: 'comprehensive', weight: 0.7 },
+      { pattern: 'thorough', weight: 0.6 },
+      { pattern: 'detailed', weight: 0.5 },
+      { pattern: 'in-depth', weight: 0.7 },
+      
+      // Analytical requirements
+      { pattern: 'analyze', weight: 0.6 },
+      { pattern: 'research', weight: 0.5 },
+      { pattern: 'evaluate', weight: 0.6 },
+      { pattern: 'assess', weight: 0.6 },
+      { pattern: 'investigate', weight: 0.6 },
+      
+      // Multiple sources/strategies
+      { pattern: 'different sources', weight: 0.8 },
+      { pattern: 'multiple perspectives', weight: 0.8 },
+      { pattern: 'alternative approach', weight: 0.7 },
+      { pattern: 'various methods', weight: 0.7 },
+      
+      // Data and quality indicators
+      { pattern: 'accurate', weight: 0.6 },
+      { pattern: 'validate', weight: 0.7 },
+      { pattern: 'verify', weight: 0.7 },
+      { pattern: 'confirm', weight: 0.5 },
+      { pattern: 'ensure', weight: 0.5 },
+      
+      // Strategic keywords
+      { pattern: 'strategy', weight: 0.8 },
+      { pattern: 'strategic', weight: 0.9 },
+      { pattern: 'optimize', weight: 0.7 },
+      { pattern: 'plan', weight: 0.5 },
+      
+      // Business and competitive analysis
+      { pattern: 'market', weight: 0.6 },
+      { pattern: 'competitor', weight: 0.7 },
+      { pattern: 'industry', weight: 0.6 },
+      { pattern: 'business', weight: 0.5 },
+    ];
+    
+    // Calculate complexity score based on indicators
+    let complexityScore = 0;
+    let matchedIndicators = 0;
+    
+    complexityIndicators.forEach(indicator => {
+      if (lowerMessage.includes(indicator.pattern)) {
+        complexityScore += indicator.weight;
+        matchedIndicators++;
+      }
+    });
+    
+    // Message length is also an indicator of complexity
+    if (message.length > 100) {
+      complexityScore += 0.3;
+    }
+    if (message.length > 200) {
+      complexityScore += 0.2;
+    }
+    
+    // Normalize based on number of matched indicators (to prevent long messages with
+    // many indicators from always triggering strategic mode)
+    const normalizedScore = matchedIndicators > 0 
+      ? complexityScore / Math.sqrt(matchedIndicators) 
+      : complexityScore;
+    
+    // Decision threshold - tune this value as needed
+    const strategicModeThreshold = 1.0;
+    
+    return normalizedScore >= strategicModeThreshold;
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !isLoading) {
@@ -650,7 +750,7 @@ const PanionChatAgent: React.FC = () => {
                 type="checkbox"
                 id="strategic-toggle"
                 checked={strategicMode}
-                onChange={() => setStrategicMode(!strategicMode)}
+                onChange={() => toggleStrategicMode()}
                 className="sr-only peer"
               />
               <label 
@@ -682,7 +782,11 @@ const PanionChatAgent: React.FC = () => {
               setProcessingStage(null);
               setProcessingProgress(0);
               setNeedsMoreInfo(null);
-              setStrategicMode(false); // Reset strategic mode on new chat
+              
+              // Reset strategic mode on new chat - if it was enabled
+              if (strategicMode) {
+                toggleStrategicMode();
+              }
             }}
           >
             <RotateCcw className="h-3 w-3 mr-1" />
