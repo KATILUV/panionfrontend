@@ -247,7 +247,7 @@ export function TaskbarSettings() {
                       AgentIcon = Brain;
                       break;
                     case 'scientist':
-                      AgentIcon = Flask;
+                      AgentIcon = FlaskConical;
                       break;
                     case 'scheduler':
                       AgentIcon = Clock;

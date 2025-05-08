@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence } from 'framer-motion';
 import { useScreenSize, useOrientation } from '../hooks/use-mobile';
 import { useTaskbarDimensions } from '../hooks/use-taskbar-dimensions';
+import { unpinAgentDirectly } from '../utils/unpinUtils';
 
 // ThemeAwareButton Component for Empty Dashboard
 interface ThemeAwareButtonProps {
@@ -256,6 +257,15 @@ const Desktop: React.FC = () => {
     
     // Simple initialization - no complex layouts
     log.action('Using simplified layout system');
+    
+    // Unpin the smokeshop agent from the taskbar if present
+    try {
+      // First try the direct method that modifies localStorage
+      unpinAgentDirectly('smokeshop');
+      log.action('Removed smokeshop agent from taskbar');
+    } catch (err) {
+      console.error("Error removing smokeshop agent:", err);
+    }
     
     // Only open Panion Chat on startup (no split view)
     setTimeout(() => {
