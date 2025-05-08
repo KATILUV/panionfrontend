@@ -326,7 +326,7 @@ router.post('/api/panion/dispatch', checkPanionAPIMiddleware, async (req: Reques
 });
 router.post('/api/panion/scrape', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
   try {
-    const { targetType, location, limit = 20, additionalParams = {} } = req.body;
+    const { targetType, location, limit = 20, additionalParams = {}, useEnhancedScraper = false } = req.body;
     
     if (!targetType) {
       return res.status(400).json({ 
@@ -335,7 +335,26 @@ router.post('/api/panion/scrape', checkPanionAPIMiddleware, async (req: Request,
       });
     }
     
-    // Forward the request to the Panion API
+    // Use enhanced scraper with adaptive strategies if requested
+    if (useEnhancedScraper && targetType === "business") {
+      log(`Using enhanced scraper with adaptive strategy for ${additionalParams.business_type || 'business'} in ${location}`, 'panion');
+      
+      try {
+        const response = await axios.post(`${PANION_API_URL}/scrape/enhanced`, {
+          business_type: additionalParams.business_type || "shop",
+          location,
+          limit,
+          source: additionalParams.source || "adaptive"
+        });
+        
+        return res.json(response.data);
+      } catch (error) {
+        log(`Enhanced scraper failed, falling back to standard scraper: ${error}`, 'panion');
+        // Continue to standard scraping if enhanced scraper fails
+      }
+    }
+    
+    // Standard scraping as fallback
     const response = await axios.post(`${PANION_API_URL}/scrape`, {
       target_type: targetType,
       location,
@@ -349,6 +368,38 @@ router.post('/api/panion/scrape', checkPanionAPIMiddleware, async (req: Request,
     res.status(500).json({ 
       error: 'Panion API error',
       message: 'Error communicating with Panion API' 
+    });
+  }
+});
+
+// Dedicated endpoint for enhanced scraper with adaptive strategy selection
+router.post('/api/panion/scrape/enhanced', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { businessType, location, limit = 20, source = "adaptive" } = req.body;
+    
+    if (!businessType || !location) {
+      return res.status(400).json({ 
+        error: 'Invalid request',
+        message: 'Business type and location are required' 
+      });
+    }
+    
+    log(`Using enhanced scraper for ${businessType} in ${location} with ${source} strategy`, 'panion');
+    
+    // Forward the request to the enhanced scraper API
+    const response = await axios.post(`${PANION_API_URL}/scrape/enhanced`, {
+      business_type: businessType,
+      location,
+      limit,
+      source
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    log(`Error in enhanced scraping: ${error}`, 'panion');
+    res.status(500).json({ 
+      error: 'Enhanced scraper error',
+      message: 'Error with enhanced scraping system' 
     });
   }
 });
