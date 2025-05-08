@@ -10,8 +10,24 @@ import json
 import time
 import logging
 import datetime
+import threading
+import re
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
+
+# Import the web scraper
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    from scrapers.smokeshop_scraper import SmokeshopScraper
+except ImportError as e:
+    logging.error(f"Failed to import scraper: {e}")
+    class SmokeshopScraper:
+        def __init__(self):
+            pass
+        def scrape_multiple_sources(self, *args, **kwargs):
+            return []
+        def save_to_json(self, *args, **kwargs):
+            return "Error: Scraper not available"
 
 # Configure logging
 logging.basicConfig(
@@ -175,13 +191,39 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                 if "hello" in content.lower() or "hi" in content.lower():
                     response = "Hello! I'm your Panion assistant. How can I help you today?"
                 elif "help" in content.lower():
-                    response = "I can help with various tasks like:\n- Creating and monitoring goals\n- Managing agent teams\n- Providing system analytics\n- Answering questions about the Panion system"
+                    response = "I can help with various tasks like:\n- Creating and monitoring goals\n- Managing agent teams\n- Providing system analytics\n- Answering questions about the Panion system\n- Web scraping data from online sources"
                 elif "goal" in content.lower() or "task" in content.lower():
                     response = "I can help you create a new goal or task. Would you like me to help you define the requirements and assign it to the most suitable agents?"
                 elif "agent" in content.lower() or "team" in content.lower():
                     response = "We have several agents with different capabilities. I can help you form a team for a specific task or show you the available agents."
                 elif "stat" in content.lower() or "system" in content.lower():
                     response = f"The system is currently active. We have {len(AGENTS)} agents and 5 plugins available."
+                # Check for web scraping requests related to smoke shops
+                elif re.search(r"(scrape|find|get|collect|search).*(smoke\s*shop|smokeshop)", content.lower()) or \
+                     re.search(r"(smoke\s*shop|smokeshop).*(info|data|details|phone|contact)", content.lower()):
+                    
+                    # Extract location if specified
+                    location_match = re.search(r"in\s+([A-Za-z\s]+)(?:,|\.|$|\s)", content)
+                    location = location_match.group(1) if location_match else "New York"
+                    
+                    # Extract limit if specified
+                    limit_match = re.search(r"(\d+)\s+(smoke\s*shops?|results|stores?)", content)
+                    limit = int(limit_match.group(1)) if limit_match else 10
+                    limit = min(limit, 100)  # Cap at 100
+                    
+                    response = f"I'll scrape information for {limit} smoke shops in {location}. This might take a minute..."
+                    
+                    # Start scraping in a background thread to avoid blocking
+                    def scrape_in_background():
+                        try:
+                            scraper = SmokeshopScraper()
+                            shops = scraper.scrape_multiple_sources(location=location, limit=limit)
+                            filepath = scraper.save_to_json(shops)
+                            logger.info(f"Scraping complete: {len(shops)} shops saved to {filepath}")
+                        except Exception as e:
+                            logger.error(f"Error during scraping: {str(e)}")
+                    
+                    threading.Thread(target=scrape_in_background).start()
                 else:
                     # Default response for other types of messages
                     response = f"I understand that you're asking about '{content}'. Let me analyze this and find the best way to help you with this request."
