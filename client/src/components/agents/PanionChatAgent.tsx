@@ -251,6 +251,28 @@ const PanionChatAgent: React.FC = () => {
     setIsLoading(true);
     
     try {
+      // Check for required capabilities
+      const requiredCapabilities = detectRequiredCapabilities(inputValue);
+      
+      // Handle missing capabilities if any are detected
+      const createdNewAgents = requiredCapabilities.length > 0 ? 
+        await handleMissingCapabilities(requiredCapabilities) : false;
+      
+      // If we're creating new agents and they're in progress, show a loading message
+      if (createdNewAgents && dynamicAgentCreationInProgress) {
+        const loadingMessage: ChatMessage = {
+          id: generateId(),
+          content: "I'm still setting up the specialized agent(s). This should only take a moment...",
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, loadingMessage]);
+        
+        // Wait a bit for agent creation to complete
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+      
       // Send message to Panion API
       const response = await fetch('/api/panion/chat', {
         method: 'POST',
@@ -260,6 +282,8 @@ const PanionChatAgent: React.FC = () => {
         body: JSON.stringify({
           message: inputValue,
           sessionId,
+          hasRequiredCapabilities: requiredCapabilities.length === 0 || !createdNewAgents,
+          capabilities: requiredCapabilities
         }),
       });
       

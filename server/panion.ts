@@ -128,7 +128,12 @@ const checkPanionAPIMiddleware = async (req: Request, res: Response, next: NextF
 // Proxy endpoint for Panion API - chat capability
 router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
   try {
-    const { message, sessionId = 'default' } = req.body;
+    const { 
+      message, 
+      sessionId = 'default',
+      hasRequiredCapabilities = true, 
+      capabilities = []
+    } = req.body;
     
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ 
@@ -137,11 +142,45 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
       });
     }
     
-    // Forward the request to the Panion API
+    // Log capability information
+    if (capabilities && capabilities.length > 0) {
+      log(`Message requires capabilities: ${capabilities.join(', ')}`, 'panion');
+    }
+    
+    // Forward the request to the Panion API with additional info
     const response = await axios.post(`${PANION_API_URL}/chat`, {
       content: message,
-      sessionId
+      sessionId,
+      metadata: {
+        hasRequiredCapabilities,
+        capabilities: capabilities || [],
+        requestedAt: new Date().toISOString(),
+        client: 'frontend',
+      }
     });
+    
+    // Add thinking details to the response
+    let thinking = '';
+    
+    // If capabilities were detected, add related thinking
+    if (capabilities && capabilities.length > 0) {
+      thinking = `Analyzing request: "${message}"\n\n`;
+      thinking += `Detected capabilities needed: ${capabilities.join(', ')}\n\n`;
+      
+      if (hasRequiredCapabilities) {
+        thinking += `Required capabilities are available. Processing request directly.`;
+      } else {
+        thinking += `Some capabilities were missing. New agents have been created to handle this request.`;
+      }
+      
+      // Merge with existing thinking if there is any
+      if (response.data.thinking) {
+        thinking += `\n\n${response.data.thinking}`;
+      }
+      
+      // Update the thinking in the response
+      response.data.thinking = thinking;
+    }
     
     res.json(response.data);
   } catch (error) {

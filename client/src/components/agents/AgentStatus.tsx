@@ -1,104 +1,63 @@
 import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, AlertCircle, CheckCircle2, Ellipsis } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type StatusType = 'idle' | 'thinking' | 'active' | 'paused' | 'error' | 'success' | 'waiting' | 'learning';
-
 interface AgentStatusProps {
-  status: StatusType;
-  size?: 'sm' | 'md';
+  status: 'idle' | 'thinking' | 'active' | 'error';
   showLabel?: boolean;
-  pulsingAnimation?: boolean;
-  className?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export const AgentStatus: React.FC<AgentStatusProps> = ({
-  status,
-  size = 'md',
+export const AgentStatus: React.FC<AgentStatusProps> = ({ 
+  status, 
   showLabel = true,
-  pulsingAnimation = true,
-  className
+  size = 'md'
 }) => {
-  const statusConfig = {
-    idle: {
-      color: 'bg-slate-400',
-      label: 'Idle',
-      pulsing: false
-    },
-    thinking: {
-      color: 'bg-blue-400',
-      label: 'Thinking',
-      pulsing: true
-    },
-    active: {
-      color: 'bg-emerald-500',
-      label: 'Active',
-      pulsing: true
-    },
-    paused: {
-      color: 'bg-amber-400',
-      label: 'Paused',
-      pulsing: false
-    },
-    error: {
-      color: 'bg-red-500',
-      label: 'Error',
-      pulsing: false
-    },
-    success: {
-      color: 'bg-green-500',
-      label: 'Success',
-      pulsing: false
-    },
-    waiting: {
-      color: 'bg-purple-400',
-      label: 'Waiting',
-      pulsing: true
-    },
-    learning: {
-      color: 'bg-cyan-400',
-      label: 'Learning',
-      pulsing: true
-    }
-  };
-
-  const config = statusConfig[status];
-  const shouldPulse = pulsingAnimation && config.pulsing;
+  let icon: React.ReactNode;
+  let label: string;
+  let variant: 'outline' | 'secondary' | 'destructive' | 'default' = 'outline';
+  
+  switch (status) {
+    case 'thinking':
+      icon = <Loader2 className="h-3 w-3 animate-spin" />;
+      label = 'Thinking';
+      variant = 'secondary';
+      break;
+    case 'active':
+      icon = <CheckCircle2 className="h-3 w-3" />;
+      label = 'Active';
+      variant = 'default';
+      break;
+    case 'error':
+      icon = <AlertCircle className="h-3 w-3" />;
+      label = 'Error';
+      variant = 'destructive';
+      break;
+    case 'idle':
+    default:
+      icon = <Ellipsis className="h-3 w-3" />;
+      label = 'Idle';
+      variant = 'outline';
+  }
+  
+  // Adjust size
+  const sizeClass = {
+    sm: 'text-xs py-0 h-5',
+    md: 'text-xs',
+    lg: 'text-sm'
+  }[size];
   
   return (
-    <div 
+    <Badge 
+      variant={variant} 
       className={cn(
-        "flex items-center space-x-1.5",
-        className
+        "gap-1 font-normal", 
+        sizeClass
       )}
     >
-      <div className="relative flex items-center justify-center">
-        <div 
-          className={cn(
-            config.color,
-            size === 'sm' ? 'h-2 w-2' : 'h-3 w-3',
-            'rounded-full'
-          )}
-        />
-        
-        {shouldPulse && (
-          <div 
-            className={cn(
-              config.color,
-              size === 'sm' ? 'h-2 w-2' : 'h-3 w-3',
-              'absolute rounded-full opacity-60 animate-ping'
-            )}
-          />
-        )}
-      </div>
-      
-      {showLabel && (
-        <span className={cn(
-          "text-xs",
-          size === 'sm' ? 'text-[10px]' : 'text-xs',
-        )}>
-          {config.label}
-        </span>
-      )}
-    </div>
+      {icon}
+      {showLabel && <span>{label}</span>}
+    </Badge>
   );
 };
