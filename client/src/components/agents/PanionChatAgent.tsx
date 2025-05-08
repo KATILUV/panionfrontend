@@ -1268,6 +1268,9 @@ const PanionChatAgent: React.FC = () => {
     // Check if we should use the advanced strategic planner
     const shouldUseAdvancedPlannerMode = shouldUseAdvancedPlanner(userMessage.content);
     
+    // Check if we should delegate to autonomous agent
+    const shouldDelegate = shouldDelegateToAutonomousAgent(userMessage.content);
+    
     // If strategic mode should be enabled and it's not already enabled, turn it on
     if (shouldEnableStrategicMode && !strategicMode) {
       toggleStrategicMode();
@@ -1844,6 +1847,88 @@ const PanionChatAgent: React.FC = () => {
     const isLongComplex = message.length > 120 && shouldUseStrategicMode(message);
     
     return hasDirectTrigger || hasComplexTask || isLongComplex;
+  };
+  
+  // Detect if a task should be handled by the autonomous agent
+  const shouldDelegateToAutonomousAgent = (message: string): boolean => {
+    const lowerMessage = message.toLowerCase();
+    
+    // Indicators suggesting task is appropriate for autonomous agent
+    const autonomousAgentIndicators = [
+      // Long-running task indicators
+      { pattern: 'continue', weight: 0.6 },
+      { pattern: 'keep running', weight: 0.9 },
+      { pattern: 'even when', weight: 0.7 },
+      { pattern: 'periodically', weight: 0.8 },
+      { pattern: 'regular', weight: 0.5 },
+      { pattern: 'over time', weight: 0.7 },
+      { pattern: 'long-term', weight: 0.8 },
+      { pattern: 'monitor', weight: 0.8 },
+      { pattern: 'track', weight: 0.6 },
+      { pattern: 'background', weight: 0.7 },
+      { pattern: 'while i', weight: 0.6 },
+      { pattern: 'when i\'m not', weight: 0.9 },
+      { pattern: 'even if i', weight: 0.7 },
+      { pattern: 'autonomous', weight: 0.8 },
+      
+      // Complex data-gathering indicators
+      { pattern: 'comprehensive research', weight: 0.8 },
+      { pattern: 'gather data', weight: 0.7 },
+      { pattern: 'compile information', weight: 0.7 },
+      { pattern: 'extensive search', weight: 0.7 },
+      { pattern: 'find all', weight: 0.6 },
+      { pattern: 'collect contact', weight: 0.8 },
+      { pattern: 'many locations', weight: 0.7 },
+      { pattern: 'multiple cities', weight: 0.7 },
+      { pattern: 'all the businesses', weight: 0.8 },
+      { pattern: 'across different', weight: 0.7 },
+      
+      // Multi-step or complex process indicators
+      { pattern: 'multi-step', weight: 0.8 },
+      { pattern: 'complex process', weight: 0.8 },
+      { pattern: 'workflow', weight: 0.7 },
+      { pattern: 'process and analyze', weight: 0.8 },
+      { pattern: 'organize and format', weight: 0.7 },
+      { pattern: 'verify and validate', weight: 0.7 }
+    ];
+    
+    // Calculate how many indicators are present and their weighted score
+    let score = 0;
+    let matches = 0;
+    
+    for (const indicator of autonomousAgentIndicators) {
+      if (lowerMessage.includes(indicator.pattern)) {
+        score += indicator.weight;
+        matches++;
+      }
+    }
+    
+    // Message length is also a factor - longer messages often describe complex tasks
+    const lengthFactor = Math.min(lowerMessage.length / 200, 1) * 0.4;
+    score += lengthFactor;
+    
+    // Check explicit mentions of autonomous agent preference
+    const explicitMentions = [
+      'use autonomous agent', 
+      'delegate to autonomous', 
+      'run as autonomous task',
+      'continue in background',
+      'keep working when',
+      'run autonomously'
+    ];
+    
+    const hasExplicitMention = explicitMentions.some(phrase => lowerMessage.includes(phrase));
+    
+    // Decision factors:
+    // 1. Score from indicators
+    // 2. Number of matches
+    // 3. Explicit mentions
+    // 4. Message complexity (based on shouldUseAdvancedPlanner)
+    
+    // Either high score with multiple matches, or an explicit mention
+    return (score >= 1.5 && matches >= 2) || 
+           hasExplicitMention || 
+           (shouldUseAdvancedPlanner(message) && score >= 0.8);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
