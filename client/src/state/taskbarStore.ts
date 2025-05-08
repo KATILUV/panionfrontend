@@ -52,9 +52,8 @@ const DEFAULT_WIDGETS: TaskbarWidgetType[] = [
   'versionNumber'
 ];
 
-// Minimal set of widgets
+// Minimal set of widgets (even more minimal now)
 const MINIMAL_WIDGETS: TaskbarWidgetType[] = [
-  'layoutManager',
   'systemConsole'
 ];
 

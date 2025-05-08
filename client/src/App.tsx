@@ -24,6 +24,7 @@ import CollaborationAgent from "./components/agents/CollaborationAgent";
 import TaskSchedulerAgent from "./components/agents/TaskSchedulerAgent";
 import DaddyDataAgent from "./components/agents/DaddyDataAgent";
 import { useAgentStore } from "./state/agentStore";
+import { useTaskbarStore } from "./state/taskbarStore";
 import ThemeProvider from "./components/common/ThemeProvider";
 
 function Router() {
@@ -92,8 +93,12 @@ function App() {
   // Register available agents with their actual components
   useEffect(() => {
     const agentStore = useAgentStore.getState();
+    const taskbarStore = useTaskbarStore.getState();
     
-    // Force open the Panion agent after a delay to ensure it's properly registered
+    // Apply minimal taskbar preset for a cleaner interface
+    taskbarStore.applyMinimalPreset();
+    
+    // Force open only the Panion agent after a delay to ensure it's properly registered
     setTimeout(() => {
       try {
         console.log('App: Forcing open Panion agent');

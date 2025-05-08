@@ -41,10 +41,13 @@ const PanionChatAgent: React.FC = () => {
   const dynamicAgentCreationInProgress = useAgentStore(state => state.dynamicAgentCreationInProgress);
   const findBestAgentForCapabilities = useAgentStore(state => state.findBestAgentForCapabilities);
   const openAgent = useAgentStore(state => state.openAgent);
+  const focusAgent = useAgentStore(state => state.focusAgent);
+  const registry = useAgentStore(state => state.registry);
+  
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: generateId(),
-      content: "Hello! I'm your Panion assistant. How can I help you today?",
+      content: "Hello! I'm your Panion assistant. I can help with your tasks directly or delegate to specialized agents when needed. I work closely with Clara for personal assistance. How can I help you today?",
       isUser: false,
       timestamp: formatTime(new Date()),
     }
@@ -57,6 +60,7 @@ const PanionChatAgent: React.FC = () => {
   const [needsMoreInfo, setNeedsMoreInfo] = useState<string | null>(null); // For asking clarifying questions
   const [showThinking, setShowThinking] = useState(false); // Toggle for thinking process display
   const [processingProgress, setProcessingProgress] = useState(0); // Progress indicator
+  const [strategicMode, setStrategicMode] = useState(false); // Toggle for strategic orchestration
   
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
