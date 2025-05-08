@@ -1915,82 +1915,71 @@ const PanionChatAgent: React.FC = () => {
   const shouldDelegateToAutonomousAgent = (message: string): boolean => {
     const lowerMessage = message.toLowerCase();
     
-    // Indicators suggesting task is appropriate for autonomous agent
-    const autonomousAgentIndicators = [
-      // Long-running task indicators
-      { pattern: 'continue', weight: 0.6 },
-      { pattern: 'keep running', weight: 0.9 },
-      { pattern: 'even when', weight: 0.7 },
-      { pattern: 'periodically', weight: 0.8 },
-      { pattern: 'regular', weight: 0.5 },
-      { pattern: 'over time', weight: 0.7 },
-      { pattern: 'long-term', weight: 0.8 },
-      { pattern: 'monitor', weight: 0.8 },
-      { pattern: 'track', weight: 0.6 },
-      { pattern: 'background', weight: 0.7 },
-      { pattern: 'while i', weight: 0.6 },
-      { pattern: 'when i\'m not', weight: 0.9 },
-      { pattern: 'even if i', weight: 0.7 },
-      { pattern: 'autonomous', weight: 0.8 },
+    // Complex indicators that suggest a task is best handled autonomously
+    const hasAutonomousIndicators = [
+      'find all', 'search for all', 'gather all', 'collect all', 'extensive research',
+      'deep analysis', 'multi-step', 'time-consuming', 'overnight', 'background',
+      'continue working', 'keep running', 'keep searching',
+      'comprehensive report', 'detailed analysis', 'data mining',
+      'monitor', 'track changes', 'alert me', 'while I\'m away',
+      'periodic updates', 'ongoing task', 'long-running', 'continue', 'keep running',
+      'even when', 'periodically'
+    ].some(indicator => lowerMessage.includes(indicator));
+    
+    // Business-specific indicators suggesting autonomous processing
+    const hasBusinessResearchIndicators = [
+      'contact information for multiple', 'find owners of', 'business owners in',
+      'compile a list of', 'all businesses that', 'survey the market',
+      'industry-wide analysis', 'competitive landscape', 'market research',
+      'contact details for', 'find decision makers', 'identify stakeholders',
+      'generate leads', 'sales prospects', 'potential clients',
+      'linkedin profile', 'find executives', 'key personnel'
+    ].some(indicator => lowerMessage.includes(indicator));
+    
+    // Context or data volume indicators
+    const hasLargeDataVolumeIndicators = [
+      'large dataset', 'big data', 'process data', 'analyze data',
+      'all available sources', 'multiple sources', 'cross-reference',
+      'correlate data', 'find patterns', 'identify trends',
+      'across multiple', 'in the whole', 'entire industry',
+      'all competitors', 'throughout the market', 'all records'
+    ].some(indicator => lowerMessage.includes(indicator));
+    
+    // Geographic scope indicators
+    const hasWideGeographicScopeIndicators = [
+      'nationwide', 'across the country', 'in every state',
+      'multiple cities', 'regions', 'all locations', 
+      'different areas', 'global', 'international'
+    ].some(indicator => lowerMessage.includes(indicator));
+    
+    // Task length and complexity indicators
+    const isVeryLongRequest = message.length > 150;
+    const hasMultipleQuestions = (message.match(/\?/g) || []).length >= 2;
+    const hasBulletPoints = message.includes('-') || message.includes('•') || message.includes('*');
+    const hasNumberedPoints = /\d+\.\s/.test(message);
+    const hasMultipleResearchPoints = hasBulletPoints || hasNumberedPoints;
+    
+    // Special indicators for task continuity
+    const suggestsOfflineProcessing = [
+      'when I\'m offline', 'continue in the background', 'keep working on this',
+      'work on this while', 'until completion', 'autonomous', 'agent', 
+      'run in background', 'use autonomous'
+    ].some(indicator => lowerMessage.includes(indicator));
+    
+    // Make decision based on combinations of factors
+    return (
+      // Explicit requests for autonomous processing
+      suggestsOfflineProcessing ||
       
-      // Complex data-gathering indicators
-      { pattern: 'comprehensive research', weight: 0.8 },
-      { pattern: 'gather data', weight: 0.7 },
-      { pattern: 'compile information', weight: 0.7 },
-      { pattern: 'extensive search', weight: 0.7 },
-      { pattern: 'find all', weight: 0.6 },
-      { pattern: 'collect contact', weight: 0.8 },
-      { pattern: 'many locations', weight: 0.7 },
-      { pattern: 'multiple cities', weight: 0.7 },
-      { pattern: 'all the businesses', weight: 0.8 },
-      { pattern: 'across different', weight: 0.7 },
+      // Complex business research with high data volume
+      (hasBusinessResearchIndicators && (hasLargeDataVolumeIndicators || hasWideGeographicScopeIndicators)) ||
       
-      // Multi-step or complex process indicators
-      { pattern: 'multi-step', weight: 0.8 },
-      { pattern: 'complex process', weight: 0.8 },
-      { pattern: 'workflow', weight: 0.7 },
-      { pattern: 'process and analyze', weight: 0.8 },
-      { pattern: 'organize and format', weight: 0.7 },
-      { pattern: 'verify and validate', weight: 0.7 }
-    ];
-    
-    // Calculate how many indicators are present and their weighted score
-    let score = 0;
-    let matches = 0;
-    
-    for (const indicator of autonomousAgentIndicators) {
-      if (lowerMessage.includes(indicator.pattern)) {
-        score += indicator.weight;
-        matches++;
-      }
-    }
-    
-    // Message length is also a factor - longer messages often describe complex tasks
-    const lengthFactor = Math.min(lowerMessage.length / 200, 1) * 0.4;
-    score += lengthFactor;
-    
-    // Check explicit mentions of autonomous agent preference
-    const explicitMentions = [
-      'use autonomous agent', 
-      'delegate to autonomous', 
-      'run as autonomous task',
-      'continue in background',
-      'keep working when',
-      'run autonomously'
-    ];
-    
-    const hasExplicitMention = explicitMentions.some(phrase => lowerMessage.includes(phrase));
-    
-    // Decision factors:
-    // 1. Score from indicators
-    // 2. Number of matches
-    // 3. Explicit mentions
-    // 4. Message complexity (based on shouldUseAdvancedPlanner)
-    
-    // Either high score with multiple matches, or an explicit mention
-    return (score >= 1.5 && matches >= 2) || 
-           hasExplicitMention || 
-           (shouldUseAdvancedPlanner(message) && score >= 0.8);
+      // Very complex requests with multiple parts
+      (isVeryLongRequest && hasMultipleResearchPoints && hasMultipleQuestions) ||
+      
+      // Autonomous indicators with context
+      (hasAutonomousIndicators && (isVeryLongRequest || hasLargeDataVolumeIndicators || hasBusinessResearchIndicators))
+    );
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
