@@ -1207,28 +1207,45 @@ router.post('/api/panion/autonomous-task', checkPanionAPIMiddleware, async (req:
       priority = 'medium',
       autoStart = true,
       autoRetry = true,
-      resources = {}
+      resources = {},
+      prompt = '',
+      params = {},
+      strategicMode = false,
+      advancedPlanning = false,
+      capabilities = [],
+      additionalContext = {}
     } = req.body;
     
-    if (!description) {
+    // Use the provided description or generate one from the prompt
+    const taskDescription = description || (prompt ? `Autonomous task: ${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}` : null);
+    
+    if (!taskDescription) {
       return res.status(400).json({
         success: false,
         error: 'Invalid request',
-        message: 'Task description is required'
+        message: 'Either task description or prompt is required'
       });
     }
     
     // Create a task using the autonomous agent system
     const taskData = {
       agentType,
-      description,
+      description: taskDescription,
       priority,
       autoStart,
       autoRetry,
-      resources
+      resources: {
+        ...resources,
+        prompt,
+        params,
+        strategicMode,
+        advancedPlanning,
+        capabilities,
+        additionalContext
+      }
     };
     
-    log(`Creating autonomous task: ${description}`, 'panion');
+    log(`Creating autonomous task: ${taskDescription}`, 'panion');
     
     // Create a new task with the autonomous agent
     const taskId = uuidv4();
@@ -1236,11 +1253,14 @@ router.post('/api/panion/autonomous-task', checkPanionAPIMiddleware, async (req:
     // Create task configuration
     const taskConfig = {
       agentType,
-      description,
+      description: taskDescription,
       priority,
       startTime: new Date(),
-      logs: [`[${new Date().toISOString()}] Task created through Panion integration`],
-      resources,
+      logs: [
+        `[${new Date().toISOString()}] Task created through Panion integration`,
+        `[${new Date().toISOString()}] Strategy: ${strategicMode ? (advancedPlanning ? 'Advanced Planning' : 'Strategic Mode') : 'Standard'}`
+      ],
+      resources: taskData.resources,
       retryCount: 0,
       maxRetries: autoRetry ? 3 : 0,
     };
