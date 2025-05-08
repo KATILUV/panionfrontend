@@ -104,21 +104,25 @@ const CollaborationDashboard: React.FC = () => {
   const fetchAgents = async () => {
     setLoading(true);
     try {
-      // For demo purposes, use mock data if the API call fails
-      // In a real implementation, you'd connect to the actual API
-      try {
-        const response = await fetch('/api/collaboration/agents');
-        if (response.ok) {
-          const data = await response.json();
-          setAgents(data.agents || []);
-        } else {
-          // API error, use sample data
-          setAgents(sampleAgents);
-        }
-      } catch (error) {
-        console.error('Error fetching agents:', error);
-        setAgents(sampleAgents);
+      const response = await fetch('/api/collaboration/agents');
+      if (response.ok) {
+        const data = await response.json();
+        setAgents(data.agents || []);
+      } else {
+        console.error('Error fetching agents:', await response.text());
+        toast({
+          title: "Error",
+          description: "Failed to fetch agents",
+          variant: "destructive"
+        });
       }
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+      toast({
+        title: "Error",
+        description: "Failed to connect to the server",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -127,18 +131,52 @@ const CollaborationDashboard: React.FC = () => {
   const fetchTeams = async () => {
     setLoading(true);
     try {
-      // For demo purposes, use mock data
-      setTeams(sampleTeams);
+      const response = await fetch('/api/collaboration/teams');
+      if (response.ok) {
+        const data = await response.json();
+        setTeams(data.teams || []);
+      } else {
+        console.error('Error fetching teams:', await response.text());
+        toast({
+          title: "Error",
+          description: "Failed to fetch teams",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+      toast({
+        title: "Error",
+        description: "Failed to connect to the server",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchMessages = async (agentId: string) => {
+  const fetchMessages = async (agentId: string = 'all') => {
     setLoading(true);
     try {
-      // For demo purposes, use mock data
-      setMessages(sampleMessages);
+      const response = await fetch(`/api/collaboration/messages/${agentId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data.messages || []);
+      } else {
+        console.error('Error fetching messages:', await response.text());
+        toast({
+          title: "Error",
+          description: "Failed to fetch messages",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to connect to the server",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -147,8 +185,25 @@ const CollaborationDashboard: React.FC = () => {
   const fetchKnowledge = async () => {
     setLoading(true);
     try {
-      // For demo purposes, use mock data
-      setKnowledge(sampleKnowledge);
+      const response = await fetch('/api/collaboration/knowledge');
+      if (response.ok) {
+        const data = await response.json();
+        setKnowledge(data.knowledge || []);
+      } else {
+        console.error('Error fetching knowledge:', await response.text());
+        toast({
+          title: "Error",
+          description: "Failed to fetch knowledge items",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching knowledge:', error);
+      toast({
+        title: "Error",
+        description: "Failed to connect to the server",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -187,26 +242,40 @@ const CollaborationDashboard: React.FC = () => {
         .map(capability => capability.trim())
         .filter(capability => capability.length > 0);
       
-      // In a real implementation, you'd call the API
-      // For demo purposes, just add to the local state
-      const newAgent: Agent = {
-        agent_id: `agent_${Date.now()}`,
-        name: newAgentName,
-        capabilities,
-        registered_at: new Date().toISOString(),
-        last_active: new Date().toISOString()
-      };
-      
-      setAgents([...agents, newAgent]);
-      
-      // Reset form
-      setNewAgentName('');
-      setNewAgentCapabilities('');
-      
-      toast({
-        title: "Success",
-        description: `Agent ${newAgentName} registered successfully`,
+      // Call the API to register the agent
+      const response = await fetch('/api/collaboration/agents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newAgentName,
+          capabilities
+        }),
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.agent) {
+          // Add the new agent to the state
+          setAgents([...agents, data.agent]);
+          
+          // Reset form
+          setNewAgentName('');
+          setNewAgentCapabilities('');
+          
+          toast({
+            title: "Success",
+            description: `Agent ${data.agent.name} registered successfully`,
+          });
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error registering agent:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
     } catch (error) {
       console.error('Error registering agent:', error);
       toast({
@@ -231,28 +300,42 @@ const CollaborationDashboard: React.FC = () => {
 
     setLoading(true);
     try {
-      // In a real implementation, you'd call the API
-      // For demo purposes, just add to the local state
-      const newTeam: Team = {
-        team_id: `team_${Date.now()}`,
-        name: newTeamName,
-        description: newTeamDescription,
-        coordinator_id: newTeamCoordinator,
-        members: [],
-        active_tasks: []
-      };
-      
-      setTeams([...teams, newTeam]);
-      
-      // Reset form
-      setNewTeamName('');
-      setNewTeamDescription('');
-      setNewTeamCoordinator('');
-      
-      toast({
-        title: "Success",
-        description: `Team ${newTeamName} created successfully`,
+      // Call the API to create the team
+      const response = await fetch('/api/collaboration/teams', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newTeamName,
+          description: newTeamDescription,
+          coordinator_id: newTeamCoordinator
+        }),
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.team) {
+          // Add the new team to the state
+          setTeams([...teams, data.team]);
+          
+          // Reset form
+          setNewTeamName('');
+          setNewTeamDescription('');
+          setNewTeamCoordinator('');
+          
+          toast({
+            title: "Success",
+            description: `Team ${data.team.name} created successfully`,
+          });
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error creating team:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
     } catch (error) {
       console.error('Error creating team:', error);
       toast({
@@ -277,30 +360,45 @@ const CollaborationDashboard: React.FC = () => {
 
     setLoading(true);
     try {
-      // In a real implementation, you'd call the API
-      // For demo purposes, just add to the local state
-      const newMessage: Message = {
-        message_id: `msg_${Date.now()}`,
-        message_type: messageType,
-        sender_id: messageSender,
-        receiver_id: messageReceiver,
-        content: { text: messageContent },
-        priority: messagePriority,
-        created_at: new Date().toISOString(),
-        delivered: false,
-        read: false,
-        processed: false
-      };
-      
-      setMessages([...messages, newMessage]);
-      
-      // Reset form
-      setMessageContent('');
-      
-      toast({
-        title: "Success",
-        description: "Message sent successfully",
+      // Call the API to send the message
+      const response = await fetch('/api/collaboration/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message_type: messageType,
+          sender_id: messageSender,
+          receiver_id: messageReceiver,
+          content: { text: messageContent },
+          priority: messagePriority
+        }),
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.message) {
+          // Add the new message to the state
+          setMessages([...messages, data.message]);
+          
+          // Reset form
+          setMessageContent('');
+          
+          toast({
+            title: "Success",
+            description: "Message sent successfully",
+          });
+          
+          // Refresh messages list for the current receiver
+          fetchMessages(messageReceiver);
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error sending message:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -331,28 +429,46 @@ const CollaborationDashboard: React.FC = () => {
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
       
-      // In a real implementation, you'd call the API
-      // For demo purposes, just add to the local state
-      const newKnowledgeItem: KnowledgeItem = {
-        item_id: `knowledge_${Date.now()}`,
-        content: { text: knowledgeContent },
-        source_agent_id: knowledgeAgent,
-        category: knowledgeCategory,
-        confidence: 1.0,
-        tags,
-        created_at: new Date().toISOString()
-      };
-      
-      setKnowledge([...knowledge, newKnowledgeItem]);
-      
-      // Reset form
-      setKnowledgeContent('');
-      setKnowledgeTags('');
-      
-      toast({
-        title: "Success",
-        description: "Knowledge added successfully",
+      // Call the API to add knowledge
+      const response = await fetch('/api/collaboration/knowledge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: { text: knowledgeContent },
+          source_agent_id: knowledgeAgent,
+          category: knowledgeCategory,
+          confidence: parseFloat(knowledgeConfidence) || 1.0,
+          tags
+        }),
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.knowledge_item) {
+          // Add the new knowledge item to the state
+          setKnowledge([...knowledge, data.knowledge_item]);
+          
+          // Reset form
+          setKnowledgeContent('');
+          setKnowledgeTags('');
+          
+          toast({
+            title: "Success",
+            description: "Knowledge added successfully",
+          });
+          
+          // Refresh knowledge list
+          fetchKnowledge();
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error adding knowledge:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
     } catch (error) {
       console.error('Error adding knowledge:', error);
       toast({
