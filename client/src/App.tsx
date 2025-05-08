@@ -95,8 +95,19 @@ function App() {
     const agentStore = useAgentStore.getState();
     const taskbarStore = useTaskbarStore.getState();
     
-    // Apply minimal taskbar preset for a cleaner interface
-    taskbarStore.applyMinimalPreset();
+    // Force reset the taskbar to default settings
+    // This ensures no unwanted agents like database, brain-circuit, or daddy-data appear in the taskbar
+    try {
+      // First clear local storage to ensure clean state
+      localStorage.removeItem('panion-taskbar-store');
+      console.log("App: Forced taskbar reset");
+      
+      // Now apply the minimal preset (which uses the updated defaults)
+      taskbarStore.resetTaskbar();
+      taskbarStore.applyMinimalPreset();
+    } catch (error) {
+      console.error("Failed to reset taskbar:", error);
+    }
     
     // Force open only the Panion agent after a delay to ensure it's properly registered
     setTimeout(() => {
