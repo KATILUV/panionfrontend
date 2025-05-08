@@ -44,6 +44,7 @@ interface TaskbarState {
   unpinAgent: (agentId: AgentId) => void;
   isPinned: (agentId: AgentId) => boolean;
   reorderPinnedAgents: (orderedIds: AgentId[]) => void;
+  clearPinnedAgents: () => void;
   
   // Presets
   applyMinimalPreset: () => void;
@@ -228,6 +229,12 @@ export const useTaskbarStore = create<TaskbarState>()(
           autohide: true,
           pinnedAgents: ['panion', 'clara', 'notes', 'marketplace']
         });
+      },
+      
+      // Clear all pinned agents (empty the taskbar)
+      clearPinnedAgents: () => {
+        log.info("Cleared all pinned agents from taskbar");
+        set({ pinnedAgents: [] });
       },
       
       // Check if a widget is visible
