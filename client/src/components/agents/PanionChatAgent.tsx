@@ -416,26 +416,81 @@ const PanionChatAgent: React.FC = () => {
           
           if (response.ok) {
             const responseData = await response.json();
+            const taskId = responseData.taskId || responseData.id || `task-${Date.now()}`;
             
             // Add the task to our tracking
-            if (responseData && responseData.taskId) {
+            if (taskId) {
+              const location = taskData.params.location || '';
+              
               const newTask = {
-                id: responseData.taskId,
+                id: taskId,
                 type: taskData.taskType,
                 status: 'in_progress',
                 progress: 0,
                 description: taskData.description,
-                location: taskData.params.location,
+                location: location,
                 created: formatTime(new Date())
               };
               
               setActiveTasks(prevTasks => [...prevTasks, newTask]);
               setTaskPollingEnabled(true);
               
+              // Prepare confirmation message based on task type
+              let confirmationContent = '';
+              
+              if (taskData.taskType === 'strategic_plan') {
+                confirmationContent = `I'm executing the strategic plan now. This will involve multiple steps that I'll work through systematically. I'll update you as I make progress.`;
+                
+                // For strategic plans, we'll also add information about the steps if available
+                if (responseData.steps && Array.isArray(responseData.steps)) {
+                  confirmationContent += `\n\nThe plan has ${responseData.steps.length} steps:`;
+                  responseData.steps.slice(0, 3).forEach((step: any, index: number) => {
+                    confirmationContent += `\n${index + 1}. ${step.description}`;
+                  });
+                  
+                  if (responseData.steps.length > 3) {
+                    confirmationContent += `\n... and ${responseData.steps.length - 3} more steps`;
+                  }
+                }
+                
+                // Set processing stage to reflect strategic plan execution
+                setProcessingStage("Executing strategic plan...");
+                setProcessingProgress(0);
+                
+                // Simulate progress updates for complex plans
+                let currentStep = 0;
+                const totalSteps = responseData.steps ? responseData.steps.length : 5;
+                
+                const progressInterval = setInterval(() => {
+                  if (currentStep < totalSteps) {
+                    currentStep++;
+                    const progress = Math.floor((currentStep / totalSteps) * 100);
+                    setProcessingProgress(progress);
+                    
+                    if (responseData.steps && responseData.steps[currentStep - 1]) {
+                      setProcessingStage(`Step ${currentStep}/${totalSteps}: ${responseData.steps[currentStep - 1].description}`);
+                    } else {
+                      setProcessingStage(`Executing plan step ${currentStep}/${totalSteps}...`);
+                    }
+                    
+                    // When we reach the last step, clear the interval
+                    if (currentStep === totalSteps) {
+                      clearInterval(progressInterval);
+                      setTimeout(() => {
+                        setAgentStatus('idle');
+                        setProcessingStage(null);
+                      }, 2000);
+                    }
+                  }
+                }, 2000); // Update every 2 seconds
+              } else {
+                confirmationContent = `Started task: ${taskData.description}. I'll notify you when results are available.`;
+              }
+              
               // Confirmation message
               const taskStartMessage: ChatMessage = {
                 id: generateId(),
-                content: `Started task: ${taskData.description}. I'll notify you when results are available.`,
+                content: confirmationContent,
                 isUser: false,
                 timestamp: formatTime(new Date()),
               };
