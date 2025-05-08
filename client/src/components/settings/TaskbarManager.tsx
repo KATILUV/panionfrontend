@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 export default function TaskbarManager() {
   const [pinnedAgents, setPinnedAgents] = useState<AgentId[]>([]);
   const taskbarStore = useTaskbarStore();
-  const agents = useAgentStore((state) => state.agents);
+  const registry = useAgentStore((state) => state.registry);
   
   // Get current pinned agents from store
   useEffect(() => {
@@ -231,7 +231,8 @@ export default function TaskbarManager() {
         <h4 className="text-sm font-semibold mb-2">Available Agents</h4>
         <ScrollArea className="h-[120px] rounded-md border p-2">
           <div className="flex flex-wrap gap-2">
-            {Object.keys(agents).map((agentId) => {
+            {registry && registry.map((agent) => {
+              const agentId = agent.id;
               const isPinned = pinnedAgents.includes(agentId as AgentId);
               return (
                 <Badge 
@@ -243,7 +244,7 @@ export default function TaskbarManager() {
                   )}
                   onClick={() => !isPinned && handlePinAgent(agentId as AgentId)}
                 >
-                  <span>{agentId}</span>
+                  <span>{agent.title || agentId}</span>
                   {isPinned && (
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12"></polyline>
