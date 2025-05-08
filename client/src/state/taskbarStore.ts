@@ -89,8 +89,8 @@ const CLASSIC_WIDGETS: TaskbarWidgetType[] = [
   'clock'
 ];
 
-// Default pinned agents
-const DEFAULT_PINNED_AGENTS: AgentId[] = ['panion', 'clara', 'notes', 'database', 'brain-circuit'];
+// Default pinned agents - database and brain-circuit removed as requested
+const DEFAULT_PINNED_AGENTS: AgentId[] = ['panion', 'clara', 'notes'];
 
 // Mac OS style dock preset
 const DOCK_WIDGETS: TaskbarWidgetType[] = [
@@ -202,7 +202,7 @@ export const useTaskbarStore = create<TaskbarState>()(
           visibleWidgets: [...MINIMAL_WIDGETS],
           showLabels: false,
           position: { location: 'bottom', alignment: 'center' },
-          pinnedAgents: ['panion', 'clara', 'database', 'brain-circuit']
+          pinnedAgents: ['panion', 'clara'] // Database and brain-circuit removed
         });
       },
       
@@ -238,7 +238,7 @@ export const useTaskbarStore = create<TaskbarState>()(
           position: { location: 'bottom', alignment: 'center' },
           enableBlur: true,
           autohide: true,
-          pinnedAgents: ['panion', 'clara', 'notes', 'marketplace', 'database', 'brain-circuit']
+          pinnedAgents: ['panion', 'clara', 'notes', 'marketplace'] // Removed database and brain-circuit
         });
       },
       
