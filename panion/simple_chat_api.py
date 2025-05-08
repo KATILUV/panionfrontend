@@ -299,8 +299,31 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         limit = int(limit_match.group(1)) if limit_match else 10
                         limit = min(limit, 100)  # Cap at 100
                         
-                        response = f"I'll gather information for {limit} {business_type}s in {location}. I'll use the Daddy Data agent to compile this information for you."
-                        thinking = f"Detected business information request for {business_type} in {location}. Using web research capabilities."
+                        # Check for proxy or playwright mentions
+                        use_proxy = True  # Default to using proxy
+                        use_playwright = False
+                        
+                        if re.search(r"(using|with|via)\s+(proxy|proxies)", content.lower()):
+                            use_proxy = True
+                        elif re.search(r"(without|no)\s+(proxy|proxies)", content.lower()):
+                            use_proxy = False
+                        
+                        if re.search(r"(using|with|via)\s+(playwright|browser|headless|chrome|firefox)", content.lower()):
+                            use_playwright = True
+                        
+                        # Prepare scraping method description
+                        method_desc = []
+                        if use_proxy:
+                            method_desc.append("proxy rotation")
+                        if use_playwright:
+                            method_desc.append("browser automation")
+                        
+                        method_text = ""
+                        if method_desc:
+                            method_text = f" using {' and '.join(method_desc)}"
+                        
+                        response = f"I'll gather information for {limit} {business_type}s in {location}{method_text}. I'll use the Daddy Data agent to compile this information for you."
+                        thinking = f"Detected business information request for {business_type} in {location}. Using web research capabilities with proxy: {use_proxy}, playwright: {use_playwright}."
                     
                     # Handle data analysis requests
                     elif re.search(r"(analyze|chart|graph|visualization|trend|plot|dashboard).*(data|csv|json|file|result)", content.lower()):
@@ -407,14 +430,27 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                 location = data.get("location", "New York")
                 limit = data.get("limit", 10)
                 source = data.get("source", "adaptive")
+                use_proxy = data.get("use_proxy", True)
+                use_playwright = data.get("use_playwright", False)
                 
-                logger.info(f"Enhanced scraping request: {business_type} in {location}, using {source} strategy, limit {limit}")
+                # If playwright is specifically requested, use it directly
+                if use_playwright:
+                    source = "playwright"
+                
+                logger.info(f"Enhanced scraping request: {business_type} in {location}, using {source} strategy, limit {limit}, proxy: {use_proxy}, playwright: {use_playwright}")
                 
                 try:
                     # Import the enhanced scraper
                     try:
                         from scrapers.enhanced_scraper import EnhancedScraper
                         scraper = EnhancedScraper()
+                        
+                        # Show current status
+                        self._set_headers()
+                        self.wfile.write(json.dumps({
+                            "status": "in_progress",
+                            "message": f"Starting scraping for {business_type} in {location} using {source} strategy. This may take 30-60 seconds."
+                        }).encode())
                         
                         # Execute scraping with the enhanced adaptive system
                         results = scraper.scrape_business_directory(
@@ -428,6 +464,18 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         output_file = f"{business_type.replace(' ', '_')}_{location.replace(' ', '_')}.json"
                         filepath = scraper.save_to_json(results, output_file)
                         
+                        # If results are empty and Playwright wasn't already tried, use it as a fallback
+                        if not results and source != "playwright" and use_playwright:
+                            logger.info("No results with primary strategy, falling back to Playwright")
+                            try:
+                                results = scraper._try_playwright_scraping(
+                                    business_type=business_type,
+                                    location=location,
+                                    limit=limit
+                                )
+                            except Exception as pw_e:
+                                logger.error(f"Error using Playwright fallback: {str(pw_e)}")
+                        
                         # Return successful response
                         self._set_headers()
                         self.wfile.write(json.dumps({
@@ -435,6 +483,8 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                             "result_count": len(results),
                             "filepath": filepath,
                             "last_successful_strategy": getattr(scraper, "last_successful_strategy", None),
+                            "use_proxy": use_proxy,
+                            "use_playwright": use_playwright or source == "playwright",
                             "message": f"Successfully scraped {len(results)} results using adaptive strategy system"
                         }).encode())
                     except ImportError as ie:
