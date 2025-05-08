@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Settings, Moon, Sun, Search, Plus, Save, CheckCircle, Clock, Terminal, Layout, Pin, PinOff, AppWindow, Copy, X } from 'lucide-react';
 import { useAgentStore } from '@/state/agentStore';
 import { useTaskbarStore } from '@/state/taskbarStore';
@@ -98,12 +98,12 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
   const [animateAction, setAnimateAction] = useState<'pin' | 'unpin' | null>(null);
   const { toast } = useToast();
   
-  // Base classes for animations
-  const getAnimationClass = () => {
+  // Base classes for animations - memoized to prevent recalculations
+  const animationClass = useMemo(() => {
     if (animateAction === 'pin') return 'animate-scale-in';
     if (animateAction === 'unpin') return 'animate-scale-out';
     return isHovered ? 'animate-bounce-subtle hover:scale-110' : '';
-  };
+  }, [animateAction, isHovered]);
   
   // Access functions from agent and taskbar stores
   const { minimizeAgent, closeAgent } = useAgentStore();
@@ -196,7 +196,7 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
             ${isVertical ? 'py-2 px-1 my-1' : 'py-1 px-2 mx-0.5'} rounded-md
             ${isActive ? 'bg-primary/20 text-white' : 'text-white/80 hover:text-white'} 
             border border-transparent hover:border-primary/30
-            transition-all ${getAnimationClass()}
+            transition-all ${animationClass}
             hover:z-10
           `}
           title={title}
