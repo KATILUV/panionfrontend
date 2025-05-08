@@ -1,493 +1,342 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Send, BrainCircuit, Lightbulb, Sparkles, BarChart, MessageSquare, Zap } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Spinner } from '@/components/ui/spinner';
-import { Progress } from '@/components/ui/progress';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { v4 as uuidv4 } from 'uuid';
 import { useIntelligence } from '@/hooks/use-intelligence';
-import { formatDate } from '@/lib/utils';
-
-interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'agent' | 'system';
-  timestamp: number;
-  perspectives?: Array<{
-    role: string;
-    content: string;
-  }>;
-  confidence?: number;
-}
-
-// Helper function to generate a unique ID
-const generateId = (): string => {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
-};
+import { useToast } from '@/hooks/use-toast';
+import { processStrategicQuery } from '@/services/strategicService';
+import { getAvailableDebateRoles, getInternalDeliberation } from '@/lib/internalDebate';
+import { 
+  updateCapabilityStats, 
+  getCapabilityStats, 
+  trackCapabilityUse,
+  getEvolvingCapabilities
+} from '@/lib/capabilityEvolution';
 
 const IntelligentAgent: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      content: "Hello, I'm your Intelligent Agent with advanced reasoning capabilities. I can use internal debate and capability evolution to provide better answers. How can I help you today?",
-      role: 'agent',
-      timestamp: Date.now()
-    }
-  ]);
-  const [inputValue, setInputValue] = useState('');
-  const [activeTab, setActiveTab] = useState('chat');
-  const [capabilities, setCapabilities] = useState<string[]>([
-    'reasoning', 'web-research', 'data-analysis', 'planning'
-  ]);
-  const [settings, setSettings] = useState({
-    useInternalDebate: true,
-    trackCapabilityUsage: true,
-    showDebugInfo: false
-  });
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const intelligence = useIntelligence();
   
-  // Initialize intelligence hook
-  const {
-    isProcessing,
-    progress,
-    result,
-    error,
-    processQuery,
-    runInternalDebate
-  } = useIntelligence({
-    autoDebate: settings.useInternalDebate,
-    trackCapabilities: settings.trackCapabilityUsage,
-    debugMode: settings.showDebugInfo
-  });
+  const [query, setQuery] = useState('');
+  const [thinking, setThinking] = useState('');
+  const [result, setResult] = useState('');
+  const [activeTab, setActiveTab] = useState('input');
+  const [confidence, setConfidence] = useState(0);
+  const [executionTime, setExecutionTime] = useState<number | null>(null);
+  const [usedStrategies, setUsedStrategies] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [complexityThreshold, setComplexityThreshold] = useState(70);
+  const [selectedCapabilities, setSelectedCapabilities] = useState<string[]>([]);
+  const [availableCapabilities, setAvailableCapabilities] = useState<{id: string, name: string, strength: number}[]>([]);
   
-  // Auto-scroll to the latest message
+  // Load available capabilities on mount
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-  
-  // Handle input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-  
-  // Handle send message
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!inputValue.trim() || isProcessing) return;
-    
-    // Add user message
-    const userMessageId = generateId();
-    const userMessage: Message = {
-      id: userMessageId,
-      content: inputValue,
-      role: 'user',
-      timestamp: Date.now()
+    const loadCapabilities = async () => {
+      const capabilities = await getEvolvingCapabilities();
+      setAvailableCapabilities(
+        capabilities.map(cap => ({
+          id: cap.id,
+          name: cap.name,
+          strength: cap.stats.strength || 0
+        }))
+      );
     };
     
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
+    loadCapabilities();
+  }, []);
+  
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Add a thinking message
-    const thinkingMessageId = generateId();
-    setMessages(prev => [...prev, {
-      id: thinkingMessageId,
-      content: 'Thinking...',
-      role: 'system',
-      timestamp: Date.now()
-    }]);
+    if (!query.trim()) {
+      toast({
+        title: "Empty query",
+        description: "Please enter a question or request.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    setThinking('Analyzing your query...');
+    setActiveTab('thinking');
     
     try {
-      let responseContent = '';
-      let perspectives: Array<{role: string, content: string}> | undefined;
-      let confidence: number | undefined;
+      // First, assess complexity to determine if we should use strategic mode
+      const queryComplexity = await intelligence.assessComplexity(query);
+      const useStrategicMode = queryComplexity > complexityThreshold;
       
-      // Process with internal debate if enabled
-      if (settings.useInternalDebate) {
-        // Run internal debate
-        const debateResult = await runInternalDebate(inputValue);
+      setThinking(prev => `${prev}\n\nQuery complexity score: ${queryComplexity}/100`);
+      
+      if (useStrategicMode) {
+        // For complex queries, use the strategic service with internal debate
+        setThinking(prev => `${prev}\n\nThis is a complex query. Activating strategic mode with multi-perspective analysis...`);
         
-        // Use the debate result
-        responseContent = debateResult.result;
-        perspectives = debateResult.perspectives;
-        confidence = debateResult.confidence;
-      } else {
-        // Use strategic processing
-        const queryResult = await processQuery(inputValue, {
-          capabilities,
-          useDebate: false
+        // Track the capabilities being used
+        selectedCapabilities.forEach(capId => {
+          trackCapabilityUse(capId);
         });
         
-        responseContent = queryResult.result;
-        confidence = queryResult.confidence;
-      }
-      
-      // Remove thinking message
-      setMessages(prev => prev.filter(msg => msg.id !== thinkingMessageId));
-      
-      // Add agent response
-      const agentMessage: Message = {
-        id: generateId(),
-        content: responseContent,
-        role: 'agent',
-        timestamp: Date.now(),
-        perspectives,
-        confidence
-      };
-      
-      setMessages(prev => [...prev, agentMessage]);
-      
-      // Add debug message if enabled
-      if (settings.showDebugInfo && perspectives) {
-        const debugMessage: Message = {
-          id: generateId(),
-          content: `Processed with ${settings.useInternalDebate ? 'internal debate' : 'standard processing'}. Confidence: ${confidence ? (confidence * 100).toFixed(1) + '%' : 'Unknown'}`,
-          role: 'system',
-          timestamp: Date.now()
-        };
+        const startTime = performance.now();
         
-        setMessages(prev => [...prev, debugMessage]);
+        // Use internal debate to generate multiple perspectives
+        const deliberation = await getInternalDeliberation(query, selectedCapabilities);
+        
+        setThinking(prev => `${prev}\n\nPerspectives generated:\n${deliberation.perspectives.map(p => 
+          `- ${p.role}: ${p.viewpoint}`).join('\n')}`);
+        
+        // Process the query with the strategic service
+        const response = await processStrategicQuery({
+          query,
+          useDebate: true,
+          requiredCapabilities: selectedCapabilities,
+          maxTokens: 2000
+        });
+        
+        const endTime = performance.now();
+        setExecutionTime(endTime - startTime);
+        setConfidence(response.confidence * 100);
+        setResult(response.result);
+        setUsedStrategies(response.usedCapabilities || []);
+        
+        // Update capability stats based on result
+        selectedCapabilities.forEach(capId => {
+          updateCapabilityStats(capId, {
+            uses: 1,
+            successRate: response.confidence,
+            responseTime: (endTime - startTime) / 1000
+          });
+        });
+        
+        setActiveTab('result');
+      } else {
+        // For simpler queries, use the regular intelligence service
+        setThinking(prev => `${prev}\n\nThis is a standard query. Using direct processing...`);
+        
+        const startTime = performance.now();
+        const response = await intelligence.generateResponse(query);
+        const endTime = performance.now();
+        
+        setExecutionTime(endTime - startTime);
+        setConfidence(85); // Default confidence for simple queries
+        setResult(response);
+        setUsedStrategies(['natural-language-understanding']);
+        
+        setActiveTab('result');
       }
-    } catch (error: any) {
-      // Handle errors
-      console.error('Error processing message:', error);
-      
-      // Remove thinking message
-      setMessages(prev => prev.filter(msg => msg.id !== thinkingMessageId));
-      
-      // Add error message
-      const errorMessage: Message = {
-        id: generateId(),
-        content: `Sorry, I encountered an error while processing your request: ${error.message || 'Unknown error'}`,
-        role: 'system',
-        timestamp: Date.now()
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
-      
+    } catch (error) {
+      console.error('Error processing query:', error);
+      setResult('I encountered an error while processing your request. Please try again.');
+      setActiveTab('result');
       toast({
-        title: 'Error',
-        description: 'Failed to process your request',
-        variant: 'destructive'
+        title: "Processing Error",
+        description: "An error occurred while processing your request.",
+        variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  // Clear chat history
-  const clearChat = () => {
-    setMessages([{
-      id: 'welcome',
-      content: "Hello, I'm your Intelligent Agent with advanced reasoning capabilities. I can use internal debate and capability evolution to provide better answers. How can I help you today?",
-      role: 'agent',
-      timestamp: Date.now()
-    }]);
-    
-    toast({
-      title: 'Chat Cleared',
-      description: 'All messages have been removed'
-    });
+  const handleCapabilityToggle = (capabilityId: string) => {
+    setSelectedCapabilities(prev => 
+      prev.includes(capabilityId)
+        ? prev.filter(id => id !== capabilityId)
+        : [...prev, capabilityId]
+    );
   };
   
-  // Toggle settings
-  const toggleSetting = (setting: keyof typeof settings) => {
-    setSettings(prev => ({
-      ...prev,
-      [setting]: !prev[setting]
-    }));
-    
-    toast({
-      title: `${setting.charAt(0).toUpperCase() + setting.slice(1).replace(/([A-Z])/g, ' $1')}`,
-      description: `${!settings[setting] ? 'Enabled' : 'Disabled'}`
-    });
-  };
-  
-  // Format the message content with some basic styling
-  const formatMessage = (content: string) => {
-    return content
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
-      .replace(/`(.*?)`/g, '<code>$1</code>') // Code
-      .split('\n').join('<br />'); // New lines
+  const handleClear = () => {
+    setQuery('');
+    setThinking('');
+    setResult('');
+    setActiveTab('input');
+    setConfidence(0);
+    setExecutionTime(null);
+    setUsedStrategies([]);
   };
   
   return (
-    <div className="flex flex-col h-full">
-      <Tabs defaultValue="chat" value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        <div className="border-b px-4 py-2">
-          <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="chat" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              <span>Chat</span>
-            </TabsTrigger>
-            <TabsTrigger value="capabilities" className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              <span>Capabilities</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <BrainCircuit className="h-4 w-4" />
-              <span>Settings</span>
-            </TabsTrigger>
+    <div className="flex flex-col h-full p-4 bg-background">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold">Intelligent Agent</h2>
+        <p className="text-muted-foreground">Enhanced reasoning with multi-strategy intelligence</p>
+      </div>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <div className="flex justify-between items-center mb-2">
+          <TabsList>
+            <TabsTrigger value="input">Input</TabsTrigger>
+            <TabsTrigger value="thinking">Thinking</TabsTrigger>
+            <TabsTrigger value="result">Result</TabsTrigger>
+            <TabsTrigger value="capabilities">Capabilities</TabsTrigger>
           </TabsList>
+          
+          <div className="flex gap-2">
+            {isLoading && <Badge variant="outline" className="bg-yellow-100">Processing...</Badge>}
+            {confidence > 0 && <Badge variant="outline" className="bg-blue-100">Confidence: {confidence.toFixed(0)}%</Badge>}
+            {executionTime && <Badge variant="outline" className="bg-green-100">Time: {(executionTime / 1000).toFixed(2)}s</Badge>}
+          </div>
         </div>
         
-        <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden">
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div 
-                  key={message.id} 
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.role === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : message.role === 'system'
-                          ? 'bg-muted text-muted-foreground italic text-sm'
-                          : 'bg-secondary text-secondary-foreground'
-                    }`}
-                  >
-                    <div 
-                      dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
-                      className="message-content"
-                    />
-                    
-                    {message.perspectives && message.perspectives.length > 0 && settings.showDebugInfo && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-xs font-medium mb-1">Internal Perspectives:</p>
-                        <div className="space-y-1">
-                          {message.perspectives.slice(0, 3).map((perspective, index) => (
-                            <div key={index} className="text-xs">
-                              <span className="font-medium">{perspective.role}:</span> {perspective.content.substring(0, 100)}
-                              {perspective.content.length > 100 && '...'}
-                            </div>
-                          ))}
-                          {message.perspectives.length > 3 && (
-                            <div className="text-xs text-muted-foreground">
-                              +{message.perspectives.length - 3} more perspectives
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {message.confidence !== undefined && settings.showDebugInfo && (
-                      <div className="mt-1 flex items-center justify-between">
-                        <div className="flex items-center">
-                          <span className="text-xs mr-1">Confidence:</span>
-                          <Progress value={message.confidence * 100} className="w-20 h-2" />
-                        </div>
-                        <span className="text-xs ml-2">{(message.confidence * 100).toFixed(0)}%</span>
-                      </div>
-                    )}
-                    
-                    <div className="text-xs opacity-70 mt-1">
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-          
-          {isProcessing && (
-            <div className="px-4 py-2 border-t">
-              <div className="flex items-center gap-2">
-                <Spinner size="sm" />
-                <span className="text-sm">Processing your request...</span>
-                <Progress value={progress} className="flex-1 h-2" />
-                <span className="text-xs">{progress}%</span>
-              </div>
-            </div>
-          )}
-          
-          <div className="p-4 border-t">
-            <form onSubmit={handleSendMessage} className="flex gap-2">
-              <Input
-                placeholder="Ask me something..."
-                value={inputValue}
-                onChange={handleInputChange}
-                disabled={isProcessing}
-                className="flex-1"
-              />
-              <Button type="submit" disabled={isProcessing || !inputValue.trim()}>
-                <Send className="h-4 w-4" />
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={clearChat} 
-                disabled={isProcessing || messages.length <= 1}
-              >
-                <Sparkles className="h-4 w-4" />
-              </Button>
-            </form>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="capabilities" className="p-4 overflow-auto">
-          <Card>
+        <TabsContent value="input" className="flex-1 flex flex-col">
+          <Card className="flex-1 flex flex-col">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Intelligent Capabilities
-              </CardTitle>
+              <CardTitle>Ask a Question</CardTitle>
               <CardDescription>
-                These are the capabilities that power my intelligence
+                Enter your question or request. For complex queries, the agent will use multiple reasoning strategies.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Core Capabilities</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {capabilities.map(capability => (
-                      <Badge key={capability} variant="secondary">
-                        {capability.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                      </Badge>
-                    ))}
+            <CardContent className="flex-1">
+              <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <label htmlFor="complexity-threshold" className="text-sm font-medium">
+                      Complexity Threshold: {complexityThreshold}
+                    </label>
+                    <span className="text-xs text-muted-foreground">
+                      Higher = use strategic mode less often
+                    </span>
                   </div>
+                  <Slider
+                    id="complexity-threshold"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={[complexityThreshold]}
+                    onValueChange={(value) => setComplexityThreshold(value[0])}
+                    className="mb-6"
+                  />
                 </div>
                 
-                <Separator />
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Internal Debate System</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    I can internally debate complex questions from multiple perspectives before providing a response.
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <Card className="col-span-1 bg-muted/50">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Lightbulb className="h-4 w-4" />
-                          Proposer
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-xs">Generates initial ideas and approaches</p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="col-span-1 bg-muted/50">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <BarChart className="h-4 w-4" />
-                          Synthesizer
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-xs">Combines perspectives into a balanced view</p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                <div className="flex-1">
+                  <textarea
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="What would you like to know or analyze?"
+                    className="w-full h-full min-h-[200px] p-4 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
-                
-                <Separator />
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Capability Evolution</h3>
-                  <p className="text-sm text-muted-foreground">
-                    My capabilities improve over time based on usage patterns and feedback.
-                  </p>
-                </div>
-              </div>
+              </form>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={handleClear} disabled={isLoading}>
+                Clear
+              </Button>
+              <Button onClick={handleSubmit} disabled={isLoading || !query.trim()}>
+                Process
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="thinking" className="flex-1">
+          <Card className="h-full flex flex-col">
+            <CardHeader>
+              <CardTitle>Thinking Process</CardTitle>
+              <CardDescription>
+                Observe how the agent reasons through your query
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1">
+              <ScrollArea className="h-full">
+                <pre className="whitespace-pre-wrap font-mono text-sm p-4 bg-slate-50 rounded">
+                  {thinking || 'No thinking process to display yet.'}
+                </pre>
+              </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="settings" className="p-4 overflow-auto">
-          <Card>
+        <TabsContent value="result" className="flex-1">
+          <Card className="h-full flex flex-col">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BrainCircuit className="h-5 w-5" />
-                Intelligence Settings
-              </CardTitle>
+              <CardTitle>Result</CardTitle>
               <CardDescription>
-                Configure how my intelligence features work
+                The agent's response to your query
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="internal-debate">Internal Debate</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Consider multiple perspectives before responding
-                    </p>
+            <CardContent className="flex-1">
+              <ScrollArea className="h-full">
+                <div className="space-y-4">
+                  {usedStrategies.length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-sm font-medium mb-1">Strategies used:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {usedStrategies.map(strategy => (
+                          <Badge key={strategy} variant="secondary" className="mr-1">
+                            {strategy}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="prose">
+                    {result || 'No result to display yet.'}
                   </div>
-                  <Switch
-                    id="internal-debate"
-                    checked={settings.useInternalDebate}
-                    onCheckedChange={() => toggleSetting('useInternalDebate')}
-                  />
                 </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="capability-tracking">Capability Tracking</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Track capability usage to improve over time
-                    </p>
-                  </div>
-                  <Switch
-                    id="capability-tracking"
-                    checked={settings.trackCapabilityUsage}
-                    onCheckedChange={() => toggleSetting('trackCapabilityUsage')}
-                  />
-                </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="debug-mode">Debug Information</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Show internal reasoning and confidence scores
-                    </p>
-                  </div>
-                  <Switch
-                    id="debug-mode"
-                    checked={settings.showDebugInfo}
-                    onCheckedChange={() => toggleSetting('showDebugInfo')}
-                  />
-                </div>
-              </div>
+              </ScrollArea>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setActiveTab('chat')}>
-                Back to Chat
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSettings({
-                    useInternalDebate: true,
-                    trackCapabilityUsage: true,
-                    showDebugInfo: false
-                  });
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="capabilities" className="flex-1">
+          <Card className="h-full flex flex-col">
+            <CardHeader>
+              <CardTitle>Agent Capabilities</CardTitle>
+              <CardDescription>
+                Select specialized capabilities to use for processing
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1">
+              <ScrollArea className="h-full">
+                <div className="space-y-4">
+                  {availableCapabilities.map(capability => (
+                    <div 
+                      key={capability.id} 
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedCapabilities.includes(capability.id) 
+                          ? 'bg-primary/10 border-primary' 
+                          : 'hover:bg-slate-50'
+                      }`}
+                      onClick={() => handleCapabilityToggle(capability.id)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-medium">{capability.name}</h3>
+                        <Badge variant="outline">
+                          Strength: {capability.strength.toFixed(1)}
+                        </Badge>
+                      </div>
+                      <div className="mt-2 w-full bg-slate-200 rounded-full h-2">
+                        <div 
+                          className="bg-primary h-2 rounded-full" 
+                          style={{ width: `${Math.min(100, capability.strength)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                   
-                  toast({
-                    title: 'Settings Reset',
-                    description: 'All settings have been reset to defaults'
-                  });
-                }}
-              >
-                Reset Defaults
-              </Button>
+                  {availableCapabilities.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No specialized capabilities available yet.</p>
+                      <p className="text-sm mt-2">Capabilities will evolve as you use the system.</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+            <CardFooter>
+              <div className="text-sm text-muted-foreground">
+                Selected: {selectedCapabilities.length} capabilities
+              </div>
             </CardFooter>
           </Card>
         </TabsContent>

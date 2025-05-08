@@ -49,7 +49,7 @@ export interface OperationStatus {
  */
 export async function processStrategicQuery(
   request: StrategicRequest
-): Promise<{ operationId: string }> {
+): Promise<StrategicResponse> {
   // Generate a unique operation ID
   const operationId = generateOperationId();
   
@@ -61,20 +61,19 @@ export async function processStrategicQuery(
     startTime: Date.now(),
   };
   
-  // Start the processing in the background
-  setTimeout(() => {
-    executeStrategicQuery(request, operationId).catch(error => {
-      operations[operationId] = {
-        ...operations[operationId],
-        status: 'failed',
-        error: error.message || 'Unknown error',
-        endTime: Date.now(),
-      };
-    });
-  }, 0);
-  
-  // Return the operation ID for status checking
-  return { operationId };
+  try {
+    const result = await executeStrategicQuery(request, operationId);
+    return result;
+  } catch (error: any) {
+    operations[operationId] = {
+      ...operations[operationId],
+      status: 'failed',
+      error: error.message || 'Unknown error',
+      endTime: Date.now(),
+    };
+    
+    throw error;
+  }
 }
 
 /**
@@ -83,7 +82,7 @@ export async function processStrategicQuery(
 async function executeStrategicQuery(
   request: StrategicRequest,
   operationId: string
-): Promise<void> {
+): Promise<StrategicResponse> {
   const { query, context, requiredCapabilities = [], useDebate = true } = request;
   const startTime = Date.now();
   

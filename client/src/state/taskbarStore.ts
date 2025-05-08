@@ -46,10 +46,8 @@ interface TaskbarState {
 
 // Default widgets shown in the taskbar
 const DEFAULT_WIDGETS: TaskbarWidgetType[] = [
-  'quickSave',
-  'systemConsole',
-  'layoutManager',
-  'versionNumber'
+  'systemConsole', // Keep system console for debugging
+  'notifications'  // Add notifications for system alerts
 ];
 
 // Minimal set of widgets (even more minimal now)

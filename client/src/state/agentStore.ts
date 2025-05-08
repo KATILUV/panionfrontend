@@ -1292,11 +1292,12 @@ export const initializeAgentRegistry = () => {
     defaultSize: { width: 700, height: 600 }
   });
   
+  // Just register with a null component for now, we'll properly connect it later
   store.registerAgent({
     id: 'intelligent-agent',
     title: 'Intelligent Agent',
     icon: 'brain-circuit',
-    component: () => null, // Placeholder - this will be replaced with the actual component when needed
+    component: () => null,
     defaultPosition: { x: 150, y: 150 },
     defaultSize: { width: 650, height: 600 },
     capabilities: ['reasoning', 'internal-debate', 'capability-evolution']

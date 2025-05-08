@@ -327,26 +327,77 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         style={getTaskbarStyles()}
         className={`taskbar ${className} ${autohide ? 'opacity-30 hover:opacity-100 transition-opacity duration-300' : ''}`}
       >
-        {/* Agent icons section */}
+        {/* Agent icons section - Simplified with core agents only */}
         <div className={`
           flex-1 ${isVertical ? 'flex flex-col space-y-1 py-2' : 'flex flex-row items-center space-x-1'}
         `}>
-          {registry.map(agent => {
-            const isOpen = windows[agent.id]?.isOpen;
-            const isMinimized = windows[agent.id]?.isMinimized;
-            const isActive = isOpen && !isMinimized;
+          {/* Filter registry to only show core agents */}
+          {registry
+            .filter(agent => {
+              // Only show specifically these core agents by default
+              const coreAgentIds = ['panion', 'clara', 'notes', 'marketplace']; 
+              return coreAgentIds.includes(agent.id);
+            })
+            .map(agent => {
+              const isOpen = windows[agent.id]?.isOpen;
+              const isMinimized = windows[agent.id]?.isMinimized;
+              const isActive = isOpen && !isMinimized;
+              
+              return (
+                <AgentIconButton
+                  key={agent.id}
+                  id={agent.id}
+                  icon={agent.icon}
+                  title={agent.title}
+                  isActive={isActive}
+                  onClick={handleIconClick}
+                />
+              );
+            })}
             
-            return (
-              <AgentIconButton
-                key={agent.id}
-                id={agent.id}
-                icon={agent.icon}
-                title={agent.title}
-                isActive={isActive}
-                onClick={handleIconClick}
-              />
-            );
-          })}
+          {/* Plus button to add more agents */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className={`
+                  group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
+                  ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
+                  text-white/80 hover:text-white hover:bg-white/10 
+                  transition-colors duration-200
+                `}
+                title="Add More"
+              >
+                <Plus size={16} />
+                {showLabels && <span className="text-xs font-medium whitespace-nowrap">Add More</span>}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="w-56 p-0 bg-black/60 backdrop-blur-md border border-primary/20"
+              side={getPopoverSide()}
+            >
+              <div className="p-1 max-h-80 overflow-y-auto">
+                {registry
+                  .filter(agent => {
+                    // Show all other agents that aren't already in the taskbar
+                    const coreAgentIds = ['panion', 'clara', 'notes', 'marketplace'];
+                    return !coreAgentIds.includes(agent.id);
+                  })
+                  .map(agent => (
+                    <button
+                      key={agent.id}
+                      onClick={() => {
+                        handleIconClick(agent.id);
+                        // Close popover after clicking
+                      }}
+                      className="w-full text-left px-2 py-1.5 rounded hover:bg-primary/20 transition-colors flex items-center"
+                    >
+                      <span className="text-xl mr-2">{agent.icon}</span>
+                      <span>{agent.title}</span>
+                    </button>
+                  ))}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
         
         {/* Widgets section */}

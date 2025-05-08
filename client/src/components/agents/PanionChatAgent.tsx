@@ -3,11 +3,17 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Settings, BrainCircuit, RotateCcw, Activity, HelpCircle, Search, Database } from 'lucide-react';
+import { Send, Settings, BrainCircuit, RotateCcw, Activity, HelpCircle, Search, Database, ZapIcon, Lightbulb, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AgentStatus } from './AgentStatus';
 import { useAgentStore, Agent } from '../../state/agentStore';
 import { Spinner } from '@/components/ui/spinner';
+import { useIntelligence } from '@/hooks/use-intelligence';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface ChatMessage {
   id: string;
@@ -68,6 +74,13 @@ const PanionChatAgent: React.FC = () => {
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Initialize intelligence hook with automatic resource optimization
+  const intelligence = useIntelligence({
+    defaultStrategicThreshold: 65,  // Slightly lower threshold to activate strategic mode
+    enableAutomaticResourceOptimization: true,
+    enableInternalDebate: true
+  });
 
   // Scroll to bottom of messages
   useEffect(() => {

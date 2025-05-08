@@ -48,9 +48,134 @@ export function getCapabilities(): Record<string, CapabilityData> {
 }
 
 // Save all capabilities to storage
-const saveCapabilities = debounce((data: Record<string, CapabilityData>) => {
-  setLocalStorage(STORAGE_KEY, data);
-}, 1000);
+const saveCapabilities = debounce((capabilities: Record<string, CapabilityData>) => {
+  setLocalStorage(STORAGE_KEY, capabilities);
+}, 500);
+
+/**
+ * Update a capability's statistics
+ */
+export function updateCapabilityStats(
+  capabilityId: string,
+  stats: {
+    uses?: number;
+    successRate?: number;
+    responseTime?: number;
+  }
+) {
+  const capabilities = getCapabilities();
+  const capability = capabilities[capabilityId];
+  
+  // If capability doesn't exist, create a basic one
+  if (!capability) {
+    const newCapability: CapabilityData = {
+      id: capabilityId,
+      name: capabilityId.charAt(0).toUpperCase() + capabilityId.slice(1).replace(/-/g, ' '),
+      description: `Capability for ${capabilityId}`,
+      version: 1,
+      importance: 0.5,
+      complexity: 0.5,
+      masteryLevel: 0.1,
+      evolutionPoints: 0,
+      tags: [],
+      stats: {
+        usageCount: stats.uses || 0,
+        successCount: 0,
+        failureCount: 0,
+        lastUsed: Date.now(),
+        feedbackScores: [],
+        averageFeedback: 0,
+        successRate: stats.successRate || 0.5,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      },
+      dependencies: [],
+      isCore: false
+    };
+    
+    capabilities[capabilityId] = newCapability;
+  } else {
+    // Update existing capability stats
+    if (stats.uses) {
+      capability.stats.usageCount += stats.uses;
+    }
+    
+    if (stats.successRate !== undefined) {
+      capability.stats.successRate = 
+        (capability.stats.successRate * 0.7) + (stats.successRate * 0.3);
+    }
+    
+    capability.stats.updatedAt = Date.now();
+    capability.stats.lastUsed = Date.now();
+    
+    capabilities[capabilityId] = capability;
+  }
+  
+  saveCapabilities(capabilities);
+}
+
+/**
+ * Get statistics for a specific capability
+ */
+export function getCapabilityStats(capabilityId: string): CapabilityStats | null {
+  const capabilities = getCapabilities();
+  return capabilities[capabilityId]?.stats || null;
+}
+
+/**
+ * Track usage of a capability
+ */
+export function trackCapabilityUse(
+  capabilityId: string,
+  success: boolean = true
+) {
+  const capabilities = getCapabilities();
+  const capability = capabilities[capabilityId];
+  
+  if (!capability) {
+    // Create a new capability if it doesn't exist
+    updateCapabilityStats(capabilityId, { uses: 1, successRate: success ? 1 : 0 });
+    return;
+  }
+  
+  // Update usage statistics
+  capability.stats.usageCount += 1;
+  capability.stats.lastUsed = Date.now();
+  
+  if (success) {
+    capability.stats.successCount += 1;
+  } else {
+    capability.stats.failureCount += 1;
+  }
+  
+  // Update success rate
+  const totalAttempts = capability.stats.successCount + capability.stats.failureCount;
+  if (totalAttempts > 0) {
+    capability.stats.successRate = capability.stats.successCount / totalAttempts;
+  }
+  
+  // Add evolution points based on usage
+  capability.evolutionPoints += 0.1;
+  
+  // Update mastery level based on success rate and usage
+  capability.masteryLevel = Math.min(
+    0.99,
+    (capability.masteryLevel * 0.8) + (capability.stats.successRate * 0.2)
+  );
+  
+  capabilities[capabilityId] = capability;
+  saveCapabilities(capabilities);
+}
+
+/**
+ * Get all capabilities that are evolving (have gained evolution points)
+ */
+export function getEvolvingCapabilities(): CapabilityData[] {
+  const capabilities = getCapabilities();
+  return Object.values(capabilities)
+    .filter(cap => cap.evolutionPoints > 0)
+    .sort((a, b) => b.evolutionPoints - a.evolutionPoints);
+}
 
 // Initialize the capability system with core capabilities
 export function initializeCapabilities(): void {
