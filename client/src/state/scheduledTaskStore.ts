@@ -405,17 +405,47 @@ export const processScheduledTasks = async () => {
       
       // Dispatch the task to the appropriate agent
       try {
-        // Implementation will depend on agent APIs
+        // First, register the task with the server API
+        await fetch('/api/scheduled-tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            targetAgent: task.targetAgent,
+            task: task.action,
+            parameters: task.parameters,
+            priority: task.priority
+          }),
+        });
+
+        // Then dispatch to the appropriate agent
         switch (task.targetAgent) {
           case 'daddy_data':
-            // Example dispatch to Daddy Data agent
-            fetch('/api/panion/dispatch', {
+            // Dispatch to Daddy Data agent
+            await fetch('/api/panion/dispatch', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
                 targetAgent: 'daddy_data',
+                task: task.action,
+                parameters: task.parameters,
+                priority: task.priority,
+                callbackEndpoint: '/api/scheduled-tasks/callback'
+              }),
+            });
+            break;
+            
+          case 'panion':
+            // Dispatch to Panion agent
+            await fetch('/api/panion/dispatch', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
                 task: task.action,
                 parameters: task.parameters,
                 priority: task.priority,
