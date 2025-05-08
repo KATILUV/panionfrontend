@@ -1,35 +1,28 @@
-import { Router } from 'express';
-import { 
-  createTask, 
-  getTaskStatus, 
-  pauseTask, 
-  resumeTask, 
-  cancelTask, 
-  retryTask, 
-  getAllTasks 
-} from '../autonomous-agent';
+import express, { Router } from 'express';
+import { createTask, getTaskStatus, pauseTask, resumeTask, cancelTask, retryTask, getAllTasks } from '../autonomous-agent';
 
-const router = Router();
+// Create a router instance for autonomous agent routes
+const autonomousAgentRoutes: Router = express.Router();
 
-// Create a new task
-router.post('/api/autonomous-agent/tasks', createTask);
+// GET all tasks
+autonomousAgentRoutes.get('/api/autonomous-agent/tasks', getAllTasks);
 
-// Get task status
-router.get('/api/autonomous-agent/tasks/:taskId', getTaskStatus);
+// POST create a new task
+autonomousAgentRoutes.post('/api/autonomous-agent/tasks', createTask);
 
-// Pause a task
-router.post('/api/autonomous-agent/tasks/:taskId/pause', pauseTask);
+// GET task status by ID
+autonomousAgentRoutes.get('/api/autonomous-agent/tasks/:id', getTaskStatus);
 
-// Resume a task
-router.post('/api/autonomous-agent/tasks/:taskId/resume', resumeTask);
+// POST pause a task
+autonomousAgentRoutes.post('/api/autonomous-agent/tasks/:id/pause', pauseTask);
 
-// Cancel a task
-router.post('/api/autonomous-agent/tasks/:taskId/cancel', cancelTask);
+// POST resume a task
+autonomousAgentRoutes.post('/api/autonomous-agent/tasks/:id/resume', resumeTask);
 
-// Retry a failed task
-router.post('/api/autonomous-agent/tasks/:taskId/retry', retryTask);
+// POST cancel a task
+autonomousAgentRoutes.post('/api/autonomous-agent/tasks/:id/cancel', cancelTask);
 
-// Get all tasks
-router.get('/api/autonomous-agent/tasks', getAllTasks);
+// POST retry a task
+autonomousAgentRoutes.post('/api/autonomous-agent/tasks/:id/retry', retryTask);
 
-export default router;
+export default autonomousAgentRoutes;

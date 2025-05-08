@@ -1,431 +1,624 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Loader2, Check, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, Play, Pause, AlertCircle, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { toast } from '@/hooks/use-toast';
 
-interface AgentStep {
-  id: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
-  output?: string;
-  error?: string;
-}
+// Define the form schema
+const formSchema = z.object({
+  description: z
+    .string()
+    .min(10, { message: "Task description must be at least 10 characters." })
+    .max(500, { message: "Task description cannot exceed 500 characters." }),
+  autoStart: z.boolean().default(true),
+  autoRetry: z.boolean().default(true),
+  priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  resources: z.string().optional(),
+});
 
-interface AgentTask {
-  id: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'paused' | 'completed' | 'failed';
-  progress: number;
-  steps: AgentStep[];
-  result?: any;
-  error?: string;
-  startTime?: Date;
-  completionTime?: Date;
-  logs: string[];
-}
+type FormValues = z.infer<typeof formSchema>;
 
 interface AutonomousAgentProps {
-  initialTask?: string;
-  agentType?: 'data_gathering' | 'analysis' | 'general';
+  agentType: 'data_gathering' | 'analysis' | 'general';
   onTaskComplete?: (result: any) => void;
   onTaskFailed?: (error: string) => void;
-  autoStart?: boolean;
 }
 
-const AutonomousAgent: React.FC<AutonomousAgentProps> = ({
-  initialTask = '',
-  agentType = 'general',
-  onTaskComplete,
-  onTaskFailed,
-  autoStart = false
+const AutonomousAgent: React.FC<AutonomousAgentProps> = ({ 
+  agentType, 
+  onTaskComplete, 
+  onTaskFailed 
 }) => {
-  const [task, setTask] = useState<AgentTask | null>(null);
-  const [taskInput, setTaskInput] = useState(initialTask);
-  const [isRunning, setIsRunning] = useState(autoStart);
-  const [logsVisible, setLogsVisible] = useState(false);
-  const [hasConfirmed, setHasConfirmed] = useState(autoStart);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  const logsEndRef = useRef<HTMLDivElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [taskStatus, setTaskStatus] = useState<'pending' | 'in_progress' | 'paused' | 'completed' | 'failed' | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [steps, setSteps] = useState<any[]>([]);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [pollingInterval, setPollingInterval] = useState<number | null>(null);
 
-  // Simulated steps for different agent types
-  const getInitialSteps = (taskDescription: string, type: string): AgentStep[] => {
-    if (type === 'data_gathering') {
-      return [
-        { id: '1', description: 'Analyze data gathering requirements', status: 'pending' },
-        { id: '2', description: 'Identify optimal data sources', status: 'pending' },
-        { id: '3', description: 'Collect data using appropriate methods', status: 'pending' },
-        { id: '4', description: 'Process and validate collected data', status: 'pending' },
-        { id: '5', description: 'Format and prepare final results', status: 'pending' }
-      ];
-    } else if (type === 'analysis') {
-      return [
-        { id: '1', description: 'Define analysis parameters', status: 'pending' },
-        { id: '2', description: 'Extract relevant features from data', status: 'pending' },
-        { id: '3', description: 'Apply analytical techniques', status: 'pending' },
-        { id: '4', description: 'Interpret analysis results', status: 'pending' },
-        { id: '5', description: 'Generate insights and recommendations', status: 'pending' }
-      ];
-    } else {
-      // General purpose agent
-      return [
-        { id: '1', description: 'Understand task requirements', status: 'pending' },
-        { id: '2', description: 'Develop execution strategy', status: 'pending' },
-        { id: '3', description: 'Execute primary actions', status: 'pending' },
-        { id: '4', description: 'Review and validate results', status: 'pending' },
-        { id: '5', description: 'Prepare final output', status: 'pending' }
-      ];
-    }
-  };
+  // Define form with default values
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      description: '',
+      autoStart: true,
+      autoRetry: true,
+      priority: 'medium',
+      resources: '',
+    },
+  });
 
-  // Scroll to bottom of logs when new logs are added
-  useEffect(() => {
-    if (logsVisible && logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [task?.logs, logsVisible]);
-
-  // Start/stop polling based on running state
-  useEffect(() => {
-    if (isRunning && task) {
-      startPolling();
-    } else {
-      stopPolling();
-    }
-
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-      }
-    };
-  }, [isRunning, task]);
-
-  const startPolling = () => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-    }
-
-    pollingRef.current = setInterval(() => {
-      if (task && task.id) {
-        fetchTaskStatus(task.id);
-      }
-    }, 3000); // Poll every 3 seconds
-  };
-
-  const stopPolling = () => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-  };
-
-  const fetchTaskStatus = async (taskId: string) => {
+  // Handle form submission
+  const onSubmit = async (values: FormValues) => {
     try {
-      // In a real implementation, this would call your backend API
-      // For now, we'll simulate progress updates
-      simulateProgress();
-    } catch (error) {
-      addLog(`Error fetching task status: ${error.message}`);
-    }
-  };
+      setIsSubmitting(true);
+      
+      // Prepare the task data
+      const taskData = {
+        agentType,
+        description: values.description,
+        autoStart: values.autoStart,
+        autoRetry: values.autoRetry,
+        priority: values.priority,
+        resources: values.resources ? JSON.parse(values.resources) : {},
+      };
 
-  const addLog = (message: string) => {
-    if (task) {
-      setTask({
-        ...task,
-        logs: [...task.logs, `[${new Date().toLocaleTimeString()}] ${message}`]
+      // Submit the task
+      const response = await fetch('/api/autonomous-agent/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(taskData),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create task');
+      }
+
+      const data = await response.json();
+      
+      // Set the task ID and status
+      setTaskId(data.id);
+      setTaskStatus(data.status);
+      setProgress(data.progress || 0);
+      
+      // Start polling for updates
+      startPolling(data.id);
+      
+      toast({
+        title: "Task created",
+        description: "Your autonomous agent task has been created and is now processing.",
+      });
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast({
+        title: "Failed to create task",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const simulateProgress = () => {
-    if (!task) return;
+  // Start polling for task updates
+  const startPolling = (id: string) => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+    }
+    
+    const interval = window.setInterval(async () => {
+      await fetchTaskStatus(id);
+    }, 2000); // Poll every 2 seconds
+    
+    setPollingInterval(interval);
+  };
 
-    // Find the first pending or in_progress step
-    const currentStepIndex = task.steps.findIndex(s => s.status === 'in_progress' || s.status === 'pending');
-    if (currentStepIndex === -1) return;
+  // Stop polling
+  const stopPolling = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+  };
 
-    const newSteps = [...task.steps];
-    const currentStep = newSteps[currentStepIndex];
-
-    // Simulate step progress
-    if (currentStep.status === 'pending') {
-      currentStep.status = 'in_progress';
-      addLog(`Starting: ${currentStep.description}`);
-    } else {
-      // 80% chance of success for each step
-      const success = Math.random() > 0.2;
-      if (success) {
-        currentStep.status = 'completed';
-        currentStep.output = `Successfully completed: ${currentStep.description}`;
-        addLog(`Completed: ${currentStep.description}`);
-
-        // Move to next step if available
-        if (currentStepIndex < newSteps.length - 1) {
-          newSteps[currentStepIndex + 1].status = 'in_progress';
-          addLog(`Starting: ${newSteps[currentStepIndex + 1].description}`);
+  // Fetch task status
+  const fetchTaskStatus = async (id: string) => {
+    try {
+      const response = await fetch(`/api/autonomous-agent/tasks/${id}`);
+      
+      if (!response.ok) {
+        console.error('Failed to fetch task status');
+        return;
+      }
+      
+      const data = await response.json();
+      
+      setTaskStatus(data.status);
+      setProgress(data.progress || 0);
+      setSteps(data.steps || []);
+      setLogs(data.logs || []);
+      
+      if (data.result) {
+        setResult(data.result);
+      }
+      
+      if (data.error) {
+        setError(data.error);
+      }
+      
+      // If the task is completed or failed, stop polling
+      if (data.status === 'completed') {
+        stopPolling();
+        if (onTaskComplete) {
+          onTaskComplete(data.result);
         }
-      } else {
-        // Simulate error and recovery
-        addLog(`Encountered issue with: ${currentStep.description}`);
-        addLog(`Attempting to recover...`);
-        
-        // 90% chance of recovery after an issue
-        const recovers = Math.random() > 0.1;
-        if (recovers) {
-          addLog(`Successfully recovered`);
-        } else {
-          currentStep.status = 'failed';
-          currentStep.error = `Failed to complete: ${currentStep.description}`;
-          addLog(`Failed: ${currentStep.description}`);
-          
-          if (onTaskFailed) {
-            onTaskFailed(currentStep.error);
-          }
-          
-          setIsRunning(false);
-          setTask({
-            ...task,
-            status: 'failed',
-            error: `Failed at step: ${currentStep.description}`,
-            steps: newSteps,
-            completionTime: new Date()
-          });
-          return;
+      } else if (data.status === 'failed') {
+        stopPolling();
+        if (onTaskFailed) {
+          onTaskFailed(data.error || 'Task failed with no error message');
         }
       }
+    } catch (error) {
+      console.error('Error fetching task status:', error);
     }
+  };
 
-    // Calculate overall progress
-    const completedSteps = newSteps.filter(s => s.status === 'completed').length;
-    const totalSteps = newSteps.length;
-    const progress = Math.round((completedSteps / totalSteps) * 100);
-
-    // Check if all steps are completed
-    if (completedSteps === totalSteps) {
-      addLog('All steps completed successfully');
-      setIsRunning(false);
-      setTask({
-        ...task,
-        status: 'completed',
-        progress: 100,
-        steps: newSteps,
-        completionTime: new Date(),
-        result: { message: 'Task completed successfully' }
+  // Pause task
+  const pauseTask = async () => {
+    if (!taskId) return;
+    
+    try {
+      const response = await fetch(`/api/autonomous-agent/tasks/${taskId}/pause`, {
+        method: 'POST',
       });
       
-      if (onTaskComplete) {
-        onTaskComplete({ message: 'Task completed successfully' });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to pause task');
       }
-    } else {
-      setTask({
-        ...task,
-        progress,
-        steps: newSteps,
-        status: progress === 100 ? 'completed' : 'in_progress'
+      
+      const data = await response.json();
+      setTaskStatus(data.status);
+      
+      toast({
+        title: "Task paused",
+        description: "Your autonomous agent task has been paused.",
+      });
+    } catch (error) {
+      console.error('Error pausing task:', error);
+      toast({
+        title: "Failed to pause task",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
       });
     }
   };
 
-  const startTask = () => {
-    if (!taskInput.trim()) return;
+  // Resume task
+  const resumeTask = async () => {
+    if (!taskId) return;
+    
+    try {
+      const response = await fetch(`/api/autonomous-agent/tasks/${taskId}/resume`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to resume task');
+      }
+      
+      const data = await response.json();
+      setTaskStatus(data.status);
+      
+      // Restart polling
+      startPolling(taskId);
+      
+      toast({
+        title: "Task resumed",
+        description: "Your autonomous agent task has been resumed.",
+      });
+    } catch (error) {
+      console.error('Error resuming task:', error);
+      toast({
+        title: "Failed to resume task",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  };
 
-    const newTaskId = Date.now().toString();
-    const initialSteps = getInitialSteps(taskInput, agentType);
+  // Cancel task
+  const cancelTask = async () => {
+    if (!taskId) return;
     
-    // Initial step is in_progress
-    initialSteps[0].status = 'in_progress';
+    try {
+      const response = await fetch(`/api/autonomous-agent/tasks/${taskId}/cancel`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to cancel task');
+      }
+      
+      // Stop polling
+      stopPolling();
+      
+      // Reset state
+      setTaskId(null);
+      setTaskStatus(null);
+      setProgress(0);
+      setResult(null);
+      setError(null);
+      setSteps([]);
+      setLogs([]);
+      
+      // Reset form
+      form.reset({
+        description: '',
+        autoStart: true,
+        autoRetry: true,
+        priority: 'medium',
+        resources: '',
+      });
+      
+      toast({
+        title: "Task cancelled",
+        description: "Your autonomous agent task has been cancelled.",
+      });
+    } catch (error) {
+      console.error('Error cancelling task:', error);
+      toast({
+        title: "Failed to cancel task",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Retry task
+  const retryTask = async () => {
+    if (!taskId) return;
     
-    const newTask: AgentTask = {
-      id: newTaskId,
-      description: taskInput,
-      status: 'in_progress',
-      progress: 0,
-      steps: initialSteps,
-      logs: [`[${new Date().toLocaleTimeString()}] Task initiated: ${taskInput}`],
-      startTime: new Date()
+    try {
+      const response = await fetch(`/api/autonomous-agent/tasks/${taskId}/retry`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to retry task');
+      }
+      
+      const data = await response.json();
+      
+      // Update state with new task info
+      setTaskId(data.id);
+      setTaskStatus(data.status);
+      setProgress(data.progress || 0);
+      setResult(null);
+      setError(null);
+      setSteps(data.steps || []);
+      setLogs(data.logs || []);
+      
+      // Start polling
+      startPolling(data.id);
+      
+      toast({
+        title: "Task retried",
+        description: "Your autonomous agent task has been retried.",
+      });
+    } catch (error) {
+      console.error('Error retrying task:', error);
+      toast({
+        title: "Failed to retry task",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Cleanup polling interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
     };
-    
-    setTask(newTask);
-    setIsRunning(true);
-    setHasConfirmed(true);
-    addLog('Starting autonomous execution');
-  };
+  }, [pollingInterval]);
 
-  const pauseTask = () => {
-    setIsRunning(false);
-    if (task) {
-      setTask({
-        ...task,
-        status: 'paused'
-      });
-      addLog('Task paused by user');
-    }
-  };
-
-  const resumeTask = () => {
-    setIsRunning(true);
-    if (task) {
-      setTask({
-        ...task,
-        status: 'in_progress'
-      });
-      addLog('Task resumed by user');
-    }
-  };
-
-  const resetTask = () => {
-    setTask(null);
-    setHasConfirmed(false);
-    setIsRunning(false);
-    stopPolling();
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'in_progress': return 'bg-blue-500 animate-pulse';
-      case 'failed': return 'bg-red-500';
-      case 'paused': return 'bg-yellow-500';
-      default: return 'bg-gray-300';
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <Badge className="bg-green-500">Completed</Badge>;
-      case 'in_progress':
-        return <Badge className="bg-blue-500">In Progress</Badge>;
-      case 'failed':
-        return <Badge className="bg-red-500">Failed</Badge>;
-      case 'paused':
-        return <Badge className="bg-yellow-500">Paused</Badge>;
-      default:
-        return <Badge variant="outline">Pending</Badge>;
-    }
-  };
-
-  // Render input form if no task is running yet
-  if (!hasConfirmed) {
+  // Render task form if no task is in progress
+  if (!taskId) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Autonomous Agent</CardTitle>
-          <CardDescription>
-            Describe what you want the agent to do. It will work autonomously until the task is complete.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="Describe your task in detail..."
-            className="h-32 mb-4"
-            value={taskInput}
-            onChange={(e) => setTaskInput(e.target.value)}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Task Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe what you want the agent to do in detail..."
+                    className="min-h-[120px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Be specific about what you want the agent to accomplish.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => setTaskInput('')}>
-            Clear
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priority</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      {...field}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </FormControl>
+                  <FormDescription>
+                    Task priority affects execution order.
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="resources"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Resources (Optional JSON)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder='{"url": "https://example.com"}'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    JSON of resources needed for the task.
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="autoStart"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Auto Start</FormLabel>
+                    <FormDescription>
+                      Start processing immediately after creation.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="autoRetry"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Auto Retry</FormLabel>
+                    <FormDescription>
+                      Automatically retry on recoverable errors.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Task...
+              </>
+            ) : (
+              'Create Autonomous Task'
+            )}
           </Button>
-          <Button onClick={startTask} disabled={!taskInput.trim()}>
-            <Play className="mr-2 h-4 w-4" /> Start Autonomous Task
-          </Button>
-        </CardFooter>
-      </Card>
+        </form>
+      </Form>
     );
   }
 
+  // Render task progress and controls
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Autonomous Agent</CardTitle>
-          {task && getStatusBadge(task.status)}
+    <div className="space-y-6">
+      <div className="flex flex-col">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <span className="font-medium text-sm">Task Progress</span>
+            <span className="ml-2 text-sm text-muted-foreground">{progress}%</span>
+          </div>
+          <div className="text-xs font-medium text-muted-foreground">
+            {taskStatus && taskStatus.charAt(0).toUpperCase() + taskStatus.slice(1)}
+          </div>
         </div>
-        <CardDescription>
-          {task?.description}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {task?.error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{task.error}</AlertDescription>
-          </Alert>
+        <Progress value={progress} className="h-2" />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {taskStatus === 'in_progress' && (
+          <Button onClick={pauseTask} variant="outline" size="sm">
+            Pause
+          </Button>
         )}
         
-        {task && (
-          <>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Progress</span>
-                <span className="text-sm font-medium">{task.progress}%</span>
-              </div>
-              <Progress value={task.progress} className="h-2" />
-            </div>
-            
-            <div className="space-y-3 my-4">
-              {task.steps.map((step) => (
-                <div key={step.id} className="flex items-start gap-3">
-                  <div className={`w-3 h-3 mt-1.5 rounded-full ${getStatusColor(step.status)}`} />
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{step.description}</div>
-                    {step.output && (
-                      <div className="text-xs text-muted-foreground mt-1">{step.output}</div>
-                    )}
-                    {step.error && (
-                      <div className="text-xs text-red-500 mt-1">{step.error}</div>
-                    )}
-                  </div>
-                  {step.status === 'completed' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-                  {step.status === 'in_progress' && <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />}
-                  {step.status === 'failed' && <XCircle className="h-4 w-4 text-red-500" />}
-                </div>
-              ))}
-            </div>
-            
-            <Button 
-              variant="outline" 
-              className="w-full text-sm" 
-              onClick={() => setLogsVisible(!logsVisible)}
-            >
-              <ChevronRight className={`h-4 w-4 mr-2 transition-transform ${logsVisible ? 'rotate-90' : ''}`} />
-              {logsVisible ? 'Hide' : 'Show'} Execution Logs
-            </Button>
-            
-            {logsVisible && (
-              <div className="bg-slate-950 text-slate-50 p-3 rounded-md text-xs font-mono h-40 overflow-y-auto">
-                {task.logs.map((log, i) => (
-                  <div key={i} className="pb-1">{log}</div>
-                ))}
-                <div ref={logsEndRef} />
-              </div>
-            )}
-          </>
+        {taskStatus === 'paused' && (
+          <Button onClick={resumeTask} variant="outline" size="sm">
+            Resume
+          </Button>
         )}
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={resetTask}>
-          Reset
-        </Button>
-        <div className="space-x-2">
-          {task?.status === 'paused' ? (
-            <Button onClick={resumeTask}>
-              <Play className="mr-2 h-4 w-4" /> Resume
-            </Button>
-          ) : task?.status === 'in_progress' ? (
-            <Button onClick={pauseTask} variant="secondary">
-              <Pause className="mr-2 h-4 w-4" /> Pause
-            </Button>
-          ) : null}
+        
+        {(taskStatus === 'failed' || taskStatus === 'completed') && (
+          <Button onClick={retryTask} variant="outline" size="sm">
+            Retry
+          </Button>
+        )}
+        
+        {taskStatus !== 'completed' && (
+          <Button onClick={cancelTask} variant="destructive" size="sm">
+            Cancel
+          </Button>
+        )}
+        
+        {taskStatus === 'completed' && (
+          <Button onClick={cancelTask} variant="outline" size="sm">
+            Start New Task
+          </Button>
+        )}
+      </div>
+
+      {steps.length > 0 && (
+        <div>
+          <h3 className="text-sm font-medium mb-3">Task Steps</h3>
+          <div className="space-y-2">
+            {steps.map((step, index) => (
+              <Card key={index} className="overflow-hidden">
+                <CardContent className="p-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      {step.status === 'completed' && (
+                        <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center">
+                          <Check className="h-3 w-3 text-green-600" />
+                        </div>
+                      )}
+                      {step.status === 'failed' && (
+                        <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center">
+                          <X className="h-3 w-3 text-red-600" />
+                        </div>
+                      )}
+                      {step.status === 'in_progress' && (
+                        <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center">
+                          <Loader2 className="h-3 w-3 text-blue-600 animate-spin" />
+                        </div>
+                      )}
+                      {step.status === 'pending' && (
+                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center">
+                          <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {step.description}
+                      </p>
+                      {step.output && (
+                        <div className="mt-1 text-xs text-gray-700 bg-gray-50 p-2 rounded overflow-auto max-h-20">
+                          {step.output}
+                        </div>
+                      )}
+                      {step.error && (
+                        <div className="mt-1 text-xs text-red-700 bg-red-50 p-2 rounded overflow-auto max-h-20">
+                          {step.error}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </CardFooter>
-    </Card>
+      )}
+
+      {result && (
+        <div>
+          <h3 className="text-sm font-medium mb-2">Result</h3>
+          <div className="bg-green-50 border border-green-100 rounded-md p-3">
+            <pre className="text-xs text-gray-800 whitespace-pre-wrap overflow-auto max-h-40">
+              {typeof result === 'object' ? JSON.stringify(result, null, 2) : result}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div>
+          <h3 className="text-sm font-medium mb-2">Error</h3>
+          <div className="bg-red-50 border border-red-100 rounded-md p-3">
+            <pre className="text-xs text-red-800 whitespace-pre-wrap overflow-auto max-h-40">
+              {error}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      {logs.length > 0 && (
+        <div>
+          <h3 className="text-sm font-medium mb-2">Logs</h3>
+          <div className="bg-gray-50 border border-gray-100 rounded-md p-2 overflow-auto max-h-40">
+            {logs.map((log, index) => (
+              <div key={index} className="text-xs font-mono">
+                {log}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

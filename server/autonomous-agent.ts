@@ -1,8 +1,13 @@
 import { Request, Response } from 'express';
-import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import OpenAI from 'openai';
 
-// Task and step interfaces
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Define the structure of a step in an agent task
 interface AgentStep {
   id: string;
   description: string;
@@ -11,6 +16,7 @@ interface AgentStep {
   error?: string;
 }
 
+// Define the structure of an agent task
 interface AgentTask {
   id: string;
   userId?: string;
@@ -35,419 +41,526 @@ interface AgentTask {
 // In-memory storage for tasks
 const tasks: Record<string, AgentTask> = {};
 
-// Default steps for different agent types
-const getDefaultSteps = (taskType: string): AgentStep[] => {
-  switch (taskType) {
-    case 'data_gathering':
-      return [
-        { id: uuidv4(), description: 'Analyze data gathering requirements', status: 'pending' },
-        { id: uuidv4(), description: 'Identify optimal data sources', status: 'pending' },
-        { id: uuidv4(), description: 'Collect data using appropriate methods', status: 'pending' },
-        { id: uuidv4(), description: 'Process and validate collected data', status: 'pending' },
-        { id: uuidv4(), description: 'Format and prepare final results', status: 'pending' }
-      ];
-    case 'analysis':
-      return [
-        { id: uuidv4(), description: 'Define analysis parameters', status: 'pending' },
-        { id: uuidv4(), description: 'Extract relevant features from data', status: 'pending' },
-        { id: uuidv4(), description: 'Apply analytical techniques', status: 'pending' },
-        { id: uuidv4(), description: 'Interpret analysis results', status: 'pending' },
-        { id: uuidv4(), description: 'Generate insights and recommendations', status: 'pending' }
-      ];
-    default:
-      return [
-        { id: uuidv4(), description: 'Understand task requirements', status: 'pending' },
-        { id: uuidv4(), description: 'Develop execution strategy', status: 'pending' },
-        { id: uuidv4(), description: 'Execute primary actions', status: 'pending' },
-        { id: uuidv4(), description: 'Review and validate results', status: 'pending' },
-        { id: uuidv4(), description: 'Prepare final output', status: 'pending' }
-      ];
-  }
-};
-
-// Add log message to a task
-const addTaskLog = (taskId: string, message: string): void => {
-  if (tasks[taskId]) {
-    const timestamp = new Date().toISOString();
-    tasks[taskId].logs.push(`[${timestamp}] ${message}`);
-  }
-};
-
-// Update task progress based on completed steps
-const updateTaskProgress = (taskId: string): void => {
-  const task = tasks[taskId];
-  if (!task) return;
-
-  const completedSteps = task.steps.filter(s => s.status === 'completed').length;
-  const totalSteps = task.steps.length;
-  task.progress = Math.round((completedSteps / totalSteps) * 100);
-
-  // If all steps are completed, mark the task as completed
-  if (completedSteps === totalSteps) {
-    task.status = 'completed';
-    task.completionTime = new Date();
-    addTaskLog(taskId, 'Task completed successfully');
-  }
-};
-
-// Retry a failed step
-const retryStep = async (taskId: string, stepId: string): Promise<boolean> => {
-  const task = tasks[taskId];
-  if (!task) return false;
-
-  const step = task.steps.find(s => s.id === stepId);
-  if (!step || step.status !== 'failed') return false;
-
-  step.status = 'in_progress';
-  addTaskLog(taskId, `Retrying step: ${step.description}`);
-
-  try {
-    // Simulate retry logic
-    // In a real implementation, this would retry the actual operation
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // 80% chance of success on retry
-    const success = Math.random() > 0.2;
-    if (success) {
-      step.status = 'completed';
-      step.output = `Successfully completed on retry: ${step.description}`;
-      step.error = undefined;
-      addTaskLog(taskId, `Successfully completed step after retry: ${step.description}`);
-      
-      // Move to next step if this was not the last one
-      const stepIndex = task.steps.findIndex(s => s.id === stepId);
-      if (stepIndex < task.steps.length - 1) {
-        task.steps[stepIndex + 1].status = 'in_progress';
-        addTaskLog(taskId, `Starting next step: ${task.steps[stepIndex + 1].description}`);
-      }
-      
-      if (task.status === 'failed') {
-        task.status = 'in_progress';
-        task.error = undefined;
-      }
-      
-      updateTaskProgress(taskId);
-      return true;
-    } else {
-      step.status = 'failed';
-      step.error = `Failed to complete after retry: ${step.description}`;
-      addTaskLog(taskId, `Failed to complete step after retry: ${step.description}`);
-      
-      // If retry count exceeded, mark task as failed
-      task.retryCount = (task.retryCount || 0) + 1;
-      if (task.retryCount >= (task.maxRetries || 3)) {
-        task.status = 'failed';
-        task.error = `Failed after ${task.retryCount} retries at step: ${step.description}`;
-        addTaskLog(taskId, `Task failed after maximum retries`);
-      }
-      
-      return false;
-    }
-  } catch (error) {
-    step.status = 'failed';
-    step.error = `Error during retry: ${error.message}`;
-    addTaskLog(taskId, `Error during retry: ${error.message}`);
-    return false;
-  }
-};
-
-// Auto-recovery system for failed tasks
-const attemptRecovery = async (taskId: string): Promise<boolean> => {
-  const task = tasks[taskId];
-  if (!task || task.status !== 'failed') return false;
-
-  addTaskLog(taskId, 'Attempting automatic recovery');
-
-  // Find the failed step
-  const failedStep = task.steps.find(s => s.status === 'failed');
-  if (!failedStep) return false;
-
-  return await retryStep(taskId, failedStep.id);
-};
-
-// Advance task execution by one step
-const advanceTask = async (taskId: string): Promise<void> => {
-  const task = tasks[taskId];
-  if (!task || task.status !== 'in_progress') return;
-
-  // Find the current step in progress
-  const currentStepIndex = task.steps.findIndex(s => s.status === 'in_progress');
-  if (currentStepIndex === -1) {
-    // If no step is in progress, start the first pending step
-    const nextStepIndex = task.steps.findIndex(s => s.status === 'pending');
-    if (nextStepIndex !== -1) {
-      task.steps[nextStepIndex].status = 'in_progress';
-      addTaskLog(taskId, `Starting step: ${task.steps[nextStepIndex].description}`);
-    }
-    return;
-  }
-
-  const currentStep = task.steps[currentStepIndex];
-
-  try {
-    // Simulate step execution
-    // In a real implementation, this would perform the actual operation
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // 90% chance of success
-    const success = Math.random() > 0.1;
-    
-    if (success) {
-      currentStep.status = 'completed';
-      currentStep.output = `Successfully completed: ${currentStep.description}`;
-      addTaskLog(taskId, `Completed step: ${currentStep.description}`);
-      
-      // Move to the next step if available
-      if (currentStepIndex < task.steps.length - 1) {
-        task.steps[currentStepIndex + 1].status = 'in_progress';
-        addTaskLog(taskId, `Starting step: ${task.steps[currentStepIndex + 1].description}`);
-      }
-    } else {
-      // Simulate failure
-      currentStep.status = 'failed';
-      currentStep.error = `Failed to complete: ${currentStep.description}`;
-      addTaskLog(taskId, `Failed at step: ${currentStep.description}`);
-      
-      // Attempt auto-recovery
-      const recovered = await attemptRecovery(taskId);
-      if (!recovered) {
-        task.status = 'failed';
-        task.error = `Failed at step: ${currentStep.description}`;
-        addTaskLog(taskId, 'Auto-recovery failed, task marked as failed');
-      }
-    }
-    
-    updateTaskProgress(taskId);
-  } catch (error) {
-    currentStep.status = 'failed';
-    currentStep.error = `Error: ${error.message}`;
-    addTaskLog(taskId, `Error: ${error.message}`);
-    
-    task.status = 'failed';
-    task.error = `Error at step ${currentStepIndex + 1}: ${error.message}`;
-  }
-};
-
-// Route handlers
-
 // Create a new task
 export const createTask = (req: Request, res: Response): void => {
   try {
-    const { description, agentType = 'general', maxRetries = 3, priority = 'medium' } = req.body;
-    
-    if (!description) {
-      res.status(400).json({ error: 'Task description is required' });
+    // Parse request body
+    const { agentType, description, priority = 'medium', autoStart = true, autoRetry = true, resources = {} } = req.body;
+
+    // Validate required fields
+    if (!agentType || !description) {
+      res.status(400).json({ message: 'Agent type and description are required' });
       return;
     }
-    
+
+    // Generate a unique ID for the task
     const taskId = uuidv4();
-    const steps = getDefaultSteps(agentType);
-    
-    // Set the first step to in_progress
-    steps[0].status = 'in_progress';
-    
+
+    // Create the new task
     const newTask: AgentTask = {
       id: taskId,
       agentType,
       description,
-      status: 'in_progress',
+      status: autoStart ? 'in_progress' : 'pending',
       progress: 0,
-      steps,
+      steps: [],
       startTime: new Date(),
-      logs: [`Task created: ${description}`],
-      maxRetries,
+      logs: [],
+      priority,
+      resources,
       retryCount: 0,
-      priority: priority as 'low' | 'medium' | 'high'
+      maxRetries: autoRetry ? 3 : 0,
     };
-    
+
+    // Add initial log
+    newTask.logs.push(`[${new Date().toISOString()}] Task created`);
+
+    // Store the task
     tasks[taskId] = newTask;
-    addTaskLog(taskId, 'Task initiated');
-    
-    // Start task execution
-    setTimeout(() => {
-      advanceTask(taskId);
-    }, 500);
-    
-    res.status(201).json({ 
-      taskId,
-      message: 'Task created successfully',
-      task: newTask
-    });
+
+    // If autoStart is enabled, start processing the task asynchronously
+    if (autoStart) {
+      processTask(taskId).catch(error => {
+        console.error(`Error processing task ${taskId}:`, error);
+        tasks[taskId].logs.push(`[${new Date().toISOString()}] Error: ${error.message}`);
+        tasks[taskId].status = 'failed';
+        tasks[taskId].error = error.message;
+      });
+    }
+
+    // Return the task
+    res.status(201).json(newTask);
   } catch (error) {
-    res.status(500).json({ error: `Failed to create task: ${error.message}` });
+    console.error('Error creating task:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
 // Get task status
 export const getTaskStatus = (req: Request, res: Response): void => {
   try {
-    const { taskId } = req.params;
-    
-    if (!tasks[taskId]) {
-      res.status(404).json({ error: 'Task not found' });
+    const { id } = req.params;
+
+    // Validate task exists
+    if (!tasks[id]) {
+      res.status(404).json({ message: 'Task not found' });
       return;
     }
-    
-    res.status(200).json(tasks[taskId]);
+
+    // Return the task
+    res.json(tasks[id]);
   } catch (error) {
-    res.status(500).json({ error: `Failed to get task status: ${error.message}` });
+    console.error('Error getting task status:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-// Pause a task
+// Pause task
 export const pauseTask = (req: Request, res: Response): void => {
   try {
-    const { taskId } = req.params;
-    
-    if (!tasks[taskId]) {
-      res.status(404).json({ error: 'Task not found' });
+    const { id } = req.params;
+
+    // Validate task exists
+    if (!tasks[id]) {
+      res.status(404).json({ message: 'Task not found' });
       return;
     }
-    
-    if (tasks[taskId].status !== 'in_progress') {
-      res.status(400).json({ error: 'Task is not in progress' });
+
+    // Can only pause in_progress tasks
+    if (tasks[id].status !== 'in_progress') {
+      res.status(400).json({ message: `Cannot pause task with status: ${tasks[id].status}` });
       return;
     }
-    
-    tasks[taskId].status = 'paused';
-    addTaskLog(taskId, 'Task paused by user');
-    
-    res.status(200).json({ 
-      taskId,
-      message: 'Task paused successfully',
-      status: tasks[taskId].status 
-    });
+
+    // Update task status
+    tasks[id].status = 'paused';
+    tasks[id].logs.push(`[${new Date().toISOString()}] Task paused`);
+
+    // Return the updated task
+    res.json(tasks[id]);
   } catch (error) {
-    res.status(500).json({ error: `Failed to pause task: ${error.message}` });
+    console.error('Error pausing task:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-// Resume a task
+// Resume task
 export const resumeTask = (req: Request, res: Response): void => {
   try {
-    const { taskId } = req.params;
-    
-    if (!tasks[taskId]) {
-      res.status(404).json({ error: 'Task not found' });
+    const { id } = req.params;
+
+    // Validate task exists
+    if (!tasks[id]) {
+      res.status(404).json({ message: 'Task not found' });
       return;
     }
-    
-    if (tasks[taskId].status !== 'paused') {
-      res.status(400).json({ error: 'Task is not paused' });
+
+    // Can only resume paused tasks
+    if (tasks[id].status !== 'paused') {
+      res.status(400).json({ message: `Cannot resume task with status: ${tasks[id].status}` });
       return;
     }
-    
-    tasks[taskId].status = 'in_progress';
-    addTaskLog(taskId, 'Task resumed by user');
-    
-    // Continue task execution
-    setTimeout(() => {
-      advanceTask(taskId);
-    }, 500);
-    
-    res.status(200).json({ 
-      taskId,
-      message: 'Task resumed successfully',
-      status: tasks[taskId].status 
+
+    // Update task status
+    tasks[id].status = 'in_progress';
+    tasks[id].logs.push(`[${new Date().toISOString()}] Task resumed`);
+
+    // Resume processing the task
+    processTask(id, tasks[id].checkpoint).catch(error => {
+      console.error(`Error processing task ${id}:`, error);
+      tasks[id].logs.push(`[${new Date().toISOString()}] Error: ${error.message}`);
+      tasks[id].status = 'failed';
+      tasks[id].error = error.message;
     });
+
+    // Return the updated task
+    res.json(tasks[id]);
   } catch (error) {
-    res.status(500).json({ error: `Failed to resume task: ${error.message}` });
+    console.error('Error resuming task:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-// Cancel a task
+// Cancel task
 export const cancelTask = (req: Request, res: Response): void => {
   try {
-    const { taskId } = req.params;
-    
-    if (!tasks[taskId]) {
-      res.status(404).json({ error: 'Task not found' });
+    const { id } = req.params;
+
+    // Validate task exists
+    if (!tasks[id]) {
+      res.status(404).json({ message: 'Task not found' });
       return;
     }
-    
-    if (tasks[taskId].status === 'completed' || tasks[taskId].status === 'failed') {
-      res.status(400).json({ error: 'Task is already completed or failed' });
-      return;
-    }
-    
-    tasks[taskId].status = 'failed';
-    tasks[taskId].error = 'Task canceled by user';
-    tasks[taskId].completionTime = new Date();
-    addTaskLog(taskId, 'Task canceled by user');
-    
-    res.status(200).json({ 
-      taskId,
-      message: 'Task canceled successfully',
-      status: tasks[taskId].status 
+
+    // Update task status
+    const previousStatus = tasks[id].status;
+    tasks[id].status = 'failed';
+    tasks[id].logs.push(`[${new Date().toISOString()}] Task cancelled`);
+    tasks[id].completionTime = new Date();
+
+    // Return the updated task
+    res.json({
+      ...tasks[id],
+      previousStatus
     });
   } catch (error) {
-    res.status(500).json({ error: `Failed to cancel task: ${error.message}` });
+    console.error('Error cancelling task:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-// Retry a failed task
+// Retry task
 export const retryTask = (req: Request, res: Response): void => {
   try {
-    const { taskId } = req.params;
-    
-    if (!tasks[taskId]) {
-      res.status(404).json({ error: 'Task not found' });
+    const { id } = req.params;
+
+    // Validate task exists
+    if (!tasks[id]) {
+      res.status(404).json({ message: 'Task not found' });
       return;
     }
-    
-    if (tasks[taskId].status !== 'failed') {
-      res.status(400).json({ error: 'Task is not in failed state' });
+
+    // Can only retry failed or completed tasks
+    if (tasks[id].status !== 'failed' && tasks[id].status !== 'completed') {
+      res.status(400).json({ message: `Cannot retry task with status: ${tasks[id].status}` });
       return;
     }
-    
-    // Reset retry count if needed
-    if (req.body.resetRetryCount) {
-      tasks[taskId].retryCount = 0;
-    }
-    
-    // Find the first failed step
-    const failedStep = tasks[taskId].steps.find(s => s.status === 'failed');
-    if (!failedStep) {
-      res.status(400).json({ error: 'No failed steps found' });
-      return;
-    }
-    
-    // Set the failed step to in_progress and reset the task status
-    failedStep.status = 'in_progress';
-    tasks[taskId].status = 'in_progress';
-    tasks[taskId].error = undefined;
-    addTaskLog(taskId, `Retrying task from step: ${failedStep.description}`);
-    
-    // Continue task execution
-    setTimeout(() => {
-      advanceTask(taskId);
-    }, 500);
-    
-    res.status(200).json({ 
-      taskId,
-      message: 'Task retry initiated successfully',
-      status: tasks[taskId].status 
+
+    // Create a new task based on the existing one
+    const newTaskId = uuidv4();
+    const newTask: AgentTask = {
+      ...tasks[id],
+      id: newTaskId,
+      status: 'in_progress',
+      progress: 0,
+      steps: [],
+      startTime: new Date(),
+      completionTime: undefined,
+      logs: [`[${new Date().toISOString()}] Task retried from task ${id}`],
+      error: undefined,
+      result: undefined,
+      retryCount: (tasks[id].retryCount || 0) + 1
+    };
+
+    // Store the new task
+    tasks[newTaskId] = newTask;
+
+    // Start processing the new task
+    processTask(newTaskId).catch(error => {
+      console.error(`Error processing task ${newTaskId}:`, error);
+      tasks[newTaskId].logs.push(`[${new Date().toISOString()}] Error: ${error.message}`);
+      tasks[newTaskId].status = 'failed';
+      tasks[newTaskId].error = error.message;
     });
+
+    // Return the new task
+    res.json(newTask);
   } catch (error) {
-    res.status(500).json({ error: `Failed to retry task: ${error.message}` });
+    console.error('Error retrying task:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
 // Get all tasks
 export const getAllTasks = (req: Request, res: Response): void => {
   try {
-    const taskList = Object.values(tasks);
-    res.status(200).json(taskList);
+    // Convert tasks object to array and sort by creation time (newest first)
+    const taskList = Object.values(tasks).sort((a, b) => 
+      new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+    );
+
+    // Return the tasks
+    res.json(taskList);
   } catch (error) {
-    res.status(500).json({ error: `Failed to get tasks: ${error.message}` });
+    console.error('Error getting all tasks:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-// Export the task manager object for simulation purposes
+// Process a task asynchronously
+async function processTask(taskId: string, checkpoint?: string): Promise<void> {
+  // Get the task
+  const task = tasks[taskId];
+  if (!task) {
+    throw new Error('Task not found');
+  }
+
+  // Skip processing if task is not in progress
+  if (task.status !== 'in_progress') {
+    return;
+  }
+
+  // Log that processing has started
+  task.logs.push(`[${new Date().toISOString()}] Started processing task`);
+  
+  try {
+    // Set initial task steps based on agent type
+    if (task.steps.length === 0) {
+      switch (task.agentType) {
+        case 'data_gathering':
+          // Data gathering steps
+          task.steps = [
+            {
+              id: uuidv4(),
+              description: 'Analyze and understand the task requirements',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Identify required data sources',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Collect data from identified sources',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Process and validate collected data',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Format and prepare final results',
+              status: 'pending'
+            }
+          ];
+          break;
+
+        case 'analysis':
+          // Analysis steps
+          task.steps = [
+            {
+              id: uuidv4(),
+              description: 'Analyze and understand the task requirements',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Review available data and identify patterns',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Perform data analysis and extract insights',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Verify and validate findings',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Generate comprehensive analysis report',
+              status: 'pending'
+            }
+          ];
+          break;
+
+        default:
+          // General purpose steps
+          task.steps = [
+            {
+              id: uuidv4(),
+              description: 'Analyze and understand the task requirements',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Plan approach and strategy',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Execute task operations',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Review and verify results',
+              status: 'pending'
+            },
+            {
+              id: uuidv4(),
+              description: 'Finalize and prepare output',
+              status: 'pending'
+            }
+          ];
+      }
+    }
+
+    // Start from checkpoint if provided
+    let startIndex = 0;
+    if (checkpoint) {
+      const checkpointIndex = task.steps.findIndex(step => step.id === checkpoint);
+      if (checkpointIndex !== -1) {
+        startIndex = checkpointIndex;
+      }
+    }
+
+    // Process each step
+    for (let i = startIndex; i < task.steps.length; i++) {
+      // Check if task is still in progress
+      if (task.status !== 'in_progress') {
+        task.checkpoint = task.steps[i].id;
+        return;
+      }
+
+      const step = task.steps[i];
+      
+      // Update step status
+      step.status = 'in_progress';
+      task.logs.push(`[${new Date().toISOString()}] Started step: ${step.description}`);
+
+      try {
+        // Update progress
+        task.progress = Math.round(((i) / task.steps.length) * 100);
+
+        // Process the step
+        const result = await processStep(task, step);
+        
+        // Update step status and output
+        step.status = 'completed';
+        step.output = result;
+        task.logs.push(`[${new Date().toISOString()}] Completed step: ${step.description}`);
+      } catch (error) {
+        // Handle step failure
+        step.status = 'failed';
+        step.error = error.message;
+        task.logs.push(`[${new Date().toISOString()}] Step failed: ${step.description} - ${error.message}`);
+        
+        // Check if we should retry
+        if ((task.retryCount || 0) < (task.maxRetries || 0)) {
+          task.logs.push(`[${new Date().toISOString()}] Retrying step: ${step.description}`);
+          step.status = 'in_progress';
+          
+          // Try again
+          try {
+            const result = await processStep(task, step);
+            
+            // Update step status and output
+            step.status = 'completed';
+            step.output = result;
+            task.logs.push(`[${new Date().toISOString()}] Retry succeeded for step: ${step.description}`);
+          } catch (retryError) {
+            // Handle retry failure
+            step.status = 'failed';
+            step.error = retryError.message;
+            task.logs.push(`[${new Date().toISOString()}] Retry failed for step: ${step.description} - ${retryError.message}`);
+            
+            // Mark task as failed
+            task.status = 'failed';
+            task.error = `Failed to complete step: ${step.description}`;
+            task.completionTime = new Date();
+            return;
+          }
+        } else {
+          // Mark task as failed
+          task.status = 'failed';
+          task.error = `Failed to complete step: ${step.description}`;
+          task.completionTime = new Date();
+          return;
+        }
+      }
+    }
+
+    // All steps completed successfully
+    task.status = 'completed';
+    task.progress = 100;
+    task.completionTime = new Date();
+    task.logs.push(`[${new Date().toISOString()}] Task completed successfully`);
+
+    // Generate result summary
+    try {
+      const summaryPrompt = `
+        Summarize the results of this autonomous agent task. 
+        Task description: ${task.description}
+        Task type: ${task.agentType}
+        
+        Steps completed:
+        ${task.steps.map(step => `- ${step.description}: ${step.output || 'No output'}`).join('\n')}
+        
+        Provide a concise, well-formatted summary with key points and insights.
+      `;
+
+      // Generate summary
+      const summary = await generateTaskSummary(summaryPrompt);
+      task.result = summary;
+    } catch (error) {
+      console.error('Error generating task summary:', error);
+      task.logs.push(`[${new Date().toISOString()}] Warning: Could not generate task summary - ${error.message}`);
+      task.result = 'Task completed successfully, but summary generation failed.';
+    }
+  } catch (error) {
+    // Handle unexpected errors
+    console.error(`Error processing task ${taskId}:`, error);
+    task.logs.push(`[${new Date().toISOString()}] Error: ${error.message}`);
+    task.status = 'failed';
+    task.error = error.message;
+    task.completionTime = new Date();
+  }
+}
+
+// Process a single step
+async function processStep(task: AgentTask, step: AgentStep): Promise<string> {
+  // Wait a random time to simulate processing
+  const waitTime = Math.floor(Math.random() * 5000) + 2000;
+  await new Promise(resolve => setTimeout(resolve, waitTime));
+
+  // Different processing based on agent type and step
+  const stepPrompt = `
+    You are an autonomous agent tasked with: "${task.description}"
+    
+    You are currently working on step: "${step.description}"
+    Agent type: ${task.agentType}
+    
+    Resources available: ${JSON.stringify(task.resources || {})}
+    
+    Previous steps:
+    ${task.steps
+      .filter(s => s.id !== step.id && s.status === 'completed')
+      .map(s => `- ${s.description}: ${s.output}`)
+      .join('\n')
+    }
+    
+    Your task is to provide a detailed response for this step. Include any relevant findings, insights, or data. Be thorough but concise.
+    Format your response professionally, focusing on factual information.
+  `;
+
+  // Use OpenAI API to generate step output
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    messages: [
+      { role: "system", content: "You are a sophisticated autonomous agent capable of performing complex tasks. Your responses are factual, detailed, and professional." },
+      { role: "user", content: stepPrompt }
+    ],
+    temperature: 0.7,
+    max_tokens: 1000,
+  });
+
+  const stepOutput = response.choices[0].message.content || "Step completed successfully";
+  return stepOutput;
+}
+
+// Generate a task summary
+async function generateTaskSummary(prompt: string): Promise<string> {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    messages: [
+      { role: "system", content: "You are an expert at summarizing complex tasks and providing insightful summaries. Focus on key results and actionable insights." },
+      { role: "user", content: prompt }
+    ],
+    temperature: 0.5,
+    max_tokens: 1000,
+  });
+
+  return response.choices[0].message.content || "Task summary generation failed.";
+}
+
+// Task management utilities
 export const taskManager = {
   tasks,
-  advanceTask,
-  retryStep,
-  attemptRecovery,
-  addTaskLog
+  processTask
 };

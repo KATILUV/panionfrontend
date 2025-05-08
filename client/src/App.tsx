@@ -13,6 +13,7 @@ import AuthPage from "./pages/auth-page";
 import MarketplacePage from "./pages/marketplace-page";
 import CollaborationPage from "./pages/CollaborationPage";
 import ScraperTest from "./pages/ScraperTest";
+import AutonomousAgentPage from "./pages/AutonomousAgentPage";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
@@ -70,6 +71,13 @@ function Router() {
         <Route path="/scraper-test">
           <PageTransition type="fade" duration={0.3}>
             <ScraperTest />
+          </PageTransition>
+        </Route>
+        
+        {/* Autonomous Agent Page */}
+        <Route path="/autonomous-agent">
+          <PageTransition type="slideUp" duration={0.3}>
+            <AutonomousAgentPage />
           </PageTransition>
         </Route>
         
