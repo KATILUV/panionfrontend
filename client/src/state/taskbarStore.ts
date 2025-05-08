@@ -45,6 +45,7 @@ interface TaskbarState {
   isPinned: (agentId: AgentId) => boolean;
   reorderPinnedAgents: (orderedIds: AgentId[]) => void;
   clearPinnedAgents: () => void;
+  resetTaskbar: () => void; // Add reset function
   
   // Presets
   applyMinimalPreset: () => void;
@@ -263,6 +264,28 @@ export const useTaskbarStore = create<TaskbarState>()(
         }
         
         return []; // Return empty array for convenience
+      },
+      
+      // Reset taskbar to default state (clearing persisted data)
+      resetTaskbar: () => {
+        log.info("Resetting taskbar to factory defaults");
+        // Clear local storage for this store
+        try {
+          localStorage.removeItem('panion-taskbar-store');
+          console.log("Cleared taskbar store from local storage");
+        } catch (err) {
+          console.error("Failed to clear localStorage:", err);
+        }
+        
+        // Set all values back to defaults
+        set({ 
+          position: { location: 'bottom', alignment: 'center' },
+          enableBlur: true,
+          showLabels: false,
+          autohide: false,
+          visibleWidgets: [...DEFAULT_WIDGETS],
+          pinnedAgents: [...DEFAULT_PINNED_AGENTS],
+        });
       },
       
       // Check if a widget is visible

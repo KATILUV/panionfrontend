@@ -88,7 +88,8 @@ export function TaskbarSettings() {
     applyClassicPreset,
     pinAgent,
     unpinAgent,
-    clearPinnedAgents
+    clearPinnedAgents,
+    resetTaskbar
   } = useTaskbarStore();
   
   // Log when pinnedAgents change
@@ -172,33 +173,60 @@ export function TaskbarSettings() {
             
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium">Currently Pinned Agents</h3>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  console.log("Before clearing pinned agents:", pinnedAgents);
-                  // Get fresh function directly from store to avoid stale closures
-                  const { clearPinnedAgents } = useTaskbarStore.getState();
-                  clearPinnedAgents();
-                  // Force a re-render of this component immediately
-                  setForceUpdate(prev => prev + 1);
-                  // Also force a direct state update for all components
-                  useTaskbarStore.setState({ pinnedAgents: [] });
-                  // Verify changes were applied
-                  setTimeout(() => {
-                    const currentPinned = useTaskbarStore.getState().pinnedAgents;
-                    console.log("After clearing pinned agents:", currentPinned);
-                  }, 0);
-                  toast({
-                    title: "Taskbar cleared",
-                    description: "All agents have been removed from the taskbar",
-                  });
-                }}
-                className="text-destructive hover:bg-destructive/10"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Clear All
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    console.log("Resetting taskbar configuration to defaults");
+                    // Get fresh function from store to avoid stale closures
+                    const { resetTaskbar } = useTaskbarStore.getState();
+                    resetTaskbar();
+                    // Force a re-render of this component immediately
+                    setForceUpdate(prev => prev + 2); // +2 to make it different
+                    // Verify changes were applied
+                    setTimeout(() => {
+                      const currentPinned = useTaskbarStore.getState().pinnedAgents;
+                      console.log("After resetting taskbar:", currentPinned);
+                    }, 0);
+                    toast({
+                      title: "Taskbar reset",
+                      description: "Taskbar configuration has been reset to defaults",
+                    });
+                  }}
+                  className="text-primary hover:bg-primary/10"
+                >
+                  <Settings className="h-4 w-4 mr-1" />
+                  Reset Defaults
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    console.log("Before clearing pinned agents:", pinnedAgents);
+                    // Get fresh function directly from store to avoid stale closures
+                    const { clearPinnedAgents } = useTaskbarStore.getState();
+                    clearPinnedAgents();
+                    // Force a re-render of this component immediately
+                    setForceUpdate(prev => prev + 1);
+                    // Also force a direct state update for all components
+                    useTaskbarStore.setState({ pinnedAgents: [] });
+                    // Verify changes were applied
+                    setTimeout(() => {
+                      const currentPinned = useTaskbarStore.getState().pinnedAgents;
+                      console.log("After clearing pinned agents:", currentPinned);
+                    }, 0);
+                    toast({
+                      title: "Taskbar cleared",
+                      description: "All agents have been removed from the taskbar",
+                    });
+                  }}
+                  className="text-destructive hover:bg-destructive/10"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear All
+                </Button>
+              </div>
             </div>
             
             <div className="space-y-2 mb-6">
