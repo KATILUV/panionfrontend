@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { log } from './systemLogStore';
+import { subscribeWithSelector } from '@/utils/subscribe-with-selector';
 
 export type TaskPriority = 'low' | 'normal' | 'high' | 'urgent';
 export type TaskStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
@@ -454,9 +455,6 @@ export const stopTaskProcessor = () => {
     log.info('Task processor stopped');
   }
 };
-
-// Import our subscription helper
-import { subscribeWithSelector } from '@/utils/subscribe-with-selector';
 
 // Auto-start the task processor when the app loads
 // This should be called in a component that's always mounted, like App.tsx
