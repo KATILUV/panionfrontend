@@ -428,13 +428,31 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
 
   // Function to clear all pinned agents
   const handleClearAllPins = () => {
+    console.log("TaskbarFixed - Clearing all pins");
     const clearPinnedAgents = useTaskbarStore.getState().clearPinnedAgents;
     clearPinnedAgents();
+    // Force a re-render of the component
+    setState({ ...state });
     toast({
       title: "Taskbar Cleared",
       description: "All agents have been unpinned from the taskbar",
     });
   };
+  
+  // Subscribe to changes in the store
+  React.useEffect(() => {
+    // This will force a re-render when pinnedAgents change
+    const unsubscribe = useTaskbarStore.subscribe(
+      (state) => state.pinnedAgents,
+      (pinnedAgents) => {
+        console.log("TaskbarFixed - Pinned agents changed:", pinnedAgents);
+        // Force a re-render by updating component state
+        setState({ ...state });
+      }
+    );
+    
+    return unsubscribe;
+  }, []);
 
   return (
     <>
@@ -451,8 +469,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
             `}>
               {/* Get pinned agents from taskbar store */}
               {(() => {
-                // Get pinned agents list
-                const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
+                // Get pinned agents list and use direct store access
+                // This helps ensure we're getting the most up-to-date state
+                const pinnedAgents = useTaskbarStore.getState().pinnedAgents;
+                console.log("TaskbarFixed - Current pinned agents:", pinnedAgents);
                 
                 // Create a map of all agents by ID for quicker access
                 const agentsMap = registry.reduce((map, agent) => {
