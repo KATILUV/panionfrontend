@@ -51,91 +51,72 @@ const TaskbarButton: React.FC<TaskbarButtonProps> = ({
     <button
       onClick={onClick}
       className={`
-        relative group flex ${isVertical ? 'flex-col' : 'items-center'} 
-        ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md 
+        group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
+        ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
         ${isActive ? 'bg-primary/20 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'} 
-        transition-colors duration-200 ${className}
+        transition-colors duration-200 relative
+        ${className}
       `}
       title={label}
     >
-      {typeof icon === 'string' ? (
-        <span className="text-xl">{icon}</span>
-      ) : (
-        <span className={`${isVertical ? 'mb-1' : 'mr-1.5'}`}>{icon}</span>
-      )}
-      
+      <span className={`text-xl ${showLabels && isVertical ? 'mb-1' : (showLabels && !isVertical ? 'mr-1.5' : '')}`}>{icon}</span>
       {showLabels && <span className="text-xs font-medium whitespace-nowrap">{label}</span>}
       
-      {hasIndicator && (
-        <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full"></div>
+      {/* Active indicator */}
+      {isActive && <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>}
+      
+      {/* Running indicator dot */}
+      {hasIndicator && !isActive && (
+        <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-primary rounded-full"></div>
       )}
     </button>
   );
 };
 
-// Agent icon component for taskbar
+// Agent icon button with additional features (pin, context menu, etc.)
 interface AgentIconButtonProps {
   id: AgentId;
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   isActive: boolean;
-  onClick: (id: AgentId) => void;
-  isPinned?: boolean;
   hasRunningIndicator?: boolean;
+  isPinned: boolean;
+  onClick: (id: AgentId) => void;
 }
 
-const AgentIconButton: React.FC<AgentIconButtonProps> = ({ 
-  id, 
-  icon, 
-  title, 
-  isActive, 
-  onClick,
-  isPinned = false,
-  hasRunningIndicator = false
+const AgentIconButton: React.FC<AgentIconButtonProps> = ({
+  id,
+  icon,
+  title,
+  isActive,
+  hasRunningIndicator = false,
+  isPinned,
+  onClick
 }) => {
-  const { showLabels } = useTaskbarStore(state => ({
-    showLabels: state.showLabels,
-  }));
+  const [isHovered, setIsHovered] = useState(false);
+  const bounceClass = isHovered ? 'animate-bounce-subtle' : '';
   
-  const { position } = useTaskbarStore(state => ({
-    position: state.position,
-  }));
-  
-  // Pin/unpin functions from taskbar store
-  const pinAgent = useTaskbarStore(state => state.pinAgent);
-  const unpinAgent = useTaskbarStore(state => state.unpinAgent);
-  const { toast } = useToast();
-  
-  // Get window closure/minimize actions
+  // Access functions from agent and taskbar stores
   const { minimizeAgent, closeAgent } = useAgentStore();
+  const { unpinAgent, pinAgent } = useTaskbarStore();
   
-  // Determine if we're in a vertical taskbar
-  const isVertical = position.location === 'left' || position.location === 'right';
-  
-  // Handle pin/unpin action
+  // Function to handle pin/unpin
   const handlePinUnpin = () => {
     if (isPinned) {
       unpinAgent(id);
-      toast({
-        title: "Agent Unpinned",
-        description: `Removed ${title} from taskbar`,
-        variant: "default",
-      });
     } else {
       pinAgent(id);
-      toast({
-        title: "Agent Pinned",
-        description: `Added ${title} to taskbar`,
-        variant: "default",
-      });
     }
   };
   
-  // State for hover animation
-  const [isHovered, setIsHovered] = useState(false);
+  // Access taskbar settings
+  const { position, showLabels } = useTaskbarStore(state => ({
+    position: state.position,
+    showLabels: state.showLabels
+  }));
   
-  // Bounce animation class for running indicators or hover
-  const bounceClass = hasRunningIndicator || isHovered ? 'animate-bounce-subtle' : '';
+  // Determine if we're in a vertical taskbar
+  const isVertical = position.location === 'left' || position.location === 'right';
   
   return (
     <ContextMenu>
@@ -426,436 +407,544 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
     console.log("Setting taskbar position to:", position.location);
   }, [position.location]);
 
+  // Function to clear all pinned agents
+  const handleClearAllPins = () => {
+    const clearPinnedAgents = useTaskbarStore.getState().clearPinnedAgents;
+    clearPinnedAgents();
+    toast({
+      title: "Taskbar Cleared",
+      description: "All agents have been unpinned from the taskbar",
+    });
+  };
+
   return (
     <>
-      <div 
-        ref={taskbarRef}
-        style={getTaskbarStyles()}
-        className={`taskbar ${className} ${autohide ? 'opacity-30 hover:opacity-100 transition-opacity duration-300' : ''}`}
-      >
-        {/* Agent icons section - with customizable pinned agents (macOS dock style) */}
-        <div className={`
-          flex-1 ${isVertical ? 'flex flex-col space-y-1.5 py-2' : 'flex flex-row items-center space-x-1.5'}
-        `}>
-          {/* Get pinned agents from taskbar store */}
-          {(() => {
-            // Get pinned agents list
-            const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
-            
-            // Create a map of all agents by ID for quicker access
-            const agentsMap = registry.reduce((map, agent) => {
-              map[agent.id] = agent;
-              return map;
-            }, {} as Record<AgentId, typeof registry[0]>);
-            
-            // Return pinned agents that exist in registry
-            return pinnedAgents
-              .filter(id => agentsMap[id])
-              .map(id => {
-                const agent = agentsMap[id];
-                const isOpen = windows[id]?.isOpen;
-                const isMinimized = windows[id]?.isMinimized;
-                const isActive = isOpen && !isMinimized;
-                const isRunning = isOpen && !isActive; // Running but not focused
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <div 
+            ref={taskbarRef}
+            style={getTaskbarStyles()}
+            className={`taskbar ${className} ${autohide ? 'opacity-30 hover:opacity-100 transition-opacity duration-300' : ''}`}
+          >
+            {/* Agent icons section - with customizable pinned agents (macOS dock style) */}
+            <div className={`
+              flex-1 ${isVertical ? 'flex flex-col space-y-1.5 py-2' : 'flex flex-row items-center space-x-1.5'}
+            `}>
+              {/* Get pinned agents from taskbar store */}
+              {(() => {
+                // Get pinned agents list
+                const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
                 
-                return (
-                  <AgentIconButton
-                    key={id}
-                    id={id}
-                    icon={agent.icon}
-                    title={agent.title}
-                    isActive={isActive}
-                    isPinned={true}
-                    hasRunningIndicator={isRunning}
-                    onClick={handleIconClick}
-                  />
-                );
-              });
-          })()}
-          
-          {/* Separator between pinned and running non-pinned agents */}
-          {(() => {
-            const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
-            
-            // Check if there are any running non-pinned agents
-            const hasRunningNonPinned = registry.some(agent => {
-              const isOpen = windows[agent.id]?.isOpen;
-              const isPinned = pinnedAgents.includes(agent.id);
-              return isOpen && !isPinned;
-            });
-            
-            if (hasRunningNonPinned && pinnedAgents.length > 0) {
-              return (
-                <div className={isVertical 
-                  ? "w-6 h-px bg-white/20 my-1" 
-                  : "h-6 w-px bg-white/20 mx-1"
-                }></div>
-              );
-            }
-            return null;
-          })()}
-          
-          {/* Show running non-pinned agents */}
-          {(() => {
-            const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
-            
-            return registry
-              .filter(agent => {
-                const isOpen = windows[agent.id]?.isOpen;
-                const isPinned = pinnedAgents.includes(agent.id);
-                return isOpen && !isPinned;
-              })
-              .map(agent => {
-                const isMinimized = windows[agent.id]?.isMinimized;
-                const isActive = windows[agent.id]?.isOpen && !isMinimized;
+                // Create a map of all agents by ID for quicker access
+                const agentsMap = registry.reduce((map, agent) => {
+                  map[agent.id] = agent;
+                  return map;
+                }, {} as Record<AgentId, typeof registry[0]>);
                 
-                return (
-                  <AgentIconButton
-                    key={agent.id}
-                    id={agent.id}
-                    icon={agent.icon}
-                    title={agent.title}
-                    isActive={isActive}
-                    isPinned={false}
-                    hasRunningIndicator={!isActive}
-                    onClick={handleIconClick}
-                  />
-                );
-              });
-          })()}
-            
-          {/* Plus button to add agents to taskbar */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className={`
-                  group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
-                  ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
-                  text-white/80 hover:text-white hover:bg-white/10 
-                  transition-colors duration-200
-                `}
-                title="Add Agents"
-              >
-                <Plus size={16} />
-                {showLabels && <span className="text-xs font-medium whitespace-nowrap">Add Agents</span>}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent 
-              className="w-56 p-0 bg-black/80 backdrop-blur-md border border-primary/20"
-              side={getPopoverSide()}
-            >
-              <div className="py-2 px-1">
-                <div className="mb-2 px-2 text-xs font-semibold text-primary/80">ADD TO TASKBAR</div>
-                <div className="max-h-[calc(100vh-150px)] overflow-y-auto">
-                  {(() => {
-                    const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
-                    const pinAgent = useTaskbarStore(state => state.pinAgent);
+                // Return pinned agents that exist in registry
+                return pinnedAgents
+                  .filter(id => agentsMap[id])
+                  .map(id => {
+                    const agent = agentsMap[id];
+                    const isOpen = windows[id]?.isOpen;
+                    const isMinimized = windows[id]?.isMinimized;
+                    const isActive = isOpen && !isMinimized;
+                    const isRunning = isOpen && !isActive; // Running but not focused
                     
-                    // Show agents that aren't pinned yet
-                    return registry
-                      .filter(agent => !pinnedAgents.includes(agent.id))
-                      .map(agent => (
-                        <button
-                          key={agent.id}
-                          onClick={() => {
-                            pinAgent(agent.id);
-                            toast({
-                              title: "Agent Pinned",
-                              description: `Added ${agent.title} to taskbar`,
-                              variant: "default",
-                            });
-                          }}
-                          className="w-full text-left px-2 py-1.5 rounded hover:bg-primary/20 transition-colors flex items-center"
-                        >
-                          <span className="text-xl mr-2">{agent.icon}</span>
-                          <span>{agent.title}</span>
-                        </button>
-                      ));
-                  })()}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-        
-        {/* Widgets section */}
-        <div className={`
-          ${isVertical ? 'flex flex-col space-y-2 items-center' : 'flex flex-row items-center space-x-2'}
-        `}>
-          {/* Search Bar Widget - horizontal version */}
-          {visibleWidgets.includes('searchBar') && !isVertical && (
-            <div className="relative w-40 lg:w-48">
-              <Input
-                className="h-8 bg-black/40 border-primary/20 text-white placeholder:text-white/50 pr-8"
-                placeholder="Search..."
-                onClick={() => toast({
-                  title: "Search Feature",
-                  description: "Global search will be implemented in a future update",
-                  variant: "default",
-                })}
-              />
-              <div className="absolute right-2 top-2">
-                <Search className="w-4 h-4 text-white/50" />
-              </div>
-            </div>
-          )}
-          
-          {/* Simplified Search Button for vertical taskbars */}
-          {visibleWidgets.includes('searchBar') && isVertical && (
-            <TaskbarButton
-              icon={<Search size={16} />}
-              label="Search"
-              isActive={false}
-              onClick={() => toast({
-                title: "Search Feature",
-                description: "Global search will be implemented in a future update",
-                variant: "default",
-              })}
-            />
-          )}
-
-          {/* Notifications Widget */}
-          {visibleWidgets.includes('notifications') && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <TaskbarButton
-                  icon={<div className="relative">
-                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                      3
-                    </span>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                  </div>}
-                  label="Notifications"
-                  isActive={false}
-                  onClick={() => {}}
-                />
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" side={getPopoverSide()}>
-                <div className="bg-black/60 backdrop-blur-md rounded-md overflow-hidden border border-primary/20">
-                  <div className="p-3 border-b border-primary/10 flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-white">Notifications</h3>
-                    <button className="text-xs text-primary hover:text-primary/80 transition-colors">Mark all as read</button>
-                  </div>
-                  <div className="max-h-80 overflow-y-auto">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="p-3 border-b border-primary/10 hover:bg-primary/10 transition-colors">
-                        <div className="flex items-start gap-3">
-                          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                            {i === 1 ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                              </svg>
-                            ) : i === 2 ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm text-white">
-                              {i === 1 ? "New agent available in Marketplace" : 
-                               i === 2 ? "System update available" : 
-                               "Layout 'Productivity Setup' created"}
-                            </p>
-                            <p className="text-xs text-white/60 mt-1">
-                              {i === 1 ? "2 minutes ago" : 
-                               i === 2 ? "10 minutes ago" : 
-                               "15 minutes ago"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-2 border-t border-primary/10 flex justify-center">
-                    <button className="text-xs text-primary hover:text-primary/80 transition-colors">
-                      View all notifications
-                    </button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
-          
-          {/* AI Status Widget - horizontal version */}
-          {visibleWidgets.includes('aiStatus') && !isVertical && (
-            <div className="px-2.5 py-1 rounded-lg bg-black/20 text-white/80 flex items-center space-x-2">
-              <div className="relative">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="w-2 h-2 bg-green-500 rounded-full absolute inset-0 animate-ping opacity-75"></div>
-              </div>
-              <span className="text-xs font-medium">AI Active</span>
-            </div>
-          )}
-          
-          {/* AI Status Widget - vertical version */}
-          {visibleWidgets.includes('aiStatus') && isVertical && (
-            <div className="p-2 rounded-lg bg-black/20 text-white/80">
-              <div className="flex flex-col items-center space-y-1">
-                <div className="relative">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div className="w-2 h-2 bg-green-500 rounded-full absolute inset-0 animate-ping opacity-75"></div>
-                </div>
-                {showLabels && <span className="text-xs font-medium">AI</span>}
-              </div>
-            </div>
-          )}
-
-          {/* Quick Save Button */}
-          {visibleWidgets.includes('quickSave') && (
-            <div className="relative">
-              <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
-                <PopoverTrigger asChild>
-                  <TaskbarButton
-                    icon={<Plus size={16} />}
-                    label="Save Layout"
-                    isActive={false}
-                    onClick={() => {}}
-                    className="bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20"
-                  />
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-4 bg-black/60 backdrop-blur-md border border-primary/20 rounded-md" side={getPopoverSide()}>
-                  <div className="space-y-4">
-                    <h3 className="text-base font-medium text-white">Save Current Layout</h3>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="layout-name" className="text-white">Layout Name</Label>
-                      <Input 
-                        id="layout-name"
-                        ref={inputRef}
-                        placeholder="e.g., My Workspace Layout"
-                        value={customLayoutName}
-                        onChange={(e) => setCustomLayoutName(e.target.value)}
-                        className="w-full bg-black/40 border-primary/20 text-white"
-                        onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
+                    return (
+                      <AgentIconButton
+                        key={id}
+                        id={id}
+                        icon={agent.icon}
+                        title={agent.title}
+                        isActive={isActive}
+                        isPinned={true}
+                        hasRunningIndicator={isRunning}
+                        onClick={handleIconClick}
                       />
-                    </div>
+                    );
+                  });
+              })()}
+              
+              {/* Separator between pinned and running non-pinned agents */}
+              {(() => {
+                const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
+                
+                // Check if there are any running non-pinned agents
+                const hasRunningNonPinned = registry.some(agent => {
+                  const isOpen = windows[agent.id]?.isOpen;
+                  const isPinned = pinnedAgents.includes(agent.id);
+                  return isOpen && !isPinned;
+                });
+                
+                if (hasRunningNonPinned && pinnedAgents.length > 0) {
+                  return (
+                    <div className={isVertical 
+                      ? "w-6 h-px bg-white/20 my-1" 
+                      : "h-6 w-px bg-white/20 mx-1"
+                    }></div>
+                  );
+                }
+                return null;
+              })()}
+              
+              {/* Show running non-pinned agents */}
+              {(() => {
+                const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
+                
+                return registry
+                  .filter(agent => {
+                    const isOpen = windows[agent.id]?.isOpen;
+                    const isPinned = pinnedAgents.includes(agent.id);
+                    return isOpen && !isPinned;
+                  })
+                  .map(agent => {
+                    const isMinimized = windows[agent.id]?.isMinimized;
+                    const isActive = windows[agent.id]?.isOpen && !isMinimized;
                     
-                    <div className="flex items-center justify-between gap-2">
-                      <button
-                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-primary/10
-                                  hover:bg-primary/20 text-sm text-white transition-colors"
-                        onClick={handleQuickSave}
-                      >
-                        <Save size={14} /> Quick Save
-                      </button>
-                      
-                      <button
-                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-primary/80
-                                  hover:bg-primary text-sm text-white transition-colors disabled:opacity-50 
-                                  disabled:pointer-events-none"
-                        onClick={handleCustomSave}
-                        disabled={!customLayoutName.trim()}
-                      >
-                        <CheckCircle size={14} /> Save with Name
-                      </button>
+                    return (
+                      <AgentIconButton
+                        key={agent.id}
+                        id={agent.id}
+                        icon={agent.icon}
+                        title={agent.title}
+                        isActive={isActive}
+                        isPinned={false}
+                        hasRunningIndicator={!isActive}
+                        onClick={handleIconClick}
+                      />
+                    );
+                  });
+              })()}
+                
+              {/* Plus button to add agents to taskbar */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className={`
+                      group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
+                      ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
+                      text-white/80 hover:text-white hover:bg-white/10 
+                      transition-colors duration-200
+                    `}
+                    title="Add Agents"
+                  >
+                    <Plus size={16} />
+                    {showLabels && <span className="text-xs font-medium whitespace-nowrap">Add Agents</span>}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent 
+                  className="w-56 p-0 bg-black/80 backdrop-blur-md border border-primary/20"
+                  side={getPopoverSide()}
+                >
+                  <div className="py-2 px-1">
+                    <div className="mb-2 px-2 text-xs font-semibold text-primary/80">ADD TO TASKBAR</div>
+                    <div className="max-h-[calc(100vh-150px)] overflow-y-auto">
+                      {(() => {
+                        const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
+                        const pinAgent = useTaskbarStore(state => state.pinAgent);
+                        
+                        // Show agents that aren't pinned yet
+                        return registry
+                          .filter(agent => !pinnedAgents.includes(agent.id))
+                          .map(agent => (
+                            <button
+                              key={agent.id}
+                              onClick={() => {
+                                pinAgent(agent.id);
+                                toast({
+                                  title: "Agent Pinned",
+                                  description: `Added ${agent.title} to taskbar`,
+                                  variant: "default",
+                                });
+                              }}
+                              className="w-full text-left px-2 py-1.5 rounded hover:bg-primary/20 transition-colors flex items-center"
+                            >
+                              <span className="text-xl mr-2">{agent.icon}</span>
+                              <span>{agent.title}</span>
+                            </button>
+                          ));
+                      })()}
                     </div>
                   </div>
                 </PopoverContent>
               </Popover>
             </div>
-          )}
-          
-          {/* System Console Button */}
-          {visibleWidgets.includes('systemConsole') && (
-            <TaskbarButton
-              icon={<Terminal size={16} />}
-              label="System Console"
-              isActive={isSystemLogVisible}
-              onClick={toggleSystemLog}
-            />
-          )}
-          
-          {/* Layout Manager Button */}
-          {visibleWidgets.includes('layoutManager') && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <TaskbarButton
-                  icon={<Layout size={16} />}
-                  label={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
-                  isActive={!!activeLayoutId}
-                  onClick={() => {}}
-                />
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0 bg-black/60 backdrop-blur-md border border-primary/20" side={getPopoverSide()}>
-                <div className="p-3 border-b border-primary/10 flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-white">Layouts</h3>
-                </div>
-                <div className="py-2 px-1">
-                  <div className="mb-2 px-2 text-xs font-medium text-primary/80">SAVED LAYOUTS</div>
-                  <div className="max-h-80 overflow-y-auto">
-                    {/* Placeholder for layouts - would need actual layouts from agentStore */}
-                    {[
-                      { id: 'default', name: 'Default Layout' },
-                      { id: 'development', name: 'Development Layout' },
-                      { id: 'research', name: 'Research Layout' }
-                    ].map(layout => (
-                      <button
-                        key={layout.id}
-                        onClick={() => {
-                          // Restore layout (this function would need to be implemented in agentStore)
-                          // For now, just show a toast
-                          toast({
-                            title: "Layout Feature",
-                            description: `Layout restoration will be implemented in a future update`,
-                            variant: "default",
-                          });
-                        }}
-                        className={`w-full text-left px-2 py-1.5 rounded ${layout.id === activeLayoutId ? 'bg-primary/20' : 'hover:bg-primary/10'} transition-colors flex items-center justify-between`}
-                      >
-                        <span>{layout.name}</span>
-                        {layout.id === activeLayoutId && (
-                          <CheckCircle size={14} className="text-primary" />
-                        )}
-                      </button>
-                    ))}
+            
+            {/* Widgets section */}
+            <div className={`
+              ${isVertical ? 'flex flex-col space-y-2 items-center' : 'flex flex-row items-center space-x-2'}
+            `}>
+              {/* Search Bar Widget - horizontal version */}
+              {visibleWidgets.includes('searchBar') && !isVertical && (
+                <div className="relative w-40 lg:w-48">
+                  <Input
+                    className="h-8 bg-black/40 border-primary/20 text-white placeholder:text-white/50 pr-8"
+                    placeholder="Search..."
+                    onClick={() => toast({
+                      title: "Search Feature",
+                      description: "Global search will be implemented in a future update",
+                      variant: "default",
+                    })}
+                  />
+                  <div className="absolute right-2 top-2">
+                    <Search className="w-4 h-4 text-white/50" />
                   </div>
                 </div>
-              </PopoverContent>
-            </Popover>
-          )}
-          
-          {/* Clock Widget - horizontal version */}
-          {visibleWidgets.includes('clock') && !isVertical && (
-            <div className="px-2.5 py-1 rounded-lg bg-black/20 text-white/80">
-              <div className="flex items-center space-x-1">
-                <Clock size={14} />
-                <span className="text-xs font-medium">{formattedTime}</span>
-              </div>
+              )}
+              
+              {/* Simplified Search Button for vertical taskbars */}
+              {visibleWidgets.includes('searchBar') && isVertical && (
+                <TaskbarButton
+                  icon={<Search size={16} />}
+                  label="Search"
+                  isActive={false}
+                  onClick={() => toast({
+                    title: "Search Feature",
+                    description: "Global search will be implemented in a future update",
+                    variant: "default",
+                  })}
+                />
+              )}
+
+              {/* Notifications Widget */}
+              {visibleWidgets.includes('notifications') && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <TaskbarButton
+                      icon={<div className="relative">
+                        <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                          3
+                        </span>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                      </div>}
+                      label="Notifications"
+                      isActive={false}
+                      onClick={() => {}}
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0" side={getPopoverSide()}>
+                    <div className="bg-black/60 backdrop-blur-md rounded-md overflow-hidden border border-primary/20">
+                      <div className="p-3 border-b border-primary/10 flex items-center justify-between">
+                        <h3 className="text-sm font-medium text-white">Notifications</h3>
+                        <button className="text-xs text-primary hover:text-primary/80 transition-colors">Mark all as read</button>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="p-3 border-b border-primary/10 hover:bg-primary/10 transition-colors">
+                            <div className="flex items-start gap-3">
+                              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                {i === 1 ? (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                  </svg>
+                                ) : i === 2 ? (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm text-white">
+                                  {i === 1 ? "New agent available in Marketplace" : 
+                                   i === 2 ? "System update available" : 
+                                   "Layout 'Productivity Setup' created"}
+                                </p>
+                                <p className="text-xs text-white/60 mt-1">
+                                  {i === 1 ? "2 minutes ago" : 
+                                   i === 2 ? "10 minutes ago" : 
+                                   "15 minutes ago"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-2 border-t border-primary/10 flex justify-center">
+                        <button className="text-xs text-primary hover:text-primary/80 transition-colors">
+                          View all notifications
+                        </button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+              
+              {/* AI Status Widget */}
+              {visibleWidgets.includes('aiStatus') && (
+                <div className="flex items-center space-x-1 bg-primary/10 px-2 py-1 rounded-full">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  {showLabels && <span className="text-xs text-white/80">AI Active</span>}
+                </div>
+              )}
+              
+              {/* System Console Widget */}
+              {visibleWidgets.includes('systemConsole') && (
+                <TaskbarButton
+                  icon={<Terminal size={16} />}
+                  label="System Console"
+                  isActive={isSystemLogVisible}
+                  onClick={toggleSystemLog}
+                />
+              )}
+              
+              {/* Layout Manager Widget */}
+              {visibleWidgets.includes('layoutManager') && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <TaskbarButton
+                      icon={<Layout size={16} />}
+                      label="Layouts"
+                      isActive={false}
+                      onClick={() => {}}
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className="w-64 p-0 bg-black/80 backdrop-blur-md border border-primary/20 shadow-lg"
+                    side={getPopoverSide()}
+                  >
+                    <div className="p-3 border-b border-primary/10 flex flex-col">
+                      <div className="text-xs uppercase tracking-wide text-primary/60 mb-1">Active Layout</div>
+                      <div className="text-sm font-medium text-white">{getActiveLayoutName() || "Default Layout"}</div>
+                    </div>
+                    
+                    <div className="p-2 max-h-[300px] overflow-y-auto thin-scrollbar">
+                      <div className="text-xs text-white/70 mb-2 px-1">Quick Save</div>
+                      <div className="flex space-x-2 mb-3">
+                        <button 
+                          onClick={handleQuickSave}
+                          className="flex-1 flex items-center justify-center space-x-1 bg-primary/20 hover:bg-primary/30 transition-colors py-1.5 px-2 rounded-md text-white text-xs font-medium"
+                        >
+                          <Save size={12} />
+                          <span>Quick Save</span>
+                        </button>
+                        
+                        <Popover open={isQuickSaveOpen} onOpenChange={handlePopoverOpenChange}>
+                          <PopoverTrigger asChild>
+                            <button 
+                              className="flex items-center justify-center space-x-1 bg-gray-700/50 hover:bg-gray-700/70 transition-colors py-1.5 px-2 rounded-md text-white text-xs font-medium"
+                            >
+                              <span>Custom</span>
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-60 p-3" side="top">
+                            <Label htmlFor="customName" className="text-xs text-white/80 mb-2 block">
+                              Name your layout
+                            </Label>
+                            <div className="flex space-x-2">
+                              <Input
+                                id="customName"
+                                ref={inputRef}
+                                value={customLayoutName}
+                                onChange={(e) => setCustomLayoutName(e.target.value)}
+                                placeholder="e.g., Productivity Setup"
+                                className="flex-1 h-8 text-sm bg-black/20"
+                              />
+                              <button
+                                onClick={handleCustomSave}
+                                disabled={!customLayoutName.trim()}
+                                className="bg-primary/70 hover:bg-primary transition-colors text-white rounded-md px-2 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      
+                      <div className="text-xs text-white/70 my-2 px-1">Saved Layouts</div>
+                      {(() => {
+                        const layouts = useAgentStore.getState().layouts;
+                        if (layouts.length === 0) {
+                          return (
+                            <div className="py-2 px-1 text-xs text-white/50 italic">
+                              No saved layouts yet
+                            </div>
+                          );
+                        }
+                        
+                        return layouts.map(layout => (
+                          <button
+                            key={layout.id}
+                            onClick={() => {
+                              useAgentStore.getState().loadLayout(layout.id);
+                              toast({
+                                title: "Layout Loaded",
+                                description: `Loaded "${layout.name}" layout`,
+                              });
+                            }}
+                            className={`
+                              w-full text-left px-2 py-1.5 rounded mb-1
+                              ${layout.id === activeLayoutId ? 'bg-primary/30 text-white' : 'hover:bg-primary/10 text-white/80'} 
+                              transition-colors flex items-center justify-between group
+                            `}
+                          >
+                            <span className="flex items-center">
+                              {layout.id === activeLayoutId && <CheckCircle size={12} className="text-primary mr-1.5" />}
+                              <span className="text-sm">{layout.name}</span>
+                            </span>
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                              <Copy size={12} className="text-white/60 hover:text-white cursor-pointer" onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(JSON.stringify(layout));
+                                toast({
+                                  title: "Layout Copied",
+                                  description: `Layout data copied to clipboard`,
+                                  variant: "default",
+                                });
+                              }} />
+                              <X size={12} className="text-white/60 hover:text-white cursor-pointer" onClick={(e) => {
+                                e.stopPropagation();
+                                useAgentStore.getState().deleteLayout(layout.id);
+                                toast({
+                                  title: "Layout Deleted",
+                                  description: `"${layout.name}" layout deleted`,
+                                  variant: "destructive",
+                                });
+                              }} />
+                            </span>
+                          </button>
+                        ));
+                      })()}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+                            
+              {/* Quick Save Widget */}
+              {visibleWidgets.includes('quickSave') && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <TaskbarButton
+                      icon={<Save size={16} />}
+                      label="Save Layout"
+                      isActive={false}
+                      onClick={() => {}}
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className="w-64 p-4 bg-black/80 backdrop-blur-md border border-primary/20"
+                    side={getPopoverSide()}
+                  >
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="quickSaveName" className="text-sm text-white/90 block mb-1">
+                          Save current layout
+                        </Label>
+                        <div className="text-xs text-white/60 mb-2">
+                          Save the current window arrangement
+                        </div>
+                        <div className="flex space-x-2">
+                          <Input
+                            id="quickSaveName"
+                            placeholder="Layout name"
+                            value={customLayoutName}
+                            onChange={(e) => setCustomLayoutName(e.target.value)}
+                            className="flex-1 bg-black/40 border-primary/20"
+                          />
+                          <button
+                            onClick={handleCustomSave}
+                            disabled={!customLayoutName.trim()}
+                            className="bg-primary hover:bg-primary/80 transition-colors text-white px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <button
+                          onClick={handleQuickSave}
+                          className="w-full bg-primary/20 hover:bg-primary/30 transition-colors text-white py-2 px-3 rounded text-sm flex items-center justify-center space-x-2"
+                        >
+                          <Save size={14} />
+                          <span>Quick Save (Auto-named)</span>
+                        </button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+              
+              {/* Clock Widget */}
+              {visibleWidgets.includes('clock') && (
+                <div className="text-white/80">
+                  <div className="flex items-center space-x-1">
+                    <Clock size={14} />
+                    {showLabels && <span className="text-xs font-medium">{formattedTime}</span>}
+                  </div>
+                </div>
+              )}
+              
+              {/* Version number - horizontal */}
+              {visibleWidgets.includes('versionNumber') && !isVertical && (
+                <div className="text-xs px-2.5 py-1 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
+                  v1.0
+                </div>
+              )}
+              
+              {/* Version number - vertical */}
+              {visibleWidgets.includes('versionNumber') && isVertical && (
+                <div className="text-xs p-1.5 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
+                  v1.0
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        </ContextMenuTrigger>
+        
+        {/* Taskbar context menu */}
+        <ContextMenuContent className="min-w-[180px] bg-black/80 backdrop-blur-md border border-primary/20">
+          <ContextMenuItem onClick={handleClearAllPins} className="flex items-center cursor-pointer text-destructive hover:text-destructive">
+            <X size={15} className="mr-2" />
+            Clear All Pinned Agents
+          </ContextMenuItem>
           
-          {/* Clock Widget - vertical version */}
-          {visibleWidgets.includes('clock') && isVertical && (
-            <div className="p-2 rounded-lg bg-black/20 text-white/80">
-              <div className="flex flex-col items-center space-y-1">
-                <Clock size={14} />
-                {showLabels && <span className="text-xs font-medium">{formattedTime}</span>}
-              </div>
-            </div>
-          )}
+          <ContextMenuSeparator />
           
-          {/* Version number - horizontal */}
-          {visibleWidgets.includes('versionNumber') && !isVertical && (
-            <div className="text-xs px-2.5 py-1 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
-              v1.0
-            </div>
-          )}
+          <ContextMenuItem onClick={() => {
+            const { applyMinimalPreset } = useTaskbarStore.getState();
+            applyMinimalPreset();
+            toast({
+              title: "Minimal Preset Applied",
+              description: "Taskbar set to minimal configuration",
+            });
+          }} className="flex items-center cursor-pointer">
+            <span className="mr-2">🔍</span>
+            Minimal Preset
+          </ContextMenuItem>
           
-          {/* Version number - vertical */}
-          {visibleWidgets.includes('versionNumber') && isVertical && (
-            <div className="text-xs p-1.5 rounded-full text-primary-foreground/70 bg-primary/10 transition-colors duration-200 border border-primary/20">
-              v1.0
-            </div>
-          )}
-        </div>
-      </div>
+          <ContextMenuItem onClick={() => {
+            const { applyFullPreset } = useTaskbarStore.getState();
+            applyFullPreset();
+            toast({
+              title: "Full Preset Applied",
+              description: "Taskbar set to full configuration",
+            });
+          }} className="flex items-center cursor-pointer">
+            <span className="mr-2">🎛️</span>
+            Full Preset
+          </ContextMenuItem>
+          
+          <ContextMenuItem onClick={() => {
+            const { applyDockPreset } = useTaskbarStore.getState();
+            applyDockPreset();
+            toast({
+              title: "macOS Dock Preset Applied",
+              description: "Taskbar set to macOS dock style",
+            });
+          }} className="flex items-center cursor-pointer">
+            <span className="mr-2">💻</span>
+            macOS Dock Style
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
       
       {/* System Log Component */}
       {isSystemLogVisible && (
