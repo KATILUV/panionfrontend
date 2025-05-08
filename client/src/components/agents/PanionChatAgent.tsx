@@ -142,8 +142,14 @@ const PanionChatAgent: React.FC = () => {
                   // If this is a smoke shop search, format the results nicely
                   if ((task.type === 'smokeshop_search' || task.type === 'smokeshop_research') && taskData.data) {
                     try {
-                      // Add data to messages in a readable format
-                      let formattedData = "Here's what I found:\n\n";
+                      // Check if we're displaying owner information
+                      const hasOwnerInfo = taskData.params?.includeOwnerInfo || false;
+                      
+                      // Add data to messages in a readable format with appropriate heading
+                      let formattedData = hasOwnerInfo 
+                        ? "📋 **SMOKE SHOP OWNER CONTACT INFORMATION**\n\n" 
+                        : "📋 **SMOKE SHOP DIRECTORY RESULTS**\n\n";
+                        
                       const shopData = Array.isArray(taskData.data) ? taskData.data : [taskData.data];
                       
                       shopData.forEach((shop: any, idx: number) => {
@@ -152,7 +158,22 @@ const PanionChatAgent: React.FC = () => {
                         if (shop.phone) formattedData += `Phone: ${shop.phone}\n`;
                         if (shop.website) formattedData += `Website: ${shop.website}\n`;
                         if (shop.hours) formattedData += `Hours: ${shop.hours}\n`;
-                        if (idx < shopData.length - 1) formattedData += '\n';
+                        
+                        // Include owner information when available and requested
+                        if (hasOwnerInfo) {
+                          if (shop.owner_name) formattedData += `Owner: ${shop.owner_name}\n`;
+                          if (shop.owner_email) formattedData += `Owner Email: ${shop.owner_email}\n`;
+                          if (shop.owner_phone && shop.owner_phone !== shop.phone) {
+                            formattedData += `Owner Phone: ${shop.owner_phone}\n`;
+                          }
+                          if (shop.contact_person && shop.contact_person !== shop.owner_name) {
+                            formattedData += `Contact Person: ${shop.contact_person}\n`;
+                          }
+                          if (shop.business_type) formattedData += `Business Type: ${shop.business_type}\n`;
+                          if (shop.year_established) formattedData += `Established: ${shop.year_established}\n`;
+                        }
+                        
+                        if (idx < shopData.length - 1) formattedData += '\n---\n\n';
                       });
                       
                       const dataMessage: ChatMessage = {
@@ -162,6 +183,25 @@ const PanionChatAgent: React.FC = () => {
                         timestamp: formatTime(new Date()),
                       };
                       setMessages(prev => [...prev, dataMessage]);
+                      
+                      // If we searched for owner info but didn't find much, add a follow-up message
+                      if (hasOwnerInfo) {
+                        const hasCompleteOwnerInfo = shopData.some(shop => 
+                          shop.owner_name || shop.owner_email || 
+                          (shop.owner_phone && shop.owner_phone !== shop.phone)
+                        );
+                        
+                        if (!hasCompleteOwnerInfo) {
+                          const followUpMessage: ChatMessage = {
+                            id: generateId(),
+                            content: "I've found basic business information, but complete owner details may require additional research. Would you like me to suggest other methods to find this information?",
+                            isUser: false,
+                            timestamp: formatTime(new Date()),
+                          };
+                          setMessages(prev => [...prev, followUpMessage]);
+                        }
+                      }
+                      
                     } catch (err) {
                       console.error('Error formatting shop data:', err);
                     }
@@ -212,10 +252,52 @@ const PanionChatAgent: React.FC = () => {
     inputRef.current?.focus();
   }, []);
   
-  // Function to detect missing capabilities based on user input
+  // Function to detect missing capabilities based on user input with advanced context inference
   const detectRequiredCapabilities = (message: string): string[] => {
     const requiredCapabilities: string[] = [];
     const lowerMessage = message.toLowerCase();
+    
+    // ADVANCED CONTEXT INFERENCE
+    // First, identify key semantic patterns that indicate user intent
+    
+    // Detect business entities
+    const businessEntities = [
+      'business', 'shop', 'store', 'company', 'enterprise', 'firm',
+      'restaurant', 'cafe', 'coffee shop', 'smoke shop', 'smokeshop', 
+      'vape shop', 'dispensary', 'tobacco', 'vape', 'retail', 
+      'establishment', 'outlet', 'boutique', 'market', 'vendor'
+    ];
+    
+    const hasBusiness = businessEntities.some(entity => lowerMessage.includes(entity));
+    
+    // Detect ownership and contact intent
+    const ownershipTerms = [
+      'owner', 'own', 'owns', 'owned by', 'proprietor', 'ceo', 
+      'founder', 'manager', 'management', 'executive', 'director', 
+      'who runs', 'who started', 'who founded', 'who operates'
+    ];
+    
+    const contactTerms = [
+      'contact', 'email', 'phone', 'number', 'reach', 'call',
+      'connect', 'get in touch', 'speak with', 'talk to', 
+      'details', 'information about', 'direct line', 'name',
+      'how can i reach', 'how to contact'
+    ];
+    
+    const hasOwnershipIntent = ownershipTerms.some(term => lowerMessage.includes(term));
+    const hasContactIntent = contactTerms.some(term => lowerMessage.includes(term));
+    
+    // Detect implicit contact request based on verbs that suggest contact action
+    const implicitContactVerbs = [
+      'find', 'get', 'obtain', 'gather', 'collect', 'acquire',
+      'need', 'want', 'looking for', 'searching for', 'seeking'
+    ];
+    
+    const hasImplicitContactIntent = 
+      businessEntities.some(entity => lowerMessage.includes(entity)) &&
+      implicitContactVerbs.some(verb => lowerMessage.includes(verb));
+      
+    // CAPABILITY ASSIGNMENT LOGIC WITH SMART INFERENCE
     
     // Detect web research capability requirement
     if (
@@ -237,39 +319,43 @@ const PanionChatAgent: React.FC = () => {
       requiredCapabilities.push(CAPABILITIES.DATA_ANALYSIS);
     }
     
-    // Detect business research capability needs
-    if (
-      lowerMessage.includes('business') || 
-      lowerMessage.includes('company') || 
-      lowerMessage.includes('industry') ||
-      lowerMessage.includes('market')
-    ) {
+    // Enhanced business directory detection
+    if (hasBusiness) {
+      // Always add business directory for business queries
+      requiredCapabilities.push(CAPABILITIES.BUSINESS_DIRECTORY);
+      
+      // If there are explicit or implicit contact/ownership requirements, add CONTACT_FINDER and BUSINESS_RESEARCH
+      if (hasOwnershipIntent || hasContactIntent || hasImplicitContactIntent) {
+        requiredCapabilities.push(CAPABILITIES.CONTACT_FINDER);
+        requiredCapabilities.push(CAPABILITIES.BUSINESS_RESEARCH);
+        
+        // Log the contextual inference for debugging
+        console.log('Detected owner/contact request from context:', {
+          hasOwnershipIntent,
+          hasContactIntent,
+          hasImplicitContactIntent,
+          message: lowerMessage
+        });
+      }
+    }
+    
+    // Explicit contact finding requirements (if not already added)
+    if (!requiredCapabilities.includes(CAPABILITIES.CONTACT_FINDER) && 
+        (hasContactIntent || hasOwnershipIntent)) {
+      requiredCapabilities.push(CAPABILITIES.CONTACT_FINDER);
+    }
+    
+    // Additional business research detection
+    if (!requiredCapabilities.includes(CAPABILITIES.BUSINESS_RESEARCH) && 
+        (lowerMessage.includes('business') || 
+         lowerMessage.includes('company') || 
+         lowerMessage.includes('industry') ||
+         lowerMessage.includes('market'))) {
       requiredCapabilities.push(CAPABILITIES.BUSINESS_RESEARCH);
     }
     
-    // Detect business directory related queries (including smoke shops)
-    if (
-      lowerMessage.includes('smokeshop') || 
-      lowerMessage.includes('smoke shop') || 
-      lowerMessage.includes('dispensary') ||
-      lowerMessage.includes('tobacco') ||
-      lowerMessage.includes('vape') ||
-      lowerMessage.includes('businesses') ||
-      lowerMessage.includes('directory') ||
-      lowerMessage.includes('locations')
-    ) {
-      requiredCapabilities.push(CAPABILITIES.BUSINESS_DIRECTORY);
-    }
-    
-    // Detect contact finding requirements
-    if (
-      lowerMessage.includes('contact') || 
-      lowerMessage.includes('email') || 
-      lowerMessage.includes('phone') ||
-      lowerMessage.includes('buyer')
-    ) {
-      requiredCapabilities.push(CAPABILITIES.CONTACT_FINDER);
-    }
+    // Log capabilities for debugging
+    console.log('Detected capabilities:', requiredCapabilities);
     
     return requiredCapabilities;
   };
@@ -796,19 +882,26 @@ const PanionChatAgent: React.FC = () => {
           location = locationMatch[1].trim();
         }
         
-        const taskDescription = `Finding smoke shops in ${location}`;
+        // Determine if we need owner information (contact details) based on capabilities
+        const needsOwnerInfo = requiredCapabilities.includes(CAPABILITIES.CONTACT_FINDER);
         
-        // Instead of immediately executing the task, ask for user confirmation
+        const taskDescription = needsOwnerInfo 
+          ? `Finding smoke shop owner contact information in ${location}` 
+          : `Finding smoke shops in ${location}`;
+        
+        // Instead of immediately executing the task, ask for user confirmation with appropriate message
         const confirmationMessage: ChatMessage = {
           id: generateId(),
-          content: `I can search for smoke shops in ${location} for you. This will run as a background task and may take a few minutes. Would you like me to start this search now?`,
+          content: needsOwnerInfo
+            ? `I can search for smoke shop owner contact information in ${location} for you. This will run as a background task and may take a few minutes to gather owner details. Would you like me to start this search now?`
+            : `I can search for smoke shops in ${location} for you. This will run as a background task and may take a few minutes. Would you like me to start this search now?`,
           isUser: false,
           timestamp: formatTime(new Date()),
         };
         
         setMessages(prev => [...prev, confirmationMessage]);
         
-        // Create a pending action for user approval
+        // Create a pending action for user approval with appropriate parameters
         setPendingAction({
           type: 'start_task',
           data: {
@@ -818,6 +911,8 @@ const PanionChatAgent: React.FC = () => {
             params: {
               location: location,
               limit: 20,
+              includeOwnerInfo: needsOwnerInfo,   // Add parameter to include owner info
+              deepSearch: needsOwnerInfo,         // Deep search when owner info is requested
               additionalKeywords: inputValue.toLowerCase().includes('vape') ? ['vape'] : []
             }
           }
