@@ -47,44 +47,44 @@ class DaddyDataAgent(BasePlugin):
         self.data_dir = os.path.join("data", "daddy_data")
         os.makedirs(self.data_dir, exist_ok=True)
         
-    async def execute(self, action: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, action_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Execute a specific action with the given parameters.
         
         Args:
-            action: The action to execute
+            action_name: The action to execute
             parameters: Parameters for the action
             
         Returns:
             Result of the action
         """
         try:
-            if action == "search":
+            if action_name == "search":
                 return await self.search_businesses(
                     query=parameters.get("query", ""),
-                    location=parameters.get("location"),
+                    location=parameters.get("location", ""),
                     limit=parameters.get("limit", 100)
                 )
-            elif action == "verify":
+            elif action_name == "verify":
                 return await self.verify_data(
                     data=parameters.get("data", []),
-                    fields_to_verify=parameters.get("fields_to_verify")
+                    fields_to_verify=parameters.get("fields_to_verify", [])
                 )
-            elif action == "organize":
+            elif action_name == "organize":
                 return await self.organize_data(
                     data=parameters.get("data", []),
                     format=parameters.get("format", "excel"),
-                    structure=parameters.get("structure")
+                    structure=parameters.get("structure", {})
                 )
-            elif action == "get_task_status":
+            elif action_name == "get_task_status":
                 return await self.get_task_status(parameters.get("task_id", ""))
             else:
                 return {
                     "status": "error",
-                    "error": f"Unknown action: {action}"
+                    "error": f"Unknown action: {action_name}"
                 }
         except Exception as e:
-            logging.error(f"Error executing action {action}: {e}")
+            logging.error(f"Error executing action {action_name}: {e}")
             return {
                 "status": "error",
                 "error": str(e)

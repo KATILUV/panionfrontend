@@ -15,6 +15,7 @@ import NotesAgent from './agents/NotesAgent';
 import SettingsAgent from './agents/SettingsAgent';
 import MarketplaceAgent from './agents/MarketplaceAgent';
 import PanionChatAgent from './agents/PanionChatAgent';
+import DaddyDataAgent from './agents/DaddyDataAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
 import SimpleEmptyStateDashboard from './system/SimpleEmptyStateDashboard';
@@ -128,6 +129,8 @@ const renderAgentContent = (agentId: string) => {
       return <MarketplaceAgent />;
     case 'panion':
       return <PanionChatAgent />;
+    case 'daddy-data':
+      return <DaddyDataAgent />;
     default:
       return <div>Unknown agent type: {agentId}</div>;
   }
