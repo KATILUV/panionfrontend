@@ -20,6 +20,7 @@ import {
 } from "./utils/fileCleanup";
 import agentRoutes from "./routes/agentRoutes";
 import collaborationRoutes from "./routes/collaborationRoutes";
+import daddyDataRoutes from "./routes/daddyDataRoutes";
 import panionRoutes, { startPanionAPI, shutdownPanionAPI } from "./panion";
 
 // Configure multer for handling file uploads
@@ -57,6 +58,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use collaboration routes under /api/collaboration prefix
   app.use('/api/collaboration', collaborationRoutes);
+  
+  // Use Daddy Data routes
+  app.use(daddyDataRoutes);
   
   // Try to start the Panion API
   try {

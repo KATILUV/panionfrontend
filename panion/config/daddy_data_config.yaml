@@ -1,0 +1,55 @@
+# Daddy Data Agent Configuration
+
+# Task management
+max_concurrent_tasks: 5
+request_delay: 1.0  # Delay between requests in seconds
+
+# Data verification settings
+verification_sources: 3      # Number of sources to verify information
+confidence_threshold: 0.7    # Minimum confidence to consider data valid
+
+# Search settings
+search_limit_default: 100    # Default limit for search results
+search_timeout: 60           # Maximum search time in seconds
+
+# API usage throttling
+api_rate_limits:
+  google_maps: 100   # Queries per day
+  yelp: 500          # Queries per day
+  yellow_pages: 1000 # Queries per day
+
+# Data sources configuration
+data_sources:
+  business_directories:
+    - google_maps
+    - yelp
+    - yellow_pages
+    - better_business_bureau
+    - local_chambers_commerce
+  review_sites:
+    - trustpilot
+    - bbb
+    - google_reviews
+    - yelp_reviews
+  social_media:
+    - facebook
+    - linkedin
+    - twitter
+
+# Data export formats
+export_formats:
+  - excel
+  - csv
+  - json
+  - pdf
+
+# Data cleaning rules
+data_cleaning:
+  normalize_phone: true     # Standardize phone number formats
+  verify_addresses: true    # Validate address formats
+  check_duplicates: true    # Remove duplicate entries
+  standardize_names: true   # Standardize business name formats
+
+# File outputs
+output_directory: "data/daddy_data"
+max_storage_days: 30        # Number of days to keep generated files

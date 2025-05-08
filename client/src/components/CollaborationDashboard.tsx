@@ -439,7 +439,7 @@ const CollaborationDashboard: React.FC = () => {
           content: { text: knowledgeContent },
           source_agent_id: knowledgeAgent,
           category: knowledgeCategory,
-          confidence: parseFloat(knowledgeConfidence) || 1.0,
+          confidence: 1.0,
           tags
         }),
       });
