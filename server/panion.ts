@@ -588,6 +588,117 @@ router.post('/api/panion/analyze', checkPanionAPIMiddleware, async (req: Request
   }
 });
 
+// Dynamic agent creation endpoint
+// Process messages for dynamic agents
+router.post('/api/panion/agents/process', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { 
+      agentId, 
+      message, 
+      capabilities = [], 
+      useStrategicMode = true, 
+      verboseResponses = false,
+      history = []
+    } = req.body;
+    
+    if (!agentId || !message) {
+      return res.status(400).json({ 
+        error: 'Invalid request',
+        message: 'Agent ID and message are required' 
+      });
+    }
+    
+    log(`Processing message for agent ${agentId} with strategic mode: ${useStrategicMode ? 'enabled' : 'disabled'}`, 'panion');
+    
+    // Forward the request to the Panion API
+    const response = await axios.post(`${PANION_API_URL}/agents/process`, {
+      agent_id: agentId,
+      message,
+      capabilities,
+      use_strategic_mode: useStrategicMode,
+      verbose_responses: verboseResponses,
+      history: history.map((msg: any) => ({
+        content: msg.content,
+        role: msg.role === 'agent' ? 'assistant' : msg.role,
+        timestamp: msg.timestamp
+      }))
+    });
+    
+    const responseData = response.data || {};
+    
+    // Return a well-formed response
+    res.json({
+      success: true,
+      response: responseData.response || "I processed your request, but I'm not sure how to respond.",
+      reasoning: responseData.reasoning || null,
+      metadata: responseData.metadata || {},
+      capabilities_used: responseData.capabilities_used || []
+    });
+  } catch (error) {
+    log(`Error processing agent message: ${error}`, 'panion');
+    res.status(500).json({ 
+      error: 'Panion API error',
+      message: 'Error processing agent message'
+    });
+  }
+});
+
+router.post('/api/panion/agents/create', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { 
+      name, 
+      description,
+      capabilities = [],
+      icon = 'cpu',
+      agentType = 'specialized'
+    } = req.body;
+    
+    if (!name || !description || !capabilities.length) {
+      return res.status(400).json({ 
+        error: 'Invalid request',
+        message: 'Agent name, description, and at least one capability are required' 
+      });
+    }
+    
+    log(`Creating dynamic agent "${name}" with capabilities: ${capabilities.join(', ')}`, 'panion');
+    
+    // Forward the request to the Panion API
+    const response = await axios.post(`${PANION_API_URL}/agents/create`, {
+      name,
+      description,
+      capabilities,
+      icon,
+      agent_type: agentType,
+      metadata: {
+        created_at: new Date().toISOString(),
+        client: 'frontend'
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    log(`Error creating dynamic agent: ${error}`, 'panion');
+    res.status(500).json({ 
+      error: 'Panion API error',
+      message: 'Error creating dynamic agent' 
+    });
+  }
+});
+
+// Get available capabilities
+router.get('/api/panion/capabilities', checkPanionAPIMiddleware, async (_req: Request, res: Response) => {
+  try {
+    const response = await axios.get(`${PANION_API_URL}/capabilities`);
+    res.json(response.data);
+  } catch (error) {
+    log(`Error getting capabilities: ${error}`, 'panion');
+    res.status(500).json({ 
+      error: 'Panion API error',
+      message: 'Error getting available capabilities' 
+    });
+  }
+});
+
 router.post('/api/panion/document', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
   try {
     const { file, processType, params = {} } = req.body;

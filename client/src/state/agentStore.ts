@@ -263,7 +263,7 @@ export const useAgentStore = create<AgentState>()(
         
         try {
           // Call the server API to generate the agent code
-          const response = await fetch('/api/panion/create-agent', {
+          const response = await fetch('/api/panion/agents/create', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -271,7 +271,9 @@ export const useAgentStore = create<AgentState>()(
             body: JSON.stringify({
               name,
               description,
-              capabilities
+              capabilities,
+              icon,
+              agentType: 'specialized'
             })
           });
           
@@ -285,8 +287,11 @@ export const useAgentStore = create<AgentState>()(
             throw new Error(data.error || 'Unknown error creating agent');
           }
           
+          // Log the agent creation success
+          log.success(`Successfully created dynamic agent "${name}" with ID: ${data.agent_id || 'unknown'}`);
+          
           // Generate a unique ID for the new agent
-          const agentId = `dynamic_${generateId()}`;
+          const agentId = `dynamic_${data.agent_id || generateId()}`;
           
           // Create dynamic component for the agent
           const DynamicAgentComponent = React.lazy(() => import('@/components/agents/DynamicAgent'));

@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import React, { useState, useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Settings, Activity, RotateCcw, Cpu } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Send, RefreshCw, Code, MessageCircle, Zap, Terminal, Settings } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { AgentStatus } from './AgentStatus';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 
 interface DynamicAgentProps {
   agentId: string;
@@ -15,209 +19,411 @@ interface DynamicAgentProps {
   codeInfo?: any;
 }
 
-interface ChatMessage {
+interface Message {
   id: string;
   content: string;
-  isUser: boolean;
-  timestamp: string;
-  thinking?: string;
+  role: 'user' | 'agent' | 'system';
+  timestamp: number;
 }
 
-// Helper to generate a random ID
-const generateId = () => Math.random().toString(36).substring(2, 9);
-
-// Helper to format timestamp
-const formatTime = (date: Date) => {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
-
-const DynamicAgent: React.FC<DynamicAgentProps> = ({ 
-  agentId, 
-  name, 
-  description, 
-  capabilities 
+const DynamicAgent: React.FC<DynamicAgentProps> = ({
+  agentId,
+  name,
+  description,
+  capabilities,
+  codeInfo
 }) => {
-  const [inputValue, setInputValue] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<Message[]>([
     {
-      id: generateId(),
-      content: `Hello! I'm ${name}, a specialized agent with capabilities for: ${capabilities.join(', ')}. How can I assist you?`,
-      isUser: false,
-      timestamp: formatTime(new Date()),
+      id: 'welcome',
+      content: `Hello, I'm ${name}. I'm a specialized agent that can help with: ${capabilities.join(', ')}. How can I assist you today?`,
+      role: 'agent',
+      timestamp: Date.now()
     }
   ]);
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [sessionId] = useState(`session_${agentId}_${Date.now()}`);
-  const [agentStatus, setAgentStatus] = useState<'idle' | 'thinking' | 'active' | 'error'>('idle');
+  const [inputValue, setInputValue] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [activeTab, setActiveTab] = useState('chat');
+  const [isDebugMode, setIsDebugMode] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [settings, setSettings] = useState({
+    useStrategicMode: true,
+    verboseResponses: false,
+    maxContextLength: 10
+  });
   
   const { toast } = useToast();
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const inputRef = React.useRef<HTMLInputElement>(null);
 
-  // Scroll to bottom of messages
+  // Auto scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Focus input on load
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
 
-  const handleSendMessage = async () => {
+  const generateMessageId = () => {
+    return Math.random().toString(36).substring(2, 11);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!inputValue.trim()) return;
     
-    // Create user message
-    const userMessage: ChatMessage = {
-      id: generateId(),
+    // Add user message
+    const userMessage: Message = {
+      id: generateMessageId(),
       content: inputValue,
-      isUser: true,
-      timestamp: formatTime(new Date()),
+      role: 'user',
+      timestamp: Date.now()
     };
     
-    // Clear input and update messages
-    setInputValue('');
     setMessages(prev => [...prev, userMessage]);
-    setAgentStatus('thinking');
-    setIsLoading(true);
+    setInputValue('');
+    setIsProcessing(true);
     
     try {
-      // Send message to dynamic agent API
-      const response = await fetch(`/api/dynamic-agent/${agentId}/chat`, {
+      // First, add a thinking indicator
+      const thinkingId = generateMessageId();
+      setMessages(prev => [...prev, {
+        id: thinkingId,
+        content: 'Thinking...',
+        role: 'system',
+        timestamp: Date.now()
+      }]);
+      
+      // Call the API with strategic mode if enabled
+      const response = await fetch('/api/panion/agents/process', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          agentId,
           message: inputValue,
-          sessionId,
-          capabilities
-        }),
+          capabilities,
+          useStrategicMode: settings.useStrategicMode,
+          verboseResponses: settings.verboseResponses,
+          history: messages
+            .filter(m => m.role !== 'system')
+            .slice(-settings.maxContextLength)
+        })
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to send message to ${name}`);
+        throw new Error(`Error: ${response.statusText}`);
       }
       
       const data = await response.json();
       
-      // Create bot message
-      const botMessage: ChatMessage = {
-        id: generateId(),
-        content: data.response,
-        isUser: false,
-        timestamp: formatTime(new Date()),
-        thinking: data.thinking,
+      // Remove the thinking message
+      setMessages(prev => prev.filter(msg => msg.id !== thinkingId));
+      
+      // Add the agent's response
+      const agentMessage: Message = {
+        id: generateMessageId(),
+        content: data.response || "I'm having trouble processing that request. Could you try again?",
+        role: 'agent',
+        timestamp: Date.now()
       };
       
-      // Update messages
-      setMessages(prev => [...prev, botMessage]);
-      setAgentStatus('active');
+      setMessages(prev => [...prev, agentMessage]);
       
-      // Reset status after a short delay
-      setTimeout(() => {
-        setAgentStatus('idle');
-      }, 2000);
-      
+      // If in debug mode and reasoning is available, show it
+      if (isDebugMode && data.reasoning) {
+        const debugMessage: Message = {
+          id: generateMessageId(),
+          content: `💭 Reasoning: ${data.reasoning}`,
+          role: 'system',
+          timestamp: Date.now()
+        };
+        
+        setMessages(prev => [...prev, debugMessage]);
+      }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error processing request:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send message. Please try again.',
-        variant: 'destructive',
+        description: 'Failed to get a response. Please try again later.',
+        variant: 'destructive'
       });
-      setAgentStatus('error');
+      
+      // Add error message to chat
+      const errorMessage: Message = {
+        id: generateMessageId(),
+        content: 'I encountered an error while processing your request. Please try again or contact support if the issue persists.',
+        role: 'system',
+        timestamp: Date.now()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !isLoading) {
-      handleSendMessage();
-    }
+  const clearChat = () => {
+    const initialMessage: Message = {
+      id: 'welcome',
+      content: `Hello, I'm ${name}. I'm a specialized agent that can help with: ${capabilities.join(', ')}. How can I assist you today?`,
+      role: 'agent',
+      timestamp: Date.now()
+    };
+    
+    setMessages([initialMessage]);
+    toast({
+      title: 'Chat cleared',
+      description: 'Chat history has been reset.'
+    });
+  };
+
+  const toggleDebugMode = () => {
+    setIsDebugMode(!isDebugMode);
+    toast({
+      title: `Debug mode ${!isDebugMode ? 'enabled' : 'disabled'}`,
+      description: !isDebugMode 
+        ? 'You will now see agent reasoning in the chat.' 
+        : 'Agent reasoning will be hidden.'
+    });
+  };
+
+  // Format message content with markdown-like syntax
+  const formatMessage = (content: string) => {
+    // Simple formatting
+    const formattedContent = content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+      .replace(/`(.*?)`/g, '<code>$1</code>') // Inline code
+      .replace(/\n/g, '<br />'); // New lines
+      
+    return (
+      <div 
+        dangerouslySetInnerHTML={{ __html: formattedContent }}
+        className="message-content"
+      />
+    );
   };
 
   return (
-    <Card className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b p-3">
-        <div className="flex items-center">
-          <Cpu className="h-5 w-5 mr-2 text-purple-500" />
-          <div>
-            <h3 className="font-medium">{name}</h3>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </div>
+    <div className="flex flex-col h-full">
+      <Tabs defaultValue="chat" value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+        <div className="border-b px-4 py-2">
+          <TabsList className="grid grid-cols-4">
+            <TabsTrigger value="chat" className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Chat</span>
+            </TabsTrigger>
+            <TabsTrigger value="capabilities" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              <span className="hidden sm:inline">Capabilities</span>
+            </TabsTrigger>
+            <TabsTrigger value="code" className="flex items-center gap-2">
+              <Code className="h-4 w-4" />
+              <span className="hidden sm:inline">Code</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Settings</span>
+            </TabsTrigger>
+          </TabsList>
         </div>
-        <div className="flex items-center gap-2">
-          <AgentStatus status={agentStatus} showLabel={false} size="sm" />
-          <Button variant="ghost" size="icon" title="Settings">
-            <Settings className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      
-      {/* Messages */}
-      <ScrollArea className="flex-1 p-3">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.isUser
-                    ? 'bg-purple-500 text-white'
-                    : 'bg-muted'
-                }`}
-              >
-                <div className="whitespace-pre-wrap">{message.content}</div>
-                <div className="mt-1 text-xs opacity-70">{message.timestamp}</div>
-                
-                {/* Thinking display (collapsed by default) */}
-                {message.thinking && (
-                  <details className="mt-2 text-xs">
-                    <summary className="cursor-pointer">View thinking process</summary>
-                    <div className="mt-1 p-2 bg-black/20 rounded overflow-x-auto whitespace-pre">
-                      {message.thinking}
+
+        <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden">
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div 
+                  key={message.id} 
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      message.role === 'user' 
+                        ? 'bg-primary text-primary-foreground' 
+                        : message.role === 'system'
+                          ? 'bg-muted text-muted-foreground italic text-sm'
+                          : 'bg-secondary text-secondary-foreground'
+                    }`}
+                  >
+                    {formatMessage(message.content)}
+                    <div className="text-xs opacity-70 mt-1">
+                      {new Date(message.timestamp).toLocaleTimeString()}
                     </div>
-                  </details>
-                )}
-              </div>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
-      
-      {/* Input */}
-      <div className="border-t p-3">
-        <div className="flex gap-2 items-center">
-          <Input
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            disabled={isLoading}
-          />
-          <Button 
-            variant="default" 
-            size="icon"
-            onClick={handleSendMessage}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Activity className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </div>
-    </Card>
+          </ScrollArea>
+          
+          <div className="p-4 border-t">
+            <form onSubmit={handleSubmit} className="flex gap-2">
+              <Input
+                placeholder={`Ask ${name} something...`}
+                value={inputValue}
+                onChange={handleInputChange}
+                disabled={isProcessing}
+                className="flex-1"
+              />
+              <Button type="submit" disabled={isProcessing || !inputValue.trim()}>
+                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={clearChat} 
+                disabled={isProcessing || messages.length <= 1}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant={isDebugMode ? "secondary" : "outline"}
+                onClick={toggleDebugMode}
+                title="Toggle debug mode"
+              >
+                <Terminal className="h-4 w-4" />
+              </Button>
+            </form>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="capabilities" className="p-4 overflow-auto h-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>{name}</CardTitle>
+              <CardDescription>{description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <h3 className="text-lg font-medium mb-2">Capabilities</h3>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {capabilities.map((capability) => (
+                  <Badge key={capability} variant="secondary" className="text-sm">
+                    {capability}
+                  </Badge>
+                ))}
+              </div>
+              <Separator className="my-4" />
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">About this agent</h3>
+                <p className="text-sm text-muted-foreground">
+                  This agent was dynamically created based on your needs. It specializes in 
+                  the capabilities listed above and can collaborate with other agents in the system.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Agent ID: <code className="text-xs bg-muted p-1 rounded">{agentId}</code>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="code" className="p-4 overflow-auto h-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>Agent Code Information</CardTitle>
+              <CardDescription>
+                The technical implementation details of this agent
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {codeInfo ? (
+                <pre className="bg-muted p-4 rounded-md text-xs overflow-auto max-h-[400px]">
+                  {JSON.stringify(codeInfo, null, 2)}
+                </pre>
+              ) : (
+                <div className="text-muted-foreground italic">
+                  No code information available for this agent.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings" className="p-4 overflow-auto h-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>Agent Settings</CardTitle>
+              <CardDescription>
+                Configure how this agent operates
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="strategic-mode" className="text-base">Strategic Mode</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Uses multiple reasoning strategies for complex tasks
+                    </p>
+                  </div>
+                  <Switch 
+                    id="strategic-mode" 
+                    checked={settings.useStrategicMode}
+                    onCheckedChange={(checked) => setSettings({...settings, useStrategicMode: checked})}
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="verbose-mode" className="text-base">Verbose Responses</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Provides more detailed explanations
+                    </p>
+                  </div>
+                  <Switch 
+                    id="verbose-mode" 
+                    checked={settings.verboseResponses}
+                    onCheckedChange={(checked) => setSettings({...settings, verboseResponses: checked})}
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <Label htmlFor="context-length" className="text-base">Context Length</Label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Number of previous messages to include for context
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      id="context-length"
+                      type="number" 
+                      min={1}
+                      max={20}
+                      value={settings.maxContextLength}
+                      onChange={(e) => setSettings({
+                        ...settings, 
+                        maxContextLength: parseInt(e.target.value) || 10
+                      })}
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">messages</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setSettings({
+                  useStrategicMode: true,
+                  verboseResponses: false,
+                  maxContextLength: 10
+                })}
+                className="w-full"
+              >
+                Reset to Defaults
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
