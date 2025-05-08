@@ -90,7 +90,7 @@ const CLASSIC_WIDGETS: TaskbarWidgetType[] = [
 ];
 
 // Default pinned agents
-const DEFAULT_PINNED_AGENTS: AgentId[] = ['panion', 'clara', 'notes'];
+const DEFAULT_PINNED_AGENTS: AgentId[] = ['panion', 'clara', 'notes', 'database', 'brain-circuit'];
 
 // Mac OS style dock preset
 const DOCK_WIDGETS: TaskbarWidgetType[] = [
@@ -191,7 +191,7 @@ export const useTaskbarStore = create<TaskbarState>()(
           visibleWidgets: [...MINIMAL_WIDGETS],
           showLabels: false,
           position: { location: 'bottom', alignment: 'center' },
-          pinnedAgents: ['panion', 'clara']
+          pinnedAgents: ['panion', 'clara', 'database', 'brain-circuit']
         });
       },
       
@@ -227,7 +227,7 @@ export const useTaskbarStore = create<TaskbarState>()(
           position: { location: 'bottom', alignment: 'center' },
           enableBlur: true,
           autohide: true,
-          pinnedAgents: ['panion', 'clara', 'notes', 'marketplace']
+          pinnedAgents: ['panion', 'clara', 'notes', 'marketplace', 'database', 'brain-circuit']
         });
       },
       
