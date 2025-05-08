@@ -24,11 +24,37 @@ logger = logging.getLogger(__name__)
 
 # User agents to rotate through to avoid being blocked
 USER_AGENTS = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:90.0) Gecko/20100101 Firefox/90.0'
+    # Chrome on Windows
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    
+    # Chrome on Mac
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    
+    # Firefox on Windows
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0',
+    
+    # Firefox on Mac
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/115.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0',
+    
+    # Safari on Mac
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+    
+    # Edge on Windows
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+    
+    # Mobile browsers
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
+    'Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
 ]
 
 class EnhancedScraper:
@@ -46,47 +72,115 @@ class EnhancedScraper:
     def _make_request(self, url: str, method: str = "GET", 
                       params: Dict[str, Any] = None, 
                       headers: Dict[str, str] = None,
-                      timeout: int = 10) -> Optional[str]:
+                      timeout: int = 15,
+                      verify: bool = True) -> Optional[str]:
         """Make an HTTP request with error handling and retries."""
+        # Generate a realistic browser-like user agent
+        chrome_version = f"{random.randint(90, 120)}.0.{random.randint(1000, 9999)}.{random.randint(10, 999)}"
+        default_user_agent = f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version} Safari/537.36"
+        
         default_headers = {
-            'User-Agent': self._get_random_user_agent(),
-            'Accept': 'text/html,application/xhtml+xml,application/xml',
-            'Accept-Language': 'en-US,en;q=0.9'
+            'User-Agent': headers.get('User-Agent', default_user_agent) if headers else self._get_random_user_agent(),
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache'
         }
         
         # Merge default headers with any custom headers
         if headers:
             for key, value in headers.items():
                 default_headers[key] = value
+                
+        # Set a realistic referer if not provided
+        if 'Referer' not in default_headers:
+            referers = [
+                'https://www.google.com/',
+                'https://www.bing.com/',
+                'https://search.yahoo.com/',
+                'https://duckduckgo.com/'
+            ]
+            default_headers['Referer'] = random.choice(referers)
         
-        retries = 3
-        while retries > 0:
+        # Init session for each request to avoid cookie tracking
+        local_session = requests.Session()
+        
+        # Configure session
+        local_session.headers.update(default_headers)
+        
+        # Add cookies to appear like a regular browser session
+        local_session.cookies.set('visitor', f"v{random.randint(1, 9999999)}", domain=url.split('/')[2] if '://' in url else url)
+        
+        # Setup retry strategy with exponential backoff
+        retries = 5
+        backoff_factor = 1.5
+        
+        # Keep track of current attempt
+        attempt = 0
+        
+        while attempt < retries:
             try:
+                # Calculate wait time for exponential backoff (but randomize it a bit)
+                wait_time = (backoff_factor ** attempt) * (0.5 + random.random())
+                
+                # On later attempts, try different approaches
+                if attempt > 0:
+                    # Rotate user agent on retry
+                    local_session.headers['User-Agent'] = self._get_random_user_agent()
+                    
+                    # Add some jitter to the request timing to appear more human-like
+                    time.sleep(random.uniform(0.5, 1.5))
+                
+                # Execute the request with the appropriate method
                 if method.upper() == "GET":
-                    response = self.session.get(
+                    response = local_session.get(
                         url, 
-                        headers=default_headers, 
                         params=params,
-                        timeout=timeout
+                        timeout=timeout,
+                        verify=verify
                     )
                 elif method.upper() == "POST":
-                    response = self.session.post(
+                    response = local_session.post(
                         url, 
-                        headers=default_headers, 
                         data=params,
-                        timeout=timeout
+                        timeout=timeout,
+                        verify=verify
                     )
                 else:
                     logger.error(f"Unsupported HTTP method: {method}")
                     return None
                 
+                # Check for rate limiting or blocking
+                if response.status_code == 403:
+                    logger.warning(f"Received 403 Forbidden - we may be blocked. Attempt {attempt+1}/{retries}")
+                    # Wait longer between retries if we're being rate limited
+                    time.sleep(wait_time * 2)
+                    attempt += 1
+                    continue
+                    
+                # Proceed if successful
                 response.raise_for_status()
-                return response.text
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Error fetching {url}: {str(e)}")
-                retries -= 1
-                time.sleep(2)  # Wait before retrying
                 
+                # Return response with encoding properly set
+                if response.encoding is None:
+                    response.encoding = 'utf-8'
+                    
+                return response.text
+                
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Error fetching {url} (attempt {attempt+1}/{retries}): {str(e)}")
+                attempt += 1
+                time.sleep(wait_time)  # Wait before retrying with exponential backoff
+        
+        logger.error(f"Failed to fetch {url} after {retries} attempts")
         return None
     
     def scrape_business_directory(self, 
@@ -121,6 +215,22 @@ class EnhancedScraper:
         """Scrape business data from Yelp."""
         businesses = []
         
+        # Try to load existing data first (don't re-scrape if we have recent data)
+        cache_file = os.path.join(self.data_dir, f"smokeshop_{location.replace(' ', '_')}.json")
+        if os.path.exists(cache_file):
+            try:
+                with open(cache_file, 'r') as f:
+                    cached_data = json.load(f)
+                    if cached_data and len(cached_data) > 0:
+                        # Check if data is less than 24 hours old
+                        first_record = cached_data[0]
+                        scraped_at = datetime.fromisoformat(first_record.get('scraped_at', '2000-01-01'))
+                        if (datetime.now() - scraped_at).days < 1:
+                            logger.info(f"Using cached data for {business_type} in {location} ({len(cached_data)} records)")
+                            return cached_data[:limit]  # Return only up to the limit
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
+                logger.error(f"Error reading cached data: {str(e)}")
+        
         # Format the search URL
         search_term = business_type.replace(" ", "+")
         formatted_location = location.replace(" ", "+")
@@ -128,89 +238,149 @@ class EnhancedScraper:
         
         logger.info(f"Scraping Yelp for {business_type} in {location}")
         
-        # Make the request
-        html_content = self._make_request(base_url)
-        if not html_content:
-            logger.error("Failed to fetch Yelp search results")
-            return businesses
+        # Enhanced headers to appear more like a real browser
+        enhanced_headers = {
+            'User-Agent': self._get_random_user_agent(),
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Cache-Control': 'max-age=0',
+            'TE': 'Trailers',
+            'Referer': 'https://www.google.com/',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'cross-site',
+            'Sec-Fetch-User': '?1',
+            'Pragma': 'no-cache'
+        }
         
-        # Parse the HTML
-        soup = BeautifulSoup(html_content, 'lxml')
-        
-        # Find business listings (this may need updates as Yelp changes their HTML structure)
-        business_elements = soup.find_all("div", class_="container__09f24__mpR8_")
-        
-        count = 0
-        for element in business_elements:
-            if count >= limit:
-                break
+        # If Yelp scraping fails, try an alternative approach or fallback to existing data
+        try:
+            # First attempt - direct web scraping
+            html_content = self._make_request(base_url, headers=enhanced_headers, timeout=15)
+            
+            if not html_content:
+                # If direct scraping fails, try to use existing data if available
+                if os.path.exists(cache_file):
+                    try:
+                        with open(cache_file, 'r') as f:
+                            logger.info(f"Using cached data as fallback for {business_type} in {location}")
+                            return json.load(f)[:limit]
+                    except (json.JSONDecodeError, KeyError) as e:
+                        logger.error(f"Error reading fallback data: {str(e)}")
                 
-            try:
-                # Extract name
-                name_element = element.find("a", class_="css-19v1rkv")
-                if not name_element:
-                    continue
+                # If we still don't have data, fall back to Yellow Pages
+                logger.info("Falling back to Yellow Pages as Yelp scraping failed")
+                return self._scrape_yellowpages(business_type, location, limit)
+            
+            # Parse the HTML
+            soup = BeautifulSoup(html_content, 'lxml')
+            
+            # Find business listings (this may need updates as Yelp changes their HTML structure)
+            business_elements = soup.find_all("div", class_="container__09f24__mpR8_")
+            
+            # If we can't find businesses with the expected class, try alternative selectors
+            if not business_elements:
+                business_elements = soup.select("div.businessName__09f24__CGSAT")
+                
+            # If we still can't find businesses, try a broader approach
+            if not business_elements:
+                business_elements = soup.select("div[data-testid='serp-biz-attribute']")
+            
+            # Last resort - try to find any <h3> elements that might be business names
+            if not business_elements:
+                business_elements = soup.select("h3 a")
+            
+            count = 0
+            for element in business_elements:
+                if count >= limit:
+                    break
                     
-                name = name_element.text.strip()
-                
-                # Extract business URL
-                business_url = name_element.get('href')
-                if business_url and not business_url.startswith('http'):
-                    business_url = f"https://www.yelp.com{business_url}"
-                
-                # Extract address
-                address_element = element.find("span", class_="css-1e4fdj9")
-                address = address_element.text.strip() if address_element else "Address not found"
-                
-                # Extract phone and additional details (requires visiting the business page)
-                phone = "Phone not available"
-                categories = []
-                hours = []
-                rating = None
-                
-                if business_url:
-                    business_html = self._make_request(business_url)
-                    if business_html:
-                        business_soup = BeautifulSoup(business_html, 'lxml')
+                try:
+                    # Extract name (try multiple possible selectors)
+                    name_element = element.find("a", class_="css-19v1rkv")
+                    if not name_element:
+                        name_element = element.find("a", class_="businessName__09f24__CGSAT")
+                    if not name_element:
+                        name_element = element.select_one("h3 a")
+                    if not name_element and element.name == 'a':
+                        name_element = element
                         
-                        # Phone number
-                        phone_element = business_soup.find("p", string=lambda t: t and re.search(r'\(\d{3}\)\s*\d{3}-\d{4}', t))
-                        if phone_element:
-                            phone = phone_element.text.strip()
-                            
-                        # Categories
-                        category_elements = business_soup.select("a.css-19v1rkv span")
-                        categories = [cat.text.strip() for cat in category_elements if cat.text.strip()]
+                    if not name_element:
+                        continue
                         
-                        # Rating
-                        rating_element = business_soup.select_one("div[aria-label*='star rating']")
-                        if rating_element:
-                            rating_text = rating_element.get('aria-label', '')
-                            rating_match = re.search(r'([\d.]+)\s*star', rating_text)
-                            if rating_match:
-                                rating = float(rating_match.group(1))
-                
-                # Add to results
-                businesses.append({
-                    "name": name,
-                    "address": address,
-                    "phone": phone,
-                    "categories": categories,
-                    "rating": rating,
-                    "hours": hours,
-                    "source": "yelp",
-                    "url": business_url,
-                    "scraped_at": datetime.now().isoformat()
-                })
-                
-                count += 1
-                logger.info(f"Scraped business: {name}")
-                
-                # Be nice to the server
-                time.sleep(random.uniform(1.0, 3.0))
-                
+                    name = name_element.text.strip()
+                    if not name:
+                        continue
+                    
+                    # Extract business URL
+                    business_url = name_element.get('href')
+                    if business_url and not business_url.startswith('http'):
+                        business_url = f"https://www.yelp.com{business_url}"
+                    
+                    # Extract address (try multiple possible selectors)
+                    address_element = element.find("span", class_="css-1e4fdj9")
+                    if not address_element:
+                        address_element = element.select_one("address p")
+                    if not address_element:
+                        address_element = element.select_one("[data-testid='address']")
+                        
+                    address = address_element.text.strip() if address_element else "Address not found"
+                    
+                    # Extract phone and additional details (requires visiting the business page)
+                    phone = "Phone not available"
+                    categories = []
+                    hours = []
+                    rating = None
+                    
+                    # Skip detailed page scraping to avoid too many requests
+                    # This reduces the chance of getting blocked
+                    
+                    # Add to results
+                    businesses.append({
+                        "name": name,
+                        "address": address,
+                        "phone": phone,
+                        "categories": categories,
+                        "rating": rating,
+                        "hours": hours,
+                        "source": "yelp",
+                        "url": business_url,
+                        "scraped_at": datetime.now().isoformat()
+                    })
+                    
+                    count += 1
+                    logger.info(f"Scraped business: {name}")
+                    
+                    # Be nice to the server - use longer random delays
+                    time.sleep(random.uniform(2.0, 5.0))
+                    
+                except Exception as e:
+                    logger.error(f"Error parsing business listing: {str(e)}")
+                    
+        except Exception as e:
+            logger.error(f"Error during Yelp scraping: {str(e)}")
+            # If we have a catastrophic error, try to fall back to Yellow Pages
+            if not businesses:
+                logger.info("Falling back to Yellow Pages due to Yelp scraping error")
+                return self._scrape_yellowpages(business_type, location, limit)
+        
+        # If we got some data from Yelp, save it to the cache
+        if businesses:
+            try:
+                with open(cache_file, 'w') as f:
+                    json.dump(businesses, f, indent=2)
+                logger.info(f"Saved {len(businesses)} records to {cache_file}")
             except Exception as e:
-                logger.error(f"Error parsing business listing: {str(e)}")
+                logger.error(f"Error saving scraped data to cache: {str(e)}")
+        else:
+            # If we couldn't get any data from Yelp and there's no fallback,
+            # try Yellow Pages as a last resort
+            logger.warning("No businesses found from Yelp, trying Yellow Pages")
+            return self._scrape_yellowpages(business_type, location, limit)
         
         return businesses
     

@@ -275,7 +275,7 @@ export const useAgentStore = create<AgentState>()(
           const agentId = `dynamic_${generateId()}`;
           
           // Create dynamic component for the agent
-          const DynamicAgentComponent = React.lazy(() => import('../components/agents/DynamicAgent'));
+          const DynamicAgentComponent = React.lazy(() => import('@/components/agents/DynamicAgent'));
           
           // Register the new agent
           const agent: Agent = {
