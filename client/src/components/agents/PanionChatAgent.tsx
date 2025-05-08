@@ -747,6 +747,9 @@ const PanionChatAgent: React.FC = () => {
     // Automatically detect if strategic mode should be enabled based on the complexity of the request
     const shouldEnableStrategicMode = shouldUseStrategicMode(userMessage.content);
     
+    // Check if we should use the advanced strategic planner
+    const shouldUseAdvancedPlannerMode = shouldUseAdvancedPlanner(userMessage.content);
+    
     // If strategic mode should be enabled and it's not already enabled, turn it on
     if (shouldEnableStrategicMode && !strategicMode) {
       toggleStrategicMode();
@@ -754,7 +757,9 @@ const PanionChatAgent: React.FC = () => {
       // Let the user know that strategic mode was automatically enabled
       const strategicModeMessage: ChatMessage = {
         id: generateId(),
-        content: "I've enabled strategic mode for this complex request. I'll use multiple approaches and provide a more thorough response.",
+        content: shouldUseAdvancedPlannerMode
+          ? "I've enabled advanced strategic planning for this complex request. I'll create a multi-step plan and execute it systematically."
+          : "I've enabled strategic mode for this complex request. I'll use multiple approaches and provide a more thorough response.",
         isUser: false,
         timestamp: formatTime(new Date()),
       };
@@ -826,20 +831,42 @@ const PanionChatAgent: React.FC = () => {
         return;
       }
       
-      // Send message to Panion API - use strategic mode if enabled
-      if (strategicMode) {
+      // Send message to Panion API - use appropriate mode based on complexity
+      if (strategicMode && shouldUseAdvancedPlannerMode) {
+        setProcessingStage("Creating advanced strategic plan...");
+      } else if (strategicMode) {
         setProcessingStage("Strategically evaluating approaches...");
       } else {
         setProcessingStage("Processing with Panion API...");
       }
       setProcessingProgress(60);
       
-      // Determine which endpoint to use based on strategic mode
-      const endpoint = strategicMode ? '/api/panion/strategic' : '/api/panion/chat';
+      // Determine which endpoint to use based on mode
+      let endpoint;
+      if (strategicMode && shouldUseAdvancedPlannerMode) {
+        endpoint = '/api/strategic/plans';
+      } else if (strategicMode) {
+        endpoint = '/api/panion/strategic';
+      } else {
+        endpoint = '/api/panion/chat';
+      }
       
       // Prepare request body based on endpoint type
       let requestBody;
-      if (strategicMode) {
+      if (strategicMode && shouldUseAdvancedPlannerMode) {
+        // Use the advanced strategic planner for complex requests
+        requestBody = {
+          goal: inputValue,
+          context: {
+            sessionId,
+            hasRequiredCapabilities: requiredCapabilities.length === 0 || !createdNewAgents,
+            capabilities: requiredCapabilities,
+            strategicMode: true,
+            advancedPlanning: true
+          }
+        };
+      } else if (strategicMode) {
+        // Use regular strategic mode
         requestBody = {
           goal: inputValue,
           parameters: {
@@ -852,6 +879,7 @@ const PanionChatAgent: React.FC = () => {
           }
         };
       } else {
+        // Use standard mode
         requestBody = {
           content: inputValue,  // changed from message to content to match backend
           sessionId,  // backend handles both sessionId and session_id formats now
@@ -983,61 +1011,127 @@ const PanionChatAgent: React.FC = () => {
       
       // Process strategic information if available
       let thinkingContent = data.thinking || '';
+      let responseContent = '';
       
-      // Check for additional_info which may include capabilities information
-      if (data.additional_info && !thinkingContent) {
-        // If we have additional info but no thinking content, use that information
-        const info = data.additional_info;
-        thinkingContent = `Processing request with session: ${info.session_id || 'unknown'}\n`;
-        if (info.intent_detected) {
-          thinkingContent += `Detected intent: ${info.intent_detected}\n`;
-        }
-        if (info.capabilities && Array.isArray(info.capabilities)) {
-          thinkingContent += `Required capabilities: ${info.capabilities.join(', ')}\n`;
-        }
-      }
-      
-      if (strategicMode && data.strategies && Array.isArray(data.strategies)) {
-        // Format strategies information as part of the thinking process
-        thinkingContent += '\n\n**Strategy Evaluation:**\n';
+      // Handle different response formats based on the endpoint used
+      if (strategicMode && shouldUseAdvancedPlannerMode && data.id && data.steps) {
+        // This is a strategic plan from the /api/strategic/plans endpoint
+        thinkingContent = thinkingContent || 'Strategic Plan Analysis:\n\n';
+        thinkingContent += `Plan ID: ${data.id}\n`;
+        thinkingContent += `Goal: ${data.goal}\n`;
+        thinkingContent += `Status: ${data.status}\n`;
+        thinkingContent += `Overall Progress: ${data.progress * 100}%\n\n`;
         
-        data.strategies.forEach((strategy: any, index: number) => {
-          thinkingContent += `\n**Strategy ${index + 1}: ${strategy.name}**\n`;
-          thinkingContent += `- Approach: ${strategy.approach || 'Not specified'}\n`;
-          thinkingContent += `- Success: ${strategy.success ? '✓' : '✗'}\n`;
-          if (strategy.reasoning) {
-            thinkingContent += `- Reasoning: ${strategy.reasoning}\n`;
-          }
-          if (strategy.execution_time) {
-            thinkingContent += `- Execution time: ${strategy.execution_time.toFixed(2)}s\n`;
+        if (data.thought_process && Array.isArray(data.thought_process)) {
+          thinkingContent += '**Thought Process:**\n';
+          data.thought_process.forEach((thought: string) => {
+            thinkingContent += `- ${thought}\n`;
+          });
+          thinkingContent += '\n';
+        }
+        
+        thinkingContent += '**Strategic Plan Steps:**\n';
+        data.steps.forEach((step: any, index: number) => {
+          thinkingContent += `\n${index + 1}. ${step.description}\n`;
+          thinkingContent += `   Status: ${step.status}\n`;
+          if (step.metrics) {
+            if (step.metrics.confidence) {
+              thinkingContent += `   Confidence: ${step.metrics.confidence.toFixed(2)}\n`;
+            }
+            if (step.metrics.estimated_time) {
+              thinkingContent += `   Estimated time: ${step.metrics.estimated_time}s\n`;
+            }
           }
         });
         
-        if (data.selected_strategy) {
-          thinkingContent += `\n**Selected Strategy:** ${data.selected_strategy.name} - ${data.selected_strategy.reasoning || 'Best overall performance'}\n`;
-        }
-      }
-      
-      // Check if this might be a request better handled by Clara
-      if (data.additional_info && data.additional_info.clara_context) {
-        const claraInfo = data.additional_info.clara_context;
+        // Format the response message for the strategic plan
+        responseContent = `I've created a strategic plan for: "${data.goal}"\n\n`;
+        responseContent += `This plan has ${data.steps.length} steps to accomplish your goal efficiently.\n\n`;
         
-        // Add Clara's context information to thinking
-        if (claraInfo.personal_context) {
-          thinkingContent += '\n\n**Clara Context:**\n';
-          thinkingContent += `${claraInfo.personal_context}\n`;
+        // Add a summary of the first few steps
+        const initialSteps = data.steps.slice(0, 3);
+        responseContent += `Initial steps:\n`;
+        initialSteps.forEach((step: any, index: number) => {
+          responseContent += `${index + 1}. ${step.description}\n`;
+        });
+        
+        if (data.steps.length > 3) {
+          responseContent += `... and ${data.steps.length - 3} more steps\n\n`;
         }
         
-        // If Clara would be better for this query, suggest forwarding
-        if (claraInfo.clara_recommended) {
-          setNeedsMoreInfo(`This seems like a request Clara might handle better. Would you like me to forward this to Clara?`);
+        responseContent += `Would you like me to execute this plan now?`;
+        
+        // Create a pending action for the plan execution
+        setPendingAction({
+          type: 'start_task',
+          data: {
+            endpoint: `/api/strategic/plans/${data.id}/execute`,
+            taskType: 'strategic_plan',
+            description: `Execute strategic plan: ${data.goal}`,
+            params: {
+              planId: data.id
+            }
+          }
+        });
+      } else {
+        // Regular response from chat or strategic endpoints
+        responseContent = data.response;
+        
+        // Check for additional_info which may include capabilities information
+        if (data.additional_info && !thinkingContent) {
+          // If we have additional info but no thinking content, use that information
+          const info = data.additional_info;
+          thinkingContent = `Processing request with session: ${info.session_id || 'unknown'}\n`;
+          if (info.intent_detected) {
+            thinkingContent += `Detected intent: ${info.intent_detected}\n`;
+          }
+          if (info.capabilities && Array.isArray(info.capabilities)) {
+            thinkingContent += `Required capabilities: ${info.capabilities.join(', ')}\n`;
+          }
+        }
+        
+        if (strategicMode && data.strategies && Array.isArray(data.strategies)) {
+          // Format strategies information as part of the thinking process
+          thinkingContent += '\n\n**Strategy Evaluation:**\n';
+          
+          data.strategies.forEach((strategy: any, index: number) => {
+            thinkingContent += `\n**Strategy ${index + 1}: ${strategy.name}**\n`;
+            thinkingContent += `- Approach: ${strategy.approach || 'Not specified'}\n`;
+            thinkingContent += `- Success: ${strategy.success ? '✓' : '✗'}\n`;
+            if (strategy.reasoning) {
+              thinkingContent += `- Reasoning: ${strategy.reasoning}\n`;
+            }
+            if (strategy.execution_time) {
+              thinkingContent += `- Execution time: ${strategy.execution_time.toFixed(2)}s\n`;
+            }
+          });
+          
+          if (data.selected_strategy) {
+            thinkingContent += `\n**Selected Strategy:** ${data.selected_strategy.name} - ${data.selected_strategy.reasoning || 'Best overall performance'}\n`;
+          }
+        }
+        
+        // Check if this might be a request better handled by Clara
+        if (data.additional_info && data.additional_info.clara_context) {
+          const claraInfo = data.additional_info.clara_context;
+          
+          // Add Clara's context information to thinking
+          if (claraInfo.personal_context) {
+            thinkingContent += '\n\n**Clara Context:**\n';
+            thinkingContent += `${claraInfo.personal_context}\n`;
+          }
+          
+          // If Clara would be better for this query, suggest forwarding
+          if (claraInfo.clara_recommended) {
+            setNeedsMoreInfo(`This seems like a request Clara might handle better. Would you like me to forward this to Clara?`);
+          }
         }
       }
       
       // Create bot message
       const botMessage: ChatMessage = {
         id: generateId(),
-        content: data.response,
+        content: responseContent,
         isUser: false,
         timestamp: formatTime(new Date()),
         thinking: thinkingContent,
@@ -1131,12 +1225,22 @@ const PanionChatAgent: React.FC = () => {
       { pattern: 'strategic', weight: 0.9 },
       { pattern: 'optimize', weight: 0.7 },
       { pattern: 'plan', weight: 0.5 },
+      { pattern: 'step by step', weight: 0.8 },
       
       // Business and competitive analysis
       { pattern: 'market', weight: 0.6 },
       { pattern: 'competitor', weight: 0.7 },
       { pattern: 'industry', weight: 0.6 },
       { pattern: 'business', weight: 0.5 },
+      
+      // New advanced planner keywords
+      { pattern: 'smart', weight: 0.7 },
+      { pattern: 'intelligent', weight: 0.8 },
+      { pattern: 'advanced', weight: 0.7 },
+      { pattern: 'multi-step', weight: 0.8 },
+      { pattern: 'planning', weight: 0.8 },
+      { pattern: 'structured', weight: 0.7 },
+      { pattern: 'organized', weight: 0.6 },
     ];
     
     // Calculate complexity score based on indicators
@@ -1158,16 +1262,70 @@ const PanionChatAgent: React.FC = () => {
       complexityScore += 0.2;
     }
     
-    // Normalize based on number of matched indicators (to prevent long messages with
-    // many indicators from always triggering strategic mode)
+    // Normalize based on number of matched indicators
     const normalizedScore = matchedIndicators > 0 
       ? complexityScore / Math.sqrt(matchedIndicators) 
       : complexityScore;
     
-    // Decision threshold - tune this value as needed
-    const strategicModeThreshold = 1.0;
+    // Direct triggers for strategic planning
+    const strategicPlanningTriggers = [
+      'use strategic', 
+      'strategic mode',
+      'think strategically',
+      'need multiple approaches',
+      'compare different',
+      'analyze in depth'
+    ];
     
-    return normalizedScore >= strategicModeThreshold;
+    // Check for direct triggers
+    const hasDirectTrigger = strategicPlanningTriggers.some(trigger => 
+      lowerMessage.includes(trigger)
+    );
+    
+    // Decision threshold - tune this value as needed
+    const strategicModeThreshold = 0.9;
+    
+    return hasDirectTrigger || normalizedScore >= strategicModeThreshold;
+  };
+  
+  // Function to check if we should use the advanced strategic planner
+  const shouldUseAdvancedPlanner = (message: string): boolean => {
+    const lowerMessage = message.toLowerCase();
+    
+    // Direct triggers for advanced strategic planning
+    const advancedPlannerTriggers = [
+      'advanced planning',
+      'advanced planner',
+      'strategic planner',
+      'multi-step planning',
+      'complex planning',
+      'use advanced planner',
+      'smart planning',
+      'intelligent planning',
+      'structured planning',
+      'create a comprehensive plan'
+    ];
+    
+    // Check for direct triggers
+    const hasDirectTrigger = advancedPlannerTriggers.some(trigger => 
+      lowerMessage.includes(trigger)
+    );
+    
+    // Also use advanced planner for certain complex tasks
+    const complexTaskPatterns = [
+      { type: 'business_research', patterns: ['research business', 'find business information', 'business details'] },
+      { type: 'owner_contact', patterns: ['find owner', 'contact information', 'business owner', 'who owns'] },
+      { type: 'data_analysis', patterns: ['analyze data', 'data analysis', 'statistical analysis', 'analyze statistics'] }
+    ];
+    
+    const hasComplexTask = complexTaskPatterns.some(task => 
+      task.patterns.some(pattern => lowerMessage.includes(pattern))
+    );
+    
+    // If message is long and complex, consider using advanced planner
+    const isLongComplex = message.length > 120 && shouldUseStrategicMode(message);
+    
+    return hasDirectTrigger || hasComplexTask || isLongComplex;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
