@@ -19,6 +19,19 @@ import {
   getEvolvingCapabilities
 } from '@/lib/capabilityEvolution';
 
+interface CapabilityStats {
+  id: string;
+  name: string;
+  stats: {
+    strength: number;
+  }
+}
+
+interface Perspective {
+  role: string;
+  content: string;
+}
+
 const IntelligentAgent: React.FC = () => {
   const { toast } = useToast();
   const intelligence = useIntelligence();
@@ -33,19 +46,13 @@ const IntelligentAgent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [complexityThreshold, setComplexityThreshold] = useState(70);
   const [selectedCapabilities, setSelectedCapabilities] = useState<string[]>([]);
-  const [availableCapabilities, setAvailableCapabilities] = useState<{id: string, name: string, strength: number}[]>([]);
+  const [availableCapabilities, setAvailableCapabilities] = useState<CapabilityStats[]>([]);
   
   // Load available capabilities on mount
   useEffect(() => {
     const loadCapabilities = async () => {
       const capabilities = await getEvolvingCapabilities();
-      setAvailableCapabilities(
-        capabilities.map(cap => ({
-          id: cap.id,
-          name: cap.name,
-          strength: cap.stats.strength || 0
-        }))
-      );
+      setAvailableCapabilities(capabilities);
     };
     
     loadCapabilities();
@@ -90,7 +97,7 @@ const IntelligentAgent: React.FC = () => {
         const deliberation = await getInternalDeliberation(query, selectedCapabilities);
         
         setThinking(prev => `${prev}\n\nPerspectives generated:\n${deliberation.perspectives.map(p => 
-          `- ${p.role}: ${p.viewpoint}`).join('\n')}`);
+          `- ${p.role}: ${p.content}`).join('\n')}`);
         
         // Process the query with the strategic service
         const response = await processStrategicQuery({
@@ -312,13 +319,13 @@ const IntelligentAgent: React.FC = () => {
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium">{capability.name}</h3>
                         <Badge variant="outline">
-                          Strength: {capability.strength.toFixed(1)}
+                          Strength: {capability.stats.strength.toFixed(1)}
                         </Badge>
                       </div>
                       <div className="mt-2 w-full bg-slate-200 rounded-full h-2">
                         <div 
                           className="bg-primary h-2 rounded-full" 
-                          style={{ width: `${Math.min(100, capability.strength)}%` }}
+                          style={{ width: `${Math.min(100, capability.stats.strength)}%` }}
                         />
                       </div>
                     </div>
