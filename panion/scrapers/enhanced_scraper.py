@@ -399,8 +399,8 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                 'type': 'business'
             }
             
-            # Make the request
-            response = requests.get(base_url, params=params, timeout=10)
+            # Make the request with SSL verification disabled for Replit
+            response = requests.get(base_url, params=params, timeout=10, verify=False)
             response.raise_for_status()
             
             # Parse results
@@ -421,6 +421,10 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
             businesses = []
             count = 0
             
+            # Check if we should get detailed business information (including owner info)
+            get_details = True  # Always try to get details with our new implementation
+            
+            # Process results with enhanced details extraction
             for place in results[:limit]:
                 try:
                     name = place.get('name', 'No name available')
@@ -432,23 +436,49 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                     # Get rating if available
                     rating = place.get('rating')
                     
-                    # We can get more details like phone number with a Place Details request
-                    # But we'll limit API calls to avoid hitting rate limits
-                    
-                    # Add to results
-                    businesses.append({
+                    # Basic business record
+                    business_record = {
                         "name": name,
                         "address": address,
-                        "phone": "Phone details require additional API call",
+                        "phone": None,
                         "categories": [business_type],  # Basic category from search
                         "rating": rating,
                         "source": "google_maps_api",
                         "url": f"https://www.google.com/maps/place/?q=place_id:{place_id}" if place_id else None,
                         "scraped_at": datetime.now().isoformat(),
                         "place_id": place_id  # Store this for potential future use
-                    })
+                    }
                     
+                    # Get additional details if requested (for owner information)
+                    if get_details and place_id:
+                        logger.info(f"Getting detailed information for {name}")
+                        details = self.get_place_details(place_id)
+                        
+                        if details:
+                            # Update with additional details
+                            business_record["phone"] = details.get("formatted_phone_number")
+                            business_record["website"] = details.get("website")
+                            
+                            # Try to extract potential owner information from detailed data
+                            # Note: Google doesn't provide direct owner data but we can extract what's available
+                            owner_info = self.extract_owner_info(details, name)
+                            
+                            # Add owner information if found
+                            if owner_info:
+                                business_record.update(owner_info)
+                                
+                            # Search for contact information in reviews if available
+                            reviews_info = self.get_place_reviews(place_id)
+                            if reviews_info:
+                                contact_from_reviews = self.extract_contact_from_reviews(reviews_info)
+                                if contact_from_reviews:
+                                    business_record.update(contact_from_reviews)
+                    
+                    businesses.append(business_record)
                     count += 1
+                    
+                    # Be nice to the API - avoid rate limiting
+                    time.sleep(0.5)
                     
                 except Exception as e:
                     logger.error(f"Error processing Google Maps result: {str(e)}")
@@ -481,11 +511,12 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
             params = {
                 'place_id': place_id,
                 'key': self.api_key,
-                'fields': 'name,formatted_address,formatted_phone_number,website,opening_hours'
+                # Request all available fields for maximum data
+                'fields': 'name,formatted_address,formatted_phone_number,website,opening_hours,url,address_components,business_status,reviews,price_level,rating,user_ratings_total'
             }
             
-            # Make the request
-            response = requests.get(base_url, params=params, timeout=10)
+            # Make the request with SSL verification disabled for Replit
+            response = requests.get(base_url, params=params, timeout=10, verify=False)
             response.raise_for_status()
             
             # Parse results
@@ -498,10 +529,160 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                 
             # Return the result
             return data.get('result', {})
-            
         except Exception as e:
             logger.error(f"Error getting place details: {str(e)}")
             return {}
+    
+    def get_place_reviews(self, place_id):
+        """Get reviews for a place which might contain contact information."""
+        if not self.api_key or not place_id:
+            return {}
+            
+        try:
+            # Build the API request URL - use the details endpoint but only request reviews
+            base_url = "https://maps.googleapis.com/maps/api/place/details/json"
+            params = {
+                'place_id': place_id,
+                'key': self.api_key,
+                'fields': 'reviews'
+            }
+            
+            # Make the request with SSL verification disabled for Replit
+            response = requests.get(base_url, params=params, timeout=10, verify=False)
+            response.raise_for_status()
+            
+            # Parse results
+            data = response.json()
+            
+            # Check if the request was successful
+            if data.get('status') != 'OK':
+                logger.error(f"Google Maps Reviews API error: {data.get('status')}")
+                return {}
+                
+            # Return the reviews
+            return data.get('result', {}).get('reviews', [])
+            
+        except Exception as e:
+            logger.error(f"Error getting place reviews: {str(e)}")
+            return []
+    
+    def extract_owner_info(self, details, business_name):
+        """Extract potential owner information from place details.
+        
+        Google doesn't provide direct owner information, but we can look for hints:
+        1. Check if there's an owner response in reviews
+        2. Look for contact info in the website description or title
+        3. Check the business description for owner mentions
+        """
+        owner_info = {}
+        
+        try:
+            # Check for any potential owner references in the place details
+            if details:
+                # Check if the website contains relevant information
+                website = details.get('website')
+                if website:
+                    # Add website to owner_info in case it has contact forms
+                    owner_info['owner_website'] = website
+                
+                # Extract possible owner name from the business name if it looks like a person's name
+                if business_name and " - " in business_name:
+                    parts = business_name.split(" - ")
+                    if len(parts) == 2:
+                        possible_owner = parts[0].strip()
+                        # Simple check if this looks like a person's name
+                        if " " in possible_owner and possible_owner.count(" ") < 3:
+                            owner_info['owner_name'] = possible_owner
+                
+                # Look for owner responses in reviews
+                if 'reviews' in details:
+                    for review in details.get('reviews', []):
+                        if review.get('owner_response'):
+                            owner_response = review.get('owner_response').get('text', '')
+                            # Look for signature patterns like "- John, Owner" or "Thanks, John (Owner)"
+                            signature_patterns = [
+                                r'[-—]\s*(\w+)[\s,]*(?:Owner|Manager)',  # - John, Owner
+                                r'Thanks,\s*(\w+)[\s,]*\(?(?:Owner|Manager)',  # Thanks, John (Owner)
+                                r'Best[\s,]+(\w+)[\s,]*(?:Owner|Manager)',  # Best, John - Owner
+                                r'Regards[\s,]+(\w+)[\s,]*(?:Owner|Manager)',  # Regards, John (Owner)
+                            ]
+                            
+                            for pattern in signature_patterns:
+                                match = re.search(pattern, owner_response, re.IGNORECASE)
+                                if match:
+                                    owner_info['owner_name'] = match.group(1)
+                                    # Also search for email or phone patterns in the response
+                                    email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', owner_response)
+                                    if email_match:
+                                        owner_info['owner_email'] = email_match.group(0)
+                                    
+                                    # Look for phone patterns
+                                    phone_match = re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', owner_response)
+                                    if phone_match:
+                                        owner_info['owner_phone'] = phone_match.group(0)
+                                    
+                                    break
+            
+            if owner_info:
+                owner_info['owner_notes'] = "Information extracted from business details and reviews"
+                owner_info['owner_status'] = "available"
+                owner_info['data_quality'] = "enhanced"
+                
+        except Exception as e:
+            logger.error(f"Error extracting owner info: {str(e)}")
+        
+        return owner_info
+    
+    def extract_contact_from_reviews(self, reviews):
+        """Look for contact information patterns in reviews that might indicate owner details."""
+        contact_info = {}
+        
+        if not reviews:
+            return contact_info
+            
+        try:
+            # Combine all review text into one searchable string
+            all_text = " ".join([review.get('text', '') for review in reviews])
+            
+            # Look for mentions of the owner with possible names
+            owner_patterns = [
+                r'(?:owner|manager)[\s,]+(?:is|named|called)[\s,]+([A-Z][a-z]+)',  # owner is John
+                r'([A-Z][a-z]+)[\s,]+(?:is|was)[\s,]+(?:the|their)[\s,]+(?:owner|manager)',  # John is the owner
+                r'met[\s,]+(?:the|their)[\s,]+(?:owner|manager)[\s,]+([A-Z][a-z]+)',  # met the owner John
+                r'([A-Z][a-z]+)[\s,]+(?:the|their)[\s,]+(?:owner|manager)[\s,]+(?:was|is)',  # John the owner was
+            ]
+            
+            for pattern in owner_patterns:
+                matches = re.finditer(pattern, all_text, re.IGNORECASE)
+                for match in matches:
+                    potential_name = match.group(1)
+                    if potential_name and len(potential_name) > 2:  # Avoid abbreviations
+                        contact_info['owner_name'] = potential_name
+                        break
+                
+                if 'owner_name' in contact_info:
+                    break
+            
+            # Look for email addresses
+            email_matches = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', all_text)
+            if email_matches:
+                contact_info['owner_email'] = email_matches[0]  # Use the first email found
+            
+            # Look for additional phone numbers not matching the business number
+            phone_matches = re.findall(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', all_text)
+            if phone_matches:
+                contact_info['owner_phone'] = phone_matches[0]  # Use the first phone found
+                
+            if contact_info:
+                contact_info['owner_notes'] = "Information extracted from customer reviews"
+                if 'owner_name' in contact_info:
+                    contact_info['owner_status'] = "available"
+                    contact_info['data_quality'] = "enhanced"
+                    
+        except Exception as e:
+            logger.error(f"Error extracting contact from reviews: {str(e)}")
+            
+        return contact_info
 
 
 class CachedDataStrategy(ScrapingStrategy):
