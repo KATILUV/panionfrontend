@@ -363,6 +363,12 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         "message": f"Successfully scraped {len(results)} results"
                     }).encode())
                 except Exception as e:
+                    logger.error(f"Error in scraping: {str(e)}")
+                    self._set_headers(500)
+                    self.wfile.write(json.dumps({
+                        "status": "error",
+                        "message": f"Error during scraping: {str(e)}"
+                    }).encode())
             
             # Enhanced scraping endpoint with adaptive strategy selection
             elif path == "/scrape/enhanced":
