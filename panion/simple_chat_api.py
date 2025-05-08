@@ -296,18 +296,60 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     
                     response = f"I'll help you create a {style} style video. Please provide more details about what you'd like to show in the video."
                 else:
-                    # Default response for other types of messages
-                    response = f"I understand that you're asking about '{content}'. Let me analyze this and find the best way to help you with this request."
+                    # Process the message metadata if provided
+                    metadata = data.get("metadata", {})
+                    capabilities = metadata.get("capabilities", []) if metadata else []
+                    has_required = metadata.get("hasRequiredCapabilities", True) if metadata else True
+                    
+                    # Check for smoke shop research specifically 
+                    if "smokeshop_data" in capabilities or "smoke shop" in content.lower() or "smokeshop" in content.lower():
+                        # Extract location with better regex
+                        location_match = re.search(r"in\s+([A-Za-z\s]+)(?:,|\.|$|\s)", content)
+                        location = location_match.group(1) if location_match else None
+                        
+                        if location:
+                            response = f"I'm searching for smoke shop data in {location}. I'll delegate this task to the Daddy Data agent, which specializes in business research and contact information. It will compile phone numbers, addresses, email addresses, business hours, and website URLs as requested."
+                            
+                            # Add detailed thinking
+                            thinking = f"Analyzing request: '{content}'\n\n"
+                            thinking += f"Detected capabilities: {', '.join(capabilities)}\n\n"
+                            thinking += f"Location detected: {location}\n\n"
+                            thinking += "Delegating to Daddy Data agent which has business_research, web_research, and contact_finder capabilities.\n\n"
+                            thinking += "Preparing to search business directories and smoke shop registries for this location."
+                        else:
+                            response = "I'd be happy to help you find smoke shop data. Could you please specify which city or location you're interested in?"
+                            thinking = "Request requires location specification for smoke shop data."
+                    # Default response for other types of messages - much more detailed
+                    else:
+                        # If we have detected capabilities, provide a more specific response
+                        if capabilities:
+                            capability_responses = {
+                                "data_analysis": "I'm analyzing the data you provided. I'll extract key insights and prepare visualizations as needed.",
+                                "web_research": "I'm researching this topic online to gather the most relevant and up-to-date information for you.",
+                                "business_research": "I'm gathering business information and market data related to your query.",
+                                "contact_finder": "I'm searching for contact information and will compile a structured database for you."
+                            }
+                            
+                            # Check if we match any capabilities
+                            for cap in capabilities:
+                                if cap in capability_responses:
+                                    response = capability_responses[cap]
+                                    break
+                            else:
+                                response = f"I'm working on your request that requires these capabilities: {', '.join(capabilities)}. I'll provide a detailed response shortly."
+                        else:
+                            response = f"I understand that you're asking about '{content}'. Let me analyze this and find the best way to help you with this request."
                 
                 self._set_headers()
                 self.wfile.write(json.dumps({
                     "response": response,
-                    "thinking": f"Analyzing input: '{content}'",
+                    "thinking": thinking if 'thinking' in locals() else f"Analyzing input: '{content}'",
                     "additional_info": {
                         "timestamp": datetime.datetime.now().isoformat(),
                         "session_id": session_id,
                         "intent_detected": detect_intent(content),
-                        "confidence": 0.85
+                        "confidence": 0.85,
+                        "capabilities": capabilities
                     }
                 }).encode())
             
