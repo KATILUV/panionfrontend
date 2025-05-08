@@ -98,6 +98,113 @@ const PanionChatAgent: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  
+  // Task polling effect
+  useEffect(() => {
+    let pollingInterval: NodeJS.Timeout | null = null;
+    
+    if (taskPollingEnabled && activeTasks.length > 0) {
+      pollingInterval = setInterval(async () => {
+        try {
+          // For each active task, check its status
+          const updatedTasks = [...activeTasks];
+          let tasksChanged = false;
+          
+          for (let i = 0; i < updatedTasks.length; i++) {
+            const task = updatedTasks[i];
+            if (task.status === 'completed' || task.status === 'failed') continue;
+            
+            const response = await fetch(`/api/panion/tasks/${task.id}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.ok) {
+              const taskData = await response.json();
+              
+              // Update task with latest data
+              if (taskData.status !== updatedTasks[i].status || 
+                  taskData.progress !== updatedTasks[i].progress) {
+                updatedTasks[i] = { ...updatedTasks[i], ...taskData };
+                tasksChanged = true;
+                
+                // If task completed, add a message to the chat
+                if (taskData.status === 'completed' && updatedTasks[i].status !== 'completed') {
+                  const completionMessage: ChatMessage = {
+                    id: generateId(),
+                    content: `Task "${task.description}" has completed. ${taskData.result || ''}`,
+                    isUser: false,
+                    timestamp: formatTime(new Date()),
+                  };
+                  setMessages(prev => [...prev, completionMessage]);
+                  
+                  // If this is a smoke shop search, format the results nicely
+                  if (task.type === 'smokeshop_search' && taskData.data) {
+                    try {
+                      // Add data to messages in a readable format
+                      let formattedData = "Here's what I found:\n\n";
+                      const shopData = Array.isArray(taskData.data) ? taskData.data : [taskData.data];
+                      
+                      shopData.forEach((shop: any, idx: number) => {
+                        formattedData += `📍 **${shop.name || 'Smoke Shop'}**\n`;
+                        if (shop.address) formattedData += `Address: ${shop.address}\n`;
+                        if (shop.phone) formattedData += `Phone: ${shop.phone}\n`;
+                        if (shop.website) formattedData += `Website: ${shop.website}\n`;
+                        if (shop.hours) formattedData += `Hours: ${shop.hours}\n`;
+                        if (idx < shopData.length - 1) formattedData += '\n';
+                      });
+                      
+                      const dataMessage: ChatMessage = {
+                        id: generateId(),
+                        content: formattedData,
+                        isUser: false,
+                        timestamp: formatTime(new Date()),
+                      };
+                      setMessages(prev => [...prev, dataMessage]);
+                    } catch (err) {
+                      console.error('Error formatting shop data:', err);
+                    }
+                  }
+                }
+                
+                // If task failed, also add a message
+                if (taskData.status === 'failed' && updatedTasks[i].status !== 'failed') {
+                  const failureMessage: ChatMessage = {
+                    id: generateId(),
+                    content: `Unfortunately, task "${task.description}" has failed. ${taskData.error || 'Please try again or modify your request.'}`,
+                    isUser: false,
+                    timestamp: formatTime(new Date()),
+                  };
+                  setMessages(prev => [...prev, failureMessage]);
+                }
+              }
+            }
+          }
+          
+          if (tasksChanged) {
+            setActiveTasks(updatedTasks);
+          }
+          
+          // If all tasks are complete or failed, stop polling
+          const allTasksFinished = updatedTasks.every(task => 
+            task.status === 'completed' || task.status === 'failed'
+          );
+          
+          if (allTasksFinished) {
+            setTaskPollingEnabled(false);
+          }
+        } catch (error) {
+          console.error('Error polling tasks:', error);
+        }
+      }, 3000); // Poll every 3 seconds
+    }
+    
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [taskPollingEnabled, activeTasks]);
 
   // Focus input on load
   useEffect(() => {

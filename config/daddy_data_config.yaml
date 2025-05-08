@@ -1,0 +1,72 @@
+# Daddy Data Agent Configuration
+
+# Task Concurrency Configuration
+max_concurrent_tasks: 10
+request_delay: 0.5  # Delay between requests in seconds
+
+# Verification Configuration
+verification_sources: 3  # Number of sources to verify information
+confidence_threshold: 0.7  # Minimum confidence to consider data valid
+
+# Data Sources Configuration
+data_sources:
+  business_directories:
+    - google_maps
+    - yelp
+    - yellow_pages
+    - local_business_directory
+  review_sites:
+    - trustpilot
+    - bbb
+    - yelp_reviews
+  social_media:
+    - facebook
+    - linkedin
+    - instagram
+
+# Specialized Search Configuration
+specialized_searches:
+  smoke_shop:
+    sources:
+      - google_maps
+      - yelp
+      - yellow_pages
+      - smokeshop_directory
+    fields:
+      - name
+      - phone
+      - address
+      - website
+      - hours
+      - products
+      - ratings
+    keywords:
+      - smoke shop
+      - tobacco shop
+      - vape store
+      - pipe shop
+      - cigar shop
+      - cbd shop
+  coffee_shop:
+    sources:
+      - google_maps 
+      - yelp
+      - coffee_directory
+    fields:
+      - name
+      - phone
+      - address
+      - website
+      - hours
+      - menu
+      - ratings
+    keywords:
+      - coffee shop
+      - cafe
+      - coffee house
+      - espresso bar
+
+# Output Configuration
+default_output_dir: "./data/daddy_data"
+default_output_format: "json"
+generate_excel_report: true
