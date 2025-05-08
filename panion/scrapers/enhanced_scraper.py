@@ -567,7 +567,7 @@ class EnhancedScraper:
                       params: Dict[str, Any] = None, 
                       headers: Dict[str, str] = None,
                       timeout: int = 15,
-                      verify: bool = True,
+                      verify: bool = False,  # Set to False to bypass SSL verification in Replit
                       use_proxy: bool = True) -> Optional[str]:
         """Make an HTTP request with error handling and retries."""
         # Import proxy manager (only when needed to avoid circular imports)
