@@ -1,0 +1,95 @@
+Core Features of Manus AI
+🔁 Autonomous Agent Capabilities
+Executes multi-step tasks without user input after the initial goal
+
+Can self-plan, iterate, and correct actions based on task state
+
+Operates in an autonomous loop (think AutoGPT on steroids)
+
+🛠️ Tool Integration
+Built-in web browser for live internet browsing
+
+Code execution tools for live programming and debugging
+
+File I/O and document generation capabilities
+
+Integration with external APIs, databases, and spreadsheets
+
+🧩 Multi-Modality
+Understands and generates:
+
+Text
+
+Images
+
+Code
+
+Possibly audio (unconfirmed but rumored)
+
+💻 Developer-Focused Functions
+Can build websites or apps autonomously from prompts
+
+Writes and debugs code across multiple languages
+
+Interfaces with IDEs and version control (like Git)
+
+📊 Data and Research Capabilities
+Analyzes large datasets (CSV, JSON, API)
+
+Summarizes and compares research
+
+Can generate reports, dashboards, charts
+
+🧠 Self-Improvement + Reflection
+Performs self-analysis and adjusts internal plans
+
+Can evaluate success/failure and retry/refine tasks
+
+🔄 Contextual Memory
+Keeps track of conversation history and task state
+
+Learns and adapts to user preferences over time
+
+🌍 Use Case Examples
+Research assistant (real-time info + synthesis)
+
+Job applicant screener and résumé reviewer
+
+Content creator (social posts, articles, visuals)
+
+UI/UX assistant and wireframe designer
+
+Product planner (roadmaps, specs, MVP builds)
+
+Travel planner and life organizer
+
+🚀 Benchmarked Performance
+Scored ~86.5% on the GAIA benchmark (real-world agent benchmark)
+
+Higher than AutoGPT, GPT-Engineer, and many GPT-4 powered agents
+
+🔒 Access + Platform
+Invite-only beta (as of 2025)
+
+No public open-source version
+
+Runs in the cloud, not locally
+
+⚠️ Current Limitations
+Occasional crashes or hallucinations under load
+
+Closed-source with privacy concerns (Chinese servers)
+
+Some task failures still occur on complex chains
+
+Would you like a feature comparison between Manus and Panion (or Clara) to help guide your roadmap?
+
+
+
+
+
+
+
+
+
+

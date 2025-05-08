@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import BusinessResultsSheet, { BusinessData } from '../BusinessResultsSheet';
 
 interface ChatMessage {
   id: string;
@@ -21,6 +22,7 @@ interface ChatMessage {
   isUser: boolean;
   timestamp: string;
   thinking?: string;
+  component?: React.ReactNode; // For embedding component like BusinessResultsSheet
 }
 
 // Helper function to generate a random ID
