@@ -945,7 +945,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                   )}
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="end" className="w-56 p-2">
+              <PopoverContent side="top" align="end" className="w-60 p-2">
                 <div className="flex flex-col gap-2">
                   <h3 className="font-semibold text-sm mb-1">Quick Layouts</h3>
                   <Button 
@@ -990,6 +990,44 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                     <Icon name={ICONS.LAYOUT_GRID} className="mr-2 h-4 w-4" />
                     Triple Layout
                   </Button>
+                  
+                  <div className="mt-1 pt-1 border-t border-border">
+                    <h3 className="font-semibold text-sm mb-1">Grid Layouts</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-center"
+                        onClick={() => {
+                          import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
+                            ApplyLayout.gridLayout(['clara', 'notes', 'settings', 'marketplace'], 2);
+                            toast({ title: "2×2 Grid", description: "Applied 2×2 grid layout" });
+                          });
+                        }}
+                      >
+                        <Icon name={ICONS.GRID} className="mr-2 h-4 w-4" />
+                        2×2 Grid
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-center"
+                        onClick={() => {
+                          import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
+                            // Use all available agents for 4×4 grid
+                            const registry = useAgentStore.getState().registry;
+                            const agentIds = registry.map(agent => agent.id);
+                            ApplyLayout.gridLayout(agentIds, 4);
+                            toast({ title: "4×4 Grid", description: "Applied 4×4 grid layout" });
+                          });
+                        }}
+                      >
+                        <Icon name={ICONS.LAYOUT_GRID} className="mr-2 h-4 w-4" />
+                        4×4 Grid
+                      </Button>
+                    </div>
+                  </div>
+                  
                   <Button 
                     variant="destructive" 
                     size="sm" 

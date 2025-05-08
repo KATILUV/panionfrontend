@@ -109,22 +109,55 @@ export const ApplyLayout = {
   },
 
   /**
-   * Apply a grid layout with four windows in a 2x2 grid
-   * @param agentIds Array of 1-4 agent IDs to place in grid
+   * Apply a grid layout with windows in a grid
+   * @param agentIds Array of agent IDs to place in grid
+   * @param gridSize Number of windows per row/column (defaults to 2 for 2x2 grid)
    */
-  gridLayout: (agentIds: AgentId[]) => {
+  gridLayout: (agentIds: AgentId[], gridSize: 2 | 4 = 2) => {
     const { openAgent } = useAgentStore.getState();
-    const positions = [
-      { x: 50, y: 50 },
-      { x: 550, y: 50 },
-      { x: 50, y: 450 },
-      { x: 550, y: 450 }
-    ];
     
-    // Open all provided agents (up to 4)
-    const agentsToUse = agentIds.slice(0, 4);
+    // Calculate positions based on grid size
+    let positions: {x: number, y: number}[];
+    let windowSize: {width: number, height: number};
+    
+    if (gridSize === 4) {
+      // 4x4 grid (16 positions)
+      const grid = [0, 1, 2, 3];
+      positions = [];
+      
+      // Calculate positions for a 4x4 grid
+      grid.forEach(row => {
+        grid.forEach(col => {
+          positions.push({
+            x: 50 + (col * 310),
+            y: 50 + (row * 230)
+          });
+        });
+      });
+      
+      // Smaller windows for 4x4 grid
+      windowSize = { width: 290, height: 210 };
+    } else {
+      // Default 2x2 grid (4 positions)
+      positions = [
+        { x: 50, y: 50 },      // Top left
+        { x: 550, y: 50 },     // Top right
+        { x: 50, y: 450 },     // Bottom left
+        { x: 550, y: 450 }     // Bottom right
+      ];
+      
+      // Standard size for 2x2 grid
+      windowSize = { width: 480, height: 380 };
+    }
+    
+    // Limit to available positions
+    const maxWindows = positions.length;
+    const agentsToUse = agentIds.slice(0, maxWindows);
+    
+    // First open all windows to ensure they exist
     agentsToUse.forEach(id => openAgent(id));
     
+    // Then position them all at once to avoid z-index issues
     useAgentStore.setState(state => {
       const windows = {...state.windows};
       
@@ -133,7 +166,7 @@ export const ApplyLayout = {
           windows[id] = {
             ...windows[id],
             position: positions[index],
-            size: { width: 480, height: 380 }
+            size: windowSize
           };
         }
       });
