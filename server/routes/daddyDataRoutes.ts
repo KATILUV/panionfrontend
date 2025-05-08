@@ -237,7 +237,7 @@ router.get('/api/daddy-data/task/:taskId', async (req: Request, res: Response) =
       success: true,
       task
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in /api/daddy-data/task/:taskId:', error);
     return res.status(500).json({
       success: false,
@@ -260,7 +260,7 @@ router.get('/api/daddy-data/download/:filename', (req: Request, res: Response) =
     }
     
     return res.download(filePath);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in /api/daddy-data/download/:filename:', error);
     return res.status(500).json({
       success: false,

@@ -146,7 +146,7 @@ const DaddyDataAgent = () => {
         const errorText = await response.text();
         throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error searching:', error);
       toast({
         title: "Search failed",
@@ -217,7 +217,7 @@ const DaddyDataAgent = () => {
         const errorText = await response.text();
         throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error verifying data:', error);
       toast({
         title: "Verification failed",
@@ -297,7 +297,7 @@ const DaddyDataAgent = () => {
         const errorText = await response.text();
         throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error organizing data:', error);
       toast({
         title: "Export failed",
@@ -559,7 +559,7 @@ const DaddyDataAgent = () => {
                                 {Object.entries(item.confidence_scores).map(([field, score]) => (
                                   <div key={field} className="flex items-center justify-between">
                                     <span className="capitalize">{field}:</span>
-                                    <span className={score >= 0.8 ? 'text-green-600' : score >= 0.6 ? 'text-yellow-600' : 'text-red-600'}>
+                                    <span className={typeof score === 'number' && score >= 0.8 ? 'text-green-600' : typeof score === 'number' && score >= 0.6 ? 'text-yellow-600' : 'text-red-600'}>
                                       {(Number(score) * 100).toFixed(0)}%
                                     </span>
                                   </div>
