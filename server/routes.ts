@@ -19,6 +19,7 @@ import {
   formatFileSize
 } from "./utils/fileCleanup";
 import agentRoutes from "./routes/agentRoutes";
+import panionRoutes, { startPanionAPI, shutdownPanionAPI } from "./panion";
 
 // Configure multer for handling file uploads
 const upload = multer({
@@ -49,6 +50,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use agent routes
   app.use(agentRoutes);
+  
+  // Use Panion routes
+  app.use(panionRoutes);
+  
+  // Try to start the Panion API
+  try {
+    await startPanionAPI();
+  } catch (error) {
+    console.error('Failed to start Panion API:', error);
+  }
   
   // API routes are defined below
 

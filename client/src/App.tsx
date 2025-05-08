@@ -17,6 +17,7 @@ import SettingsAgent from "./components/agents/SettingsAgent";
 import MarketplaceAgent from "./components/agents/MarketplaceAgent";
 import { StatusExample } from "./components/agents/StatusExample";
 import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
+import PanionChatAgent from "./components/agents/PanionChatAgent";
 import { useAgentStore } from "./state/agentStore";
 import ThemeProvider from "./components/common/ThemeProvider";
 
@@ -180,6 +181,24 @@ function App() {
       component: () => <FeedbackDemoAgent />,
       defaultPosition: { x: 400, y: 150 },
       defaultSize: { width: 650, height: 600 }
+    });
+    
+    // Panion Chat Agent
+    const panionIcon = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
+        <path d="M12 6C11.45 6 11 6.45 11 7V13C11 13.55 11.45 14 12 14C12.55 14 13 13.55 13 13V7C13 6.45 12.55 6 12 6Z" fill="currentColor"/>
+        <circle cx="12" cy="17" r="1.5" fill="currentColor"/>
+      </svg>
+    `;
+    
+    agentStore.registerAgent({
+      id: 'panion',
+      title: 'Panion Chat',
+      icon: panionIcon,
+      component: () => <PanionChatAgent />,
+      defaultPosition: { x: 650, y: 200 },
+      defaultSize: { width: 500, height: 600 }
     });
   }, []);
   
