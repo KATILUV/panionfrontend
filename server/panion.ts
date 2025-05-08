@@ -399,7 +399,9 @@ router.post('/api/panion/scrape/enhanced', checkPanionAPIMiddleware, async (req:
       limit = 20, 
       source = "adaptive",
       useProxy = true,
-      usePlaywright = false
+      usePlaywright = false,
+      useSelenium = false,
+      useStrategic = false
     } = req.body;
     
     if (!businessType || !location) {
@@ -411,18 +413,49 @@ router.post('/api/panion/scrape/enhanced', checkPanionAPIMiddleware, async (req:
     
     // Determine which approach to show in log
     const proxyText = useProxy ? "with proxy rotation" : "without proxies";
-    const playwrightText = usePlaywright ? " and browser automation" : "";
+    const playwrightText = usePlaywright ? " and Playwright browser automation" : "";
+    const seleniumText = useSelenium ? " and Selenium browser automation" : "";
+    const strategicText = useStrategic ? " and strategic orchestration" : "";
     
-    log(`Using enhanced scraper for ${businessType} in ${location} with ${source} strategy ${proxyText}${playwrightText}`, 'panion');
+    log(`Using enhanced scraper for ${businessType} in ${location} with ${source} strategy ${proxyText}${playwrightText}${seleniumText}${strategicText}`, 'panion');
     
-    // Forward the request to the enhanced scraper API
+    // If strategic mode is enabled, use the chat endpoint to trigger it
+    if (useStrategic) {
+      // Create a strategic goal through the chat system
+      const chatPayload = {
+        session_id: req.session?.id || 'default-session',
+        content: `strategically scrape information about ${businessType} in ${location} using multiple approaches and compare results`,
+        metadata: {
+          hasRequiredCapabilities: true,
+          capabilities: ['strategic_thinking', 'web_research', 'data_integration'],
+          client: 'frontend'
+        }
+      };
+      
+      const response = await axios.post(`${PANION_API_URL}/chat`, chatPayload);
+      
+      // Extract operation ID from the response if available
+      const responseText = response.data.response || '';
+      const operationIdMatch = responseText.match(/Operation ID: (op_\d+)/);
+      const operationId = operationIdMatch ? operationIdMatch[1] : null;
+      
+      return res.json({
+        status: 'strategic_initiated',
+        message: response.data.response,
+        operation_id: operationId,
+        thinking: response.data.thinking
+      });
+    }
+    
+    // Otherwise forward the request to the enhanced scraper API
     const response = await axios.post(`${PANION_API_URL}/scrape/enhanced`, {
       business_type: businessType,
       location,
       limit,
       source,
       use_proxy: useProxy,
-      use_playwright: usePlaywright
+      use_playwright: usePlaywright,
+      use_selenium: useSelenium
     });
     
     res.json(response.data);
@@ -431,6 +464,98 @@ router.post('/api/panion/scrape/enhanced', checkPanionAPIMiddleware, async (req:
     res.status(500).json({ 
       error: 'Enhanced scraper error',
       message: 'Error with enhanced scraping system' 
+    });
+  }
+});
+
+// Strategic operation - use multiple approaches and get optimized results
+router.post('/api/panion/strategic', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { goal, parameters } = req.body;
+    
+    if (!goal) {
+      return res.status(400).json({ 
+        error: 'Invalid request',
+        message: 'Goal description is required' 
+      });
+    }
+    
+    log(`Strategic operation request: ${goal}`, 'panion');
+    
+    // Execute strategic operation - this is handled via the chat API
+    const chatPayload = {
+      session_id: req.session?.id || 'default-session',
+      content: goal, // The goal statement is sent as chat content
+      metadata: {
+        hasRequiredCapabilities: true,
+        capabilities: ['strategic_thinking', 'web_research', 'data_integration'],
+        parameters: parameters || {},
+        client: 'frontend'
+      }
+    };
+    
+    const response = await axios.post(`${PANION_API_URL}/chat`, chatPayload);
+    
+    // Extract operation ID from the response if available
+    const responseText = response.data.response || '';
+    const operationIdMatch = responseText.match(/Operation ID: (op_\d+)/);
+    const operationId = operationIdMatch ? operationIdMatch[1] : null;
+    
+    return res.json({
+      status: 'initiated',
+      message: response.data.response,
+      operation_id: operationId,
+      thinking: response.data.thinking
+    });
+  } catch (error) {
+    log(`Strategic operation error: ${error}`, 'panion');
+    res.status(500).json({ 
+      error: 'Strategic operation error',
+      message: 'Error initiating strategic operation' 
+    });
+  }
+});
+
+// Get status of a strategic operation
+router.get('/api/panion/strategic/status/:operationId', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { operationId } = req.params;
+    
+    log(`Getting strategic operation status: ${operationId}`, 'panion');
+    
+    // Get status from the Panion API
+    const response = await axios.post(`${PANION_API_URL}/strategic/status`, {
+      operation_id: operationId
+    });
+    
+    return res.json(response.data);
+  } catch (error) {
+    log(`Strategic status error: ${error}`, 'panion');
+    res.status(500).json({ 
+      error: 'Strategic status error',
+      message: 'Error getting strategic operation status' 
+    });
+  }
+});
+
+// Get results of a strategic operation
+router.get('/api/panion/strategic/results/:operationId', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { operationId } = req.params;
+    
+    log(`Getting strategic operation results: ${operationId}`, 'panion');
+    
+    // Get results from the Panion API
+    const response = await axios.post(`${PANION_API_URL}/strategic/results`, {
+      operation_id: operationId
+    });
+    
+    return res.json(response.data);
+  } catch (error) {
+    log(`Strategic results error: ${error}`, 'panion');
+    res.status(500).json({ 
+      error: 'Strategic results error',
+      message: 'Error getting strategic operation results' 
     });
   }
 });

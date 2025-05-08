@@ -302,6 +302,8 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         # Check for proxy or playwright mentions
                         use_proxy = True  # Default to using proxy
                         use_playwright = False
+                        use_selenium = False
+                        use_strategic = False
                         
                         if re.search(r"(using|with|via)\s+(proxy|proxies)", content.lower()):
                             use_proxy = True
@@ -310,20 +312,63 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         
                         if re.search(r"(using|with|via)\s+(playwright|browser|headless|chrome|firefox)", content.lower()):
                             use_playwright = True
+                            
+                        if re.search(r"(using|with|via)\s+(selenium|browser automation)", content.lower()):
+                            use_selenium = True
+                            
+                        # Check for strategic/multi-approach requests
+                        if re.search(r"(strategic|strategy|multiple approaches|compare|best approach|optimal|combine|multi-source)", content.lower()):
+                            use_strategic = True
                         
                         # Prepare scraping method description
                         method_desc = []
                         if use_proxy:
                             method_desc.append("proxy rotation")
                         if use_playwright:
-                            method_desc.append("browser automation")
+                            method_desc.append("Playwright browser automation")
+                        if use_selenium:
+                            method_desc.append("Selenium browser automation")
+                        if use_strategic:
+                            method_desc.append("strategic orchestration")
                         
                         method_text = ""
                         if method_desc:
                             method_text = f" using {' and '.join(method_desc)}"
-                        
-                        response = f"I'll gather information for {limit} {business_type}s in {location}{method_text}. I'll use the Daddy Data agent to compile this information for you."
-                        thinking = f"Detected business information request for {business_type} in {location}. Using web research capabilities with proxy: {use_proxy}, playwright: {use_playwright}."
+                            
+                        # Generate different responses based on strategic mode
+                        if use_strategic:
+                            # Import the strategy controller
+                            try:
+                                from scrapers.strategy_controller import get_controller
+                                controller = get_controller()
+                                
+                                # Create a strategic goal
+                                goal = f"Find information about {business_type}s in {location}"
+                                parameters = {
+                                    "business_type": business_type,
+                                    "location": location,
+                                    "limit": limit,
+                                    "use_proxy": use_proxy,
+                                    "use_playwright": use_playwright,
+                                    "use_selenium": use_selenium
+                                }
+                                
+                                # Execute the strategic goal asynchronously
+                                import asyncio
+                                operation_info = asyncio.run(controller.execute_strategic_goal(goal, parameters))
+                                
+                                # Return a response with the operation ID
+                                response = f"I'll strategically gather information about {business_type}s in {location} using multiple data sources and approaches. I'll analyze which methods work best and combine the results for optimal coverage. Operation ID: {operation_info['operation_id']}"
+                                thinking = f"Created strategic research operation {operation_info['operation_id']} for {business_type} in {location}. Using multiple scraping methods with strategic orchestration."
+                                
+                            except ImportError:
+                                logger.error("Could not import strategy controller, falling back to standard response")
+                                response = f"I'll gather information for {limit} {business_type}s in {location}{method_text}. I'll use multiple methods to compile this information for you."
+                                thinking = f"Detected business information request for {business_type} in {location}. Using web research capabilities with proxy: {use_proxy}, playwright: {use_playwright}, selenium: {use_selenium}."
+                        else:
+                            # Standard response
+                            response = f"I'll gather information for {limit} {business_type}s in {location}{method_text}. I'll use the Daddy Data agent to compile this information for you."
+                            thinking = f"Detected business information request for {business_type} in {location}. Using web research capabilities with proxy: {use_proxy}, playwright: {use_playwright}, selenium: {use_selenium}."
                     
                     # Handle data analysis requests
                     elif re.search(r"(analyze|chart|graph|visualization|trend|plot|dashboard).*(data|csv|json|file|result)", content.lower()):
@@ -649,6 +694,82 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         "steps_completion": "1/8"
                     }
                 ]).encode())
+                
+            # Strategic operation status endpoint
+            elif path == "/strategic/status":
+                operation_id = data.get("operation_id", "")
+                
+                if not operation_id:
+                    self._set_headers(400)
+                    self.wfile.write(json.dumps({
+                        "status": "error",
+                        "message": "Operation ID is required"
+                    }).encode())
+                    return
+                
+                try:
+                    # Import the strategy controller
+                    from scrapers.strategy_controller import get_controller
+                    controller = get_controller()
+                    
+                    # Get the operation status
+                    status = controller.get_operation_status(operation_id)
+                    
+                    self._set_headers()
+                    self.wfile.write(json.dumps(status).encode())
+                    
+                except ImportError as ie:
+                    logger.error(f"Error importing strategy controller: {str(ie)}")
+                    self._set_headers(500)
+                    self.wfile.write(json.dumps({
+                        "status": "error",
+                        "message": "Strategic operation framework not available"
+                    }).encode())
+                except Exception as e:
+                    logger.error(f"Error getting operation status: {str(e)}")
+                    self._set_headers(500)
+                    self.wfile.write(json.dumps({
+                        "status": "error",
+                        "message": f"Error getting operation status: {str(e)}"
+                    }).encode())
+                    
+            # Strategic operation results endpoint
+            elif path == "/strategic/results":
+                operation_id = data.get("operation_id", "")
+                
+                if not operation_id:
+                    self._set_headers(400)
+                    self.wfile.write(json.dumps({
+                        "status": "error",
+                        "message": "Operation ID is required"
+                    }).encode())
+                    return
+                
+                try:
+                    # Import the strategy controller
+                    from scrapers.strategy_controller import get_controller
+                    controller = get_controller()
+                    
+                    # Get the operation results
+                    results = controller.get_operation_result(operation_id)
+                    
+                    self._set_headers()
+                    self.wfile.write(json.dumps(results).encode())
+                    
+                except ImportError as ie:
+                    logger.error(f"Error importing strategy controller: {str(ie)}")
+                    self._set_headers(500)
+                    self.wfile.write(json.dumps({
+                        "status": "error",
+                        "message": "Strategic operation framework not available"
+                    }).encode())
+                except Exception as e:
+                    logger.error(f"Error getting operation results: {str(e)}")
+                    self._set_headers(500)
+                    self.wfile.write(json.dumps({
+                        "status": "error",
+                        "message": f"Error getting operation results: {str(e)}"
+                    }).encode())
             
             # Clara dream expansion endpoint
             elif path == "/clara/expand-dream":
