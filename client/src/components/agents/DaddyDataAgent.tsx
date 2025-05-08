@@ -247,8 +247,8 @@ The data suggests that the most successful businesses in this category focus on 
                         <Input
                           id="limit"
                           type="number"
-                          value={limit}
-                          onChange={(e) => setLimit(parseInt(e.target.value))}
+                          value={limit.toString()}
+                          onChange={(e) => setLimit(e.target.value ? parseInt(e.target.value) : 10)}
                           min={1}
                           max={50}
                         />
