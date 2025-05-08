@@ -258,62 +258,101 @@ const PanionChatAgent: React.FC = () => {
                   };
                   setMessages(prev => [...prev, completionMessage]);
                   
-                  // If this is a smoke shop search, format the results nicely
+                  // If this is a smoke shop search, format the results using the BusinessResultsSheet
                   if ((task.type === 'smokeshop_search' || task.type === 'smokeshop_research') && taskData.data) {
                     try {
                       // Check if we're displaying owner information
                       const hasOwnerInfo = taskData.params?.includeOwnerInfo || false;
                       
-                      // Add data to messages in a readable format with appropriate heading
-                      let formattedData = hasOwnerInfo 
-                        ? "📋 **SMOKE SHOP OWNER CONTACT INFORMATION**\n\n" 
-                        : "📋 **SMOKE SHOP DIRECTORY RESULTS**\n\n";
-                        
+                      // Convert the raw shop data to BusinessData format
                       const shopData = Array.isArray(taskData.data) ? taskData.data : [taskData.data];
-                      
-                      shopData.forEach((shop: any, idx: number) => {
-                        formattedData += `📍 **${shop.name || 'Smoke Shop'}**\n`;
-                        if (shop.address) formattedData += `Address: ${shop.address}\n`;
-                        if (shop.phone) formattedData += `Phone: ${shop.phone}\n`;
-                        if (shop.website) formattedData += `Website: ${shop.website}\n`;
-                        if (shop.hours) formattedData += `Hours: ${shop.hours}\n`;
+                      const formattedBusinessData: BusinessData[] = shopData.map((shop: any) => {
+                        // Extract location information from task description or params
+                        const locationMatch = task.description.match(/in ([a-zA-Z\s]+)/i);
+                        const location = locationMatch ? locationMatch[1].trim() : (taskData.params?.location || 'your area');
                         
-                        // Include owner information when available and requested
-                        if (hasOwnerInfo) {
-                          if (shop.owner_name) formattedData += `Owner: ${shop.owner_name}\n`;
-                          if (shop.owner_email) formattedData += `Owner Email: ${shop.owner_email}\n`;
-                          if (shop.owner_phone && shop.owner_phone !== shop.phone) {
-                            formattedData += `Owner Phone: ${shop.owner_phone}\n`;
-                          }
-                          if (shop.contact_person && shop.contact_person !== shop.owner_name) {
-                            formattedData += `Contact Person: ${shop.contact_person}\n`;
-                          }
-                          if (shop.business_type) formattedData += `Business Type: ${shop.business_type}\n`;
-                          if (shop.year_established) formattedData += `Established: ${shop.year_established}\n`;
-                        }
+                        // Extract business type from task description or use default
+                        const businessTypeMatch = task.description.match(/(smoke shop|coffee shop|restaurant|bar|store)/i);
+                        const businessType = businessTypeMatch ? businessTypeMatch[1].trim() : 'business';
                         
-                        if (idx < shopData.length - 1) formattedData += '\n---\n\n';
+                        // Format owner info into our BusinessOwnerInfo structure
+                        const ownerInfo = hasOwnerInfo ? {
+                          name: shop.owner_name,
+                          title: shop.owner_title || 'Owner',
+                          phone: shop.owner_phone,
+                          email: shop.owner_email,
+                          linkedin_url: shop.owner_linkedin || shop.linkedin_profile,
+                          confidence: shop.confidence || shop.owner_confidence || 0.7,
+                          tier: shop.data_quality || shop.tier || 'basic'
+                        } : undefined;
+                        
+                        // Format manager info if available
+                        const managerInfo = shop.managers ? 
+                          shop.managers.map((manager: any) => ({
+                            name: manager.name,
+                            title: manager.title || 'Manager',
+                            linkedin_url: manager.linkedin_profile || manager.linkedin_url,
+                            confidence: manager.confidence || 0.6
+                          })) : 
+                          undefined;
+                        
+                        return {
+                          name: shop.name || 'Business',
+                          address: shop.address || 'Address unavailable',
+                          phone: shop.phone,
+                          website: shop.website,
+                          rating: shop.rating,
+                          categories: shop.categories || [businessType],
+                          owner_info: ownerInfo,
+                          linkedin_company_url: shop.linkedin_company_url || shop.business_linkedin,
+                          manager_info: managerInfo
+                        };
                       });
                       
-                      const dataMessage: ChatMessage = {
+                      // Create introduction message
+                      const introMessage: ChatMessage = {
                         id: generateId(),
-                        content: formattedData,
+                        content: hasOwnerInfo 
+                          ? `I've found ${formattedBusinessData.length} businesses with owner/manager contact information:` 
+                          : `Here are ${formattedBusinessData.length} businesses that match your search:`,
                         isUser: false,
                         timestamp: formatTime(new Date()),
                       };
+                      setMessages(prev => [...prev, introMessage]);
+                      
+                      // Extract location and business type for the sheet heading
+                      const locationMatch = task.description.match(/in ([a-zA-Z\s]+)/i);
+                      const location = locationMatch ? locationMatch[1].trim() : (taskData.params?.location || 'your area');
+                      
+                      const businessTypeMatch = task.description.match(/(smoke shop|coffee shop|restaurant|bar|store)/i);
+                      const businessType = businessTypeMatch ? businessTypeMatch[1].trim() : 'businesses';
+                      
+                      // Create sheet data message
+                      const dataMessage: ChatMessage = {
+                        id: generateId(),
+                        content: "",
+                        isUser: false,
+                        timestamp: formatTime(new Date()),
+                        component: (
+                          <BusinessResultsSheet 
+                            results={formattedBusinessData}
+                            location={location}
+                            businessType={businessType}
+                          />
+                        )
+                      };
                       setMessages(prev => [...prev, dataMessage]);
                       
-                      // If we searched for owner info but didn't find much, add a follow-up message
+                      // If we searched for owner info but didn't find complete LinkedIn data, add a follow-up message
                       if (hasOwnerInfo) {
-                        const hasCompleteOwnerInfo = shopData.some((shop: any) => 
-                          shop.owner_name || shop.owner_email || 
-                          (shop.owner_phone && shop.owner_phone !== shop.phone)
+                        const hasLinkedInInfo = formattedBusinessData.some(business => 
+                          business.owner_info?.linkedin_url || business.linkedin_company_url
                         );
                         
-                        if (!hasCompleteOwnerInfo) {
+                        if (!hasLinkedInInfo) {
                           const followUpMessage: ChatMessage = {
                             id: generateId(),
-                            content: "I've found basic business information, but complete owner details may require additional research. Would you like me to suggest other methods to find this information?",
+                            content: "I've found business information, but complete LinkedIn profiles for some owners may require additional research. Would you like me to explore other methods to find more detailed contact information?",
                             isUser: false,
                             timestamp: formatTime(new Date()),
                           };
@@ -393,26 +432,89 @@ const PanionChatAgent: React.FC = () => {
       
       if (task.type === 'smokeshop_research') {
         const shops = result.data || [];
-        const location = task.location;
+        const location = task.location || '';
         
         if (shops.length === 0) {
-          messageContent = `I couldn't find any smoke shops in ${location}. Would you like me to try with a different search term or location?`;
-        } else {
-          messageContent = `I found ${shops.length} smoke shops in ${location}.\n\n`;
+          messageContent = `I couldn't find any businesses in ${location}. Would you like me to try with a different search term or location?`;
           
-          shops.slice(0, 5).forEach((shop: any, index: number) => {
-            messageContent += `${index + 1}. **${shop.name || 'Unnamed Shop'}**\n`;
-            if (shop.address) messageContent += `   Address: ${shop.address}\n`;
-            if (shop.phone) messageContent += `   Phone: ${shop.phone}\n`;
-            if (shop.website) messageContent += `   Website: ${shop.website}\n`;
-            if (shop.owner) messageContent += `   Owner: ${shop.owner}\n`;
-            if (shop.email) messageContent += `   Email: ${shop.email}\n`;
-            messageContent += '\n';
+          // Create a simple completion message
+          const completionMessage: ChatMessage = {
+            id: generateId(),
+            content: messageContent,
+            isUser: false,
+            timestamp: formatTime(new Date()),
+          };
+          
+          setMessages(prev => [...prev, completionMessage]);
+        } else {
+          // Show simple intro message
+          const introMessage: ChatMessage = {
+            id: generateId(),
+            content: `I found ${shops.length} businesses in ${location}.`,
+            isUser: false,
+            timestamp: formatTime(new Date()),
+          };
+          setMessages(prev => [...prev, introMessage]);
+          
+          // Extract business type from task description
+          const businessTypeMatch = task.description?.match(/(smoke shop|coffee shop|restaurant|bar|store)/i);
+          const businessType = businessTypeMatch ? businessTypeMatch[1].trim() : 'businesses';
+          
+          // Check if we're displaying owner information
+          const hasOwnerInfo = task.description?.toLowerCase().includes('owner') || 
+                             task.description?.toLowerCase().includes('contact') ||
+                             task.description?.toLowerCase().includes('manager');
+          
+          // Convert shop data to BusinessData format
+          const businessData: BusinessData[] = shops.map((shop: any) => {
+            // Format owner info if available
+            const ownerInfo = hasOwnerInfo && (shop.owner || shop.owner_name || shop.contact_person) ? {
+              name: shop.owner || shop.owner_name || shop.contact_person,
+              title: shop.owner_title || shop.title || 'Owner',
+              phone: shop.owner_phone || shop.owner_contact || shop.contact_phone,
+              email: shop.owner_email || shop.email || shop.contact_email,
+              linkedin_url: shop.linkedin_profile || shop.owner_linkedin || shop.linkedin_url,
+              confidence: shop.confidence || shop.owner_confidence || 0.7,
+              tier: shop.tier || 'basic'
+            } : undefined;
+            
+            return {
+              name: shop.name || 'Business',
+              address: shop.address || 'Address unavailable',
+              phone: shop.phone,
+              website: shop.website,
+              rating: shop.rating,
+              categories: shop.categories || [businessType],
+              owner_info: ownerInfo,
+              linkedin_company_url: shop.linkedin_company_url || shop.business_linkedin,
+              manager_info: shop.managers ? shop.managers.map((m: any) => ({
+                name: m.name,
+                title: m.title || 'Manager',
+                linkedin_url: m.linkedin_url || m.linkedin_profile,
+                confidence: m.confidence || 0.6
+              })) : undefined
+            };
           });
           
-          if (shops.length > 5) {
-            messageContent += `... and ${shops.length - 5} more results. Would you like me to show more?`;
-          }
+          // Create sheet component message
+          const dataMessage: ChatMessage = {
+            id: generateId(),
+            content: '',
+            isUser: false,
+            timestamp: formatTime(new Date()),
+            component: (
+              <BusinessResultsSheet 
+                results={businessData}
+                location={location}
+                businessType={businessType}
+              />
+            )
+          };
+          
+          setMessages(prev => [...prev, dataMessage]);
+          
+          // No need to set messageContent as we're directly adding messages
+          return;
         }
       } else if (task.type === 'strategic_plan') {
         // Format strategic plan results
