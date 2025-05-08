@@ -589,6 +589,24 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                 
                 # Extract possible owner name from the business name if it looks like a person's name
                 if business_name:
+                    # Words that should not be considered owner names
+                    definitely_not_names = [
+                        "the", "smoke", "vape", "king", "queen", "royal", "bros", "million", "sky", "high",
+                        "broadway", "downtown", "uptown", "central", "head", "shop", "global", "world", 
+                        "universal", "superior", "premier", "elite", "prime", "quality", "value", "budget",
+                        "tobacco", "cigar", "pipe", "hookah", "water", "glass", "freaky", "maybe", "super",
+                        "happy", "lucky", "spot", "zone", "market", "store", "emporium", "boutique", "lounge",
+                        "hut", "shack", "depot", "house", "place", "point", "corner", "center", "plaza",
+                        "station", "gallery", "studio", "international", "national", "american", "colorado", 
+                        "denver", "chicago", "seattle", "local", "specialty", "cloud", "purple", "green",
+                        "blue", "red", "black", "white", "gold", "silver", "bronze", "discount", "bargain",
+                        "premium", "deluxe", "mega", "super", "ultra", "mini", "micro", "max", "express",
+                        "fast", "quick", "rapid", "instant", "direct", "master", "expert", "pro", "tech",
+                        "professional", "specialist", "exclusive", "unique", "special", "modern", "advanced",
+                        "innovative", "original", "classic", "traditional", "custom", "digital", "smart", "urban",
+                        "pacific", "atlantic", "mountain", "valley", "peak", "summit", "horizon", "sunset", "sunrise"
+                    ]
+                    
                     # Check for common patterns in business names
                     name_patterns = [
                         r"([\w']+)'s\s+(?:smoke|vape|tobacco)",  # John's Smoke Shop
@@ -596,18 +614,95 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                         r"([\w']+)\s+and\s+(?:[\w']+)'s",  # John and Mary's
                         r"^([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)'s",  # John's or John Smith's at start
                         r"^([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+(?:smoke|vape)",  # John Smith Smoke Shop
+                        r"^([A-Z][a-z]{2,}(?:\s[A-Z][a-z]{2,})?)[''`]s",  # More possessive variations
+                        r"([A-Z][a-z]{2,}(?:\s&\s[A-Z][a-z]{2,})?)[''`]s",  # Joe & Bob's
+                        r"([A-Z][a-z]{2,})\s+(?:and|&)\s+([A-Z][a-z]{2,})",  # Joe and Bob / Joe & Bob 
                     ]
                     
                     for pattern in name_patterns:
                         match = re.search(pattern, business_name, re.IGNORECASE)
                         if match:
-                            possible_owner = match.group(1)
-                            # Validate this looks like a person's name - not a place name
-                            common_place_names = ["new york", "chicago", "brooklyn", "manhattan", "city", "town", "village"]
-                            if possible_owner.lower() not in common_place_names:
-                                owner_info['owner_name'] = possible_owner
-                                owner_info['owner_name_source'] = "business_name"
+                            possible_owner = match.group(1).strip()
+                            
+                            # Skip if the possible owner is in the definitely_not_names list
+                            if possible_owner.lower() in definitely_not_names:
+                                continue
+                                
+                            # Check for vowels
+                            has_vowels = bool(re.search(r'[aeiou]', possible_owner.lower()))
+                            
+                            # Check if it's capitalized properly
+                            properly_capitalized = all(word[0].isupper() for word in possible_owner.split() if word)
+                            
+                            # Common first names as an additional validation
+                            common_first_names = [
+                                "john", "james", "robert", "michael", "william", "david", "richard", 
+                                "joseph", "thomas", "charles", "mary", "patricia", "jennifer", "linda", 
+                                "elizabeth", "barbara", "susan", "jessica", "sarah", "karen", "lisa", 
+                                "nancy", "betty", "margaret", "sandra", "alex", "sam", "dan", "chris",
+                                "mike", "bob", "tom", "jim", "joe", "jeff", "mark", "paul", "steve",
+                                "anna", "emma", "olivia", "ava", "sophia", "mia", "amelia", "jake",
+                                "jason", "kevin", "ryan", "brian", "justin", "adam", "eric", "george",
+                                "frank", "scott", "andrew", "raymond", "gregory", "joshua", "jerry",
+                                "dennis", "walter", "patrick", "peter", "harold", "douglas", "henry",
+                                "carl", "arthur", "ryan", "roger", "joe", "juan", "jack", "albert",
+                                "jonathan", "justin", "terry", "gerald", "keith", "samuel", "willie",
+                                "ralph", "lawrence", "nicholas", "roy", "benjamin", "bruce", "brandon",
+                                "eugene", "harry", "ashley", "donna", "kimberly", "carol", "michelle",
+                                "emily", "amanda", "melissa", "deborah", "stephanie", "rebecca", "laura",
+                                "sharon", "cynthia", "kathleen", "amy", "angela", "shirley", "anna",
+                                "ruth", "brenda", "pamela", "nicole", "katherine", "rachel", "virginia",
+                                "janice", "maria", "diana", "julie", "christina", "joan", "evelyn", "kelly",
+                                "victoria", "lauren", "joan", "alice", "sara", "rosa", "grace", "judy"
+                            ]
+                            
+                            # Validate name format with stricter requirements
+                            if (possible_owner and 
+                                len(possible_owner) >= 3 and 
+                                has_vowels and
+                                properly_capitalized):
+                                
+                                # Check if any part of the name is a common first name
+                                name_parts = possible_owner.split()
+                                has_common_name = False
+                                
+                                for part in name_parts:
+                                    if part.lower() in common_first_names:
+                                        has_common_name = True
+                                        break
+                                
+                                # Only accept if it's a multi-word name or contains a common name
+                                if has_common_name or len(name_parts) > 1:
+                                    owner_info['owner_name'] = possible_owner
+                                    owner_info['owner_name_source'] = "business_name"
+                                    
+                                    # Adjust confidence based on whether it's a common name
+                                    if has_common_name:
+                                        owner_info['owner_name_confidence'] = "high"
+                                    else:
+                                        owner_info['owner_name_confidence'] = "medium"
+                                    
+                                    break
+                            
+                            if 'owner_name' in owner_info:
                                 break
+                                
+                    # Handle specific name pattern: "Joe & Bob" where we need to combine both names
+                    combined_name_pattern = r"([A-Z][a-z]{2,})\s+(?:and|&)\s+([A-Z][a-z]{2,})"
+                    match = re.search(combined_name_pattern, business_name, re.IGNORECASE)
+                    if match and 'owner_name' not in owner_info:
+                        first_name = match.group(1)
+                        second_name = match.group(2)
+                        # Construct combined name
+                        combined_name = f"{first_name} and {second_name}"
+                        
+                        # Validate both parts look like names
+                        common_place_names = ["king", "queen", "smoke", "vape", "city", "town"]
+                        if (first_name.lower() not in common_place_names and
+                            second_name.lower() not in common_place_names):
+                            owner_info['owner_name'] = combined_name
+                            owner_info['owner_name_source'] = "business_name"
+                            owner_info['owner_name_confidence'] = "high"
                 
                 # Check for any social media links
                 if 'website' in details and details['website']:
@@ -761,13 +856,47 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                     matches = re.finditer(pattern, all_text, re.IGNORECASE)
                     for match in matches:
                         potential_name = match.group(1)
-                        # More strict validation for single names to avoid false positives
-                        common_words = ["great", "nice", "best", "good", "bad", "the", "this", "that", "here", "there"]
-                        if (potential_name and len(potential_name) > 2 and 
-                            potential_name.lower() not in common_words):
-                            contact_info['owner_name'] = potential_name
-                            contact_info['owner_name_confidence'] = "medium"
-                            break
+                        # Much stricter validation for single names to avoid false positives
+                        common_words = [
+                            "great", "nice", "best", "good", "bad", "the", "this", "that", "here", "there",
+                            "very", "really", "actually", "quite", "pretty", "all", "every", "each", "any",
+                            "who", "what", "when", "where", "why", "how", "most", "some", "such", "no", "yes",
+                            "well", "just", "now", "then", "always", "never", "ever", "only", "also", "too",
+                            "new", "old", "first", "last", "high", "low", "big", "small", "large", "little",
+                            "same", "different", "next", "previous", "above", "below", "over", "under", "top", "bottom",
+                            "hard", "soft", "hot", "cold", "warm", "cool", "easy", "difficult", "simple", "complex",
+                            "early", "late", "fast", "slow", "quick", "long", "short", "tall", "wide", "narrow",
+                            "thick", "thin", "deep", "shallow", "heavy", "light", "full", "empty", "clean", "dirty"
+                        ]
+                        
+                        # 1. Must be a capitalized word
+                        # 2. Must not be in our common words list
+                        # 3. Must have a minimum length of 3
+                        # 4. Must not be all consonants
+                        # 5. Should have vowels and consonants
+                        
+                        # Check for vowels
+                        has_vowels = bool(re.search(r'[aeiou]', potential_name.lower()))
+                        
+                        if (potential_name and 
+                            len(potential_name) >= 3 and
+                            re.match(r'^[A-Z][a-z]+$', potential_name) and
+                            potential_name.lower() not in common_words and
+                            has_vowels):
+                            # Additional context check - ensure it's close to owner/manager text
+                            # Get the sentence containing the name to check context
+                            sentences = re.split(r'[.!?]', all_text)
+                            for sentence in sentences:
+                                if potential_name in sentence:
+                                    if re.search(r'owner|manager|proprietor|staff', sentence, re.IGNORECASE):
+                                        contact_info['owner_name'] = potential_name
+                                        contact_info['owner_name_confidence'] = "medium"
+                                        contact_info['owner_name_context'] = sentence.strip()
+                                        break
+                            
+                            # If we've added an owner name, break the loop
+                            if 'owner_name' in contact_info:
+                                break
                     
                     if 'owner_name' in contact_info:
                         break
