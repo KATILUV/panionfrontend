@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Settings, Moon, Sun, Search, Plus, Save, CheckCircle, Clock, Terminal, Layout } from 'lucide-react';
+import { Settings, Moon, Sun, Search, Plus, Save, CheckCircle, Clock, Terminal, Layout, Pin, PinOff, AppWindow, Copy, X } from 'lucide-react';
 import { useAgentStore } from '@/state/agentStore';
 import { useTaskbarStore } from '@/state/taskbarStore';
 import { useSystemLogStore } from '@/state/systemLogStore';
@@ -8,8 +8,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import useLayoutManager from '@/hooks/use-layout-manager';
 import { useThemeStore } from '@/state/themeStore';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import '../ui/clara-themes.css';
 
 // Taskbar button component for icons and buttons
@@ -74,9 +80,19 @@ interface AgentIconButtonProps {
   title: string;
   isActive: boolean;
   onClick: (id: AgentId) => void;
+  isPinned?: boolean;
+  hasRunningIndicator?: boolean;
 }
 
-const AgentIconButton: React.FC<AgentIconButtonProps> = ({ id, icon, title, isActive, onClick }) => {
+const AgentIconButton: React.FC<AgentIconButtonProps> = ({ 
+  id, 
+  icon, 
+  title, 
+  isActive, 
+  onClick,
+  isPinned = false,
+  hasRunningIndicator = false
+}) => {
   const { showLabels } = useTaskbarStore(state => ({
     showLabels: state.showLabels,
   }));
@@ -85,24 +101,109 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({ id, icon, title, isAc
     position: state.position,
   }));
   
+  // Pin/unpin functions from taskbar store
+  const pinAgent = useTaskbarStore(state => state.pinAgent);
+  const unpinAgent = useTaskbarStore(state => state.unpinAgent);
+  const { toast } = useToast();
+  
+  // Get window closure/minimize actions
+  const { minimizeAgent, closeAgent } = useAgentStore();
+  
   // Determine if we're in a vertical taskbar
   const isVertical = position.location === 'left' || position.location === 'right';
   
+  // Handle pin/unpin action
+  const handlePinUnpin = () => {
+    if (isPinned) {
+      unpinAgent(id);
+      toast({
+        title: "Agent Unpinned",
+        description: `Removed ${title} from taskbar`,
+        variant: "default",
+      });
+    } else {
+      pinAgent(id);
+      toast({
+        title: "Agent Pinned",
+        description: `Added ${title} to taskbar`,
+        variant: "default",
+      });
+    }
+  };
+  
+  // Bounce animation class for running indicators
+  const bounceClass = hasRunningIndicator ? 'animate-bounce-subtle' : '';
+  
   return (
-    <button
-      onClick={() => onClick(id)}
-      className={`
-        group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
-        ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
-        ${isActive ? 'bg-primary/20 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'} 
-        transition-colors duration-200
-      `}
-      title={title}
-    >
-      <span className={`text-xl ${showLabels && isVertical ? 'mb-1' : (showLabels && !isVertical ? 'mr-1.5' : '')}`}>{icon}</span>
-      {showLabels && <span className="text-xs font-medium whitespace-nowrap">{title}</span>}
-      {isActive && <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>}
-    </button>
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <button
+          onClick={() => onClick(id)}
+          className={`
+            group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
+            ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
+            ${isActive ? 'bg-primary/20 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'} 
+            transition-colors duration-200 relative ${bounceClass}
+          `}
+          title={title}
+        >
+          <span className={`text-xl ${showLabels && isVertical ? 'mb-1' : (showLabels && !isVertical ? 'mr-1.5' : '')}`}>{icon}</span>
+          {showLabels && <span className="text-xs font-medium whitespace-nowrap">{title}</span>}
+          
+          {/* Active indicator */}
+          {isActive && <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>}
+          
+          {/* Running indicator dot */}
+          {hasRunningIndicator && !isActive && (
+            <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-primary rounded-full"></div>
+          )}
+          
+          {/* Pin indicator */}
+          {isPinned && (
+            <div className="absolute -top-1 -right-1 text-[8px] text-primary">
+              <Pin size={8} className="text-primary/70" />
+            </div>
+          )}
+        </button>
+      </ContextMenuTrigger>
+      
+      <ContextMenuContent className="min-w-[180px] bg-black/80 backdrop-blur-md border border-primary/20">
+        <ContextMenuItem onClick={() => onClick(id)} className="flex items-center cursor-pointer">
+          <AppWindow size={15} className="mr-2" />
+          {isActive ? "Focus Window" : "Open Window"}
+        </ContextMenuItem>
+        
+        {isActive && (
+          <ContextMenuItem onClick={() => minimizeAgent(id)} className="flex items-center cursor-pointer">
+            <span className="mr-2">🗕</span>
+            Minimize
+          </ContextMenuItem>
+        )}
+        
+        {isActive && (
+          <ContextMenuItem onClick={() => closeAgent(id)} className="flex items-center cursor-pointer">
+            <X size={15} className="mr-2" />
+            Close
+          </ContextMenuItem>
+        )}
+        
+        <ContextMenuSeparator />
+        
+        <ContextMenuItem onClick={handlePinUnpin} className="flex items-center cursor-pointer">
+          {isPinned ? (
+            <>
+              <PinOff size={15} className="mr-2" />
+              Unpin from Taskbar
+            </>
+          ) : (
+            <>
+              <Pin size={15} className="mr-2" />
+              Pin to Taskbar
+            </>
+          )}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 };
 
