@@ -99,8 +99,10 @@ async function executeStrategicQuery(
   request: StrategicRequest,
   operationId: string
 ): Promise<StrategicResponse> {
-  const { query, context, requiredCapabilities = [], useDebate = true } = request;
+  const { query, context, requiredCapabilities = [], useDebate = true, maxTokens, similarityThreshold } = request;
   const startTime = Date.now();
+  
+  debugLog(`Starting strategic query execution for "${query.substring(0, 50)}..."`, { operationId });
   
   try {
     // Update operation status
@@ -110,11 +112,14 @@ async function executeStrategicQuery(
       progress: 10,
     };
     
-    // Determine if the query should use internal debate
+    // Analyze query complexity to determine processing approach
     const shouldDebate = useDebate && shouldUseMultiPerspective(query);
+    debugLog(`Query complexity analysis: shouldUseDebate=${shouldDebate}`, { query });
     
     // Get relevant capabilities for this query
     const suggestedCapabilities = getSuggestedCapabilities(query, 5);
+    debugLog(`Suggested capabilities:`, suggestedCapabilities.map(c => c.name));
+    
     const allCapabilities = [
       ...requiredCapabilities,
       ...suggestedCapabilities.map(c => c.id)
@@ -130,22 +135,35 @@ async function executeStrategicQuery(
     let result: string;
     let confidence: number;
     let reasoning: string | undefined;
-    let perspectives: { role: string; content: string }[] | undefined;
+    let perspectives: { role: string; content: string; viewpoint: string }[] | undefined;
     
-    // Use internal debate if appropriate
+    // Use internal debate if appropriate for complex queries
     if (shouldDebate) {
+      debugLog(`Using internal debate for complex query`, { operationId });
+      
       const debateResult = await getInternalDeliberation(query, context);
       result = debateResult.result;
       confidence = debateResult.confidence;
+      reasoning = debateResult.reasoning;
       perspectives = debateResult.perspectives;
       
       // Record capability usage for internal debate
       recordCapabilityUsage('internal-debate', true);
+      
+      debugLog(`Internal debate completed with confidence: ${confidence}`, {
+        perspectiveCount: perspectives.length,
+        roles: perspectives.map(p => p.role)
+      });
     } else {
-      // Simple response generation for now
+      // Direct response for simpler queries
       // In a real implementation, we would call an appropriate API based on capabilities
-      result = `Strategic response to "${query}": This approach considers the key factors and provides a balanced solution.`;
+      debugLog(`Using direct response for simpler query`, { operationId });
+      
+      // Generate a more thoughtful response for simpler queries
+      const truncatedQuery = query.length > 30 ? `${query.substring(0, 30)}...` : query;
+      result = `Strategic response to "${truncatedQuery}": Based on analysis of the key factors, I recommend a balanced approach that considers both immediate needs and long-term implications.`;
       confidence = 0.75;
+      reasoning = "This response was generated using direct reasoning without multi-perspective analysis, as the query was determined to be straightforward.";
     }
     
     // Record capability usage for all used capabilities
@@ -153,13 +171,15 @@ async function executeStrategicQuery(
       recordCapabilityUsage(capabilityId, true);
     });
     
+    debugLog(`Recorded usage for ${uniqueCapabilities.length} capabilities`, { uniqueCapabilities });
+    
     // Update progress
     operations[operationId] = {
       ...operations[operationId],
       progress: 90,
     };
     
-    // Prepare response
+    // Prepare comprehensive response
     const response: StrategicResponse = {
       result,
       confidence,
@@ -179,13 +199,26 @@ async function executeStrategicQuery(
       endTime: Date.now(),
     };
     
+    debugLog(`Strategic query execution completed in ${response.executionTime}ms`, { 
+      confidence: response.confidence,
+      usedDebate: shouldDebate, 
+      operationId 
+    });
+    
     return response;
   } catch (error: any) {
-    // Handle errors
+    // Enhanced error handling
+    debugLog(`Error in strategic query execution: ${error.message}`, { 
+      error,
+      operationId,
+      query
+    });
+    
+    // Update operation with detailed error information
     operations[operationId] = {
       ...operations[operationId],
       status: 'failed',
-      error: error.message || 'Unknown error',
+      error: error.message || 'Unknown error in strategic processing',
       endTime: Date.now(),
     };
     
