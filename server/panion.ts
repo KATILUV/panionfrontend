@@ -3,6 +3,7 @@ import { spawn, ChildProcess } from 'child_process';
 import axios from 'axios';
 import { log } from './vite';
 import path from 'path';
+import fs from 'fs';
 
 // Create router
 const router = Router();
@@ -967,27 +968,35 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
               const filename = `smoke_shop_${location.replace(' ', '_')}.json`;
               const possibleFilepath = `./data/scraped/${filename}`;
               log(`Trying to find results in default location: ${possibleFilepath}`, 'panion');
-              const fs = require('fs');
-              // Check if file exists by trying to access it
+              // Use the imported fs and path modules
+              // Define file paths using path.resolve for more reliable path resolution
+              const possibleFullPath = path.resolve(process.cwd(), possibleFilepath);
+              
               try {
-                fs.accessSync(possibleFilepath);
-                // File exists
-                const fileContent = fs.readFileSync(possibleFilepath, 'utf8');
-                results = JSON.parse(fileContent);
-                log(`Found ${results.length} results in default location`, 'panion');
-              } catch (e: any) {
-                log(`No file found at ${possibleFilepath}: ${e.message}`, 'panion');
-                // Try alternative format
-                const alternateFilepath = `./data/scraped/smokeshop_${location.replace(' ', '_')}.json`;
-                try {
-                  fs.accessSync(alternateFilepath);
-                  const fileContent = fs.readFileSync(alternateFilepath, 'utf8');
+                if (fs.existsSync(possibleFullPath)) {
+                  // File exists
+                  const fileContent = fs.readFileSync(possibleFullPath, 'utf8');
                   results = JSON.parse(fileContent);
-                  log(`Found ${results.length} results in alternate location: ${alternateFilepath}`, 'panion');
-                } catch (e2: any) {
-                  log(`No file found at ${alternateFilepath} either: ${e2.message}`, 'panion');
-                  results = [];
+                  log(`Found ${results.length} results in default location`, 'panion');
+                } else {
+                  log(`No file found at ${possibleFullPath}`, 'panion');
+                  
+                  // Try alternative format
+                  const alternateFilepath = `./data/scraped/smokeshop_${location.replace(' ', '_')}.json`;
+                  const alternateFullPath = path.resolve(process.cwd(), alternateFilepath);
+                  
+                  if (fs.existsSync(alternateFullPath)) {
+                    const fileContent = fs.readFileSync(alternateFullPath, 'utf8');
+                    results = JSON.parse(fileContent);
+                    log(`Found ${results.length} results in alternate location: ${alternateFullPath}`, 'panion');
+                  } else {
+                    log(`No file found at ${alternateFullPath} either`, 'panion');
+                    results = [];
+                  }
                 }
+              } catch (fileError: any) {
+                log(`Error reading scrape files: ${fileError.message}`, 'panion');
+                results = [];
               }
             } catch (fileError: any) {
               log(`Error reading default location: ${fileError.message}`, 'panion');
