@@ -195,43 +195,20 @@ const PanionChatAgent: React.FC = () => {
       let agentCreated = false;
       
       // Create specialized agents based on the specific capabilities needed
-      if (missingCapabilities.includes(CAPABILITIES.SMOKESHOP_DATA)) {
-        // Create a specialized agent for smokeshop data
-        await createDynamicAgent({
-          name: 'Smokeshop Research Agent',
-          description: 'Specialized agent for finding and analyzing smokeshop business data and contacts.',
-          capabilities: [CAPABILITIES.SMOKESHOP_DATA, CAPABILITIES.BUSINESS_RESEARCH, CAPABILITIES.CONTACT_FINDER],
-          icon: 'Building'
-        });
-        
-        // Add confirmation message
+      if (missingCapabilities.includes(CAPABILITIES.SMOKESHOP_DATA) || 
+          missingCapabilities.includes(CAPABILITIES.BUSINESS_RESEARCH)) {
+        // Use existing Daddy Data agent instead of creating new ones
         const confirmMessage: ChatMessage = {
           id: generateId(),
-          content: 'I\'ve created a Smokeshop Research Agent that can help find the buyer contact information you need. It\'s now available in your workspace.',
+          content: 'I\'ll use the Daddy Data agent to help find the business information you need. Opening it now in your workspace.',
           isUser: false,
           timestamp: formatTime(new Date()),
         };
         
         setMessages(prev => [...prev, confirmMessage]);
-        agentCreated = true;
-      } else if (missingCapabilities.includes(CAPABILITIES.BUSINESS_RESEARCH)) {
-        // Create a business research agent
-        await createDynamicAgent({
-          name: 'Business Research Agent',
-          description: 'Specialized agent for analyzing businesses, markets, and industry trends.',
-          capabilities: [CAPABILITIES.BUSINESS_RESEARCH, CAPABILITIES.WEB_RESEARCH],
-          icon: 'LineChart'
-        });
         
-        // Add confirmation message
-        const confirmMessage: ChatMessage = {
-          id: generateId(),
-          content: 'I\'ve created a Business Research Agent to help with your query. It\'s now available in your workspace.',
-          isUser: false,
-          timestamp: formatTime(new Date()),
-        };
-        
-        setMessages(prev => [...prev, confirmMessage]);
+        // Open the Daddy Data agent instead of creating a new one
+        useAgentStore.getState().openAgent('daddy-data');
         agentCreated = true;
       } else if (missingCapabilities.includes(CAPABILITIES.DATA_ANALYSIS)) {
         // Create a data analysis agent
