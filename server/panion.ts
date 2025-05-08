@@ -27,6 +27,7 @@ interface Task {
   result?: any;
   error?: string;
   data?: any;
+  params?: Record<string, any>;
 }
 
 const activeTasks: Record<string, Task> = {};
