@@ -150,7 +150,7 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
     // Forward the request to the Panion API with additional info
     const response = await axios.post(`${PANION_API_URL}/chat`, {
       content: message,
-      sessionId,
+      session_id: sessionId,  // This is the correct format for the backend
       metadata: {
         hasRequiredCapabilities,
         capabilities: capabilities || [],
@@ -423,7 +423,7 @@ router.post('/api/panion/scrape/enhanced', checkPanionAPIMiddleware, async (req:
     if (useStrategic) {
       // Create a strategic goal through the chat system
       const chatPayload = {
-        session_id: req.session?.id || 'default-session',
+        session_id: 'strategic-scraper-session',
         content: `strategically scrape information about ${businessType} in ${location} using multiple approaches and compare results`,
         metadata: {
           hasRequiredCapabilities: true,
@@ -484,7 +484,7 @@ router.post('/api/panion/strategic', checkPanionAPIMiddleware, async (req: Reque
     
     // Execute strategic operation - this is handled via the chat API
     const chatPayload = {
-      session_id: req.session?.id || 'default-session',
+      session_id: parameters?.sessionId || 'default-session',
       content: goal, // The goal statement is sent as chat content
       metadata: {
         hasRequiredCapabilities: true,

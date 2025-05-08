@@ -426,22 +426,35 @@ const PanionChatAgent: React.FC = () => {
       // Determine which endpoint to use based on strategic mode
       const endpoint = strategicMode ? '/api/panion/strategic' : '/api/panion/chat';
       
+      // Prepare request body based on endpoint type
+      let requestBody;
+      if (strategicMode) {
+        requestBody = {
+          goal: inputValue,
+          parameters: {
+            sessionId,
+            hasRequiredCapabilities: requiredCapabilities.length === 0 || !createdNewAgents,
+            capabilities: requiredCapabilities,
+            compare_strategies: true,
+            use_reflection: true,
+            max_attempts: 3
+          }
+        };
+      } else {
+        requestBody = {
+          message: inputValue,
+          sessionId,
+          hasRequiredCapabilities: requiredCapabilities.length === 0 || !createdNewAgents,
+          capabilities: requiredCapabilities
+        };
+      }
+      
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message: inputValue,
-          sessionId,
-          hasRequiredCapabilities: requiredCapabilities.length === 0 || !createdNewAgents,
-          capabilities: requiredCapabilities,
-          options: strategicMode ? {
-            compare_strategies: true,
-            use_reflection: true,
-            max_attempts: 3
-          } : undefined
-        }),
+        body: JSON.stringify(requestBody),
       });
       
       if (!response.ok) {
