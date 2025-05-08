@@ -54,7 +54,8 @@ const DEFAULT_WIDGETS: TaskbarWidgetType[] = [
 
 // Minimal set of widgets (even more minimal now)
 const MINIMAL_WIDGETS: TaskbarWidgetType[] = [
-  'systemConsole'
+  'systemConsole',
+  'aiStatus'
 ];
 
 // Full set of widgets

@@ -467,13 +467,12 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
   
   // Determine background style based on theme and settings
   const getTaskbarBgClass = () => {
-    // Since we're focusing on dark theme for now
-    const themeClass = 'bg-black/20 border-white/10';
+    // Modern gradient with subtle transparency
+    const themeClass = 'bg-gradient-to-r from-black/30 via-black/25 to-black/30 border-white/5';
     
-    // Apply backdrop blur when enableBlur is true
-    const blurClass = enableBlur ? 'backdrop-blur-sm' : '';
+    // Apply backdrop blur when enableBlur is true - increased blur for better readability
+    const blurClass = enableBlur ? 'backdrop-blur-md' : '';
     
-    console.log("Taskbar blur enabled:", enableBlur);
     return `${themeClass} ${blurClass}`;
   };
   
@@ -488,9 +487,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
       position: 'fixed' as const,
       display: 'flex' as const,
       zIndex: 200,
-      backgroundColor: 'rgba(0, 0, 0, 0.2)',
-      backdropFilter: enableBlur ? 'blur(4px)' : 'none',
+      backgroundColor: 'transparent', // Using gradient from class
+      backdropFilter: enableBlur ? 'blur(12px)' : 'none',
       transition: 'all 0.3s ease-in-out',
+      boxShadow: '0 0 15px rgba(0, 0, 0, 0.2)'
     };
     
     // For mobile or small screens, we always use a special bottom position
