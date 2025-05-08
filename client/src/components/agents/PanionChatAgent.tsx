@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Send, Settings, BrainCircuit, RotateCcw, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AgentStatus } from './AgentStatus';
+import { useAgentStore } from '../../state/agentStore';
 
 interface ChatMessage {
   id: string;
@@ -23,7 +24,20 @@ const formatTime = (date: Date) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
+// Define common capability types for better organization
+const CAPABILITIES = {
+  WEB_RESEARCH: 'web_research',
+  DATA_ANALYSIS: 'data_analysis',
+  CONTACT_FINDER: 'contact_finder',
+  BUSINESS_RESEARCH: 'business_research',
+  SMOKESHOP_DATA: 'smokeshop_data',
+};
+
 const PanionChatAgent: React.FC = () => {
+  // Access agent store for capability checking and dynamic agent creation
+  const hasCapability = useAgentStore(state => state.hasCapability);
+  const createDynamicAgent = useAgentStore(state => state.createDynamicAgent);
+  const dynamicAgentCreationInProgress = useAgentStore(state => state.dynamicAgentCreationInProgress);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: generateId(),
@@ -50,6 +64,174 @@ const PanionChatAgent: React.FC = () => {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+  
+  // Function to detect missing capabilities based on user input
+  const detectRequiredCapabilities = (message: string): string[] => {
+    const requiredCapabilities: string[] = [];
+    const lowerMessage = message.toLowerCase();
+    
+    // Detect web research capability requirement
+    if (
+      lowerMessage.includes('search') || 
+      lowerMessage.includes('find information') || 
+      lowerMessage.includes('look up') ||
+      lowerMessage.includes('research')
+    ) {
+      requiredCapabilities.push(CAPABILITIES.WEB_RESEARCH);
+    }
+    
+    // Detect data analysis capability requirement
+    if (
+      lowerMessage.includes('analyze') || 
+      lowerMessage.includes('data analysis') || 
+      lowerMessage.includes('statistics') ||
+      lowerMessage.includes('trends')
+    ) {
+      requiredCapabilities.push(CAPABILITIES.DATA_ANALYSIS);
+    }
+    
+    // Detect business research capability needs
+    if (
+      lowerMessage.includes('business') || 
+      lowerMessage.includes('company') || 
+      lowerMessage.includes('industry') ||
+      lowerMessage.includes('market')
+    ) {
+      requiredCapabilities.push(CAPABILITIES.BUSINESS_RESEARCH);
+    }
+    
+    // Detect smokeshop related queries (specific use case)
+    if (
+      lowerMessage.includes('smokeshop') || 
+      lowerMessage.includes('smoke shop') || 
+      lowerMessage.includes('dispensary') ||
+      lowerMessage.includes('tobacco')
+    ) {
+      requiredCapabilities.push(CAPABILITIES.SMOKESHOP_DATA);
+    }
+    
+    // Detect contact finding requirements
+    if (
+      lowerMessage.includes('contact') || 
+      lowerMessage.includes('email') || 
+      lowerMessage.includes('phone') ||
+      lowerMessage.includes('buyer')
+    ) {
+      requiredCapabilities.push(CAPABILITIES.CONTACT_FINDER);
+    }
+    
+    return requiredCapabilities;
+  };
+  
+  // Function to handle missing capabilities
+  const handleMissingCapabilities = async (requiredCapabilities: string[]): Promise<boolean> => {
+    // Filter out capabilities that we already have
+    const missingCapabilities = requiredCapabilities.filter(cap => !hasCapability(cap));
+    
+    if (missingCapabilities.length === 0) {
+      return false; // No missing capabilities
+    }
+    
+    // Notify the user about creating specialized agents
+    const botMessage: ChatMessage = {
+      id: generateId(),
+      content: `I need to create specialized agent(s) with the following capabilities to help with your request: ${missingCapabilities.join(', ')}. Please wait a moment...`,
+      isUser: false,
+      timestamp: formatTime(new Date()),
+    };
+    
+    setMessages(prev => [...prev, botMessage]);
+    
+    try {
+      if (missingCapabilities.includes(CAPABILITIES.SMOKESHOP_DATA)) {
+        // Create a specialized agent for smokeshop data
+        await createDynamicAgent({
+          name: 'Smokeshop Research Agent',
+          description: 'Specialized agent for finding and analyzing smokeshop business data and contacts.',
+          capabilities: [CAPABILITIES.SMOKESHOP_DATA, CAPABILITIES.BUSINESS_RESEARCH, CAPABILITIES.CONTACT_FINDER],
+          icon: 'Building'
+        });
+        
+        // Add confirmation message
+        const confirmMessage: ChatMessage = {
+          id: generateId(),
+          content: 'I\'ve created a Smokeshop Research Agent that can help find the buyer contact information you need. It\'s now available in your workspace.',
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, confirmMessage]);
+      } else if (missingCapabilities.includes(CAPABILITIES.BUSINESS_RESEARCH)) {
+        // Create a business research agent
+        await createDynamicAgent({
+          name: 'Business Research Agent',
+          description: 'Specialized agent for analyzing businesses, markets, and industry trends.',
+          capabilities: [CAPABILITIES.BUSINESS_RESEARCH, CAPABILITIES.WEB_RESEARCH],
+          icon: 'LineChart'
+        });
+        
+        // Add confirmation message
+        const confirmMessage: ChatMessage = {
+          id: generateId(),
+          content: 'I\'ve created a Business Research Agent to help with your query. It\'s now available in your workspace.',
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, confirmMessage]);
+      } else if (missingCapabilities.includes(CAPABILITIES.DATA_ANALYSIS)) {
+        // Create a data analysis agent
+        await createDynamicAgent({
+          name: 'Data Analysis Agent',
+          description: 'Specialized agent for analyzing data sets and extracting insights.',
+          capabilities: [CAPABILITIES.DATA_ANALYSIS],
+          icon: 'BarChart'
+        });
+        
+        // Add confirmation message
+        const confirmMessage: ChatMessage = {
+          id: generateId(),
+          content: 'I\'ve created a Data Analysis Agent to help analyze the information you need. It\'s now available in your workspace.',
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, confirmMessage]);
+      } else if (missingCapabilities.includes(CAPABILITIES.WEB_RESEARCH)) {
+        // Create a web research agent
+        await createDynamicAgent({
+          name: 'Web Research Agent',
+          description: 'Specialized agent for finding and organizing information from the web.',
+          capabilities: [CAPABILITIES.WEB_RESEARCH],
+          icon: 'Globe'
+        });
+        
+        // Add confirmation message
+        const confirmMessage: ChatMessage = {
+          id: generateId(),
+          content: 'I\'ve created a Web Research Agent to help find the information you need. It\'s now available in your workspace.',
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, confirmMessage]);
+      }
+      
+      return true; // Successfully created needed agents
+    } catch (error) {
+      // Add error message
+      const errorMessage: ChatMessage = {
+        id: generateId(),
+        content: 'I encountered a problem while creating the specialized agent. Let me try to help you directly instead.',
+        isUser: false,
+        timestamp: formatTime(new Date()),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      console.error('Error creating dynamic agent:', error);
+      return false;
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;

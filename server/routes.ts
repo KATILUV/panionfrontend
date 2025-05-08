@@ -47,6 +47,9 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// Import dynamic agent routes
+import dynamicAgentRoutes from "./routes/dynamicAgentRoutes";
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from uploads directory
   app.use('/uploads', express.static(uploadsDir));
@@ -65,6 +68,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use Scheduled Tasks routes
   app.use(scheduledTaskRoutes);
+  
+  // Use Dynamic Agent routes
+  app.use(dynamicAgentRoutes);
   
   // Try to start the Panion API
   try {
