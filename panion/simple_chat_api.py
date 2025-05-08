@@ -35,6 +35,29 @@ except ImportError as e:
             def save_to_json(self, *args, **kwargs):
                 return "Error: Scraper not available"
 
+# Import our new data gathering agent
+try:
+    from core.agent_management.agents.data_gathering_agent import data_gathering_agent
+    logging.info("Successfully imported data gathering agent")
+except ImportError as e:
+    logging.error(f"Failed to import data gathering agent: {e}")
+    # Create a stub implementation if needed
+    class StubDataGatheringAgent:
+        def __init__(self):
+            self.active_tasks = {}
+            self.completed_tasks = {}
+        
+        def create_task(self, task_id, task_details):
+            return {"status": "error", "message": "Data gathering agent not available"}
+        
+        def get_task_status(self, task_id):
+            return {"status": "error", "message": "Data gathering agent not available"}
+        
+        def list_tasks(self, status_filter=None):
+            return {"active_tasks": [], "completed_tasks": [], "total_active": 0, "total_completed": 0}
+    
+    data_gathering_agent = StubDataGatheringAgent()
+
 # Import the collaboration API
 try:
     from core.agent_collaboration import (
