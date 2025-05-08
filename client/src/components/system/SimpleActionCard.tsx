@@ -87,23 +87,23 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
     >
       <Card className="bg-black/20 backdrop-blur-lg border-none h-full overflow-hidden relative rounded-[10px]">
         {badge && (
-          <div className={`absolute top-2 right-2 ${badgeColor} text-white text-xs px-1.5 py-0.5 rounded-sm font-medium`}>
+          <div className={`absolute top-1 right-1 ${badgeColor} text-white text-xs px-1 py-0.5 rounded-sm font-medium`}>
             {badge}
           </div>
         )}
-        <CardHeader className="pb-0">
+        <CardHeader className="p-3 pb-0">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-xl font-medium flex items-center gap-3 text-white">
-              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white p-1.5">{icon}</span>
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-white">
+              <span className="w-5 h-5 flex items-center justify-center rounded-full bg-white/10 text-white p-1">{icon}</span>
               {title}
             </CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="pt-3">
-          <CardDescription className="text-base text-white/80">{description}</CardDescription>
+        <CardContent className="p-3 pt-1">
+          <CardDescription className="text-xs text-white/80">{description}</CardDescription>
           {shortcut && (
-            <div className="mt-3 flex items-center">
-              <kbd className="px-2 py-1 text-xs font-semibold bg-white/10 rounded border border-white/20 text-white/70">
+            <div className="mt-2 flex items-center">
+              <kbd className="px-1 py-0.5 text-xs font-semibold bg-white/10 rounded border border-white/20 text-white/70">
                 {shortcut}
               </kbd>
             </div>

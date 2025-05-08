@@ -65,19 +65,19 @@ const SimpleEmptyStateDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full mx-auto flex flex-col items-center justify-center min-h-[80vh]">
-        {/* Centered Title Block with modern styling */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-extralight tracking-tight mb-4 text-white/90">
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="max-w-sm w-full mx-auto flex flex-col items-center justify-center">
+        {/* Smaller, Centered Title Block */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-extralight tracking-tight mb-2 text-white/90">
             Welcome to <span className="font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">Panion</span>
           </h1>
-          <p className="text-white/70 text-xl mb-2">Your AI-powered workspace environment</p>
-          <div className="w-20 h-1 bg-gradient-to-r from-white/30 to-transparent mx-auto mt-6"></div>
+          <p className="text-white/70 text-sm mb-2">Your AI workspace environment</p>
+          <div className="w-12 h-[1px] bg-gradient-to-r from-white/30 to-transparent mx-auto mt-3"></div>
         </div>
         
-        {/* Centered card grid with a modern appearance */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full max-w-3xl mx-auto">
+        {/* Compact card grid */}
+        <div className="grid grid-cols-2 gap-4 w-full">
           {actions.map((action, index) => (
             <SimpleActionCard
               key={`${action.title}-${index}-${renderKey}`}
