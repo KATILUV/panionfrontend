@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Settings, BrainCircuit, RotateCcw, Activity, HelpCircle, Search, Database, ZapIcon, Lightbulb, Sparkles } from 'lucide-react';
+import { Send, Settings, BrainCircuit, RotateCcw, Activity, HelpCircle, Search, Database, ZapIcon, Lightbulb, Sparkles, Check, X, AlertCircle, Globe, Puzzle, BarChart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AgentStatus } from './AgentStatus';
 import { useAgentStore, Agent } from '../../state/agentStore';
@@ -721,63 +721,39 @@ const PanionChatAgent: React.FC = () => {
           location = locationMatch[1].trim();
         }
         
-        // Create a task for this search
-        const taskId = generateId();
         const taskDescription = `Finding smoke shops in ${location}`;
         
-        // Add a message that we're starting a background task
-        const taskMessage: ChatMessage = {
+        // Instead of immediately executing the task, ask for user confirmation
+        const confirmationMessage: ChatMessage = {
           id: generateId(),
-          content: `I'm starting a background task to search for smoke shops in ${location}. This will continue running even if you close this window. You'll be notified when results are ready.`,
+          content: `I can search for smoke shops in ${location} for you. This will run as a background task and may take a few minutes. Would you like me to start this search now?`,
           isUser: false,
           timestamp: formatTime(new Date()),
         };
         
-        setMessages(prev => [...prev, taskMessage]);
+        setMessages(prev => [...prev, confirmationMessage]);
         
-        // Create the task through a special endpoint
-        response = await fetch('/api/panion/smokeshop/search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            location: location,
-            limit: 20,
-            additionalKeywords: inputValue.toLowerCase().includes('vape') ? ['vape'] : []
-          })
+        // Create a pending action for user approval
+        setPendingAction({
+          type: 'start_task',
+          data: {
+            endpoint: '/api/panion/smokeshop/search',
+            taskType: 'smokeshop_research',
+            description: taskDescription,
+            params: {
+              location: location,
+              limit: 20,
+              additionalKeywords: inputValue.toLowerCase().includes('vape') ? ['vape'] : []
+            }
+          }
         });
         
-        if (response.ok) {
-          const taskData = await response.json();
-          
-          // Use the task ID and data returned from the server
-          if (taskData && taskData.taskId) {
-            // Start tracking this task
-            const newTask = {
-              id: taskData.taskId,
-              type: 'smokeshop_research',
-              status: 'in_progress',
-              progress: 0,
-              description: taskDescription,
-              location: location,
-              created: formatTime(new Date())
-            };
-            
-            setActiveTasks(prevTasks => [...prevTasks, newTask]);
-          }
-          setTaskPollingEnabled(true);
-          
-          // Add a specific progress message
-          const progressMessage: ChatMessage = {
-            id: generateId(),
-            content: `I've started gathering information on smoke shops in ${location}. This process will run in the background and may take a few minutes. I'll notify you when results are available.`,
-            isUser: false,
-            timestamp: formatTime(new Date()),
-          };
-          
-          setMessages(prev => [...prev, progressMessage]);
-        }
+        // We'll wait for user confirmation before proceeding with the task
+        setAgentStatus('idle');
+        setIsLoading(false);
+        clearInterval(progressInterval);
+        setProcessingProgress(100);
+        return;
       } else {
         // For regular requests, use the standard endpoint
         response = await fetch(endpoint, {
@@ -1067,6 +1043,45 @@ const PanionChatAgent: React.FC = () => {
               className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-in-out" 
               style={{ width: `${processingProgress}%` }}
             />
+          </div>
+        </div>
+      )}
+      
+      {/* Action Confirmation */}
+      {pendingAction && (
+        <div className="mx-3 mb-3 p-3 border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900 rounded-lg">
+          <div className="flex items-center mb-2">
+            <AlertCircle className="h-4 w-4 text-amber-500 mr-2" />
+            <span className="font-medium text-sm">Confirm Action</span>
+          </div>
+          <div className="text-sm mb-3">
+            {pendingAction.type === 'use_agent' && (
+              <p>I'll use the {pendingAction.data.agent.title} to help with your request.</p>
+            )}
+            {pendingAction.type === 'create_agent' && (
+              <p>I'll create a new {pendingAction.data.agentInfo.name} agent with specialized capabilities.</p>
+            )}
+            {pendingAction.type === 'start_task' && (
+              <p>I'll start a background task: {pendingAction.data.description}</p>
+            )}
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleActionRejection}
+              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
+            >
+              <X className="h-3 w-3 mr-1" /> Cancel
+            </Button>
+            <Button 
+              size="sm" 
+              variant="default" 
+              onClick={handleActionAcceptance}
+              className="bg-green-600 hover:bg-green-700 text-white border-none"
+            >
+              <Check className="h-3 w-3 mr-1" /> Confirm
+            </Button>
           </div>
         </div>
       )}
