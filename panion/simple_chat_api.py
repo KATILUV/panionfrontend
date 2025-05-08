@@ -204,7 +204,8 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
             # Chat endpoint
             if path == "/chat":
                 content = data.get("content", "")
-                session_id = data.get("sessionId", "default")
+                # Check both formats of session ID
+                session_id = data.get("session_id", data.get("sessionId", "default"))
                 
                 logger.info(f"Received chat message: {content}")
                 
@@ -219,6 +220,12 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     if metadata:
                         capabilities = metadata.get("capabilities", [])
                         has_required = metadata.get("hasRequiredCapabilities", True)
+                    
+                    # Also check direct parameters in the root of the request for flexibility
+                    if not capabilities and "capabilities" in data:
+                        capabilities = data.get("capabilities", [])
+                    
+                    has_required = data.get("hasRequiredCapabilities", metadata.get("hasRequiredCapabilities", True))
                     
                     # Check for smoke shop research specifically 
                     if "smokeshop_data" in capabilities or "smoke shop" in content.lower() or "smokeshop" in content.lower():
