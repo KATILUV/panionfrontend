@@ -20,6 +20,7 @@ import { StatusExample } from "./components/agents/StatusExample";
 import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
 import PanionChatAgent from "./components/agents/PanionChatAgent";
 import CollaborationAgent from "./components/agents/CollaborationAgent";
+import TaskSchedulerAgent from "./components/agents/TaskSchedulerAgent";
 import { useAgentStore } from "./state/agentStore";
 import ThemeProvider from "./components/common/ThemeProvider";
 

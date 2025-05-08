@@ -466,13 +466,14 @@ export const initializeTaskProcessor = () => {
   
   // Subscribe to changes in the isRunningTasks state
   const unsubscribe = useScheduledTaskStore.subscribe(
-    (state) => state.isRunningTasks,
-    (isRunning: boolean) => {
+    (state) => {
+      const isRunning = state.isRunningTasks;
       if (isRunning) {
         startTaskProcessor();
       } else {
         stopTaskProcessor();
       }
+      return isRunning;
     }
   );
   
