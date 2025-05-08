@@ -734,6 +734,11 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                                 r'Sincerely[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]*(?:Owner|Manager|Proprietor)',  # Sincerely, John Smith (Owner)
                                 r'From[\s,]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)[\s,]*(?:Owner|Manager|Proprietor)',  # From John Smith, Owner
                                 r'([A-Z][a-z]+(?:\s[A-Z][a-z]+)?),\s*Owner',  # John Smith, Owner
+                                
+                                # Added patterns specifically to find manager information
+                                r'[-—]\s*([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s*[,|-]\s*(?:General\s+)?Manager',  # - John Smith, General Manager
+                                r'Thanks,\s*([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s*[,|-]\s*(?:General\s+)?Manager',  # Thanks, John Smith, General Manager
+                                r'([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s*[,|-]\s*(?:General\s+)?Manager',  # John Smith, General Manager
                             ]
                             
                             for pattern in signature_patterns:
@@ -742,18 +747,51 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                                     potential_name = match.group(1)
                                     # Validate name length and format
                                     if len(potential_name) > 2 and re.match(r'^[A-Z][a-z]', potential_name):
-                                        owner_info['owner_name'] = potential_name
-                                        owner_info['owner_name_source'] = "owner_response"
+                                        # Check if this is a manager vs owner signature
+                                        is_manager = re.search(r'manager', owner_response, re.IGNORECASE) and not re.search(r'owner', owner_response, re.IGNORECASE)
+                                        
+                                        if is_manager:
+                                            owner_info['manager_name'] = potential_name
+                                            owner_info['manager_name_source'] = "manager_response"
+                                        else:
+                                            owner_info['owner_name'] = potential_name
+                                            owner_info['owner_name_source'] = "owner_response"
                                     
                                     # Also search for email or phone patterns in the response
                                     email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', owner_response)
                                     if email_match:
-                                        owner_info['owner_email'] = email_match.group(0)
+                                        # Determine if this is manager's or owner's email based on context
+                                        if 'manager_name' in owner_info and not 'owner_name' in owner_info:
+                                            owner_info['manager_email'] = email_match.group(0)
+                                        else:
+                                            owner_info['owner_email'] = email_match.group(0)
                                     
                                     # Look for phone patterns
                                     phone_match = re.search(r'\(?(?:\d{3})\)?[-.\s]?(?:\d{3})[-.\s]?(?:\d{4})', owner_response)
                                     if phone_match:
-                                        owner_info['owner_phone'] = phone_match.group(0)
+                                        # Determine if this is manager's or owner's phone based on context
+                                        if 'manager_name' in owner_info and not 'owner_name' in owner_info:
+                                            owner_info['manager_phone'] = phone_match.group(0)
+                                        else:
+                                            owner_info['owner_phone'] = phone_match.group(0)
+                                    
+                                    # Look for LinkedIn profiles
+                                    linkedin_patterns = [
+                                        r'linkedin\.com/in/([a-zA-Z0-9_-]+)',
+                                        r'linkedin\.com/company/([a-zA-Z0-9_-]+)',
+                                        r'(?:find|follow|connect)(?:\s+\w+){0,3}\s+on\s+linkedin\s+(?:at|@)?\s*([a-zA-Z0-9_-]+)',
+                                        r'linkedin(?:\s+profile)?[\s:]+(?:https?://)?(?:www\.)?linkedin\.com/(?:in|company)/([a-zA-Z0-9_-]+)'
+                                    ]
+                                    
+                                    for linkedin_pattern in linkedin_patterns:
+                                        linkedin_match = re.search(linkedin_pattern, owner_response, re.IGNORECASE)
+                                        if linkedin_match:
+                                            # Determine if this is manager's or owner's LinkedIn
+                                            if 'manager_name' in owner_info and not 'owner_name' in owner_info:
+                                                owner_info['manager_linkedin'] = linkedin_match.group(1)
+                                            else:
+                                                owner_info['owner_linkedin'] = linkedin_match.group(1)
+                                            break
                                     
                                     break
                             
@@ -803,6 +841,135 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
         
         return owner_info
     
+    def find_linkedin_profiles(self, business_name, location=None):
+        """Search for LinkedIn profiles associated with a business.
+        
+        Args:
+            business_name: Name of the business to search for
+            location: Optional location to narrow down search
+            
+        Returns:
+            List of dictionaries with LinkedIn profile information
+        """
+        profiles = []
+        
+        try:
+            # Construct search query
+            search_query = f"{business_name}"
+            if location:
+                search_query += f" {location}"
+                
+            search_query = search_query.replace(' ', '+')
+            
+            # First approach: Use Google search with LinkedIn site filter
+            google_url = f"https://www.google.com/search?q=site:linkedin.com/in+{search_query}"
+            
+            headers = {
+                'User-Agent': self._get_random_user_agent(),
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+            }
+            
+            response = self._make_request(google_url, headers=headers, verify=False)
+            
+            if response:
+                # Extract LinkedIn profile URLs from search results
+                profile_pattern = r'https://www\.linkedin\.com/in/([a-zA-Z0-9_-]+)'
+                matches = re.findall(profile_pattern, response)
+                
+                # Process up to 5 unique profiles
+                unique_profiles = list(set(matches))[:5]
+                
+                for profile_id in unique_profiles:
+                    # Extract basic information from profile ID
+                    # Format names by replacing hyphens and underscores with spaces
+                    name = profile_id.replace('-', ' ').replace('_', ' ')
+                    name = ' '.join(word.capitalize() for word in name.split())
+                    
+                    profiles.append({
+                        'name': name,
+                        'profile_id': profile_id,
+                        'url': f"https://www.linkedin.com/in/{profile_id}",
+                        'source': 'linkedin_search',
+                        'confidence': 'medium'
+                    })
+            
+            # Second approach: Search for company page on LinkedIn
+            company_search_url = f"https://www.google.com/search?q=site:linkedin.com/company+{search_query}"
+            
+            response = self._make_request(company_search_url, headers=headers, verify=False)
+            
+            if response:
+                # Extract LinkedIn company URL
+                company_pattern = r'https://www\.linkedin\.com/company/([a-zA-Z0-9_-]+)'
+                company_matches = re.findall(company_pattern, response)
+                
+                if company_matches:
+                    company_id = company_matches[0]
+                    company_url = f"https://www.linkedin.com/company/{company_id}"
+                    
+                    # Add company page info
+                    profiles.append({
+                        'name': business_name,
+                        'company_id': company_id,
+                        'url': company_url,
+                        'source': 'linkedin_company',
+                        'confidence': 'high'
+                    })
+                    
+            # Enhance profiles with titles (when available from search snippets)
+            # Look for patterns like "Name - Job Title at Company"
+            title_pattern = r'>([^<]+) - ([^<]+) at ([^<]+)</div>'
+            title_matches = re.findall(title_pattern, response or "")
+            
+            for match in title_matches:
+                name, title, company = match
+                name = name.strip()
+                title = title.strip()
+                company = company.strip()
+                
+                # Only process if company name is similar to our search
+                if business_name.lower() in company.lower():
+                    # Try to find matching profile to enhance
+                    for profile in profiles:
+                        if name.lower() in profile['name'].lower() or profile['name'].lower() in name.lower():
+                            profile['job_title'] = title
+                            profile['company'] = company
+                            profile['confidence'] = 'high'
+                            break
+                    else:
+                        # If no match found, add as new profile
+                        url_friendly_name = name.lower().replace(' ', '-')
+                        profiles.append({
+                            'name': name,
+                            'job_title': title,
+                            'company': company,
+                            'profile_id': url_friendly_name,
+                            'url': f"https://www.linkedin.com/in/{url_friendly_name}",
+                            'source': 'google_snippet',
+                            'confidence': 'medium'
+                        })
+                        
+            # If no profiles found yet, try direct LinkedIn search
+            if not profiles:
+                linkedin_search_url = f"https://www.linkedin.com/search/results/people/?keywords={search_query}&origin=SWITCH_SEARCH_VERTICAL"
+                
+                try:
+                    # This would require LinkedIn login in real implementation
+                    # For now, we'll just log this as a potential enhancement
+                    logger.info(f"Direct LinkedIn search would be performed for: {linkedin_search_url}")
+                    logger.info("Note: Direct LinkedIn searches require authentication")
+                except Exception as e:
+                    logger.error(f"LinkedIn direct search error: {str(e)}")
+                    
+            # Sort profiles by confidence
+            profiles.sort(key=lambda x: 1 if x.get('confidence') == 'high' else 2 if x.get('confidence') == 'medium' else 3)
+                        
+        except Exception as e:
+            logger.error(f"Error searching LinkedIn: {str(e)}")
+            
+        return profiles
+
     def extract_contact_from_reviews(self, reviews):
         """Look for contact information patterns in reviews that might indicate owner details."""
         contact_info = {}
@@ -842,8 +1009,25 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                         # Check if this looks like a real name
                         name_parts = potential_name.split()
                         if all(len(part) > 1 for part in name_parts):
-                            contact_info['owner_name'] = potential_name
-                            contact_info['owner_name_confidence'] = "high"
+                            # Determine if this is owner or manager based on context
+                            context_sentence = ""
+                            sentences = re.split(r'[.!?]', all_text)
+                            for sentence in sentences:
+                                if potential_name in sentence:
+                                    context_sentence = sentence
+                                    break
+                                    
+                            is_manager = re.search(r'manager', context_sentence, re.IGNORECASE) and not re.search(r'owner', context_sentence, re.IGNORECASE)
+                            
+                            if is_manager:
+                                contact_info['manager_name'] = potential_name
+                                contact_info['manager_name_confidence'] = "high"
+                                contact_info['manager_name_context'] = context_sentence.strip()
+                            else:
+                                contact_info['owner_name'] = potential_name
+                                contact_info['owner_name_confidence'] = "high"
+                                contact_info['owner_name_context'] = context_sentence.strip()
+                            
                             full_name_found = True
                             break
                 
@@ -889,9 +1073,17 @@ class GoogleMapsAPIStrategy(ScrapingStrategy):
                             for sentence in sentences:
                                 if potential_name in sentence:
                                     if re.search(r'owner|manager|proprietor|staff', sentence, re.IGNORECASE):
-                                        contact_info['owner_name'] = potential_name
-                                        contact_info['owner_name_confidence'] = "medium"
-                                        contact_info['owner_name_context'] = sentence.strip()
+                                        # Determine if this is manager based on context
+                                        is_manager = re.search(r'manager', sentence, re.IGNORECASE) and not re.search(r'owner', sentence, re.IGNORECASE)
+                                        
+                                        if is_manager:
+                                            contact_info['manager_name'] = potential_name
+                                            contact_info['manager_name_confidence'] = "medium"
+                                            contact_info['manager_name_context'] = sentence.strip()
+                                        else:
+                                            contact_info['owner_name'] = potential_name
+                                            contact_info['owner_name_confidence'] = "medium"
+                                            contact_info['owner_name_context'] = sentence.strip()
                                         break
                             
                             # If we've added an owner name, break the loop
