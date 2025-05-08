@@ -1232,28 +1232,26 @@ router.post('/api/panion/autonomous-task', checkPanionAPIMiddleware, async (req:
     
     // Create a new task with the autonomous agent
     const taskId = uuidv4();
-    const task: any = {
-      id: taskId,
-      ...taskData,
-      status: 'pending',
-      progress: 0,
-      steps: [],
-      result: null,
-      error: null,
+    
+    // Create task configuration
+    const taskConfig = {
+      agentType,
+      description,
+      priority,
       startTime: new Date(),
-      logs: [`[${new Date().toISOString()}] Task created through Panion integration`]
+      logs: [`[${new Date().toISOString()}] Task created through Panion integration`],
+      resources,
+      retryCount: 0,
+      maxRetries: autoRetry ? 3 : 0,
     };
     
-    // Add task to the autonomous agent's task manager
-    taskManager.tasks[taskId] = task;
+    // Use the improved createTask method from taskManager
+    const task = taskManager.createTask(taskId, taskConfig);
     
     // Start processing if autoStart is true
     if (autoStart) {
-      // Start the task processing in the background
-      setTimeout(() => {
-        task.status = 'in_progress';
-        taskManager.processTask(taskId);
-      }, 100);
+      // Use the dedicated startTask method
+      taskManager.startTask(taskId);
     }
     
     return res.json({

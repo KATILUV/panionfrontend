@@ -559,8 +559,71 @@ async function generateTaskSummary(prompt: string): Promise<string> {
   return response.choices[0].message.content || "Task summary generation failed.";
 }
 
+// Helper function to create a task programmatically (for API usage)
+function createTaskInternal(taskId: string, taskConfig: Partial<AgentTask>): AgentTask {
+  // Create the new task with default values merged with provided config
+  const newTask: AgentTask = {
+    id: taskId,
+    agentType: taskConfig.agentType || 'general',
+    description: taskConfig.description || 'Task with no description',
+    status: taskConfig.status || 'pending',
+    progress: taskConfig.progress || 0,
+    steps: taskConfig.steps || [],
+    startTime: taskConfig.startTime || new Date(),
+    logs: taskConfig.logs || [],
+    priority: taskConfig.priority || 'medium',
+    resources: taskConfig.resources || {},
+    retryCount: taskConfig.retryCount || 0,
+    maxRetries: taskConfig.maxRetries || 3,
+    completionTime: taskConfig.completionTime,
+    error: taskConfig.error,
+    result: taskConfig.result,
+    dependencies: taskConfig.dependencies,
+    checkpoint: taskConfig.checkpoint,
+    userId: taskConfig.userId
+  };
+
+  // Add initial log if none exists
+  if (newTask.logs.length === 0) {
+    newTask.logs.push(`[${new Date().toISOString()}] Task created`);
+  }
+
+  // Store the task
+  tasks[taskId] = newTask;
+  
+  return newTask;
+}
+
+// Helper function to start a task programmatically
+function startTaskInternal(taskId: string): boolean {
+  if (!tasks[taskId]) {
+    return false;
+  }
+  
+  // Only start tasks that are in pending state
+  if (tasks[taskId].status !== 'pending') {
+    return false;
+  }
+  
+  // Update status and start processing
+  tasks[taskId].status = 'in_progress';
+  tasks[taskId].logs.push(`[${new Date().toISOString()}] Task started`);
+  
+  // Process the task asynchronously
+  processTask(taskId).catch(error => {
+    console.error(`Error processing task ${taskId}:`, error);
+    tasks[taskId].logs.push(`[${new Date().toISOString()}] Error: ${error instanceof Error ? error.message : String(error)}`);
+    tasks[taskId].status = 'failed';
+    tasks[taskId].error = error instanceof Error ? error.message : String(error);
+  });
+  
+  return true;
+}
+
 // Task management utilities
 export const taskManager = {
   tasks,
-  processTask
+  processTask,
+  createTask: createTaskInternal,
+  startTask: startTaskInternal
 };

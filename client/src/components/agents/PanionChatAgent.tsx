@@ -1169,6 +1169,39 @@ const PanionChatAgent: React.FC = () => {
     setInputValue('');
     setMessages(prev => [...prev, userMessage]);
     
+    // Check for navigation to autonomous agent dashboard
+    const lastMessage = messages[messages.length - 1];
+    const isNavigationResponse = lastMessage && lastMessage.content.includes("Would you like to view the autonomous agent dashboard");
+    if (isNavigationResponse) {
+      const message = userMessage.content.toLowerCase();
+      const userWantsToNavigate = 
+        message.includes('yes') || 
+        message.includes('sure') || 
+        message.includes('okay') ||
+        message.includes('ok') || 
+        message.includes('show') || 
+        message.includes('navigate') || 
+        message.includes('go to') || 
+        message.includes("let's see");
+      
+      if (userWantsToNavigate) {
+        // Add navigation message
+        const navigatingMessage: ChatMessage = {
+          id: generateId(),
+          content: "Navigating to the Autonomous Agent dashboard where you can monitor your tasks...",
+          isUser: false,
+          timestamp: formatTime(new Date())
+        };
+        setMessages(prev => [...prev, navigatingMessage]);
+        
+        // Navigate to autonomous agent page
+        setTimeout(() => {
+          window.location.href = '/autonomous-agent';
+        }, 1500);
+        return;
+      }
+    }
+    
     // Check if we have a pending action and this is a response to it
     if (pendingAction) {
       const message = userMessage.content.toLowerCase();
