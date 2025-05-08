@@ -108,6 +108,12 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
       pinAgent(id);
     }
   };
+
+  // Function to directly unpin on click for the X button
+  const handleDirectUnpin = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the button's onClick
+    unpinAgent(id);
+  };
   
   // Access taskbar settings
   const { position, showLabels } = useTaskbarStore(state => ({
@@ -121,36 +127,49 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <button
-          onClick={() => onClick(id)}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className={`
-            group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
-            ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
-            ${isActive ? 'bg-primary/20 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'} 
-            transition-colors duration-200 relative ${bounceClass}
-          `}
-          title={title}
-        >
-          <span className={`text-xl ${showLabels && isVertical ? 'mb-1' : (showLabels && !isVertical ? 'mr-1.5' : '')}`}>{icon}</span>
-          {showLabels && <span className="text-xs font-medium whitespace-nowrap">{title}</span>}
+        <div className="relative group">
+          <button
+            onClick={() => onClick(id)}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className={`
+              group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
+              ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
+              ${isActive ? 'bg-primary/20 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'} 
+              transition-colors duration-200 relative ${bounceClass}
+            `}
+            title={title}
+          >
+            <span className={`text-xl ${showLabels && isVertical ? 'mb-1' : (showLabels && !isVertical ? 'mr-1.5' : '')}`}>{icon}</span>
+            {showLabels && <span className="text-xs font-medium whitespace-nowrap">{title}</span>}
+            
+            {/* Active indicator */}
+            {isActive && <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>}
+            
+            {/* Running indicator dot */}
+            {hasRunningIndicator && !isActive && (
+              <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-primary rounded-full"></div>
+            )}
+            
+            {/* Pin indicator */}
+            {isPinned && (
+              <div className="absolute -top-1 -right-1 text-[8px] text-primary">
+                <Pin size={8} className="text-primary/70" />
+              </div>
+            )}
+          </button>
           
-          {/* Active indicator */}
-          {isActive && <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"></div>}
-          
-          {/* Running indicator dot */}
-          {hasRunningIndicator && !isActive && (
-            <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-primary rounded-full"></div>
-          )}
-          
-          {/* Pin indicator */}
+          {/* Added unpin button that appears on hover */}
           {isPinned && (
-            <div className="absolute -top-1 -right-1 text-[8px] text-primary">
-              <Pin size={8} className="text-primary/70" />
-            </div>
+            <button 
+              onClick={handleDirectUnpin}
+              className="absolute -top-2 -right-2 bg-black/80 rounded-full p-0.5 text-white/70 hover:text-white hover:bg-red-900/80 opacity-0 group-hover:opacity-100 transition-opacity"
+              title="Unpin from taskbar"
+            >
+              <X size={12} />
+            </button>
           )}
-        </button>
+        </div>
       </ContextMenuTrigger>
       
       <ContextMenuContent className="min-w-[180px] bg-black/80 backdrop-blur-md border border-primary/20">
@@ -517,6 +536,21 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                   });
               })()}
                 
+              {/* Clear button to remove all pinned agents */}
+              <button
+                onClick={handleClearAllPins}
+                className={`
+                  group flex ${isVertical ? 'flex-col items-center' : 'items-center'} 
+                  ${isVertical ? 'py-2 px-1' : 'py-1 px-2'} rounded-md
+                  text-red-500/80 hover:text-red-500 hover:bg-white/10 
+                  transition-colors duration-200
+                `}
+                title="Clear Taskbar"
+              >
+                <X size={16} />
+                {showLabels && <span className="text-xs font-medium whitespace-nowrap">Clear</span>}
+              </button>
+              
               {/* Plus button to add agents to taskbar */}
               <Popover>
                 <PopoverTrigger asChild>
