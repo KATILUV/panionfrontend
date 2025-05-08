@@ -11,6 +11,7 @@ import { AgentStatusType } from '@/components/ui/agent-status';
 import { WindowPanel, WindowContent, WindowSection } from '@/components/ui/window-components';
 import { DensitySelector } from '@/components/ui/density-selector';
 import TaskbarSettings from '../settings/TaskbarSettings';
+import TaskbarManager from '../settings/TaskbarManager';
 
 const SettingsAgent = () => {
   // Use the settings tab store to manage the active tab
@@ -407,7 +408,24 @@ const SettingsAgent = () => {
           {activeTab === 'taskbar' && (
             <div>
               <h3 className="h3 mb-6">Taskbar Settings</h3>
-              <TaskbarSettings />
+              
+              {/* Pin Management Section */}
+              <WindowSection
+                title="Taskbar Pin Management"
+                description="Add or remove apps from your taskbar"
+                className="mb-6"
+              >
+                <TaskbarManager />
+              </WindowSection>
+              
+              {/* General Taskbar Configuration */}
+              <WindowSection
+                title="Taskbar Configuration"
+                description="Control taskbar appearance and position"
+                className="mb-6"
+              >
+                <TaskbarSettings />
+              </WindowSection>
             </div>
           )}
           {activeTab === 'notifications' && renderNotificationsTab()}

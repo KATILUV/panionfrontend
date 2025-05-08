@@ -90,7 +90,7 @@ const CLASSIC_WIDGETS: TaskbarWidgetType[] = [
   'clock'
 ];
 
-// Default pinned agents - database and brain-circuit removed as requested
+// Default pinned agents - database, brain-circuit, and daddy-data have been removed as requested
 const DEFAULT_PINNED_AGENTS: AgentId[] = ['panion', 'clara', 'notes'];
 
 // Mac OS style dock preset
@@ -214,7 +214,7 @@ export const useTaskbarStore = create<TaskbarState>()(
           visibleWidgets: [...FULL_WIDGETS],
           showLabels: true,
           position: { location: 'bottom', alignment: 'space-between' },
-          pinnedAgents: [...DEFAULT_PINNED_AGENTS, 'marketplace', 'daddy-data']
+          pinnedAgents: [...DEFAULT_PINNED_AGENTS, 'marketplace'] // daddy-data removed
         });
       },
       
