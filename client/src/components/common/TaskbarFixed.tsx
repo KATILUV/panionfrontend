@@ -478,12 +478,16 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
     }
   };
   
+  // Set default position values to prevent undefined errors
+  const defaultLocation = 'bottom';
+  const defaultAlignment = 'center';
+  
   // Determine if we're using a vertical layout
-  const isVertical = position.location === 'left' || position.location === 'right';
+  const isVertical = (position?.location === 'left' || position?.location === 'right') ?? false;
   
   // Get the side for popovers based on taskbar position
   const getPopoverSide = () => {
-    switch (position.location) {
+    switch (position?.location || defaultLocation) {
       case 'top': return 'bottom';
       case 'bottom': return 'top';
       case 'left': return 'right';
@@ -494,6 +498,10 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
   
   // Create taskbar container styles based on position
   const getTaskbarStyles = (): React.CSSProperties => {
+    // Get safe position values
+    const location = position?.location || defaultLocation;
+    const alignment = position?.alignment || defaultAlignment;
+    
     // Calculate a dynamic blur amount based on transparency
     const blurAmount = enableBlur ? `blur(${4 + (transparency * 8)}px)` : 'none';
     
@@ -501,17 +509,17 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
     let gradientBg;
     switch(accent) {
       case 'purple':
-        gradientBg = `linear-gradient(to ${isVertical ? (position.location === 'left' ? 'right' : 'left') : 'bottom'}, 
+        gradientBg = `linear-gradient(to ${isVertical ? (location === 'left' ? 'right' : 'left') : 'bottom'}, 
                       rgba(43, 24, 103, ${transparency}), 
                       rgba(20, 12, 50, ${transparency * 0.9}))`;
         break;
       case 'blue':
-        gradientBg = `linear-gradient(to ${isVertical ? (position.location === 'left' ? 'right' : 'left') : 'bottom'}, 
+        gradientBg = `linear-gradient(to ${isVertical ? (location === 'left' ? 'right' : 'left') : 'bottom'}, 
                       rgba(24, 43, 103, ${transparency}), 
                       rgba(12, 20, 50, ${transparency * 0.9}))`;
         break;
       default:
-        gradientBg = `linear-gradient(to ${isVertical ? (position.location === 'left' ? 'right' : 'left') : 'bottom'}, 
+        gradientBg = `linear-gradient(to ${isVertical ? (location === 'left' ? 'right' : 'left') : 'bottom'}, 
                       rgba(0, 0, 0, ${transparency}), 
                       rgba(20, 20, 20, ${transparency * 0.9}))`;
     }
@@ -529,40 +537,56 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
     
     if (isVertical) {
       // Vertical taskbar (left or right)
-      return {
+      const styles: React.CSSProperties = {
         ...baseStyles,
         top: 0,
         bottom: 0,
-        [position.location]: 0, // 'left: 0' or 'right: 0'
         width: showLabels ? '5rem' : '3.5rem',
         maxWidth: '80px',
         height: '100vh',
         flexDirection: 'column',
         padding: '0.75rem 0.375rem',
-        borderRight: position.location === 'left' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-        borderLeft: position.location === 'right' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
         alignItems: 'center',
-        justifyContent: position.alignment === 'space-between' ? 'space-between' : 
-                       position.alignment === 'center' ? 'center' : 
-                       position.alignment === 'end' ? 'flex-end' : 'flex-start',
+        justifyContent: alignment === 'space-between' ? 'space-between' : 
+                      alignment === 'center' ? 'center' : 
+                      alignment === 'end' ? 'flex-end' : 'flex-start',
       };
+      
+      // Add dynamic properties based on location
+      if (location === 'left') {
+        styles.left = 0;
+        styles.borderRight = '1px solid rgba(255, 255, 255, 0.1)';
+      } else if (location === 'right') {
+        styles.right = 0;
+        styles.borderLeft = '1px solid rgba(255, 255, 255, 0.1)';
+      }
+      
+      return styles;
     } else {
       // Horizontal taskbar (top or bottom)
-      return {
+      const styles: React.CSSProperties = {
         ...baseStyles,
         left: 0,
         right: 0,
-        [position.location]: 0, // 'top: 0' or 'bottom: 0'
         height: showLabels ? '3.5rem' : '2.75rem',
         flexDirection: 'row',
         padding: '0.375rem 1rem',
-        borderTop: position.location === 'bottom' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-        borderBottom: position.location === 'top' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
         alignItems: 'center',
-        justifyContent: position.alignment === 'space-between' ? 'space-between' : 
-                       position.alignment === 'center' ? 'center' : 
-                       position.alignment === 'end' ? 'flex-end' : 'flex-start',
+        justifyContent: alignment === 'space-between' ? 'space-between' : 
+                      alignment === 'center' ? 'center' : 
+                      alignment === 'end' ? 'flex-end' : 'flex-start',
       };
+      
+      // Add dynamic properties based on location
+      if (location === 'bottom') {
+        styles.bottom = 0;
+        styles.borderTop = '1px solid rgba(255, 255, 255, 0.1)';
+      } else if (location === 'top') {
+        styles.top = 0;
+        styles.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
+      }
+      
+      return styles;
     }
   };
 
