@@ -326,7 +326,15 @@ router.post('/api/panion/dispatch', checkPanionAPIMiddleware, async (req: Reques
 });
 router.post('/api/panion/scrape', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
   try {
-    const { targetType, location, limit = 20, additionalParams = {}, useEnhancedScraper = false } = req.body;
+    const { 
+      targetType, 
+      location, 
+      limit = 20, 
+      additionalParams = {}, 
+      useEnhancedScraper = false,
+      useProxy = true,
+      usePlaywright = false 
+    } = req.body;
     
     if (!targetType) {
       return res.status(400).json({ 
@@ -337,14 +345,20 @@ router.post('/api/panion/scrape', checkPanionAPIMiddleware, async (req: Request,
     
     // Use enhanced scraper with adaptive strategies if requested
     if (useEnhancedScraper && targetType === "business") {
-      log(`Using enhanced scraper with adaptive strategy for ${additionalParams.business_type || 'business'} in ${location}`, 'panion');
+      // Determine which approach to show in log
+      const proxyText = useProxy ? "with proxy rotation" : "without proxies";
+      const playwrightText = usePlaywright ? " and browser automation" : "";
+      
+      log(`Using enhanced scraper for ${additionalParams.business_type || 'business'} in ${location} ${proxyText}${playwrightText}`, 'panion');
       
       try {
         const response = await axios.post(`${PANION_API_URL}/scrape/enhanced`, {
           business_type: additionalParams.business_type || "shop",
           location,
           limit,
-          source: additionalParams.source || "adaptive"
+          source: additionalParams.source || "adaptive",
+          use_proxy: useProxy,
+          use_playwright: usePlaywright
         });
         
         return res.json(response.data);
@@ -359,7 +373,11 @@ router.post('/api/panion/scrape', checkPanionAPIMiddleware, async (req: Request,
       target_type: targetType,
       location,
       limit,
-      additional_params: additionalParams
+      additional_params: {
+        ...additionalParams,
+        use_proxy: useProxy,
+        use_playwright: usePlaywright
+      }
     });
     
     res.json(response.data);
@@ -375,7 +393,14 @@ router.post('/api/panion/scrape', checkPanionAPIMiddleware, async (req: Request,
 // Dedicated endpoint for enhanced scraper with adaptive strategy selection
 router.post('/api/panion/scrape/enhanced', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
   try {
-    const { businessType, location, limit = 20, source = "adaptive" } = req.body;
+    const { 
+      businessType, 
+      location, 
+      limit = 20, 
+      source = "adaptive",
+      useProxy = true,
+      usePlaywright = false
+    } = req.body;
     
     if (!businessType || !location) {
       return res.status(400).json({ 
@@ -384,14 +409,20 @@ router.post('/api/panion/scrape/enhanced', checkPanionAPIMiddleware, async (req:
       });
     }
     
-    log(`Using enhanced scraper for ${businessType} in ${location} with ${source} strategy`, 'panion');
+    // Determine which approach to show in log
+    const proxyText = useProxy ? "with proxy rotation" : "without proxies";
+    const playwrightText = usePlaywright ? " and browser automation" : "";
+    
+    log(`Using enhanced scraper for ${businessType} in ${location} with ${source} strategy ${proxyText}${playwrightText}`, 'panion');
     
     // Forward the request to the enhanced scraper API
     const response = await axios.post(`${PANION_API_URL}/scrape/enhanced`, {
       business_type: businessType,
       location,
       limit,
-      source
+      source,
+      use_proxy: useProxy,
+      use_playwright: usePlaywright
     });
     
     res.json(response.data);
