@@ -83,7 +83,7 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
     <button 
       type="button"
       onClick={onClick}
-      className={`w-full text-left rounded-xl bg-gradient-to-br ${gradientColor} p-[1px] shadow-lg cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-background`}
+      className={`w-full text-left rounded-xl bg-gradient-to-br ${gradientColor} p-[1px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-background`}
     >
       <Card className="bg-card/50 backdrop-blur-sm border-none h-full overflow-hidden relative">
         {badge && (
@@ -93,14 +93,14 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
         )}
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <span className="text-foreground/80">{icon}</span>
+            <CardTitle className="text-lg font-bold flex items-center gap-2 text-white">
+              <span className="text-white">{icon}</span>
               {title}
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          <CardDescription className="text-sm text-foreground/70">{description}</CardDescription>
+          <CardDescription className="text-sm text-white/80">{description}</CardDescription>
           {shortcut && (
             <div className="mt-2 flex items-center">
               <kbd className="px-2 py-1 text-xs font-semibold bg-black/10 dark:bg-white/10 rounded border border-gray-200 dark:border-gray-700">
