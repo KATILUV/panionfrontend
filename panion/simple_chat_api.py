@@ -202,107 +202,17 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                 
                 logger.info(f"Received chat message: {content}")
                 
-                # Example responses based on message content
-                if "hello" in content.lower() or "hi" in content.lower():
-                    response = "Hello! I'm your Panion assistant. How can I help you today?"
-                elif "help" in content.lower():
-                    response = "I can help with various tasks like:\n- Creating and monitoring goals\n- Managing agent teams\n- Providing system analytics\n- Answering questions about the Panion system\n- Web scraping data from online sources"
-                elif "goal" in content.lower() or "task" in content.lower():
-                    response = "I can help you create a new goal or task. Would you like me to help you define the requirements and assign it to the most suitable agents?"
-                elif "agent" in content.lower() or "team" in content.lower():
-                    response = "We have several agents with different capabilities. I can help you form a team for a specific task or show you the available agents."
-                elif "stat" in content.lower() or "system" in content.lower():
-                    response = f"The system is currently active. We have {len(AGENTS)} agents and 5 plugins available."
-                # Check for web scraping requests related to businesses
-                elif re.search(r"(scrape|find|get|collect|search).*(smoke\s*shop|smokeshop|business|store|restaurant|shop|company)", content.lower()) or \
-                     re.search(r"(smoke\s*shop|smokeshop|business|store|restaurant|shop|company).*(info|data|details|phone|contact)", content.lower()):
-                    
-                    # Extract business type
-                    business_type_match = re.search(r"(smoke\s*shop|restaurant|cafe|coffee\s*shop|bar|grocery\s*store|clothing\s*store|electronic\s*store|hardware\s*store|bookstore|pharmacy|gym|salon|spa|hotel|bank|gas\s*station|theater|cinema)", content.lower())
-                    business_type = business_type_match.group(1) if business_type_match else "business"
-                    
-                    # Extract location if specified
-                    location_match = re.search(r"in\s+([A-Za-z\s]+)(?:,|\.|$|\s)", content)
-                    location = location_match.group(1) if location_match else "New York"
-                    
-                    # Extract limit if specified
-                    limit_match = re.search(r"(\d+)\s+(smoke\s*shops?|results|stores?|businesses|restaurants)", content)
-                    limit = int(limit_match.group(1)) if limit_match else 10
-                    limit = min(limit, 100)  # Cap at 100
-                    
-                    response = f"I'll scrape information for {limit} {business_type}s in {location}. This might take a minute..."
-                    
-                    # Start scraping in a background thread to avoid blocking
-                    def scrape_in_background():
-                        try:
-                            # Try to import enhanced scraper first, fall back to smokeshop scraper if not available
-                            try:
-                                from scrapers.enhanced_scraper import EnhancedScraper
-                                scraper = EnhancedScraper()
-                                shops = scraper.scrape_business_directory(
-                                    business_type=business_type,
-                                    location=location,
-                                    limit=limit
-                                )
-                                filepath = scraper.save_to_json(shops, f"{business_type.replace(' ', '_')}_{location.replace(' ', '_')}.json")
-                            except ImportError:
-                                # Fall back to smokeshop scraper
-                                from scrapers.smokeshop_scraper import SmokeshopScraper
-                                scraper = SmokeshopScraper()
-                                shops = scraper.scrape_multiple_sources(location=location, limit=limit)
-                                filepath = scraper.save_to_json(shops)
-                                
-                            logger.info(f"Scraping complete: {len(shops)} businesses saved to {filepath}")
-                        except Exception as e:
-                            logger.error(f"Error during scraping: {str(e)}")
-                    
-                    threading.Thread(target=scrape_in_background).start()
-                    
-                # Check for data analysis requests
-                elif re.search(r"(analyze|chart|graph|visualization|trend|plot|dashboard).*(data|csv|json|file|result)", content.lower()):
-                    
-                    # Extract analysis type
-                    analysis_type_match = re.search(r"(bar\s*chart|pie\s*chart|line\s*graph|histogram|scatter\s*plot|correlation|summary|statistics)", content.lower())
-                    analysis_type = analysis_type_match.group(1) if analysis_type_match else "summary"
-                    
-                    # Extract data file if specified
-                    file_match = re.search(r"(?:data|file|csv|json)\s+(?:called|named)\s+([a-zA-Z0-9_\-.]+)", content.lower())
-                    data_file = file_match.group(1) if file_match else "last_scraped_data"
-                    
-                    response = f"I'll analyze your data and create a {analysis_type} visualization. This might take a moment..."
-                    
-                    # We'd normally start data analysis here, but we'll just simulate it for now
-                    # In a real implementation, we'd use our data analysis module
-                    
-                # Check for document processing requests
-                elif re.search(r"(extract|analyze|process|parse|ocr).*(document|pdf|doc|docx|image|text)", content.lower()):
-                    
-                    # Extract document processing type
-                    process_type_match = re.search(r"(text\s*extraction|ocr|table\s*extraction|image\s*extraction|summary|analysis)", content.lower())
-                    process_type = process_type_match.group(1) if process_type_match else "text_extraction"
-                    
-                    response = f"I'll process your document using {process_type}. Please upload the document you'd like to process."
-                    
-                # Check for video generation requests
-                elif re.search(r"(generate|create|make|produce).*(video|animation|clip|footage)", content.lower()):
-                    
-                    # Extract video details
-                    style_match = re.search(r"(?:in|with)\s+(?:a|an)?\s+([a-zA-Z\s]+)\s+style", content.lower())
-                    style = style_match.group(1) if style_match else "professional"
-                    
-                    duration_match = re.search(r"(\d+)\s+(?:second|minute)s?", content.lower())
-                    duration = duration_match.group(1) if duration_match else "30"
-                    duration_unit = "seconds" if "second" in content.lower() else "minutes"
-                    
-                    response = f"I'll help you create a {style} style video. Please provide more details about what you'd like to show in the video."
-                else:
-                    # Process the message metadata if provided
+                # Initialize variables with defaults to avoid reference errors
+                response = "I'm analyzing your request..."
+                thinking = f"Processing request: '{content}'"
+                capabilities = []
+                
+                try:
+                    # Get metadata if available
                     metadata = data.get("metadata", {})
-                    capabilities = metadata.get("capabilities", []) if metadata else []
-                    has_required = metadata.get("hasRequiredCapabilities", True) if metadata else True
-                    
-                    # Initialize thinking variable to avoid reference errors
-                    thinking = f"Analyzing input: '{content}'"
+                    if metadata:
+                        capabilities = metadata.get("capabilities", [])
+                        has_required = metadata.get("hasRequiredCapabilities", True)
                     
                     # Check for smoke shop research specifically 
                     if "smokeshop_data" in capabilities or "smoke shop" in content.lower() or "smokeshop" in content.lower():
@@ -322,44 +232,109 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         else:
                             response = "I'd be happy to help you find smoke shop data. Could you please specify which city or location you're interested in?"
                             thinking = "Request requires location specification for smoke shop data."
-                    # Default response for other types of messages - much more detailed
-                    else:
-                        # If we have detected capabilities, provide a more specific response
-                        if capabilities:
-                            capability_responses = {
-                                "data_analysis": "I'm analyzing the data you provided. I'll extract key insights and prepare visualizations as needed.",
-                                "web_research": "I'm researching this topic online to gather the most relevant and up-to-date information for you.",
-                                "business_research": "I'm gathering business information and market data related to your query.",
-                                "contact_finder": "I'm searching for contact information and will compile a structured database for you."
-                            }
+                    
+                    # Check if this is another common intent
+                    elif "hello" in content.lower() or "hi" in content.lower():
+                        response = "Hello! I'm your Panion assistant. How can I help you today?"
+                        thinking = "Detected greeting. Responding with welcome message."
+                        
+                    elif "help" in content.lower():
+                        response = "I can help with various tasks like:\n- Creating and monitoring goals\n- Managing agent teams\n- Providing system analytics\n- Answering questions about the Panion system\n- Web scraping data from online sources"
+                        thinking = "Detected help request. Providing capabilities list."
+                        
+                    elif "goal" in content.lower() or "task" in content.lower():
+                        response = "I can help you create a new goal or task. Would you like me to help you define the requirements and assign it to the most suitable agents?"
+                        thinking = "Detected goal/task request. Offering goal creation assistance."
+                        
+                    elif "agent" in content.lower() or "team" in content.lower():
+                        response = "We have several agents with different capabilities. I can help you form a team for a specific task or show you the available agents."
+                        thinking = "Detected agent/team request. Offering team formation assistance."
+                        
+                    elif "stat" in content.lower() or "system" in content.lower():
+                        response = f"The system is currently active. We have {len(AGENTS)} agents and 5 plugins available."
+                        thinking = "Detected system status request. Providing system overview."
+                        
+                    # Handle based on capabilities
+                    elif capabilities:
+                        capability_responses = {
+                            "data_analysis": "I'm analyzing the data you provided. I'll extract key insights and prepare visualizations as needed.",
+                            "web_research": "I'm researching this topic online to gather the most relevant and up-to-date information for you.",
+                            "business_research": "I'm gathering business information and market data related to your query.",
+                            "contact_finder": "I'm searching for contact information and will compile a structured database for you."
+                        }
+                        
+                        # Check if we match any capabilities
+                        match_found = False
+                        for cap in capabilities:
+                            if cap in capability_responses:
+                                response = capability_responses[cap]
+                                thinking = f"Using capability: {cap} to process your request."
+                                match_found = True
+                                break
+                                
+                        if not match_found:
+                            response = f"I'm working on your request that requires these capabilities: {', '.join(capabilities)}. I'll provide a detailed response shortly."
+                            thinking = f"Processing request with capabilities: {', '.join(capabilities)}"
                             
-                            # Check if we match any capabilities
-                            match_found = False
-                            for cap in capabilities:
-                                if cap in capability_responses:
-                                    response = capability_responses[cap]
-                                    thinking = f"Using capability: {cap} to process your request."
-                                    match_found = True
-                                    break
-                                    
-                            if not match_found:
-                                response = f"I'm working on your request that requires these capabilities: {', '.join(capabilities)}. I'll provide a detailed response shortly."
-                                thinking = f"Processing request with capabilities: {', '.join(capabilities)}"
-                        else:
-                            response = f"I understand that you're asking about '{content}'. Let me analyze this and find the best way to help you with this request."
+                    # Handle web scraping requests
+                    elif re.search(r"(scrape|find|get|collect|search).*(business|store|restaurant|shop|company)", content.lower()) or \
+                         re.search(r"(business|store|restaurant|shop|company).*(info|data|details|phone|contact)", content.lower()):
+                        
+                        # Extract business type
+                        business_type_match = re.search(r"(restaurant|cafe|coffee\s*shop|bar|grocery\s*store|clothing\s*store|electronic\s*store|hardware\s*store|bookstore|pharmacy|gym|salon|spa|hotel|bank|gas\s*station|theater|cinema)", content.lower())
+                        business_type = business_type_match.group(1) if business_type_match else "business"
+                        
+                        # Extract location if specified
+                        location_match = re.search(r"in\s+([A-Za-z\s]+)(?:,|\.|$|\s)", content)
+                        location = location_match.group(1) if location_match else "New York"
+                        
+                        # Extract limit if specified
+                        limit_match = re.search(r"(\d+)\s+(results|stores?|businesses|restaurants)", content)
+                        limit = int(limit_match.group(1)) if limit_match else 10
+                        limit = min(limit, 100)  # Cap at 100
+                        
+                        response = f"I'll gather information for {limit} {business_type}s in {location}. I'll use the Daddy Data agent to compile this information for you."
+                        thinking = f"Detected business information request for {business_type} in {location}. Using web research capabilities."
+                    
+                    # Handle data analysis requests
+                    elif re.search(r"(analyze|chart|graph|visualization|trend|plot|dashboard).*(data|csv|json|file|result)", content.lower()):
+                        # Extract analysis type
+                        analysis_type_match = re.search(r"(bar\s*chart|pie\s*chart|line\s*graph|histogram|scatter\s*plot|correlation|summary|statistics)", content.lower())
+                        analysis_type = analysis_type_match.group(1) if analysis_type_match else "summary"
+                        
+                        response = f"I'll analyze your data and create a {analysis_type} visualization. I'll use data analysis capabilities to process this request."
+                        thinking = f"Detected data analysis request for {analysis_type}. Using data analysis capabilities."
+                    
+                    # Default response for other types of messages
+                    else:
+                        response = f"I understand that you're asking about '{content}'. Let me analyze this and find the best way to help you with this request."
+                        thinking = f"Processing general request: '{content}'"
+                except Exception as e:
+                    logger.error(f"Error processing chat message: {str(e)}")
+                    response = "I apologize, but I encountered an error processing your request. Could you please try rephrasing it?"
+                    thinking = f"Error during processing: {str(e)}"
                 
-                self._set_headers()
-                self.wfile.write(json.dumps({
-                    "response": response,
-                    "thinking": thinking,  # Now it's always defined
-                    "additional_info": {
-                        "timestamp": datetime.datetime.now().isoformat(),
-                        "session_id": session_id,
-                        "intent_detected": detect_intent(content),
-                        "confidence": 0.85,
-                        "capabilities": capabilities
-                    }
-                }).encode())
+                # Return the response
+                try:
+                    self._set_headers()
+                    self.wfile.write(json.dumps({
+                        "response": response,
+                        "thinking": thinking,
+                        "additional_info": {
+                            "timestamp": datetime.datetime.now().isoformat(),
+                            "session_id": session_id,
+                            "intent_detected": detect_intent(content),
+                            "confidence": 0.85,
+                            "capabilities": capabilities
+                        }
+                    }).encode())
+                except Exception as e:
+                    logger.error(f"Error sending response: {str(e)}")
+                    self._set_headers(500)
+                    self.wfile.write(json.dumps({
+                        "error": "Error sending response",
+                        "message": str(e)
+                    }).encode())
             
             # Create goal endpoint
             elif path == "/goals":
