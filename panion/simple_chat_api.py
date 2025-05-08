@@ -363,6 +363,52 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         "message": f"Successfully scraped {len(results)} results"
                     }).encode())
                 except Exception as e:
+            
+            # Enhanced scraping endpoint with adaptive strategy selection
+            elif path == "/scrape/enhanced":
+                business_type = data.get("business_type", "business")
+                location = data.get("location", "New York")
+                limit = data.get("limit", 10)
+                source = data.get("source", "adaptive")
+                
+                logger.info(f"Enhanced scraping request: {business_type} in {location}, using {source} strategy, limit {limit}")
+                
+                try:
+                    # Import the enhanced scraper
+                    try:
+                        from scrapers.enhanced_scraper import EnhancedScraper
+                        scraper = EnhancedScraper()
+                        
+                        # Execute scraping with the enhanced adaptive system
+                        results = scraper.scrape_business_directory(
+                            business_type=business_type,
+                            location=location,
+                            limit=limit,
+                            source=source
+                        )
+                        
+                        # Save results to file
+                        output_file = f"{business_type.replace(' ', '_')}_{location.replace(' ', '_')}.json"
+                        filepath = scraper.save_to_json(results, output_file)
+                        
+                        # Return successful response
+                        self._set_headers()
+                        self.wfile.write(json.dumps({
+                            "status": "success",
+                            "result_count": len(results),
+                            "filepath": filepath,
+                            "last_successful_strategy": getattr(scraper, "last_successful_strategy", None),
+                            "message": f"Successfully scraped {len(results)} results using adaptive strategy system"
+                        }).encode())
+                    except ImportError as ie:
+                        logger.error(f"Error importing enhanced scraper: {ie}")
+                        self._set_headers(500)
+                        self.wfile.write(json.dumps({
+                            "status": "error",
+                            "error": "Enhanced scraper module not available",
+                            "message": str(ie)
+                        }).encode())
+                except Exception as e:
                     logger.error(f"Error in scraping: {str(e)}")
                     self._set_headers(500)
                     self.wfile.write(json.dumps({

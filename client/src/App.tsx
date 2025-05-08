@@ -12,6 +12,7 @@ import LandingPage from "./pages/landing-page";
 import AuthPage from "./pages/auth-page";
 import MarketplacePage from "./pages/marketplace-page";
 import CollaborationPage from "./pages/CollaborationPage";
+import ScraperTest from "./pages/ScraperTest";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
@@ -60,6 +61,13 @@ function Router() {
         <Route path="/collaboration">
           <PageTransition type="slideUp" duration={0.4}>
             <CollaborationPage />
+          </PageTransition>
+        </Route>
+        
+        {/* Scraper Test Page */}
+        <Route path="/scraper-test">
+          <PageTransition type="fade" duration={0.3}>
+            <ScraperTest />
           </PageTransition>
         </Route>
         
