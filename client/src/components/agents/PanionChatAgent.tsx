@@ -442,10 +442,14 @@ const PanionChatAgent: React.FC = () => {
         };
       } else {
         requestBody = {
-          message: inputValue,
-          sessionId,
+          content: inputValue,  // changed from message to content to match backend
+          sessionId,  // backend handles both sessionId and session_id formats now
           hasRequiredCapabilities: requiredCapabilities.length === 0 || !createdNewAgents,
-          capabilities: requiredCapabilities
+          capabilities: requiredCapabilities,
+          metadata: {  // also include metadata for compatibility
+            capabilities: requiredCapabilities,
+            hasRequiredCapabilities: requiredCapabilities.length === 0 || !createdNewAgents
+          }
         };
       }
       
@@ -466,8 +470,23 @@ const PanionChatAgent: React.FC = () => {
       
       const data = await response.json();
       
+      console.log("Panion API response:", data); // Add logging to see what we get
+      
       // Process strategic information if available
       let thinkingContent = data.thinking || '';
+      
+      // Check for additional_info which may include capabilities information
+      if (data.additional_info && !thinkingContent) {
+        // If we have additional info but no thinking content, use that information
+        const info = data.additional_info;
+        thinkingContent = `Processing request with session: ${info.session_id || 'unknown'}\n`;
+        if (info.intent_detected) {
+          thinkingContent += `Detected intent: ${info.intent_detected}\n`;
+        }
+        if (info.capabilities && Array.isArray(info.capabilities)) {
+          thinkingContent += `Required capabilities: ${info.capabilities.join(', ')}\n`;
+        }
+      }
       
       if (strategicMode && data.strategies && Array.isArray(data.strategies)) {
         // Format strategies information as part of the thinking process
