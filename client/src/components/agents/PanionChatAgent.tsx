@@ -1780,7 +1780,28 @@ const PanionChatAgent: React.FC = () => {
                     <div className="italic">{message.thinking}</div>
                   </div>
                 )}
-                <div className="whitespace-pre-wrap">{message.content}</div>
+                {message.component ? (
+                  <div className="message-component-wrapper">
+                    {message.component}
+                  </div>
+                ) : (
+                  <div className="whitespace-pre-wrap">
+                    {message.content.split('\n').map((line, i) => {
+                      if (line.trim() === '') return <br key={i} />;
+                      
+                      // Replace markdown-style bold with strong elements
+                      const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                      
+                      return (
+                        <p 
+                          key={i} 
+                          dangerouslySetInnerHTML={{ __html: formattedLine }} 
+                          className="mb-1 last:mb-0"
+                        />
+                      );
+                    })}
+                  </div>
+                )}
                 <div className="text-xs mt-1 opacity-70 text-right">
                   {message.timestamp}
                 </div>

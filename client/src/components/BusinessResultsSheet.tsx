@@ -149,33 +149,33 @@ export const BusinessResultsSheet: React.FC<BusinessResultsSheetProps> = ({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <Card className="w-full shadow-md border-slate-200">
+      <CardHeader className="bg-slate-50 dark:bg-slate-900/50">
         <div className="flex justify-between items-center">
-          <CardTitle>Business Owner Results</CardTitle>
-          <Badge variant="outline" className="text-sm">
+          <CardTitle className="text-primary">Business Owner Results</CardTitle>
+          <Badge variant="outline" className="text-sm bg-primary/10 border-primary/30 text-primary">
             {results.length} businesses found
           </Badge>
         </div>
         <CardDescription>
-          {businessType} in {location}
+          {businessType.charAt(0).toUpperCase() + businessType.slice(1)} in {location}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border overflow-hidden">
           <Table className="w-full">
-            <TableHeader className="bg-muted">
+            <TableHeader className="bg-primary/5 dark:bg-primary/10">
               <TableRow>
-                <TableHead className="w-[250px]">Business</TableHead>
-                <TableHead>Contact Info</TableHead>
-                <TableHead>Person in Charge</TableHead>
-                <TableHead>LinkedIn</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-[250px] font-semibold">Business</TableHead>
+                <TableHead className="font-semibold">Contact Info</TableHead>
+                <TableHead className="font-semibold">Person in Charge</TableHead>
+                <TableHead className="font-semibold">LinkedIn</TableHead>
+                <TableHead className="text-right font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {results.map((business, index) => (
-                <TableRow key={index}>
+                <TableRow key={index} className={index % 2 === 0 ? "bg-white dark:bg-slate-950" : "bg-slate-50/50 dark:bg-slate-900/50"}>
                   <TableCell className="font-medium">
                     <div className="font-semibold">{business.name}</div>
                     <div className="text-xs text-muted-foreground">{business.address}</div>
@@ -435,13 +435,20 @@ export const BusinessResultsSheet: React.FC<BusinessResultsSheetProps> = ({
           </Table>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between items-center">
+      <CardFooter className="flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 border-t">
         <div>
           <span className="text-sm text-muted-foreground">
-            Showing {results.length} businesses with owner information
+            Showing {results.length} {businessType.toLowerCase()} with detailed contact information
           </span>
+          <div className="text-xs text-muted-foreground mt-1">
+            Data quality may vary by business
+          </div>
         </div>
-        <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
+        <Button 
+          onClick={exportToCSV} 
+          variant="outline" 
+          className="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900"
+        >
           <Download className="h-4 w-4" />
           Export to CSV
         </Button>
