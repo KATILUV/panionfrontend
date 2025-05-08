@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import Spinner from '@/components/ui/spinner';
+import { Spinner } from '../../components/ui/spinner';
 import AIThinkingIndicator from '@/components/ui/ai-thinking';
 import { ToastDemo } from '@/components/ui/toast-demo';
 import { ElementTransition } from '@/components/ui/page-transition';

@@ -5,7 +5,7 @@ interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function Spinner({ size = 'md', className, ...props }: SpinnerProps) {
+export const Spinner = ({ size = 'md', className, ...props }: SpinnerProps) => {
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-6 w-6',
@@ -26,4 +26,4 @@ export function Spinner({ size = 'md', className, ...props }: SpinnerProps) {
       <span className="sr-only">Loading...</span>
     </div>
   );
-}
+};
