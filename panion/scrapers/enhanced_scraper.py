@@ -801,7 +801,7 @@ class EnhancedScraper:
                                  business_type: str, 
                                  location: str, 
                                  limit: int = 20,
-                                 source: str = "yelp") -> List[Dict[str, Any]]:
+                                 source: str = "adaptive") -> List[Dict[str, Any]]:
         """
         Scrape business information from a directory using adaptive strategy selection.
         
@@ -809,17 +809,43 @@ class EnhancedScraper:
             business_type: Type of business to search for (e.g., "restaurant", "plumber")
             location: Location to search in (e.g., "New York", "Los Angeles")
             limit: Maximum number of businesses to return
-            source: Preferred source to scrape from ("yelp", "google", "yellowpages")
+            source: Preferred source to scrape from ("adaptive", "yelp", "google", "yellowpages",
+                   "cached_data", "playwright")
             
         Returns:
             List of business records
         """
+        # Check if Playwright was explicitly requested
+        if source.lower() == "playwright":
+            logger.info("Playwright scraping explicitly requested")
+            return self._try_playwright_scraping(business_type, location, limit)
+            
+        # Check cache first if we're using adaptive mode
+        if source.lower() in ["adaptive", "cached_data"]:
+            cache_file = os.path.join(self.data_dir, f"{business_type.replace(' ', '_')}_{location.replace(' ', '_')}.json")
+            
+            if os.path.exists(cache_file):
+                try:
+                    # Check if cache is recent enough (less than 24 hours old)
+                    if time.time() - os.path.getmtime(cache_file) < 86400:  # 24 hours
+                        with open(cache_file, 'r') as f:
+                            cached_data = json.load(f)
+                            
+                        if cached_data and len(cached_data) > 0:
+                            logger.info(f"Using cached data for {business_type} in {location} ({len(cached_data)} records)")
+                            self.last_successful_strategy = "cached_data"
+                            return cached_data[:limit]  # Respect the limit parameter
+                        
+                except Exception as e:
+                    logger.error(f"Error reading cache: {str(e)}")
+        
         # Get ranked strategies with the preferred source prioritized if specified
         ranked_strategies = self._get_ranked_strategies(source.lower())
         
         if not ranked_strategies:
             logger.error("No available scraping strategies - all are blocked")
-            return []
+            # Try Playwright as a last resort if all other strategies are blocked
+            return self._try_playwright_scraping(business_type, location, limit)
             
         logger.info(f"Attempting to scrape with strategies (in order): {', '.join(ranked_strategies)}")
         
@@ -863,8 +889,15 @@ class EnhancedScraper:
                 if strategy.consecutive_failures >= 2:
                     self._block_strategy(strategy_name)
                     
-        # If we get here, all strategies failed - last resort, try simulated/mock data
-        logger.error("All scraping strategies failed")
+        # If all standard strategies failed, try Playwright as a final fallback
+        logger.info("All standard scraping strategies failed, falling back to Playwright")
+        playwright_results = self._try_playwright_scraping(business_type, location, limit)
+        
+        if playwright_results and len(playwright_results) > 0:
+            return playwright_results
+            
+        # If we still have no results, look for any cached data as absolute last resort
+        logger.error("All scraping strategies (including Playwright) failed")
         
         # Look for any cached data as absolute last resort
         cache_file = os.path.join(self.data_dir, f"smokeshop_{location.replace(' ', '_')}.json")
@@ -879,6 +912,52 @@ class EnhancedScraper:
                 logger.error(f"Error reading fallback cached data: {str(e)}")
                 
         return []
+        
+    def _try_playwright_scraping(self, business_type: str, location: str, limit: int) -> List[Dict[str, Any]]:
+        """Try scraping using Playwright browser automation."""
+        try:
+            # Import the Playwright scraper dynamically to avoid circular imports
+            from scrapers.playwright_scraper import PlaywrightScraper
+            
+            # Create a new instance
+            playwright_scraper = PlaywrightScraper()
+            
+            # Check if Playwright is available
+            if not playwright_scraper.available:
+                logger.error("Playwright is not available, cannot use as fallback")
+                return []
+                
+            logger.info(f"Attempting to scrape with Playwright for {business_type} in {location}")
+            
+            # Run the Playwright scraper (it's async, so we need to run it in an event loop)
+            import asyncio
+            
+            # Use existing event loop if available, otherwise create a new one
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+            # Run the scraper
+            results = loop.run_until_complete(
+                playwright_scraper.scrape_business_directory(
+                    business_type=business_type,
+                    location=location,
+                    limit=limit
+                )
+            )
+            
+            # If we got results, mark it as the successful strategy and save to cache
+            if results and len(results) > 0:
+                self.last_successful_strategy = "playwright"
+                self._save_to_cache(business_type, location, results)
+                
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error using Playwright scraper: {str(e)}")
+            return []
     
     def _scrape_yelp(self, business_type: str, location: str, limit: int) -> List[Dict[str, Any]]:
         """Scrape business data from Yelp."""

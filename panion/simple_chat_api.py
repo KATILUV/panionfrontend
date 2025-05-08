@@ -18,16 +18,22 @@ from urllib.parse import parse_qs, urlparse
 # Import the web scraper
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
-    from scrapers.smokeshop_scraper import SmokeshopScraper
+    from scrapers.enhanced_scraper import EnhancedScraper
 except ImportError as e:
-    logging.error(f"Failed to import scraper: {e}")
-    class SmokeshopScraper:
-        def __init__(self):
-            pass
-        def scrape_multiple_sources(self, *args, **kwargs):
-            return []
-        def save_to_json(self, *args, **kwargs):
-            return "Error: Scraper not available"
+    logging.error(f"Failed to import enhanced scraper: {e}")
+    # Fall back to older scraper if available
+    try:
+        from scrapers.smokeshop_scraper import SmokeshopScraper as EnhancedScraper
+    except ImportError:
+        logging.error("Failed to import any scraper")
+        # Create a stub scraper class if no scraper is available
+        class EnhancedScraper:
+            def __init__(self):
+                pass
+            def scrape_business_directory(self, *args, **kwargs):
+                return []
+            def save_to_json(self, *args, **kwargs):
+                return "Error: Scraper not available"
 
 # Import the collaboration API
 try:
