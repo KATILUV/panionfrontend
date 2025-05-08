@@ -142,9 +142,14 @@ export function TaskbarSettings() {
                 size="sm" 
                 onClick={() => {
                   console.log("Before clearing pinned agents:", pinnedAgents);
-                  const clearPinnedAgentsFn = useTaskbarStore.getState().clearPinnedAgents;
-                  clearPinnedAgentsFn();
-                  console.log("After clearing pinned agents:", useTaskbarStore.getState().pinnedAgents);
+                  // Use the function from the props
+                  clearPinnedAgents();
+                  // Force a re-render of this component
+                  // This ensures the component's state is updated right away
+                  setTimeout(() => {
+                    const currentPinned = useTaskbarStore.getState().pinnedAgents;
+                    console.log("After clearing pinned agents:", currentPinned);
+                  }, 0);
                   toast({
                     title: "Taskbar cleared",
                     description: "All agents have been removed from the taskbar",
@@ -203,9 +208,11 @@ export function TaskbarSettings() {
                         size="icon" 
                         onClick={() => {
                           console.log("Before unpinning agent:", agentId, pinnedAgents);
-                          const unpinAgentFn = useTaskbarStore.getState().unpinAgent;
-                          unpinAgentFn(agentId);
-                          console.log("After unpinning agent:", agentId, useTaskbarStore.getState().pinnedAgents);
+                          // Use the function from props 
+                          unpinAgent(agentId);
+                          setTimeout(() => {
+                            console.log("After unpinning agent:", agentId, useTaskbarStore.getState().pinnedAgents);
+                          }, 0);
                           toast({
                             title: "Agent unpinned",
                             description: `${agent.title || 'Agent'} has been removed from the taskbar`,
@@ -270,9 +277,11 @@ export function TaskbarSettings() {
                         size="icon" 
                         onClick={() => {
                           console.log("Before pinning agent:", agent.id, pinnedAgents);
-                          const pinAgentFn = useTaskbarStore.getState().pinAgent;
-                          pinAgentFn(agent.id);
-                          console.log("After pinning agent:", agent.id, useTaskbarStore.getState().pinnedAgents);
+                          // Use the function from props
+                          pinAgent(agent.id);
+                          setTimeout(() => {
+                            console.log("After pinning agent:", agent.id, useTaskbarStore.getState().pinnedAgents);
+                          }, 0);
                           toast({
                             title: "Agent pinned",
                             description: `${agent.title || 'Agent'} has been added to the taskbar`,
