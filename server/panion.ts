@@ -858,22 +858,40 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
     
     log(`Created smoke shop search task: ${taskId} for ${location}`, 'panion');
     
-    // Send the task to the Python API for processing
-    axios.post(`${PANION_API_URL}/task`, {
-      task_id: taskId,
-      type: 'smokeshop_research',
-      details: {
-        type: 'smokeshop_research',
-        location,
-        limit,
-        additional_keywords: additionalKeywords
+    // We'll process this task locally since the Python API doesn't have a task endpoint
+    // Update the task status
+    setTimeout(() => {
+      try {
+        // Mock processing - this would normally be done by the Python API
+        tasks[taskId].status = 'in_progress';
+        tasks[taskId].progress = 50;
+        
+        // After a bit, complete the task
+        setTimeout(() => {
+          // Try to run a search using the existing endpoint
+          axios.post(`${PANION_API_URL}/scrape/enhanced`, {
+            business_type: 'smoke shop',
+            location: location,
+            limit: limit
+          }).then(response => {
+            // Success
+            tasks[taskId].status = 'completed';
+            tasks[taskId].progress = 100;
+            tasks[taskId].result = response.data;
+          }).catch(error => {
+            // Failed to get data
+            tasks[taskId].status = 'failed';
+            tasks[taskId].error = `Failed to get data: ${error.message}`;
+            log(`Error getting smoke shop data for task ${taskId}: ${error.message}`, 'panion');
+          });
+        }, 3000);
+      } catch (error: any) {
+        // Update task if there was an error
+        tasks[taskId].status = 'failed';
+        tasks[taskId].error = `Failed to process task: ${error.message}`;
+        log(`Error processing task ${taskId}: ${error.message}`, 'panion');
       }
-    }).catch(error => {
-      // Update task if there was an error initiating it
-      tasks[taskId].status = 'failed';
-      tasks[taskId].error = `Failed to initiate task: ${error.message}`;
-      log(`Error initiating task ${taskId}: ${error.message}`, 'panion');
-    });
+    }, 1000);
     
     // Return the task ID immediately
     res.json({
@@ -892,58 +910,20 @@ router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req
   }
 });
 
-// Task status endpoint
+// Task status endpoint - simplified to use only local tracking
 router.get('/api/panion/task/:taskId', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
     
     // Check if task exists in our local tracking
     if (tasks[taskId]) {
-      // If task is not completed, check with Python API for updates
-      if (tasks[taskId].status !== 'completed' && tasks[taskId].status !== 'failed') {
-        try {
-          const response = await axios.get(`${PANION_API_URL}/task/${taskId}`);
-          
-          // Update our local task tracking with the latest information
-          if (response.data && response.data.status) {
-            tasks[taskId] = {
-              ...tasks[taskId],
-              ...response.data
-            };
-          }
-        } catch (error) {
-          // If we can't get an update, just continue with our local data
-          log(`Error getting task update from Python API: ${error}`, 'panion');
-        }
-      }
-      
       return res.json({
         success: true,
         task: tasks[taskId]
       });
     }
     
-    // If not in local tracking, try to get from Python API
-    try {
-      const response = await axios.get(`${PANION_API_URL}/task/${taskId}`);
-      if (response.data && response.data.status) {
-        // Add to our local tracking
-        tasks[taskId] = response.data;
-        return res.json({
-          success: true,
-          task: response.data
-        });
-      }
-    } catch (error) {
-      // Task not found in Python API either
-      return res.status(404).json({
-        success: false,
-        error: 'Task not found',
-        message: `No task found with ID: ${taskId}`
-      });
-    }
-    
-    // Task not found in either local tracking or Python API
+    // Task not found
     return res.status(404).json({
       success: false,
       error: 'Task not found',
