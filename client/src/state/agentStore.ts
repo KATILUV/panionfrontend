@@ -1293,6 +1293,16 @@ export const initializeAgentRegistry = () => {
   });
   
   store.registerAgent({
+    id: 'intelligent-agent',
+    title: 'Intelligent Agent',
+    icon: 'brain-circuit',
+    component: () => React.lazy(() => import('@/components/agents/IntelligentAgent')),
+    defaultPosition: { x: 150, y: 150 },
+    defaultSize: { width: 650, height: 600 },
+    capabilities: ['reasoning', 'internal-debate', 'capability-evolution']
+  });
+  
+  store.registerAgent({
     id: 'panion',
     title: 'Panion Chat',
     icon: 'message-square',
