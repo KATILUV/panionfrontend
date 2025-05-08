@@ -301,6 +301,9 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     capabilities = metadata.get("capabilities", []) if metadata else []
                     has_required = metadata.get("hasRequiredCapabilities", True) if metadata else True
                     
+                    # Initialize thinking variable to avoid reference errors
+                    thinking = f"Analyzing input: '{content}'"
+                    
                     # Check for smoke shop research specifically 
                     if "smokeshop_data" in capabilities or "smoke shop" in content.lower() or "smokeshop" in content.lower():
                         # Extract location with better regex
@@ -331,19 +334,24 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                             }
                             
                             # Check if we match any capabilities
+                            match_found = False
                             for cap in capabilities:
                                 if cap in capability_responses:
                                     response = capability_responses[cap]
+                                    thinking = f"Using capability: {cap} to process your request."
+                                    match_found = True
                                     break
-                            else:
+                                    
+                            if not match_found:
                                 response = f"I'm working on your request that requires these capabilities: {', '.join(capabilities)}. I'll provide a detailed response shortly."
+                                thinking = f"Processing request with capabilities: {', '.join(capabilities)}"
                         else:
                             response = f"I understand that you're asking about '{content}'. Let me analyze this and find the best way to help you with this request."
                 
                 self._set_headers()
                 self.wfile.write(json.dumps({
                     "response": response,
-                    "thinking": thinking if 'thinking' in locals() else f"Analyzing input: '{content}'",
+                    "thinking": thinking,  # Now it's always defined
                     "additional_info": {
                         "timestamp": datetime.datetime.now().isoformat(),
                         "session_id": session_id,
