@@ -65,23 +65,30 @@ const SimpleEmptyStateDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="h-full w-full max-w-screen-xl mx-auto px-4 md:px-8 relative z-10 pt-10 pb-10 flex flex-col items-center justify-center">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-light mb-2 text-white/90">Welcome <span className="font-medium">{userName}</span>, this is Panion</h1>
-        <p className="text-white/70 text-lg mb-8">Your personal AI workspace environment</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl w-full">
-        {actions.map((action, index) => (
-          <SimpleActionCard
-            key={`${action.title}-${index}-${renderKey}`} // Include renderKey in the key
-            title={action.title}
-            description={action.description}
-            icon={action.icon}
-            onClick={action.onClick}
-            colorIndex={action.colorIndex} // Pass colorIndex instead of color
-          />
-        ))}
+    <div className="absolute inset-0 flex items-center justify-center p-4">
+      <div className="max-w-4xl w-full mx-auto flex flex-col items-center justify-center min-h-[80vh]">
+        {/* Centered Title Block with modern styling */}
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-extralight tracking-tight mb-4 text-white/90">
+            Welcome to <span className="font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">Panion</span>
+          </h1>
+          <p className="text-white/70 text-xl mb-2">Your AI-powered workspace environment</p>
+          <div className="w-20 h-1 bg-gradient-to-r from-white/30 to-transparent mx-auto mt-6"></div>
+        </div>
+        
+        {/* Centered card grid with a modern appearance */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full max-w-3xl mx-auto">
+          {actions.map((action, index) => (
+            <SimpleActionCard
+              key={`${action.title}-${index}-${renderKey}`}
+              title={action.title}
+              description={action.description}
+              icon={action.icon}
+              onClick={action.onClick}
+              colorIndex={action.colorIndex}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

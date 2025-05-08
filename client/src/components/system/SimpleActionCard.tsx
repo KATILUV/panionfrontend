@@ -83,27 +83,27 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
     <button 
       type="button"
       onClick={onClick}
-      className={`w-full text-left rounded-xl bg-gradient-to-br ${gradientColor} p-[1px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-background`}
+      className={`w-full text-left rounded-xl bg-gradient-to-br ${gradientColor} p-[2px] shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.03] cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-1 focus:ring-offset-transparent`}
     >
-      <Card className="bg-card/50 backdrop-blur-sm border-none h-full overflow-hidden relative">
+      <Card className="bg-black/20 backdrop-blur-lg border-none h-full overflow-hidden relative rounded-[10px]">
         {badge && (
           <div className={`absolute top-2 right-2 ${badgeColor} text-white text-xs px-1.5 py-0.5 rounded-sm font-medium`}>
             {badge}
           </div>
         )}
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-0">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-lg font-bold flex items-center gap-2 text-white">
-              <span className="text-white">{icon}</span>
+            <CardTitle className="text-xl font-medium flex items-center gap-3 text-white">
+              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white p-1.5">{icon}</span>
               {title}
             </CardTitle>
           </div>
         </CardHeader>
-        <CardContent>
-          <CardDescription className="text-sm text-white/80">{description}</CardDescription>
+        <CardContent className="pt-3">
+          <CardDescription className="text-base text-white/80">{description}</CardDescription>
           {shortcut && (
-            <div className="mt-2 flex items-center">
-              <kbd className="px-2 py-1 text-xs font-semibold bg-black/10 dark:bg-white/10 rounded border border-gray-200 dark:border-gray-700">
+            <div className="mt-3 flex items-center">
+              <kbd className="px-2 py-1 text-xs font-semibold bg-white/10 rounded border border-white/20 text-white/70">
                 {shortcut}
               </kbd>
             </div>
