@@ -4,6 +4,7 @@ import axios from 'axios';
 import { log } from './vite';
 import path from 'path';
 import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 import { taskManager } from './autonomous-agent';
 
 // Create router

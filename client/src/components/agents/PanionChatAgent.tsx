@@ -407,6 +407,89 @@ const PanionChatAgent: React.FC = () => {
 
   // Handle task completion events
   useEffect(() => {
+    // Function to create autonomous agent tasks
+    const createAutonomousTask = async (description: string, agentType: 'data_gathering' | 'analysis' | 'general' = 'general') => {
+      try {
+        setAgentStatus('thinking');
+        setProcessingStage('Creating autonomous task');
+        
+        // Create a notification message
+        const notificationMessage: ChatMessage = {
+          id: generateId(),
+          content: `Creating an autonomous task: "${description}"`,
+          isUser: false,
+          timestamp: formatTime(new Date()),
+          thinking: 'This task appears to be complex or long-running. I will delegate it to the autonomous agent system which can continue working on it without requiring your constant attention.'
+        };
+        setMessages(prev => [...prev, notificationMessage]);
+        
+        // Call the backend endpoint to create an autonomous task
+        const response = await fetch('/api/panion/autonomous-task', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            description,
+            agentType,
+            priority: 'medium',
+            autoStart: true,
+            autoRetry: true,
+            resources: {
+              sourceAgent: 'panion',
+              sessionId
+            }
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create autonomous task');
+        }
+        
+        const data = await response.json();
+        
+        // Add confirmation message
+        const confirmationMessage: ChatMessage = {
+          id: generateId(),
+          content: `I've created an autonomous task to handle this request. This task (ID: ${data.id}) will continue running even if you navigate away or close the app. You can view its progress on the Autonomous Agent page.`,
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, confirmationMessage]);
+        
+        // Add a navigation suggestion
+        const navigationSuggestionMessage: ChatMessage = {
+          id: generateId(),
+          content: "Would you like to view the autonomous agent dashboard now to monitor this task?",
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, navigationSuggestionMessage]);
+        setAgentStatus('idle');
+        setProcessingStage(null);
+        
+        return data.id;
+      } catch (error) {
+        console.error('Error creating autonomous task:', error);
+        
+        // Add error message
+        const errorMessage: ChatMessage = {
+          id: generateId(),
+          content: `I encountered an error creating the autonomous task: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, errorMessage]);
+        setAgentStatus('error');
+        setProcessingStage(null);
+        
+        return null;
+      }
+    };
+    
     const handleTaskCompletion = (event: CustomEvent) => {
       const { taskId, result, error } = event.detail;
       
