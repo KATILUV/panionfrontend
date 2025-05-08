@@ -455,6 +455,9 @@ export const stopTaskProcessor = () => {
   }
 };
 
+// Import our subscription helper
+import { subscribeWithSelector } from '@/utils/subscribe-with-selector';
+
 // Auto-start the task processor when the app loads
 // This should be called in a component that's always mounted, like App.tsx
 export const initializeTaskProcessor = () => {
@@ -464,16 +467,16 @@ export const initializeTaskProcessor = () => {
     startTaskProcessor();
   }
   
-  // Subscribe to changes in the isRunningTasks state
-  const unsubscribe = useScheduledTaskStore.subscribe(
-    (state) => {
-      const isRunning = state.isRunningTasks;
+  // Subscribe to changes in the isRunningTasks state using our helper
+  const unsubscribe = subscribeWithSelector(
+    useScheduledTaskStore,
+    (state) => state.isRunningTasks,
+    (isRunning) => {
       if (isRunning) {
         startTaskProcessor();
       } else {
         stopTaskProcessor();
       }
-      return isRunning;
     }
   );
   

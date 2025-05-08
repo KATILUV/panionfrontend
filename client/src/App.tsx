@@ -239,6 +239,27 @@ function App() {
       defaultPosition: { x: 450, y: 150 },
       defaultSize: { width: 900, height: 700 }
     });
+    
+    // Task Scheduler Agent
+    const schedulerIcon = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 22C16.9706 22 21 17.9706 21 13C21 8.02944 16.9706 4 12 4C7.02944 4 3 8.02944 3 13C3 17.9706 7.02944 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 8V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16.24 14.74L12 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 2V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16 2V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    
+    agentStore.registerAgent({
+      id: 'task-scheduler',
+      title: 'Task Scheduler',
+      icon: schedulerIcon,
+      component: () => <TaskSchedulerAgent />,
+      defaultPosition: { x: 450, y: 250 },
+      defaultSize: { width: 900, height: 600 }
+    });
   }, []);
   
   return (
