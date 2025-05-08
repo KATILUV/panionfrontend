@@ -1772,83 +1772,20 @@ const PanionChatAgent: React.FC = () => {
   const shouldUseStrategicMode = (message: string): boolean => {
     const lowerMessage = message.toLowerCase();
     
-    // Indicators of complex tasks that need strategic thinking and multiple approaches
-    const complexityIndicators = [
-      // Task complexity indicators
-      { pattern: 'compare', weight: 0.7 },
-      { pattern: 'multi', weight: 0.6 },
-      { pattern: 'complex', weight: 0.8 },
-      { pattern: 'comprehensive', weight: 0.7 },
-      { pattern: 'thorough', weight: 0.6 },
-      { pattern: 'detailed', weight: 0.5 },
-      { pattern: 'in-depth', weight: 0.7 },
-      
-      // Analytical requirements
-      { pattern: 'analyze', weight: 0.6 },
-      { pattern: 'research', weight: 0.5 },
-      { pattern: 'evaluate', weight: 0.6 },
-      { pattern: 'assess', weight: 0.6 },
-      { pattern: 'investigate', weight: 0.6 },
-      
-      // Multiple sources/strategies
-      { pattern: 'different sources', weight: 0.8 },
-      { pattern: 'multiple perspectives', weight: 0.8 },
-      { pattern: 'alternative approach', weight: 0.7 },
-      { pattern: 'various methods', weight: 0.7 },
-      
-      // Data and quality indicators
-      { pattern: 'accurate', weight: 0.6 },
-      { pattern: 'validate', weight: 0.7 },
-      { pattern: 'verify', weight: 0.7 },
-      { pattern: 'confirm', weight: 0.5 },
-      { pattern: 'ensure', weight: 0.5 },
-      
-      // Strategic keywords
-      { pattern: 'strategy', weight: 0.8 },
-      { pattern: 'strategic', weight: 0.9 },
-      { pattern: 'optimize', weight: 0.7 },
-      { pattern: 'plan', weight: 0.5 },
-      { pattern: 'step by step', weight: 0.8 },
-      
-      // Business and competitive analysis
-      { pattern: 'market', weight: 0.6 },
-      { pattern: 'competitor', weight: 0.7 },
-      { pattern: 'industry', weight: 0.6 },
-      { pattern: 'business', weight: 0.5 },
-      
-      // New advanced planner keywords
-      { pattern: 'smart', weight: 0.7 },
-      { pattern: 'intelligent', weight: 0.8 },
-      { pattern: 'advanced', weight: 0.7 },
-      { pattern: 'multi-step', weight: 0.8 },
-      { pattern: 'planning', weight: 0.8 },
-      { pattern: 'structured', weight: 0.7 },
-      { pattern: 'organized', weight: 0.6 },
-    ];
+    // Task complexity indicators
+    const hasComplexityIndicators = [
+      'compare', 'multi', 'complex', 'comprehensive', 'thorough', 'detailed', 'in-depth',
+      'analyze', 'research', 'evaluate', 'assess', 'investigate',
+      'different sources', 'multiple perspectives', 'alternative approach', 'various methods',
+      'accurate', 'validate', 'verify', 'confirm', 'ensure',
+      'strategy', 'strategic', 'optimize', 'plan', 'step by step',
+      'market', 'competitor', 'industry', 'business',
+      'smart', 'intelligent', 'advanced', 'multi-step', 'planning', 'structured', 'organized'
+    ].some(indicator => lowerMessage.includes(indicator));
     
-    // Calculate complexity score based on indicators
-    let complexityScore = 0;
-    let matchedIndicators = 0;
-    
-    complexityIndicators.forEach(indicator => {
-      if (lowerMessage.includes(indicator.pattern)) {
-        complexityScore += indicator.weight;
-        matchedIndicators++;
-      }
-    });
-    
-    // Message length is also an indicator of complexity
-    if (message.length > 100) {
-      complexityScore += 0.3;
-    }
-    if (message.length > 200) {
-      complexityScore += 0.2;
-    }
-    
-    // Normalize based on number of matched indicators
-    const normalizedScore = matchedIndicators > 0 
-      ? complexityScore / Math.sqrt(matchedIndicators) 
-      : complexityScore;
+    // Calculate complexity based on message length and indicators
+    const isLongMessage = message.length > 100;
+    const isVeryLongMessage = message.length > 200;
     
     // Direct triggers for strategic planning
     const strategicPlanningTriggers = [
@@ -1865,10 +1802,8 @@ const PanionChatAgent: React.FC = () => {
       lowerMessage.includes(trigger)
     );
     
-    // Decision threshold - tune this value as needed
-    const strategicModeThreshold = 0.9;
-    
-    return hasDirectTrigger || normalizedScore >= strategicModeThreshold;
+    // Return true if we have complexity indicators and long message, or direct trigger
+    return (hasComplexityIndicators && isLongMessage) || hasDirectTrigger || isVeryLongMessage;
   };
   
   // Function to check if we should use the advanced strategic planner
@@ -1894,16 +1829,16 @@ const PanionChatAgent: React.FC = () => {
       lowerMessage.includes(trigger)
     );
     
-    // Also use advanced planner for certain complex tasks
-    const complexTaskPatterns = [
-      { type: 'business_research', patterns: ['research business', 'find business information', 'business details'] },
-      { type: 'owner_contact', patterns: ['find owner', 'contact information', 'business owner', 'who owns'] },
-      { type: 'data_analysis', patterns: ['analyze data', 'data analysis', 'statistical analysis', 'analyze statistics'] }
-    ];
+    // Also use advanced planner for certain complex task types
+    const businessResearchPatterns = ['research business', 'find business information', 'business details'];
+    const ownerContactPatterns = ['find owner', 'contact information', 'business owner', 'who owns'];
+    const dataAnalysisPatterns = ['analyze data', 'data analysis', 'statistical analysis', 'analyze statistics'];
     
-    const hasComplexTask = complexTaskPatterns.some(task => 
-      task.patterns.some(pattern => lowerMessage.includes(pattern))
-    );
+    const hasBusinessResearchTask = businessResearchPatterns.some(pattern => lowerMessage.includes(pattern));
+    const hasOwnerContactTask = ownerContactPatterns.some(pattern => lowerMessage.includes(pattern));
+    const hasDataAnalysisTask = dataAnalysisPatterns.some(pattern => lowerMessage.includes(pattern));
+    
+    const hasComplexTask = hasBusinessResearchTask || hasOwnerContactTask || hasDataAnalysisTask;
     
     // If message is long and complex, consider using advanced planner
     const isLongComplex = message.length > 120 && shouldUseStrategicMode(message);
