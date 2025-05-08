@@ -160,7 +160,7 @@ export function TaskbarSettings() {
             <div className="space-y-2 mb-6">
               {pinnedAgents.length > 0 ? (
                 pinnedAgents.map((agentId) => {
-                  const agent = registry[agentId];
+                  const agent = registry.find(a => a.id === agentId);
                   if (!agent) return null;
                   
                   let AgentIcon;
@@ -194,8 +194,8 @@ export function TaskbarSettings() {
                           <AgentIcon className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <div className="font-medium">{agent.name}</div>
-                          <div className="text-xs text-muted-foreground">{agent.description || 'AI Agent'}</div>
+                          <div className="font-medium">{agent.title}</div>
+                          <div className="text-xs text-muted-foreground">AI Agent</div>
                         </div>
                       </div>
                       <Button 
@@ -208,7 +208,7 @@ export function TaskbarSettings() {
                           console.log("After unpinning agent:", agentId, useTaskbarStore.getState().pinnedAgents);
                           toast({
                             title: "Agent unpinned",
-                            description: `${agent.name || 'Agent'} has been removed from the taskbar`,
+                            description: `${agent.title || 'Agent'} has been removed from the taskbar`,
                           });
                         }}
                         className="text-destructive hover:bg-destructive/10 h-8 w-8"
@@ -227,11 +227,11 @@ export function TaskbarSettings() {
             
             <h3 className="text-sm font-medium mt-8 mb-2">Available Agents</h3>
             <div className="space-y-2">
-              {Object.entries(registry)
-                .filter(([id]) => !pinnedAgents.includes(id))
-                .map(([id, agent]) => {
+              {registry
+                .filter(agent => !pinnedAgents.includes(agent.id))
+                .map((agent) => {
                   let AgentIcon;
-                  switch (id) {
+                  switch (agent.id) {
                     case 'panion':
                       AgentIcon = MessageSquare;
                       break;
@@ -253,7 +253,7 @@ export function TaskbarSettings() {
                   
                   return (
                     <div 
-                      key={id}
+                      key={agent.id}
                       className="flex items-center justify-between p-2 bg-background/30 rounded-md border"
                     >
                       <div className="flex items-center">
@@ -261,21 +261,21 @@ export function TaskbarSettings() {
                           <AgentIcon className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <div className="font-medium">{agent.name}</div>
-                          <div className="text-xs text-muted-foreground">{agent.description || 'AI Agent'}</div>
+                          <div className="font-medium">{agent.title}</div>
+                          <div className="text-xs text-muted-foreground">AI Agent</div>
                         </div>
                       </div>
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         onClick={() => {
-                          console.log("Before pinning agent:", id, pinnedAgents);
+                          console.log("Before pinning agent:", agent.id, pinnedAgents);
                           const pinAgentFn = useTaskbarStore.getState().pinAgent;
-                          pinAgentFn(id);
-                          console.log("After pinning agent:", id, useTaskbarStore.getState().pinnedAgents);
+                          pinAgentFn(agent.id);
+                          console.log("After pinning agent:", agent.id, useTaskbarStore.getState().pinnedAgents);
                           toast({
                             title: "Agent pinned",
-                            description: `${agent.name || 'Agent'} has been added to the taskbar`,
+                            description: `${agent.title || 'Agent'} has been added to the taskbar`,
                           });
                         }}
                         className="text-primary hover:bg-primary/10 h-8 w-8"
