@@ -131,8 +131,11 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
     }
   };
   
-  // Bounce animation class for running indicators
-  const bounceClass = hasRunningIndicator ? 'animate-bounce-subtle' : '';
+  // State for hover animation
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Bounce animation class for running indicators or hover
+  const bounceClass = hasRunningIndicator || isHovered ? 'animate-bounce-subtle' : '';
   
   return (
     <ContextMenu>
@@ -769,14 +772,51 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
           
           {/* Layout Manager Button */}
           {visibleWidgets.includes('layoutManager') && (
-            <useLayoutManager.LayoutManager>
-              <TaskbarButton
-                icon={<Layout size={16} />}
-                label={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
-                isActive={!!activeLayoutId}
-                onClick={() => {}}
-              />
-            </useLayoutManager.LayoutManager>
+            <Popover>
+              <PopoverTrigger asChild>
+                <TaskbarButton
+                  icon={<Layout size={16} />}
+                  label={getActiveLayoutName() ? `Layout: ${getActiveLayoutName()}` : 'Layouts'}
+                  isActive={!!activeLayoutId}
+                  onClick={() => {}}
+                />
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0 bg-black/60 backdrop-blur-md border border-primary/20" side={getPopoverSide()}>
+                <div className="p-3 border-b border-primary/10 flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-white">Layouts</h3>
+                </div>
+                <div className="py-2 px-1">
+                  <div className="mb-2 px-2 text-xs font-medium text-primary/80">SAVED LAYOUTS</div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {/* Placeholder for layouts - would need actual layouts from agentStore */}
+                    {[
+                      { id: 'default', name: 'Default Layout' },
+                      { id: 'development', name: 'Development Layout' },
+                      { id: 'research', name: 'Research Layout' }
+                    ].map(layout => (
+                      <button
+                        key={layout.id}
+                        onClick={() => {
+                          // Restore layout (this function would need to be implemented in agentStore)
+                          // For now, just show a toast
+                          toast({
+                            title: "Layout Feature",
+                            description: `Layout restoration will be implemented in a future update`,
+                            variant: "default",
+                          });
+                        }}
+                        className={`w-full text-left px-2 py-1.5 rounded ${layout.id === activeLayoutId ? 'bg-primary/20' : 'hover:bg-primary/10'} transition-colors flex items-center justify-between`}
+                      >
+                        <span>{layout.name}</span>
+                        {layout.id === activeLayoutId && (
+                          <CheckCircle size={14} className="text-primary" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
           
           {/* Clock Widget - horizontal version */}
@@ -816,7 +856,41 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       </div>
       
       {/* System Log Component */}
-      <ClaraSystemLog />
+      {isSystemLogVisible && (
+        <div className="fixed right-4 bottom-16 w-96 h-80 bg-black/80 backdrop-blur-md border border-primary/20 rounded-md overflow-hidden shadow-xl z-50">
+          <div className="p-3 border-b border-primary/20 flex justify-between items-center">
+            <h3 className="text-sm font-medium text-white flex items-center">
+              <Terminal size={14} className="mr-2 text-primary" />
+              System Console
+            </h3>
+            <button 
+              onClick={toggleSystemLog}
+              className="text-white/60 hover:text-white transition-colors"
+            >
+              <X size={14} />
+            </button>
+          </div>
+          <div className="p-2 h-[calc(100%-44px)] overflow-y-auto font-mono text-xs">
+            {useSystemLogStore.getState().logs.map((log) => (
+              <div 
+                key={log.id} 
+                className={`mb-1 p-1 rounded ${
+                  log.type === 'error' ? 'bg-red-900/20 text-red-300' :
+                  log.type === 'warn' ? 'bg-yellow-900/20 text-yellow-300' :
+                  log.type === 'thinking' ? 'bg-blue-900/20 text-blue-300' :
+                  log.type === 'action' ? 'bg-purple-900/20 text-primary' :
+                  log.type === 'memory' ? 'bg-green-900/20 text-green-300' :
+                  'bg-gray-900/20 text-gray-300'
+                }`}
+              >
+                <span className="opacity-60">[{log.timestamp.toLocaleTimeString()}]</span>{' '}
+                <span className="font-semibold">{log.type.toUpperCase()}:</span>{' '}
+                {log.message}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 };

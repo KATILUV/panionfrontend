@@ -4,6 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animation classes */
+@keyframes subtle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: subtle-bounce 1.5s ease-in-out infinite;
+}
+
 /* Override for Shadcn popups and dropdowns to ensure they're on top */
 :root {
   --radix-dropdown-menu-content-z-index: 9999;
