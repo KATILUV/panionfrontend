@@ -381,11 +381,18 @@ const PanionChatAgent: React.FC = () => {
         return;
       }
       
-      // Send message to Panion API
-      setProcessingStage("Processing with Panion API...");
+      // Send message to Panion API - use strategic mode if enabled
+      if (strategicMode) {
+        setProcessingStage("Strategically evaluating approaches...");
+      } else {
+        setProcessingStage("Processing with Panion API...");
+      }
       setProcessingProgress(60);
       
-      const response = await fetch('/api/panion/chat', {
+      // Determine which endpoint to use based on strategic mode
+      const endpoint = strategicMode ? '/api/panion/strategic' : '/api/panion/chat';
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -394,12 +401,17 @@ const PanionChatAgent: React.FC = () => {
           message: inputValue,
           sessionId,
           hasRequiredCapabilities: requiredCapabilities.length === 0 || !createdNewAgents,
-          capabilities: requiredCapabilities
+          capabilities: requiredCapabilities,
+          options: strategicMode ? {
+            compare_strategies: true,
+            use_reflection: true,
+            max_attempts: 3
+          } : undefined
         }),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to send message to Panion');
+        throw new Error(`Failed to send message to Panion using ${strategicMode ? 'strategic' : 'standard'} mode`);
       }
       
       setProcessingStage("Formatting response...");
@@ -407,13 +419,53 @@ const PanionChatAgent: React.FC = () => {
       
       const data = await response.json();
       
+      // Process strategic information if available
+      let thinkingContent = data.thinking || '';
+      
+      if (strategicMode && data.strategies && Array.isArray(data.strategies)) {
+        // Format strategies information as part of the thinking process
+        thinkingContent += '\n\n**Strategy Evaluation:**\n';
+        
+        data.strategies.forEach((strategy: any, index: number) => {
+          thinkingContent += `\n**Strategy ${index + 1}: ${strategy.name}**\n`;
+          thinkingContent += `- Approach: ${strategy.approach || 'Not specified'}\n`;
+          thinkingContent += `- Success: ${strategy.success ? '✓' : '✗'}\n`;
+          if (strategy.reasoning) {
+            thinkingContent += `- Reasoning: ${strategy.reasoning}\n`;
+          }
+          if (strategy.execution_time) {
+            thinkingContent += `- Execution time: ${strategy.execution_time.toFixed(2)}s\n`;
+          }
+        });
+        
+        if (data.selected_strategy) {
+          thinkingContent += `\n**Selected Strategy:** ${data.selected_strategy.name} - ${data.selected_strategy.reasoning || 'Best overall performance'}\n`;
+        }
+      }
+      
+      // Check if this might be a request better handled by Clara
+      if (data.additional_info && data.additional_info.clara_context) {
+        const claraInfo = data.additional_info.clara_context;
+        
+        // Add Clara's context information to thinking
+        if (claraInfo.personal_context) {
+          thinkingContent += '\n\n**Clara Context:**\n';
+          thinkingContent += `${claraInfo.personal_context}\n`;
+        }
+        
+        // If Clara would be better for this query, suggest forwarding
+        if (claraInfo.clara_recommended) {
+          setNeedsMoreInfo(`This seems like a request Clara might handle better. Would you like me to forward this to Clara?`);
+        }
+      }
+      
       // Create bot message
       const botMessage: ChatMessage = {
         id: generateId(),
         content: data.response,
         isUser: false,
         timestamp: formatTime(new Date()),
-        thinking: data.thinking,
+        thinking: thinkingContent,
       };
       
       // Update messages
@@ -568,7 +620,7 @@ const PanionChatAgent: React.FC = () => {
         </div>
         
         <div className="flex flex-wrap justify-between items-center mt-2 text-xs text-muted-foreground">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center flex-wrap space-x-4">
             <div className="flex items-center">
               <Activity className="h-3 w-3 mr-1" />
               <span>Connected to Panion API</span>
@@ -591,6 +643,30 @@ const PanionChatAgent: React.FC = () => {
               </label>
               <span className="ml-1">Show thinking</span>
             </div>
+            
+            {/* Strategic Mode Toggle */}
+            <div className="flex items-center mt-1 sm:mt-0">
+              <input
+                type="checkbox"
+                id="strategic-toggle"
+                checked={strategicMode}
+                onChange={() => setStrategicMode(!strategicMode)}
+                className="sr-only peer"
+              />
+              <label 
+                htmlFor="strategic-toggle" 
+                className="relative inline-flex items-center h-4 w-7 rounded-full bg-muted peer-checked:bg-purple-500 cursor-pointer transition-colors"
+              >
+                <span className="inline-block h-3 w-3 transform translate-x-0.5 rounded-full bg-background peer-checked:translate-x-3.5 transition-transform"></span>
+              </label>
+              <span className="ml-1 flex items-center">
+                <Database className="h-3 w-3 mr-1" /> 
+                Strategic mode
+                <span className="ml-1 px-1 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-[10px]">
+                  {strategicMode ? 'ON' : 'OFF'}
+                </span>
+              </span>
+            </div>
           </div>
           
           <button 
@@ -598,7 +674,7 @@ const PanionChatAgent: React.FC = () => {
             onClick={() => {
               setMessages([{
                 id: generateId(),
-                content: "Hello! I'm your Panion assistant. How can I help you today?",
+                content: "Hello! I'm your Panion assistant. I can help with your tasks directly or delegate to specialized agents when needed. I work closely with Clara for personal assistance. How can I help you today?",
                 isUser: false,
                 timestamp: formatTime(new Date()),
               }]);
@@ -606,6 +682,7 @@ const PanionChatAgent: React.FC = () => {
               setProcessingStage(null);
               setProcessingProgress(0);
               setNeedsMoreInfo(null);
+              setStrategicMode(false); // Reset strategic mode on new chat
             }}
           >
             <RotateCcw className="h-3 w-3 mr-1" />
