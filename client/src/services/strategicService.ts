@@ -3,11 +3,27 @@
  * 
  * This service coordinates strategic approaches to complex queries by leveraging
  * internal debate, capability evolution, and external API calls.
+ * 
+ * Features:
+ * - Multi-perspective analysis through internal debate
+ * - Capability tracking and evolution
+ * - Adaptive response generation based on query complexity
+ * - Operation tracking with detailed status updates
  */
 
 import { v4 as uuidv4 } from 'uuid';
 import { getInternalDeliberation, shouldUseMultiPerspective } from '@/lib/internalDebate';
 import { getCapabilities, recordCapabilityUsage, getSuggestedCapabilities } from '@/lib/capabilityEvolution';
+
+// Enable debug mode for detailed logging
+const DEBUG_MODE = false;
+
+// Utility function for debug logging
+function debugLog(message: string, data?: any): void {
+  if (DEBUG_MODE) {
+    console.log(`[StrategicService] ${message}`, data || '');
+  }
+}
 
 // Store for in-progress operations
 const operations: Record<string, OperationStatus> = {};
@@ -162,6 +178,8 @@ async function executeStrategicQuery(
       result: response,
       endTime: Date.now(),
     };
+    
+    return response;
   } catch (error: any) {
     // Handle errors
     operations[operationId] = {
