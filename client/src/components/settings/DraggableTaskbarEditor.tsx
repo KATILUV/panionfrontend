@@ -324,9 +324,19 @@ export function DraggableTaskbarEditor() {
               variant="outline" 
               size="sm" 
               onClick={() => {
+                console.log("Before clearing pinned agents:", pinnedAgents);
                 // Get fresh function from store
                 const { clearPinnedAgents } = useTaskbarStore.getState();
                 clearPinnedAgents();
+                // Force a re-render immediately
+                setForceUpdate(prev => prev + 1);
+                // Also force a direct state update for all components
+                useTaskbarStore.setState({ pinnedAgents: [] });
+                
+                setTimeout(() => {
+                  const currentPinned = useTaskbarStore.getState().pinnedAgents;
+                  console.log("After clearing pinned agents:", currentPinned);
+                }, 0);
                 
                 toast({
                   title: "Taskbar cleared",

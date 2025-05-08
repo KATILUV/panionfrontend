@@ -388,11 +388,26 @@ export function TaskbarFixed({ position: propPosition, className = '' }: Taskbar
   // Function to clear all pinned agents
   const handleClearAllPins = () => {
     console.log("TaskbarFixed - Clearing all pins");
-    // Use the direct function from props rather than getState()
+    // Get current state for logging
+    const currentPinned = useTaskbarStore.getState().pinnedAgents;
+    console.log("Before clearing pinned agents:", currentPinned);
+    
+    // Use the direct function from store
     const { clearPinnedAgents } = useTaskbarStore.getState();
     clearPinnedAgents();
+    
     // Force a re-render immediately
     setForceUpdate(prev => prev + 1);
+    
+    // Also force a direct state update for all components
+    useTaskbarStore.setState({ pinnedAgents: [] });
+    
+    // Verify changes were applied
+    setTimeout(() => {
+      const updatedPinned = useTaskbarStore.getState().pinnedAgents;
+      console.log("After clearing pinned agents:", updatedPinned);
+    }, 0);
+    
     toast({
       title: "Taskbar Cleared",
       description: "All agents have been unpinned from the taskbar",

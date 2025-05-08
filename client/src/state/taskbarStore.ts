@@ -247,9 +247,22 @@ export const useTaskbarStore = create<TaskbarState>()(
         const current = get().pinnedAgents;
         console.log("Current pinned agents before clearing:", current);
         log.info("Clearing all pinned agents from taskbar");
-        // Explicit empty array to ensure clean state
+        
+        // Use multiple approaches to ensure clean state:
+        // 1. Set to empty array directly 
         set({ pinnedAgents: [] });
-        console.log("Pinned agents after clearing:", get().pinnedAgents);
+        
+        // 2. Log the result for debugging
+        const result = get().pinnedAgents;
+        console.log("Pinned agents after clearing:", result);
+        
+        // 3. Verify and force if needed (defensive programming)
+        if (result.length > 0) {
+          console.warn("Clearing pinned agents failed, forcing direct state update");
+          set(state => ({...state, pinnedAgents: []}));
+        }
+        
+        return []; // Return empty array for convenience
       },
       
       // Check if a widget is visible
