@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { log } from './systemLogStore';
+import React from 'react';
 
 export type AgentId = string;
 
@@ -65,6 +66,16 @@ interface AgentState {
   // Dynamic agent capabilities
   capabilities: Record<string, AgentCapability>;
   dynamicAgentCreationInProgress: boolean;
+  
+  // Dynamic agent functions
+  registerCapability: (capability: AgentCapability) => void;
+  hasCapability: (capabilityId: string) => boolean;
+  createDynamicAgent: (params: {
+    name: string;
+    description: string;
+    capabilities: string[];
+    icon?: string;
+  }) => Promise<AgentId | null>;
 
   // Window Actions
   registerAgent: (agent: Agent) => void;
@@ -149,7 +160,110 @@ export const useAgentStore = create<AgentState>()(
       // Auto-save settings
       autoSaveEnabled: true, // Enable auto-save by default
       autoSaveInterval: 60000, // Auto-save every 60 seconds by default
-      lastAutoSave: null, // Timestamp of last auto-save
+      lastAutoSave: null, // Timestamp of last auto-save,
+
+      // Dynamic agent capability management
+      registerCapability: (capability) => set((state) => {
+        if (state.capabilities[capability.id]) {
+          // Capability already registered
+          return state;
+        }
+        
+        log.info(`Registered new capability: ${capability.name} (${capability.id})`);
+        
+        return {
+          capabilities: {
+            ...state.capabilities,
+            [capability.id]: capability
+          }
+        };
+      }),
+      
+      hasCapability: (capabilityId) => {
+        const state = get();
+        
+        // First check if the capability exists in the registry
+        if (state.capabilities[capabilityId]) return true;
+        
+        // Otherwise check if any agent provides this capability
+        return state.registry.some(agent => 
+          agent.capabilities && agent.capabilities.includes(capabilityId)
+        );
+      },
+      
+      createDynamicAgent: async (params) => {
+        const { name, description, capabilities, icon = 'Cpu' } = params;
+        
+        set({ dynamicAgentCreationInProgress: true });
+        log.info(`Creating dynamic agent "${name}" with capabilities: ${capabilities.join(', ')}`);
+        
+        try {
+          // Call the server API to generate the agent code
+          const response = await fetch('/api/panion/create-agent', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name,
+              description,
+              capabilities
+            })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to create agent: ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          
+          if (!data.success) {
+            throw new Error(data.error || 'Unknown error creating agent');
+          }
+          
+          // Generate a unique ID for the new agent
+          const agentId = `dynamic_${generateId()}`;
+          
+          // Create dynamic component for the agent
+          const DynamicAgentComponent = React.lazy(() => import('../components/agents/DynamicAgent'));
+          
+          // Register the new agent
+          const agent: Agent = {
+            id: agentId,
+            title: name,
+            icon,
+            capabilities,
+            isDynamic: true,
+            component: () => React.createElement(
+              React.Suspense, 
+              { fallback: React.createElement('div', {}, 'Loading agent...') },
+              React.createElement(DynamicAgentComponent, {
+                agentId,
+                name,
+                description,
+                capabilities,
+                codeInfo: data.codeInfo
+              })
+            )
+          };
+          
+          get().registerAgent(agent);
+          
+          // Automatically open the newly created agent
+          setTimeout(() => {
+            get().openAgent(agentId);
+          }, 500);
+          
+          log.info(`Successfully created dynamic agent "${name}" with ID ${agentId}`);
+          return agentId;
+        } catch (error: any) {
+          const errorMessage = error?.message || 'Unknown error';
+          log.error(`Failed to create dynamic agent: ${errorMessage}`);
+          return null;
+        } finally {
+          set({ dynamicAgentCreationInProgress: false });
+        }
+      },
 
       registerAgent: (agent) => set((state) => {
         // Only register if not already in registry
