@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTaskbarStore, TaskbarWidgetType } from '../../state/taskbarStore';
-import { Check, ChevronDown, ChevronUp, LayoutGrid, Minus, Plus, Settings, Pin, PinOff, X, MessageSquare, Database, BrainCircuit, FlaskConical, Clock } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, LayoutGrid, Minus, Plus, Settings, Pin, PinOff, X, MessageSquare, Database, BrainCircuit, FlaskConical, Clock, Move } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { DraggableTaskbarEditor } from './DraggableTaskbarEditor';
 
 // Readable names for the widgets
 const widgetNames: Record<TaskbarWidgetType, string> = {
@@ -152,6 +153,10 @@ export function TaskbarSettings() {
       <Tabs defaultValue="pinned" className="w-full">
         <TabsList className="w-full mb-4">
           <TabsTrigger value="pinned" className="flex-1">Pinned Agents</TabsTrigger>
+          <TabsTrigger value="editor" className="flex-1 flex items-center">
+            <Move className="h-4 w-4 mr-1" />
+            Visual Editor
+          </TabsTrigger>
           <TabsTrigger value="widgets" className="flex-1">Widgets</TabsTrigger>
           <TabsTrigger value="appearance" className="flex-1">Appearance</TabsTrigger>
           <TabsTrigger value="behavior" className="flex-1">Behavior</TabsTrigger>
@@ -162,6 +167,7 @@ export function TaskbarSettings() {
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground mb-4">
               Select which agents should appear in your taskbar for quick access.
+              For visual drag-and-drop editing, use the <span className="font-medium">Visual Editor</span> tab.
             </p>
             
             <div className="flex items-center justify-between mb-4">
@@ -335,6 +341,11 @@ export function TaskbarSettings() {
                 })}
             </div>
           </div>
+        </TabsContent>
+        
+        {/* Visual Editor Tab */}
+        <TabsContent value="editor">
+          <DraggableTaskbarEditor />
         </TabsContent>
         
         {/* Widgets Tab */}

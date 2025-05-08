@@ -94,36 +94,85 @@ const AgentIconButton: React.FC<AgentIconButtonProps> = ({
   onClick
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const bounceClass = isHovered ? 'animate-bounce-subtle' : '';
+  const [showUnpinConfirm, setShowUnpinConfirm] = useState(false);
+  const [animateAction, setAnimateAction] = useState<'pin' | 'unpin' | null>(null);
+  const { toast } = useToast();
+  
+  // Base classes for animations
+  const getAnimationClass = () => {
+    if (animateAction === 'pin') return 'animate-scale-in';
+    if (animateAction === 'unpin') return 'animate-scale-out';
+    return isHovered ? 'animate-bounce-subtle hover:scale-110' : '';
+  };
   
   // Access functions from agent and taskbar stores
   const { minimizeAgent, closeAgent } = useAgentStore();
   const { unpinAgent, pinAgent } = useTaskbarStore();
   
-  // Function to handle pin/unpin
+  // Function to handle pin/unpin with visual feedback
   const handlePinUnpin = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent window open/focus
-    console.log("Pin/Unpin clicked for agent:", id, "Current pin status:", isPinned);
     
     // Always get fresh functions from store to avoid stale closures
     const store = useTaskbarStore.getState();
     
     if (isPinned) {
       console.log("Unpinning agent:", id);
-      store.unpinAgent(id);
+      // Animate then unpin
+      setAnimateAction('unpin');
+      setTimeout(() => {
+        store.unpinAgent(id);
+        setAnimateAction(null);
+        toast({
+          title: "Agent unpinned",
+          description: `${title} has been removed from the taskbar`,
+        });
+      }, 300);
     } else {
       console.log("Pinning agent:", id);
-      store.pinAgent(id);
+      // Animate then pin
+      setAnimateAction('pin');
+      setTimeout(() => {
+        store.pinAgent(id);
+        setAnimateAction(null);
+        toast({
+          title: "Agent pinned",
+          description: `${title} has been added to the taskbar`,
+        });
+      }, 300);
     }
   };
 
   // Function to directly unpin on click for the X button
   const handleDirectUnpin = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the button's onClick
+    
+    // Show confirmation first if not already showing
+    if (!showUnpinConfirm) {
+      setShowUnpinConfirm(true);
+      // Auto-hide after 3 seconds
+      setTimeout(() => setShowUnpinConfirm(false), 3000);
+      return;
+    }
+    
+    // User confirmed by clicking again
     console.log("Directly unpinning agent:", id);
-    // Get the function directly from the store to ensure freshness
-    const { unpinAgent } = useTaskbarStore.getState();
-    unpinAgent(id);
+    // Animate first
+    setAnimateAction('unpin');
+    
+    // Then actually unpin after animation
+    setTimeout(() => {
+      // Get the function directly from the store to ensure freshness
+      const { unpinAgent } = useTaskbarStore.getState();
+      unpinAgent(id);
+      setAnimateAction(null);
+      setShowUnpinConfirm(false);
+      
+      toast({
+        title: "Agent unpinned",
+        description: `${title} has been removed from the taskbar`,
+      });
+    }, 300);
   };
   
   // Access taskbar settings
