@@ -266,8 +266,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   }));
   
   // Get system log visibility state
-  const isSystemLogVisible = useSystemLogStore(state => state.visibility);
-  const toggleSystemLog = () => useSystemLogStore.setState(state => ({ visibility: !state.visibility }));
+  const isSystemLogVisible = useSystemLogStore(state => state.isVisible);
+  const toggleSystemLog = useSystemLogStore(state => state.toggleVisibility);
   
   // Get layout manager state
   const activeLayoutId = useAgentStore(state => state.activeLayoutId);
@@ -428,35 +428,98 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
         style={getTaskbarStyles()}
         className={`taskbar ${className} ${autohide ? 'opacity-30 hover:opacity-100 transition-opacity duration-300' : ''}`}
       >
-        {/* Agent icons section - Simplified with core agents only */}
+        {/* Agent icons section - with customizable pinned agents (macOS dock style) */}
         <div className={`
-          flex-1 ${isVertical ? 'flex flex-col space-y-1 py-2' : 'flex flex-row items-center space-x-1'}
+          flex-1 ${isVertical ? 'flex flex-col space-y-1.5 py-2' : 'flex flex-row items-center space-x-1.5'}
         `}>
-          {/* Filter registry to only show core agents */}
-          {registry
-            .filter(agent => {
-              // Only show specifically these core agents by default
-              const coreAgentIds = ['panion', 'clara', 'notes', 'marketplace']; 
-              return coreAgentIds.includes(agent.id);
-            })
-            .map(agent => {
-              const isOpen = windows[agent.id]?.isOpen;
-              const isMinimized = windows[agent.id]?.isMinimized;
-              const isActive = isOpen && !isMinimized;
-              
-              return (
-                <AgentIconButton
-                  key={agent.id}
-                  id={agent.id}
-                  icon={agent.icon}
-                  title={agent.title}
-                  isActive={isActive}
-                  onClick={handleIconClick}
-                />
-              );
-            })}
+          {/* Get pinned agents from taskbar store */}
+          {(() => {
+            // Get pinned agents list
+            const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
             
-          {/* Plus button to add more agents */}
+            // Create a map of all agents by ID for quicker access
+            const agentsMap = registry.reduce((map, agent) => {
+              map[agent.id] = agent;
+              return map;
+            }, {} as Record<AgentId, typeof registry[0]>);
+            
+            // Return pinned agents that exist in registry
+            return pinnedAgents
+              .filter(id => agentsMap[id])
+              .map(id => {
+                const agent = agentsMap[id];
+                const isOpen = windows[id]?.isOpen;
+                const isMinimized = windows[id]?.isMinimized;
+                const isActive = isOpen && !isMinimized;
+                const isRunning = isOpen && !isActive; // Running but not focused
+                
+                return (
+                  <AgentIconButton
+                    key={id}
+                    id={id}
+                    icon={agent.icon}
+                    title={agent.title}
+                    isActive={isActive}
+                    isPinned={true}
+                    hasRunningIndicator={isRunning}
+                    onClick={handleIconClick}
+                  />
+                );
+              });
+          })()}
+          
+          {/* Separator between pinned and running non-pinned agents */}
+          {(() => {
+            const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
+            
+            // Check if there are any running non-pinned agents
+            const hasRunningNonPinned = registry.some(agent => {
+              const isOpen = windows[agent.id]?.isOpen;
+              const isPinned = pinnedAgents.includes(agent.id);
+              return isOpen && !isPinned;
+            });
+            
+            if (hasRunningNonPinned && pinnedAgents.length > 0) {
+              return (
+                <div className={isVertical 
+                  ? "w-6 h-px bg-white/20 my-1" 
+                  : "h-6 w-px bg-white/20 mx-1"
+                }></div>
+              );
+            }
+            return null;
+          })()}
+          
+          {/* Show running non-pinned agents */}
+          {(() => {
+            const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
+            
+            return registry
+              .filter(agent => {
+                const isOpen = windows[agent.id]?.isOpen;
+                const isPinned = pinnedAgents.includes(agent.id);
+                return isOpen && !isPinned;
+              })
+              .map(agent => {
+                const isMinimized = windows[agent.id]?.isMinimized;
+                const isActive = windows[agent.id]?.isOpen && !isMinimized;
+                
+                return (
+                  <AgentIconButton
+                    key={agent.id}
+                    id={agent.id}
+                    icon={agent.icon}
+                    title={agent.title}
+                    isActive={isActive}
+                    isPinned={false}
+                    hasRunningIndicator={!isActive}
+                    onClick={handleIconClick}
+                  />
+                );
+              });
+          })()}
+            
+          {/* Plus button to add agents to taskbar */}
           <Popover>
             <PopoverTrigger asChild>
               <button
@@ -466,36 +529,45 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                   text-white/80 hover:text-white hover:bg-white/10 
                   transition-colors duration-200
                 `}
-                title="Add More"
+                title="Add Agents"
               >
                 <Plus size={16} />
-                {showLabels && <span className="text-xs font-medium whitespace-nowrap">Add More</span>}
+                {showLabels && <span className="text-xs font-medium whitespace-nowrap">Add Agents</span>}
               </button>
             </PopoverTrigger>
             <PopoverContent 
-              className="w-56 p-0 bg-black/60 backdrop-blur-md border border-primary/20"
+              className="w-56 p-0 bg-black/80 backdrop-blur-md border border-primary/20"
               side={getPopoverSide()}
             >
-              <div className="p-1 max-h-80 overflow-y-auto">
-                {registry
-                  .filter(agent => {
-                    // Show all other agents that aren't already in the taskbar
-                    const coreAgentIds = ['panion', 'clara', 'notes', 'marketplace'];
-                    return !coreAgentIds.includes(agent.id);
-                  })
-                  .map(agent => (
-                    <button
-                      key={agent.id}
-                      onClick={() => {
-                        handleIconClick(agent.id);
-                        // Close popover after clicking
-                      }}
-                      className="w-full text-left px-2 py-1.5 rounded hover:bg-primary/20 transition-colors flex items-center"
-                    >
-                      <span className="text-xl mr-2">{agent.icon}</span>
-                      <span>{agent.title}</span>
-                    </button>
-                  ))}
+              <div className="py-2 px-1">
+                <div className="mb-2 px-2 text-xs font-semibold text-primary/80">ADD TO TASKBAR</div>
+                <div className="max-h-[calc(100vh-150px)] overflow-y-auto">
+                  {(() => {
+                    const pinnedAgents = useTaskbarStore(state => state.pinnedAgents);
+                    const pinAgent = useTaskbarStore(state => state.pinAgent);
+                    
+                    // Show agents that aren't pinned yet
+                    return registry
+                      .filter(agent => !pinnedAgents.includes(agent.id))
+                      .map(agent => (
+                        <button
+                          key={agent.id}
+                          onClick={() => {
+                            pinAgent(agent.id);
+                            toast({
+                              title: "Agent Pinned",
+                              description: `Added ${agent.title} to taskbar`,
+                              variant: "default",
+                            });
+                          }}
+                          className="w-full text-left px-2 py-1.5 rounded hover:bg-primary/20 transition-colors flex items-center"
+                        >
+                          <span className="text-xl mr-2">{agent.icon}</span>
+                          <span>{agent.title}</span>
+                        </button>
+                      ));
+                  })()}
+                </div>
               </div>
             </PopoverContent>
           </Popover>
