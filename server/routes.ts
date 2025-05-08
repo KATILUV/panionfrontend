@@ -18,6 +18,7 @@ import {
   cleanupOldFiles,
   formatFileSize
 } from "./utils/fileCleanup";
+import agentRoutes from "./routes/agentRoutes";
 
 // Configure multer for handling file uploads
 const upload = multer({
@@ -45,6 +46,9 @@ if (!fs.existsSync(uploadsDir)) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from uploads directory
   app.use('/uploads', express.static(uploadsDir));
+  
+  // Use agent routes
+  app.use(agentRoutes);
   
   // API routes are defined below
 
