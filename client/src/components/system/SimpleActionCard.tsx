@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useThemeStore, ThemeAccent } from '../../state/themeStore';
+import { useThemeStore } from '../../state/themeStore';
 
 interface SimpleActionCardProps {
   title: string;
@@ -25,16 +25,56 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
   badge,
   badgeColor = "bg-primary" 
 }) => {
-  // IMPORTANT: Get theme accent directly in the component
+  // Get theme accent directly in the component
   const accent = useThemeStore(state => state.accent);
   
-  // Wrap onClick in useCallback to prevent unnecessary re-renders and maintain reference stability
+  // Refs for reliable event handling
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const clickHandled = useRef(false);
+  
+  // Handle click event with debounce protection
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Prevent double-firing of click events
+    if (clickHandled.current) return;
+    clickHandled.current = true;
+    
     console.log(`SimpleActionCard: Clicked ${title}`);
-    onClick();
+    
+    // Force button to show active state
+    if (buttonRef.current) {
+      buttonRef.current.classList.add('scale-95', 'shadow-inner', 'brightness-90');
+      
+      // Set a timeout to ensure the visual feedback is visible
+      setTimeout(() => {
+        // Execute the onClick handler
+        onClick();
+        
+        // Reset after a short delay
+        setTimeout(() => {
+          if (buttonRef.current) {
+            buttonRef.current.classList.remove('scale-95', 'shadow-inner', 'brightness-90');
+          }
+          clickHandled.current = false;
+        }, 100);
+      }, 50);
+    } else {
+      // Fallback if ref isn't available
+      onClick();
+      setTimeout(() => {
+        clickHandled.current = false;
+      }, 100);
+    }
   }, [title, onClick]);
+  
+  // Reset click state when component unmounts
+  useEffect(() => {
+    return () => {
+      clickHandled.current = false;
+    };
+  }, []);
   
   // If color is provided directly, use it, otherwise calculate based on accent theme
   const getColorGradient = () => {
@@ -89,8 +129,18 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
   
   return (
     <div 
-      className={`w-full text-left rounded-xl bg-gradient-to-br ${gradientColor} p-[1.5px] shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] cursor-pointer border-0 focus-within:outline-none focus-within:ring-2 focus-within:ring-white/30 focus-within:ring-offset-1 focus-within:ring-offset-transparent`}
+      ref={buttonRef}
+      className={`w-full text-left rounded-xl bg-gradient-to-br ${gradientColor} p-[1.5px] shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-95 active:shadow-inner cursor-pointer border-0 focus-within:outline-none focus-within:ring-2 focus-within:ring-white/30 focus-within:ring-offset-1 focus-within:ring-offset-transparent`}
       onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick(e as unknown as React.MouseEvent);
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      aria-label={title}
     >
       <Card className="bg-black/20 backdrop-blur-lg border-none h-full overflow-hidden relative rounded-xl">
         {badge && (

@@ -1230,31 +1230,26 @@ const Window: React.FC<WindowProps> = ({
           {/* Accent color bar at the top of focused windows */}
           <div className="window-accent-bar"></div>
         {/* Enhanced Snap Overlay Indicators */}
-        <AnimatePresence>
-          {isDragging && currentSnapPosition !== 'none' && (
-            <motion.div
-              className="absolute inset-0 z-10 pointer-events-none rounded-lg overflow-hidden"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98, transitionEnd: { display: 'none' } }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 500,
-                damping: 30,
-                duration: 0.2 
+        {/* Completely simplified outline - no animations */}
+        {isDragging && currentSnapPosition !== 'none' && (
+          <div
+            className="absolute inset-0 z-10 pointer-events-none rounded-lg overflow-hidden"
+            style={{
+              opacity: 0.8,
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden'
+            }}
+          >
+            <div 
+              className="absolute inset-0 rounded-lg border-2 border-primary bg-primary/20"
+              style={{
+                boxShadow: '0 0 20px rgba(var(--primary-rgb)/0.3)',
+                transform: 'translateZ(0)'
               }}
-            >
-              <div 
-                className={`absolute inset-0 rounded-lg border-2 border-primary bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb)/0.3)]`}
-                style={{ animationFillMode: 'both' }}
-              />
-              <div className="absolute top-0 left-0 w-full h-1 bg-primary/60" />
-              <div className="absolute top-0 right-0 h-full w-1 bg-primary/60" />
-              <div className="absolute bottom-0 right-0 w-full h-1 bg-primary/60" />
-              <div className="absolute top-0 left-0 h-full w-1 bg-primary/60" />
-            </motion.div>
-          )}
-        </AnimatePresence>
+            />
+          </div>
+        )}
         
         <div 
           className={`window-drag-handle window-titlebar flex items-center justify-between cursor-move
