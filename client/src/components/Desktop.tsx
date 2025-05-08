@@ -240,21 +240,18 @@ const Desktop: React.FC = () => {
     // Simple initialization - no complex layouts
     log.action('Using simplified layout system');
     
-    // Apply the Split View layout as a demo
+    // Only open Panion Chat on startup (no split view)
     setTimeout(() => {
       try {
-        // Use our simplified layout utility to show basic functionality
-        ApplyLayout.splitView('clara', 'notes');
-        
-        // Open the Panion chat agent
+        // Only open the Panion chat agent (no other windows)
         openAgent('panion');
         
         toast({
           title: "Welcome to Panion",
-          description: "Split view layout applied and Panion Chat opened"
+          description: "Panion Chat is ready to assist you"
         });
       } catch (err) {
-        console.error("Error applying initial layout:", err);
+        console.error("Error initializing Panion Chat:", err);
       }
     }, 2000); // Delay to ensure everything is loaded
     
