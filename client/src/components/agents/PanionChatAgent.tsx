@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Send, Settings, BrainCircuit, RotateCcw, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AgentStatus } from './AgentStatus';
-import { useAgentStore } from '../../state/agentStore';
+import { useAgentStore, Agent } from '../../state/agentStore';
 
 interface ChatMessage {
   id: string;
@@ -38,6 +38,8 @@ const PanionChatAgent: React.FC = () => {
   const hasCapability = useAgentStore(state => state.hasCapability);
   const createDynamicAgent = useAgentStore(state => state.createDynamicAgent);
   const dynamicAgentCreationInProgress = useAgentStore(state => state.dynamicAgentCreationInProgress);
+  const findBestAgentForCapabilities = useAgentStore(state => state.findBestAgentForCapabilities);
+  const openAgent = useAgentStore(state => state.openAgent);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: generateId(),
@@ -123,7 +125,7 @@ const PanionChatAgent: React.FC = () => {
     return requiredCapabilities;
   };
   
-  // Function to handle missing capabilities
+  // Function to handle missing capabilities using a hybrid approach
   const handleMissingCapabilities = async (requiredCapabilities: string[]): Promise<boolean> => {
     // Filter out capabilities that we already have
     const missingCapabilities = requiredCapabilities.filter(cap => !hasCapability(cap));
@@ -132,6 +134,52 @@ const PanionChatAgent: React.FC = () => {
       return false; // No missing capabilities
     }
     
+    // First, check if there's an existing agent that has most of the required capabilities
+    const bestMatchingAgent = findBestAgentForCapabilities(requiredCapabilities);
+    
+    if (bestMatchingAgent) {
+      // Calculate what capabilities this agent provides and what's still missing
+      const coveredCapabilities = requiredCapabilities.filter(cap => 
+        bestMatchingAgent.capabilities?.includes(cap)
+      );
+      
+      const stillMissingCapabilities = requiredCapabilities.filter(cap => 
+        !bestMatchingAgent.capabilities?.includes(cap)
+      );
+      
+      // If agent covers at least 70% of the required capabilities, use it
+      if (coveredCapabilities.length / requiredCapabilities.length >= 0.7) {
+        // Notify the user we're using an existing agent
+        const agentMessage: ChatMessage = {
+          id: generateId(),
+          content: `I'll use ${bestMatchingAgent.title} to help with this request, as it has the capabilities you need: ${coveredCapabilities.join(', ')}.`,
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, agentMessage]);
+        
+        // Open the existing agent
+        openAgent(bestMatchingAgent.id);
+        
+        // If there are still some missing capabilities but not enough to warrant a new agent,
+        // we'll just note it but proceed with the existing agent
+        if (stillMissingCapabilities.length > 0) {
+          const capabilitiesNote: ChatMessage = {
+            id: generateId(),
+            content: `Note: For additional capabilities like ${stillMissingCapabilities.join(', ')}, I might need to create specialized plugins later if needed.`,
+            isUser: false,
+            timestamp: formatTime(new Date()),
+          };
+          
+          setMessages(prev => [...prev, capabilitiesNote]);
+        }
+        
+        return false; // No new agents created, using existing one
+      }
+    }
+    
+    // If we didn't find a suitable existing agent, we need to create a new one
     // Notify the user about creating specialized agents
     const botMessage: ChatMessage = {
       id: generateId(),
@@ -143,6 +191,10 @@ const PanionChatAgent: React.FC = () => {
     setMessages(prev => [...prev, botMessage]);
     
     try {
+      // Determine which kind of specialized agent to create based on capabilities
+      let agentCreated = false;
+      
+      // Create specialized agents based on the specific capabilities needed
       if (missingCapabilities.includes(CAPABILITIES.SMOKESHOP_DATA)) {
         // Create a specialized agent for smokeshop data
         await createDynamicAgent({
@@ -161,6 +213,7 @@ const PanionChatAgent: React.FC = () => {
         };
         
         setMessages(prev => [...prev, confirmMessage]);
+        agentCreated = true;
       } else if (missingCapabilities.includes(CAPABILITIES.BUSINESS_RESEARCH)) {
         // Create a business research agent
         await createDynamicAgent({
@@ -179,6 +232,7 @@ const PanionChatAgent: React.FC = () => {
         };
         
         setMessages(prev => [...prev, confirmMessage]);
+        agentCreated = true;
       } else if (missingCapabilities.includes(CAPABILITIES.DATA_ANALYSIS)) {
         // Create a data analysis agent
         await createDynamicAgent({
@@ -197,6 +251,7 @@ const PanionChatAgent: React.FC = () => {
         };
         
         setMessages(prev => [...prev, confirmMessage]);
+        agentCreated = true;
       } else if (missingCapabilities.includes(CAPABILITIES.WEB_RESEARCH)) {
         // Create a web research agent
         await createDynamicAgent({
@@ -210,6 +265,28 @@ const PanionChatAgent: React.FC = () => {
         const confirmMessage: ChatMessage = {
           id: generateId(),
           content: 'I\'ve created a Web Research Agent to help find the information you need. It\'s now available in your workspace.',
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, confirmMessage]);
+        agentCreated = true;
+      }
+      
+      // If we didn't create any specific agent but have missing capabilities,
+      // create a general purpose plugin/agent
+      if (!agentCreated && missingCapabilities.length > 0) {
+        await createDynamicAgent({
+          name: `Specialized ${missingCapabilities[0]} Plugin`,
+          description: `Plugin to handle ${missingCapabilities.join(', ')} capabilities.`,
+          capabilities: missingCapabilities,
+          icon: 'Puzzle'
+        });
+        
+        // Add confirmation message
+        const confirmMessage: ChatMessage = {
+          id: generateId(),
+          content: `I've created a specialized plugin to handle ${missingCapabilities.join(', ')}. It's now available in your workspace.`,
           isUser: false,
           timestamp: formatTime(new Date()),
         };

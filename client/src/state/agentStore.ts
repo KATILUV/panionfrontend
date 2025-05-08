@@ -70,6 +70,8 @@ interface AgentState {
   // Dynamic agent functions
   registerCapability: (capability: AgentCapability) => void;
   hasCapability: (capabilityId: string) => boolean;
+  findAgentsWithCapability: (capabilityId: string) => Agent[];
+  findBestAgentForCapabilities: (requiredCapabilities: string[]) => Agent | null;
   createDynamicAgent: (params: {
     name: string;
     description: string;
@@ -189,6 +191,54 @@ export const useAgentStore = create<AgentState>()(
         return state.registry.some(agent => 
           agent.capabilities && agent.capabilities.includes(capabilityId)
         );
+      },
+      
+      findAgentsWithCapability: (capabilityId) => {
+        const state = get();
+        return state.registry.filter(agent => 
+          agent.capabilities && agent.capabilities.includes(capabilityId)
+        );
+      },
+      
+      findBestAgentForCapabilities: (requiredCapabilities) => {
+        const state = get();
+        
+        // If no capabilities needed, return null
+        if (!requiredCapabilities || requiredCapabilities.length === 0) {
+          return null;
+        }
+        
+        // Create an array of agents with a score based on how many required capabilities they have
+        const agentMatches = state.registry
+          .filter(agent => agent.capabilities && agent.capabilities.length > 0)
+          .map(agent => {
+            // Count how many of the required capabilities this agent has
+            const matchingCapabilities = requiredCapabilities.filter(cap => 
+              agent.capabilities?.includes(cap)
+            );
+            
+            return {
+              agent,
+              matchCount: matchingCapabilities.length,
+              matchPercentage: matchingCapabilities.length / requiredCapabilities.length,
+              // Priority factors: Daddy Data gets higher priority for certain tasks
+              priority: agent.id === 'daddy_data' ? 3 : (agent.isDynamic ? 2 : 1)
+            };
+          })
+          .filter(match => match.matchCount > 0); // Only consider agents with at least one matching capability
+          
+        // Sort by match count (descending) and then by priority
+        agentMatches.sort((a, b) => {
+          // If match percentages are significantly different, sort by that first
+          if (Math.abs(a.matchPercentage - b.matchPercentage) > 0.3) {
+            return b.matchPercentage - a.matchPercentage;
+          }
+          // If match percentages are similar, consider the priority
+          return b.priority - a.priority;
+        });
+        
+        // Return the best matching agent or null if none found
+        return agentMatches.length > 0 ? agentMatches[0].agent : null;
       },
       
       createDynamicAgent: async (params) => {
