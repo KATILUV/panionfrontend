@@ -244,9 +244,16 @@ const SnapGuides: React.FC<SnapGuidesProps> = ({
           animate="animate"
           exit="exit"
           variants={guideAnimation}
+          onAnimationComplete={(definition) => {
+            // Clean up after exit animation completes
+            if (definition === 'exit') {
+              // This helps clean up any lingering elements
+              return { display: 'none' };
+            }
+          }}
         >
           {/* Highlight area */}
-          <div className={getHighlightStyles()} />
+          <div className={getHighlightStyles()} style={{ animationFillMode: 'both' }} />
           
           {/* Edge guides */}
           {getEdgeGuides()}

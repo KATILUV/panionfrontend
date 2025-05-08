@@ -1221,7 +1221,7 @@ const Window: React.FC<WindowProps> = ({
               className="absolute inset-0 z-10 pointer-events-none rounded-lg overflow-hidden"
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
+              exit={{ opacity: 0, scale: 0.98, transitionEnd: { display: 'none' } }}
               transition={{ 
                 type: "spring", 
                 stiffness: 500,
@@ -1229,7 +1229,10 @@ const Window: React.FC<WindowProps> = ({
                 duration: 0.2 
               }}
             >
-              <div className={`absolute inset-0 rounded-lg border-2 border-primary bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb)/0.3)]`} />
+              <div 
+                className={`absolute inset-0 rounded-lg border-2 border-primary bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb)/0.3)]`}
+                style={{ animationFillMode: 'both' }}
+              />
               <div className="absolute top-0 left-0 w-full h-1 bg-primary/60" />
               <div className="absolute top-0 right-0 h-full w-1 bg-primary/60" />
               <div className="absolute bottom-0 right-0 w-full h-1 bg-primary/60" />
