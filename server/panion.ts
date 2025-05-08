@@ -4,6 +4,7 @@ import axios from 'axios';
 import { log } from './vite';
 import path from 'path';
 import fs from 'fs';
+import { taskManager } from './autonomous-agent';
 
 // Create router
 const router = Router();
@@ -1192,6 +1193,80 @@ router.get('/api/panion/task/:taskId', checkPanionAPIMiddleware, async (req: Req
       success: false,
       error: 'Task status error',
       message: `Error getting task status: ${error.message}`
+    });
+  }
+});
+
+// Endpoint to delegate tasks to the autonomous agent
+router.post('/api/panion/autonomous-task', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { 
+      description,
+      agentType = 'general',
+      priority = 'medium',
+      autoStart = true,
+      autoRetry = true,
+      resources = {}
+    } = req.body;
+    
+    if (!description) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid request',
+        message: 'Task description is required'
+      });
+    }
+    
+    // Create a task using the autonomous agent system
+    const taskData = {
+      agentType,
+      description,
+      priority,
+      autoStart,
+      autoRetry,
+      resources
+    };
+    
+    log(`Creating autonomous task: ${description}`, 'panion');
+    
+    // Create a new task with the autonomous agent
+    const taskId = uuidv4();
+    const task: any = {
+      id: taskId,
+      ...taskData,
+      status: 'pending',
+      progress: 0,
+      steps: [],
+      result: null,
+      error: null,
+      startTime: new Date(),
+      logs: [`[${new Date().toISOString()}] Task created through Panion integration`]
+    };
+    
+    // Add task to the autonomous agent's task manager
+    taskManager.tasks[taskId] = task;
+    
+    // Start processing if autoStart is true
+    if (autoStart) {
+      // Start the task processing in the background
+      setTimeout(() => {
+        task.status = 'in_progress';
+        taskManager.processTask(taskId);
+      }, 100);
+    }
+    
+    return res.json({
+      success: true,
+      id: taskId,
+      message: 'Autonomous task created successfully',
+      status: task.status
+    });
+  } catch (error: any) {
+    log(`Error creating autonomous task: ${error.message}`, 'panion');
+    res.status(500).json({
+      success: false,
+      error: 'Autonomous Agent error',
+      message: `Error creating autonomous task: ${error.message}`
     });
   }
 });
