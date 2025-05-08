@@ -15,6 +15,22 @@ const PANION_ENDPOINT = '/api/panion';
 let panionProcess: ChildProcess | null = null;
 let panionApiStarted = false;
 
+// Task management
+interface Task {
+  id: string;
+  type: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  progress: number;
+  description: string;
+  location?: string;
+  created: string;
+  result?: any;
+  error?: string;
+  data?: any;
+}
+
+const activeTasks: Record<string, Task> = {};
+
 // Agent and system configuration
 const AVAILABLE_AGENTS = {
   RESEARCH: 'research',
@@ -25,7 +41,8 @@ const AVAILABLE_AGENTS = {
   DATA_ANALYSIS: 'data_analysis',
   DOCUMENT_PROCESSING: 'document_processing',
   VIDEO: 'video',
-  TASK_AUTOMATION: 'task_automation'
+  TASK_AUTOMATION: 'task_automation',
+  DADDY_DATA: 'daddy_data'
 };
 
 // Start the Panion API process
@@ -782,6 +799,134 @@ router.post('/api/panion/schedule', checkPanionAPIMiddleware, async (req: Reques
     res.status(500).json({ 
       error: 'Panion API error',
       message: 'Error communicating with Panion API' 
+    });
+  }
+});
+
+// Dedicated smoke shop search endpoint using Daddy Data
+router.post('/api/panion/smokeshop/search', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { location = 'New York', limit = 20, additionalKeywords = [] } = req.body;
+    
+    // Generate task ID
+    const taskId = `smokeshop-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
+    // Create a new task and add it to activeTasks
+    const task: Task = {
+      id: taskId,
+      type: 'smokeshop_research',
+      status: 'pending',
+      progress: 0,
+      description: `Searching for smoke shops in ${location}`,
+      location,
+      created: new Date().toISOString(),
+      data: {
+        limit,
+        additionalKeywords
+      }
+    };
+    
+    activeTasks[taskId] = task;
+    
+    log(`Created smoke shop search task: ${taskId} for ${location}`, 'panion');
+    
+    // Send the task to the Python API for processing
+    axios.post(`${PANION_API_URL}/task`, {
+      task_id: taskId,
+      type: 'smokeshop_research',
+      details: {
+        type: 'smokeshop_research',
+        location,
+        limit,
+        additional_keywords: additionalKeywords
+      }
+    }).catch(error => {
+      // Update task if there was an error initiating it
+      activeTasks[taskId].status = 'failed';
+      activeTasks[taskId].error = `Failed to initiate task: ${error.message}`;
+      log(`Error initiating task ${taskId}: ${error.message}`, 'panion');
+    });
+    
+    // Return the task ID immediately
+    res.json({
+      success: true,
+      message: 'Smoke shop search task created',
+      taskId,
+      task
+    });
+  } catch (error: any) {
+    log(`Error creating smoke shop search task: ${error.message}`, 'panion');
+    res.status(500).json({
+      success: false,
+      error: 'Task creation error',
+      message: `Error creating smoke shop search task: ${error.message}`
+    });
+  }
+});
+
+// Task status endpoint
+router.get('/api/panion/task/:taskId', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    
+    // Check if task exists in our local tracking
+    if (activeTasks[taskId]) {
+      // If task is not completed, check with Python API for updates
+      if (activeTasks[taskId].status !== 'completed' && activeTasks[taskId].status !== 'failed') {
+        try {
+          const response = await axios.get(`${PANION_API_URL}/task/${taskId}`);
+          
+          // Update our local task tracking with the latest information
+          if (response.data && response.data.status) {
+            activeTasks[taskId] = {
+              ...activeTasks[taskId],
+              ...response.data
+            };
+          }
+        } catch (error) {
+          // If we can't get an update, just continue with our local data
+          log(`Error getting task update from Python API: ${error}`, 'panion');
+        }
+      }
+      
+      return res.json({
+        success: true,
+        task: activeTasks[taskId]
+      });
+    }
+    
+    // If not in local tracking, try to get from Python API
+    try {
+      const response = await axios.get(`${PANION_API_URL}/task/${taskId}`);
+      if (response.data && response.data.status) {
+        // Add to our local tracking
+        activeTasks[taskId] = response.data;
+        return res.json({
+          success: true,
+          task: response.data
+        });
+      }
+    } catch (error) {
+      // Task not found in Python API either
+      return res.status(404).json({
+        success: false,
+        error: 'Task not found',
+        message: `No task found with ID: ${taskId}`
+      });
+    }
+    
+    // Task not found in either local tracking or Python API
+    return res.status(404).json({
+      success: false,
+      error: 'Task not found',
+      message: `No task found with ID: ${taskId}`
+    });
+  } catch (error: any) {
+    log(`Error getting task status: ${error.message}`, 'panion');
+    res.status(500).json({
+      success: false,
+      error: 'Task status error',
+      message: `Error getting task status: ${error.message}`
     });
   }
 });
