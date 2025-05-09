@@ -22,11 +22,20 @@ import agentRoutes from "./routes/agentRoutes";
 import collaborationRoutes from "./routes/collaborationRoutes";
 import daddyDataRoutes from "./routes/daddyDataRoutes";
 import scheduledTaskRoutes from "./routes/scheduledTaskRoutes";
-import strategicPlannerRoutes from "./routes/strategicPlannerRoutes";
+// Import strategic planner functions
+import { 
+  createPlan, 
+  getPlan, 
+  listPlans, 
+  executePlan, 
+  getStrategicPlan 
+} from './strategic-planner';
+import { log } from './vite';
 import autonomousAgentRoutes from "./routes/autonomousAgentRoutes";
 import browserRoutes from "./routes/browserRoutes";
 import taskRoutes from "./routes/taskRoutes";
 import panionRoutes, { startPanionAPI, shutdownPanionAPI } from "./panion";
+import { handleEnhancedChat } from "./enhanced-panion";
 
 // Configure multer for handling file uploads
 const upload = multer({
@@ -64,6 +73,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Use Panion routes
   app.use(panionRoutes);
   
+  // Enhanced Panion chat endpoint with memory, self-reflection, and strategic planning
+  app.post('/api/panion/enhanced-chat', async (req, res) => {
+    try {
+      await handleEnhancedChat(req, res);
+    } catch (error) {
+      console.error('Error in enhanced panion chat:', error);
+      res.status(500).json({
+        error: 'Enhanced Panion API error',
+        message: 'Error processing enhanced chat request',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Use collaboration routes under /api/collaboration prefix
   app.use('/api/collaboration', collaborationRoutes);
   
@@ -76,8 +99,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Use Dynamic Agent routes
   app.use(dynamicAgentRoutes);
   
-  // Use Strategic Planner routes
-  app.use(strategicPlannerRoutes);
+  // Add strategic planner routes
+  app.post('/api/strategic-plan/generate', async (req, res) => {
+    try {
+      const { goal, conversationHistory = [], capabilities = [] } = req.body;
+      
+      if (!goal || typeof goal !== 'string') {
+        res.status(400).json({ 
+          error: 'Invalid request',
+          message: 'Goal description is required'
+        });
+        return;
+      }
+      
+      // Generate strategic plan
+      const plan = await getStrategicPlan(goal, conversationHistory, capabilities);
+      
+      res.json({ 
+        success: true,
+        plan
+      });
+    } catch (error) {
+      log(`Error generating strategic plan: ${error}`, 'strategic-planner');
+      res.status(500).json({
+        error: 'Failed to generate strategic plan',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.post('/api/strategic-plan/create', (req, res) => {
+    try {
+      const { goal, context = {} } = req.body;
+      
+      if (!goal || typeof goal !== 'string') {
+        res.status(400).json({ 
+          error: 'Invalid request',
+          message: 'Goal description is required'
+        });
+        return;
+      }
+      
+      // Create a new plan
+      const plan = createPlan(goal, context);
+      
+      res.json({
+        success: true,
+        plan
+      });
+    } catch (error) {
+      log(`Error creating plan: ${error}`, 'strategic-planner');
+      res.status(500).json({
+        error: 'Failed to create plan',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.get('/api/strategic-plan/:id', (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!id) {
+        res.status(400).json({ 
+          error: 'Invalid request',
+          message: 'Plan ID is required'
+        });
+        return;
+      }
+      
+      const plan = getPlan(id);
+      
+      if (!plan) {
+        res.status(404).json({
+          error: 'Plan not found',
+          message: `No plan found with ID: ${id}`
+        });
+        return;
+      }
+      
+      res.json({
+        success: true,
+        plan
+      });
+    } catch (error) {
+      log(`Error getting plan: ${error}`, 'strategic-planner');
+      res.status(500).json({
+        error: 'Failed to get plan',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.get('/api/strategic-plans', (req, res) => {
+    try {
+      const plans = listPlans();
+      
+      res.json({
+        success: true,
+        count: plans.length,
+        plans
+      });
+    } catch (error) {
+      log(`Error listing plans: ${error}`, 'strategic-planner');
+      res.status(500).json({
+        error: 'Failed to list plans',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.post('/api/strategic-plan/:id/execute', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!id) {
+        res.status(400).json({ 
+          error: 'Invalid request',
+          message: 'Plan ID is required'
+        });
+        return;
+      }
+      
+      // Check if plan exists
+      const plan = getPlan(id);
+      
+      if (!plan) {
+        res.status(404).json({
+          error: 'Plan not found',
+          message: `No plan found with ID: ${id}`
+        });
+        return;
+      }
+      
+      // Execute the plan (this is asynchronous)
+      await executePlan(id);
+      
+      res.json({
+        success: true,
+        message: `Plan ${id} execution started`,
+        status: 'in_progress'
+      });
+    } catch (error) {
+      log(`Error executing plan: ${error}`, 'strategic-planner');
+      res.status(500).json({
+        error: 'Failed to execute plan',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   
   // Use Autonomous Agent routes
   app.use(autonomousAgentRoutes);

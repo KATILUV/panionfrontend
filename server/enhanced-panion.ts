@@ -5,8 +5,49 @@ import { v4 as uuidv4 } from 'uuid';
 import * as memory from './memory';
 import OpenAI from 'openai';
 import { taskManager } from './autonomous-agent';
-import { getStrategicPlan } from './strategic-planner';
-import { extractCapabilities } from './utils/capability-detection';
+import { getStrategicPlan, StrategicPlan } from './strategic-planner';
+
+// Simple capability extraction function - will be implemented in full later
+async function extractCapabilities(message: string): Promise<string[]> {
+  const lowercaseMessage = message.toLowerCase();
+  const capabilities: string[] = [];
+  
+  // Basic pattern matching for capabilities
+  if (lowercaseMessage.includes('search') || lowercaseMessage.includes('find') || lowercaseMessage.includes('locate')) {
+    capabilities.push('search');
+  }
+  
+  if (lowercaseMessage.includes('analyze') || lowercaseMessage.includes('data') || lowercaseMessage.includes('statistics')) {
+    capabilities.push('data_analysis');
+  }
+  
+  if (lowercaseMessage.includes('plan') || lowercaseMessage.includes('steps') || lowercaseMessage.includes('strategy')) {
+    capabilities.push('planning');
+  }
+  
+  if (lowercaseMessage.includes('creative') || lowercaseMessage.includes('write') || lowercaseMessage.includes('content')) {
+    capabilities.push('creative_writing');
+  }
+  
+  if (lowercaseMessage.includes('code') || lowercaseMessage.includes('program') || lowercaseMessage.includes('develop')) {
+    capabilities.push('coding');
+  }
+  
+  if (lowercaseMessage.includes('image') || lowercaseMessage.includes('picture') || lowercaseMessage.includes('photo')) {
+    capabilities.push('visual_processing');
+  }
+  
+  if (lowercaseMessage.includes('remember') || lowercaseMessage.includes('recall') || lowercaseMessage.includes('previous')) {
+    capabilities.push('memory_recall');
+  }
+  
+  if (lowercaseMessage.includes('coordinate') || lowercaseMessage.includes('team') || lowercaseMessage.includes('collaborate')) {
+    capabilities.push('coordination');
+  }
+  
+  // Return detected capabilities, or an empty array if none are detected
+  return capabilities;
+}
 
 // Initialize OpenAI client for memory operations
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
@@ -182,7 +223,8 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
     // Strategic plan if available
     if (strategicPlan) {
       enhancedThinking += `Strategic plan:\n${strategicPlan.planDescription}\n`;
-      enhancedThinking += `Steps:\n${strategicPlan.steps.map((s, i) => `${i+1}. ${s}`).join('\n')}\n\n`;
+      enhancedThinking += `Steps:\n${strategicPlan.steps.map((step, index) => 
+        `${index+1}. ${step.description}`).join('\n')}\n\n`;
     }
     
     // Add capability analysis
@@ -483,7 +525,8 @@ async function generateFallbackResponse(
     // Add strategic plan if available
     if (strategicPlan) {
       systemMessage += `\n\nStrategic plan for this request:\n${strategicPlan.planDescription}\n`;
-      systemMessage += `Steps:\n${strategicPlan.steps.map((s, i) => `${i+1}. ${s}`).join('\n')}`;
+      systemMessage += `Steps:\n${strategicPlan.steps.map((step, index) => 
+        `${index+1}. ${step.description}`).join('\n')}`;
     }
     
     // Add instructions for the response format
