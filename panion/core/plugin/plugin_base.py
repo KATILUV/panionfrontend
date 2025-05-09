@@ -181,7 +181,7 @@ class BasePlugin(ABC):
         Returns:
             PluginResult with success status and any shutdown information.
         """
-        return PluginResult.success(message=f"Plugin {self.id} stopped")
+        return PluginResult.success_result(message=f"Plugin {self.id} stopped")
     
     def validate_parameters(self, parameters: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         """Validate plugin parameters.
@@ -319,7 +319,7 @@ class BasePlugin(ABC):
             PluginResult with plugin metrics.
         """
         # Default implementation: no metrics
-        return PluginResult.success(
+        return PluginResult.success_result(
             message="Metrics retrieved successfully",
             data={}
         )

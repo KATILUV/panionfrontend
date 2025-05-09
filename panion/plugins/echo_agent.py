@@ -14,15 +14,19 @@ from panion.core.plugin.interfaces import PluginState
 class EchoAgent(BasePlugin):
     """A simple echo agent that returns the input message."""
     
-    def __init__(self):
+    def __init__(self, metadata=None):
         """Initialize the echo agent."""
-        super().__init__(
-            name="EchoAgent",
-            version="1.0.0",
-            description="A simple echo agent that returns the input message",
-            author="Panion Team",
-            tags=["echo", "text_response", "agent"]
-        )
+        if metadata is None:
+            from panion.core.plugin.plugin_base import PluginMetadata
+            metadata = PluginMetadata(
+                id="echo_agent",
+                name="EchoAgent",
+                version="1.0.0",
+                description="A simple echo agent that returns the input message",
+                author="Panion Team",
+                type="agent"
+            )
+        super().__init__(metadata)
         self.logger = logging.getLogger("EchoAgent")
         self.is_running = False
         self.context = {}
@@ -34,7 +38,7 @@ class EchoAgent(BasePlugin):
             self.logger.info("Initializing echo agent")
             self.is_running = True
             self.logger.info("Echo agent initialized successfully")
-            return PluginResult.success(message="Echo agent initialized successfully")
+            return PluginResult.success_result(message="Echo agent initialized successfully")
         except Exception as e:
             self.logger.error(f"Error initializing echo agent: {str(e)}")
             return PluginResult.failure(message=f"Failed to initialize Echo agent: {str(e)}")
@@ -44,7 +48,7 @@ class EchoAgent(BasePlugin):
         try:
             self.logger.info("Starting echo agent")
             self.is_running = True
-            return PluginResult.success(message="Echo agent started successfully")
+            return PluginResult.success_result(message="Echo agent started successfully")
         except Exception as e:
             self.logger.error(f"Error starting echo agent: {str(e)}")
             return PluginResult.failure(message=f"Failed to start Echo agent: {str(e)}")
