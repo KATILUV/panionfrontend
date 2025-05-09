@@ -136,17 +136,87 @@ export async function executePlan(planId: string): Promise<void> {
   
   // Update plan status
   plan.status = 'in_progress';
-  
-  // In a real implementation, this would process each step...
-  // For now, just log that we're executing
   log(`Executing strategic plan: ${planId}`, 'strategic-planner');
   
-  // After some time, mark it as completed
-  setTimeout(() => {
+  // Process steps in sequence
+  try {
+    for (const step of plan.steps) {
+      // Skip steps that are already completed
+      if (step.status === 'completed') {
+        continue;
+      }
+      
+      // Mark current step as in progress
+      step.status = 'in_progress';
+      log(`Executing step ${step.order}: ${step.description}`, 'strategic-planner');
+      
+      // Execute the step
+      const result = await executeStep(plan, step);
+      
+      // Update step with result
+      step.status = 'completed';
+      step.results = result;
+      log(`Completed step ${step.order}`, 'strategic-planner');
+    }
+    
+    // All steps completed successfully
     plan.status = 'completed';
     plan.completedAt = new Date().toISOString();
     log(`Completed strategic plan: ${planId}`, 'strategic-planner');
-  }, 5000);
+  } catch (error) {
+    log(`Error executing strategic plan: ${error}`, 'strategic-planner');
+    plan.status = 'failed';
+  }
+}
+
+/**
+ * Execute a single step of a strategic plan
+ */
+async function executeStep(plan: StrategicPlan, step: PlanStep): Promise<any> {
+  try {
+    // Use OpenAI to determine the best way to execute this step
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a strategic execution assistant. You are tasked with executing a step in a strategic plan. 
+          
+          Plan goal: "${plan.goal}"
+          Plan description: "${plan.planDescription}"
+          Current step: "${step.description}" (step ${step.order} of ${plan.steps.length})
+          
+          Your task is to:
+          1. Break down this step into specific actions
+          2. Determine the best way to accomplish this step
+          3. Identify any required information or resources
+          4. If this step requires specific capabilities, explain how to use them
+          5. Provide a detailed execution plan for this step
+          
+          Required capabilities: ${plan.capabilities.join(', ')}`
+        }
+      ],
+      temperature: 0.5,
+      max_tokens: 800
+    });
+    
+    const stepExecution = response.choices[0].message.content || 'No execution plan generated.';
+    
+    // In a production system, we would actually execute the step based on the execution plan
+    // For now, we'll just return the execution plan as the result
+    
+    // Wait a bit to simulate execution time (1-3 seconds)
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+    
+    return {
+      executionPlan: stepExecution,
+      timestamp: new Date().toISOString(),
+      success: true
+    };
+  } catch (error) {
+    log(`Error executing step ${step.order}: ${error}`, 'strategic-planner');
+    throw error;
+  }
 }
 
 /**

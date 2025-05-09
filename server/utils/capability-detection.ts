@@ -34,6 +34,8 @@ const CAPABILITY_CATEGORIES = [
   'smokeshop_data',      // Special capability for smoke shop research
 ];
 
+import * as knowledgeGraph from '../knowledge-graph';
+
 /**
  * Extract capabilities needed based on the message content
  */
@@ -48,6 +50,61 @@ export async function extractCapabilities(message: string): Promise<string[]> {
   if (isCapabilityQuestion(message)) {
     log(`System capability question detected, using self_reflection only`, 'capability-detection');
     return ['self_reflection'];
+  }
+  
+  // Query knowledge graph for relevant entities and relationships
+  let knowledgeInsights = '';
+  let relevantCapabilities: string[] = [];
+  
+  try {
+    const knowledgeResults = await knowledgeGraph.queryKnowledge(message);
+    
+    // Extract relevant capabilities from knowledge graph results
+    if (knowledgeResults.relevantEntities.length > 0) {
+      // Get capabilities from Panion entity if found
+      const panionEntity = knowledgeResults.relevantEntities.find(
+        entity => entity.name.toLowerCase() === 'panion'
+      );
+      
+      if (panionEntity && 
+          panionEntity.attributes.capabilities && 
+          Array.isArray(panionEntity.attributes.capabilities)) {
+        
+        // Map capabilities from knowledge graph to our capability categories
+        const mappedCapabilities = panionEntity.attributes.capabilities
+          .map(cap => {
+            if (typeof cap !== 'string') return null;
+            const normalizedCap = cap.toLowerCase();
+            
+            // Map from knowledge graph capabilities to our capability categories
+            if (normalizedCap.includes('multi-agent') || normalizedCap.includes('collaboration'))
+              return 'coordination';
+            if (normalizedCap.includes('strategic'))
+              return 'strategic_thinking';
+            if (normalizedCap.includes('browser') || normalizedCap.includes('web'))
+              return 'web_scraping';
+            if (normalizedCap.includes('knowledge graph'))
+              return 'knowledge_retrieval';
+            if (normalizedCap.includes('business intelligence'))
+              return 'data_analysis';
+            if (normalizedCap.includes('autonomous'))
+              return 'planning';
+            return null;
+          })
+          .filter(Boolean) as string[];
+        
+        // Add relevant capabilities from knowledge graph
+        relevantCapabilities = mappedCapabilities;
+        
+        log(`Capabilities extracted from knowledge graph: ${relevantCapabilities.join(', ')}`, 'capability-detection');
+        
+        // Create knowledge insights for AI prompt
+        knowledgeInsights = `\nBased on knowledge graph analysis, these capabilities may be relevant: ${mappedCapabilities.join(', ')}`;
+      }
+    }
+  } catch (error) {
+    log(`Error querying knowledge graph for capabilities: ${error}`, 'capability-detection');
+    // Continue without knowledge graph insights
   }
   
   try {
@@ -66,12 +123,14 @@ export async function extractCapabilities(message: string): Promise<string[]> {
           3. DO NOT select 'research' unless the request clearly requires gathering extensive information from multiple sources.
           4. For simple conversational questions, explanations, or opinions, return an EMPTY array [].
           5. For questions about your own capabilities, select ONLY 'self_reflection'.
+          6. Consider any capabilities suggested by the knowledge graph.
           
           Respond with a JSON object like {"capabilities": []} containing ONLY the minimum necessary capabilities.`
         },
         {
           role: "user",
           content: `User message: "${message}"
+          ${knowledgeInsights}
           
           What capabilities would be needed to address this request? Respond with a JSON array of capability strings.`
         }
@@ -84,23 +143,34 @@ export async function extractCapabilities(message: string): Promise<string[]> {
       const result = JSON.parse(response.choices[0].message.content || '{"capabilities": []}');
       
       // Extract capabilities and validate
-      const capabilities = Array.isArray(result.capabilities) 
+      const aiCapabilities = Array.isArray(result.capabilities) 
         ? result.capabilities
         : [];
       
+      // Combine AI capabilities with knowledge graph capabilities
+      const combinedCapabilities = [...new Set([...aiCapabilities, ...relevantCapabilities])];
+      
       // Filter to only include valid capabilities
-      const validCapabilities = capabilities.filter(c => 
+      const validCapabilities = combinedCapabilities.filter(c => 
         typeof c === 'string' && CAPABILITY_CATEGORIES.includes(c)
       );
       
-      log(`Detected capabilities: ${validCapabilities.join(', ')}`, 'capability-detection');
+      log(`Detected capabilities (combined): ${validCapabilities.join(', ')}`, 'capability-detection');
       return validCapabilities;
     } catch (parseError) {
       log(`Error parsing capability detection response: ${parseError}`, 'capability-detection');
+      // Fallback to knowledge graph capabilities if AI parsing fails
+      if (relevantCapabilities.length > 0) {
+        return relevantCapabilities;
+      }
       return [];
     }
   } catch (error) {
     log(`Error detecting capabilities: ${error}`, 'capability-detection');
+    // Fallback to knowledge graph capabilities if AI call fails
+    if (relevantCapabilities.length > 0) {
+      return relevantCapabilities;
+    }
     return [];
   }
 }
