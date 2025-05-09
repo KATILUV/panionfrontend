@@ -158,6 +158,30 @@ class BasePlugin(ABC):
             PluginResult with success status and any cleanup information.
         """
         pass
+        
+    async def start(self) -> PluginResult:
+        """Start the plugin.
+        
+        This method is called when the plugin is started by the plugin manager.
+        By default, it just returns a success result but plugins can override
+        this to perform any startup operations.
+        
+        Returns:
+            PluginResult with success status and any startup information.
+        """
+        return PluginResult.success(message=f"Plugin {self.id} started")
+    
+    async def stop(self) -> PluginResult:
+        """Stop the plugin.
+        
+        This method is called when the plugin is stopped by the plugin manager.
+        By default, it just returns a success result but plugins can override
+        this to perform any shutdown operations.
+        
+        Returns:
+            PluginResult with success status and any shutdown information.
+        """
+        return PluginResult.success(message=f"Plugin {self.id} stopped")
     
     def validate_parameters(self, parameters: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         """Validate plugin parameters.

@@ -64,7 +64,7 @@ class PluginManager:
             self._plugins[name] = plugin
             
             # Register by type (for capability-based lookup)
-            plugin_type = plugin.metadata.plugin_type
+            plugin_type = plugin.metadata.type
             if plugin_type not in self._plugins_by_type:
                 self._plugins_by_type[plugin_type] = []
             self._plugins_by_type[plugin_type].append(plugin)
@@ -111,7 +111,7 @@ class PluginManager:
                 self._initialized_plugins.remove(plugin_name)
                 
             # Remove from type mapping
-            plugin_type = plugin.metadata.plugin_type
+            plugin_type = plugin.metadata.type
             if plugin_type in self._plugins_by_type:
                 if plugin in self._plugins_by_type[plugin_type]:
                     self._plugins_by_type[plugin_type].remove(plugin)

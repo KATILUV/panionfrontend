@@ -1,221 +1,252 @@
 """
-Plugin System Interfaces
-Defines abstract interfaces to break circular dependencies between components.
+Plugin Interfaces
+
+This module defines the interfaces that plugins can implement to provide
+specific functionality to the Panion system. These interfaces formalize
+the contracts between the system and plugins.
 """
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List, Protocol, runtime_checkable, TYPE_CHECKING
-from pathlib import Path
-from datetime import datetime
+import abc
+from typing import Any, Dict, List, Optional, Protocol, TypeVar, Union
 
-if TYPE_CHECKING:
-    from .types import Plugin, PluginMetadata, PluginState
-    from ..goals.types import Goal
+from .plugin_base import PluginResult
 
-class IPluginManager(ABC):
-    """Interface for plugin management operations."""
+# Type variables for generics
+T = TypeVar('T')
+
+class DataProcessor(Protocol):
+    """Interface for plugins that process data."""
     
-    @abstractmethod
-    async def initialize(self) -> None:
-        """Initialize the plugin manager."""
-        pass
-    
-    @abstractmethod
-    async def start(self) -> None:
-        """Start the plugin manager."""
-        pass
-    
-    @abstractmethod
-    async def stop(self) -> None:
-        """Stop the plugin manager."""
-        pass
-    
-    @abstractmethod
-    async def pause(self) -> None:
-        """Pause the plugin manager."""
-        pass
-    
-    @abstractmethod
-    async def resume(self) -> None:
-        """Resume the plugin manager."""
-        pass
-    
-    @abstractmethod
-    async def update(self) -> None:
-        """Update the plugin manager state."""
-        pass
-    
-    @abstractmethod
-    async def load_plugin(self, plugin_id: str, config: Dict[str, Any]) -> bool:
-        """Load a plugin.
+    async def process_data(self, data: Any) -> PluginResult:
+        """Process the provided data.
         
         Args:
-            plugin_id: Plugin identifier
-            config: Plugin configuration
+            data: The data to process.
             
         Returns:
-            bool: Whether loading was successful
+            PluginResult: The result of the processing.
         """
-        pass
+        ...
+        
+    async def get_supported_formats(self) -> PluginResult:
+        """Get the list of data formats supported by this processor.
+        
+        Returns:
+            PluginResult: The supported data formats.
+        """
+        ...
+
+
+class AgentPlugin(Protocol):
+    """Interface for plugins that act as autonomous agents."""
     
-    @abstractmethod
-    async def unload_plugin(self, plugin_id: str) -> bool:
-        """Unload a plugin.
+    async def handle_task(self, task: Dict[str, Any]) -> PluginResult:
+        """Handle a task assigned to this agent.
         
         Args:
-            plugin_id: Plugin identifier
+            task: The task to handle.
             
         Returns:
-            bool: Whether unloading was successful
+            PluginResult: The result of handling the task.
         """
-        pass
+        ...
+        
+    async def get_capabilities(self) -> PluginResult:
+        """Get the capabilities of this agent.
+        
+        Returns:
+            PluginResult: The agent's capabilities.
+        """
+        ...
+        
+    async def get_status(self) -> PluginResult:
+        """Get the current status of this agent.
+        
+        Returns:
+            PluginResult: The agent's status.
+        """
+        ...
+
+
+class DataSourcePlugin(Protocol):
+    """Interface for plugins that provide data from external sources."""
     
-    @abstractmethod
-    async def get_plugin(self, plugin_id: str) -> Optional['IPlugin']:
-        """Get a plugin instance.
+    async def fetch_data(self, query: Dict[str, Any]) -> PluginResult:
+        """Fetch data based on the provided query.
         
         Args:
-            plugin_id: Plugin identifier
+            query: The query parameters.
             
         Returns:
-            Optional[IPlugin]: Plugin instance if found
+            PluginResult: The fetched data.
         """
-        pass
+        ...
+        
+    async def get_source_info(self) -> PluginResult:
+        """Get information about this data source.
+        
+        Returns:
+            PluginResult: Information about the data source.
+        """
+        ...
+
+
+class UIComponentPlugin(Protocol):
+    """Interface for plugins that provide UI components."""
     
-    @abstractmethod
-    async def get_plugin_state(self, plugin_id: str) -> Optional['ComponentState']:
-        """Get a plugin's state.
+    async def get_component_definition(self, component_id: str) -> PluginResult:
+        """Get the definition of a UI component.
         
         Args:
-            plugin_id: Plugin identifier
+            component_id: The ID of the component to get.
             
         Returns:
-            Optional[ComponentState]: Plugin state if found
+            PluginResult: The component definition.
         """
-        pass
+        ...
+        
+    async def list_components(self) -> PluginResult:
+        """List all available UI components.
+        
+        Returns:
+            PluginResult: The list of available components.
+        """
+        ...
+
+
+class StoragePlugin(Protocol):
+    """Interface for plugins that provide storage functionality."""
     
-    @abstractmethod
-    async def get_plugin_metrics(self, plugin_id: str) -> Optional[Dict[str, Any]]:
-        """Get a plugin's metrics.
+    async def save(self, key: str, data: Any) -> PluginResult:
+        """Save data to storage.
         
         Args:
-            plugin_id: Plugin identifier
+            key: The key to save the data under.
+            data: The data to save.
             
         Returns:
-            Optional[Dict[str, Any]]: Plugin metrics if found
+            PluginResult: The result of the save operation.
         """
-        pass
-    
-    @abstractmethod
-    async def update_metrics(self) -> None:
-        """Update plugin metrics."""
-        pass
-    
-    @abstractmethod
-    async def get_status(self) -> Dict[str, Any]:
-        """Get the current status of the plugin manager."""
-        pass
-    
-    @abstractmethod
-    async def register_plugin(self, plugin: 'IPlugin') -> None:
-        """Register a new plugin."""
-        pass
-    
-    @abstractmethod
-    async def unregister_plugin(self, plugin_name: str) -> None:
-        """Unregister a plugin."""
-        pass
-    
-    @abstractmethod
-    async def list_plugins(self) -> List[str]:
-        """List all registered plugins."""
-        pass
+        ...
+        
+    async def load(self, key: str) -> PluginResult:
+        """Load data from storage.
+        
+        Args:
+            key: The key to load data from.
+            
+        Returns:
+            PluginResult: The loaded data.
+        """
+        ...
+        
+    async def delete(self, key: str) -> PluginResult:
+        """Delete data from storage.
+        
+        Args:
+            key: The key to delete.
+            
+        Returns:
+            PluginResult: The result of the delete operation.
+        """
+        ...
+        
+    async def list_keys(self, prefix: Optional[str] = None) -> PluginResult:
+        """List all keys in storage.
+        
+        Args:
+            prefix: Optional prefix to filter keys by.
+            
+        Returns:
+            PluginResult: The list of keys.
+        """
+        ...
 
-@runtime_checkable
-class IPluginTester(Protocol):
-    """Interface for plugin testing operations."""
-    
-    @abstractmethod
-    async def test_plugin(self, plugin: 'IPlugin', test_cases: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Run tests on a plugin."""
-        raise NotImplementedError()
-    
-    @abstractmethod
-    async def validate_plugin(self, plugin: 'IPlugin') -> bool:
-        """Validate a plugin's functionality."""
-        raise NotImplementedError()
 
-@runtime_checkable
-class IGoalManager(Protocol):
-    """Interface for goal management operations."""
+class AnalyticsPlugin(Protocol):
+    """Interface for plugins that provide analytics capabilities."""
     
-    @abstractmethod
-    async def create_goal(self, goal_data: Dict[str, Any]) -> 'Goal':
-        """Create a new goal."""
-        raise NotImplementedError()
-    
-    @abstractmethod
-    async def get_goal(self, goal_id: str) -> Optional['Goal']:
-        """Get a goal by ID."""
-        raise NotImplementedError()
-    
-    @abstractmethod
-    async def update_goal(self, goal_id: str, updates: Dict[str, Any]) -> bool:
-        """Update a goal's data."""
-        raise NotImplementedError()
-
-@runtime_checkable
-class IAgentSpawner(Protocol):
-    """Interface for agent spawning operations."""
-    
-    @abstractmethod
-    async def spawn_agent(self, agent_type: str, config: Dict[str, Any]) -> str:
-        """Spawn a new agent."""
-        raise NotImplementedError()
-    
-    @abstractmethod
-    async def terminate_agent(self, agent_id: str) -> bool:
-        """Terminate an agent."""
-        raise NotImplementedError()
-
-class IPlugin(ABC):
-    """Interface for plugins."""
-    
-    @abstractmethod
-    async def initialize(self) -> None:
-        """Initialize the plugin."""
-        pass
-    
-    @abstractmethod
-    async def start(self) -> None:
-        """Start the plugin."""
-        pass
-    
-    @abstractmethod
-    async def stop(self) -> None:
-        """Stop the plugin."""
-        pass
-    
-    @abstractmethod
-    async def pause(self) -> None:
-        """Pause the plugin."""
-        pass
-    
-    @abstractmethod
-    async def resume(self) -> None:
-        """Resume the plugin."""
-        pass
-    
-    @abstractmethod
-    async def update(self) -> None:
-        """Update the plugin state."""
-        pass
-    
-    @abstractmethod
-    async def get_metrics(self) -> Dict[str, Any]:
-        """Get plugin metrics.
+    async def analyze(self, data: Any, options: Optional[Dict[str, Any]] = None) -> PluginResult:
+        """Analyze the provided data.
+        
+        Args:
+            data: The data to analyze.
+            options: Optional analysis options.
+            
+        Returns:
+            PluginResult: The analysis results.
+        """
+        ...
+        
+    async def get_available_analyses(self) -> PluginResult:
+        """Get the list of available analyses.
         
         Returns:
-            Dict[str, Any]: Plugin metrics
+            PluginResult: The available analyses.
         """
-        pass 
+        ...
+
+
+class AuthenticationPlugin(Protocol):
+    """Interface for plugins that provide authentication functionality."""
+    
+    async def authenticate(self, credentials: Dict[str, Any]) -> PluginResult:
+        """Authenticate using the provided credentials.
+        
+        Args:
+            credentials: The credentials to authenticate with.
+            
+        Returns:
+            PluginResult: The authentication result.
+        """
+        ...
+        
+    async def validate_token(self, token: str) -> PluginResult:
+        """Validate an authentication token.
+        
+        Args:
+            token: The token to validate.
+            
+        Returns:
+            PluginResult: The validation result.
+        """
+        ...
+        
+    async def revoke_token(self, token: str) -> PluginResult:
+        """Revoke an authentication token.
+        
+        Args:
+            token: The token to revoke.
+            
+        Returns:
+            PluginResult: The revocation result.
+        """
+        ...
+
+
+class NotificationPlugin(Protocol):
+    """Interface for plugins that provide notification functionality."""
+    
+    async def send_notification(self, 
+                                recipient: str, 
+                                message: str, 
+                                options: Optional[Dict[str, Any]] = None) -> PluginResult:
+        """Send a notification.
+        
+        Args:
+            recipient: The recipient of the notification.
+            message: The notification message.
+            options: Optional notification options.
+            
+        Returns:
+            PluginResult: The result of sending the notification.
+        """
+        ...
+        
+    async def get_notification_channels(self) -> PluginResult:
+        """Get the available notification channels.
+        
+        Returns:
+            PluginResult: The available notification channels.
+        """
+        ...
