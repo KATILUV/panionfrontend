@@ -24,7 +24,7 @@ import SettingsAgent from "./components/agents/SettingsAgent";
 import MarketplaceAgent from "./components/agents/MarketplaceAgent";
 import BrowserAgent from "./components/agents/BrowserAgent";
 import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
-import PanionChatAgent from "./components/agents/PanionChatAgent";
+// PanionChatAgent replaced by SimplifiedEnhancedChatAgent
 import SimplifiedEnhancedChatAgent from "./components/agents/SimplifiedEnhancedChatAgent";
 import CollaborationAgent from "./components/agents/CollaborationAgent";
 import TaskSchedulerAgent from "./components/agents/TaskSchedulerAgent";

@@ -15,7 +15,7 @@ import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
 import SettingsAgent from './agents/SettingsAgent';
 import MarketplaceAgent from './agents/MarketplaceAgent';
-import PanionChatAgent from './agents/PanionChatAgent';
+import SimplifiedEnhancedChatAgent from './agents/SimplifiedEnhancedChatAgent';
 import DaddyDataAgent from './agents/DaddyDataAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
@@ -131,7 +131,7 @@ const renderAgentContent = (agentId: string) => {
     case 'marketplace':
       return <MarketplaceAgent />;
     case 'panion':
-      return <PanionChatAgent />;
+      return <SimplifiedEnhancedChatAgent />;
     case 'daddy-data':
       return <DaddyDataAgent />;
     default:
