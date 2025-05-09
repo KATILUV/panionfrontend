@@ -354,11 +354,30 @@ const EnhancedChatAgent: React.FC = () => {
       
     } catch (error) {
       console.error('Error sending message:', error);
+      // More detailed error message
+      let errorMessage = 'Failed to send message. Please try again.';
+      
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+        errorMessage = `Error: ${error.message}`;
+      }
+      
       toast({
         title: 'Error',
-        description: 'Failed to send message. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
+      
+      // Create an error message in the chat
+      const errorResponseMessage: ChatMessage = {
+        id: generateId(),
+        content: "I'm sorry, I encountered an error while processing your request. Technical team has been notified.",
+        isUser: false,
+        timestamp: formatTime(new Date()),
+        thinking: `Error occurred: ${errorMessage}`,
+      };
+      
+      setMessages(prev => [...prev, errorResponseMessage]);
       setAgentStatus('error');
     } finally {
       clearInterval(progressInterval);
