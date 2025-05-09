@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Message } from '../types/chat';
+import { ChatMessage as Message } from '../types/chat';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useThemeStore } from '../state/themeStore';
@@ -14,6 +14,11 @@ const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
   const [currentIndex, setCurrentIndex] = useState(messages.length > 0 ? messages.length - 1 : 0);
   const accent = useThemeStore((state) => state.accent);
   const isDarkMode = true; // Always dark mode for Panion
+
+  // Always show the latest message when new messages arrive
+  React.useEffect(() => {
+    setCurrentIndex(messages.length - 1);
+  }, [messages.length]);
 
   // Format timestamp to readable time
   const formatTime = (timestamp: string) => {
@@ -59,11 +64,6 @@ const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
       </div>
     );
   }
-
-  // Always show the latest message when new messages arrive
-  React.useEffect(() => {
-    setCurrentIndex(messages.length - 1);
-  }, [messages.length]);
 
   const currentMessage = messages[currentIndex];
 

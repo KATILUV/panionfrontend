@@ -64,8 +64,8 @@ export const ChatMessageComponent: React.FC<ChatMessageProps> = ({
               </div>
               
               {showThinking && (
-                <Card className="text-xs p-2 mt-1 bg-background/50 whitespace-pre-wrap">
-                  {thinking}
+                <Card className="text-xs p-2 mt-1 bg-background/50 whitespace-pre-wrap leading-relaxed">
+                  {thinking?.replace(/\\n/g, '\n')}
                 </Card>
               )}
             </div>
