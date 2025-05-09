@@ -47,9 +47,9 @@ const EnhancedChatAgent: React.FC = () => {
   const isStrategicModeEnabled = useAgentStore(state => state.isStrategicModeEnabled);
   const toggleStrategicModeStore = useAgentStore(state => state.toggleStrategicMode);
   
-  // Wrapper function for toggleStrategicMode
-  const toggleStrategicMode = () => {
-    toggleStrategicModeStore();
+  // Wrapper function for toggleStrategicMode that can accept a boolean value
+  const toggleStrategicMode = (value?: boolean) => {
+    toggleStrategicModeStore(value);
   };
   
   // Local state
@@ -351,15 +351,34 @@ const EnhancedChatAgent: React.FC = () => {
       }, 2000);
       
     } catch (error) {
+      // More detailed error logging
       console.error('Error sending message:', error);
-      // More detailed error message
+      
       let errorMessage = 'Failed to send message. Please try again.';
+      let errorDetails = '';
       
       if (error instanceof Error) {
         console.error('Error details:', error.message);
+        console.error('Error stack:', error.stack);
         errorMessage = `Error: ${error.message}`;
+        errorDetails = error.stack || '';
+      } else {
+        // Try to stringify any non-Error objects
+        try {
+          errorDetails = JSON.stringify(error);
+        } catch (e) {
+          errorDetails = 'Could not stringify error';
+        }
       }
       
+      // Add to system log
+      console.log('Full error details:', { 
+        message: errorMessage, 
+        details: errorDetails,
+        time: new Date().toISOString()
+      });
+      
+      // Show toast notification
       toast({
         title: 'Error',
         description: errorMessage,
@@ -411,7 +430,7 @@ const EnhancedChatAgent: React.FC = () => {
                 <Switch 
                   id="thinking-toggle"
                   checked={showThinking}
-                  onCheckedChange={setShowThinking}
+                  onCheckedChange={(checked) => setShowThinking(checked)}
                   className="data-[state=checked]:bg-blue-500"
                 />
               </TooltipTrigger>
@@ -431,7 +450,7 @@ const EnhancedChatAgent: React.FC = () => {
                 <Switch 
                   id="strategic-toggle"
                   checked={strategicMode}
-                  onCheckedChange={toggleStrategicMode}
+                  onCheckedChange={(checked) => toggleStrategicMode(checked)}
                   className="data-[state=checked]:bg-purple-500"
                 />
               </TooltipTrigger>

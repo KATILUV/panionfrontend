@@ -65,7 +65,7 @@ interface AgentState {
   
   // Strategic mode settings
   isStrategicModeEnabled: boolean;
-  toggleStrategicMode: () => void;
+  toggleStrategicMode: (value?: boolean) => void;
   
   // Dynamic agent capabilities
   capabilities: Record<string, AgentCapability>;
@@ -172,8 +172,8 @@ export const useAgentStore = create<AgentState>()(
       isStrategicModeEnabled: false, // Initially disabled, will auto-detect when needed
       
       // Toggle strategic mode function
-      toggleStrategicMode: () => set(state => {
-        const newValue = !state.isStrategicModeEnabled;
+      toggleStrategicMode: (value?: boolean) => set(state => {
+        const newValue = value !== undefined ? value : !state.isStrategicModeEnabled;
         log.info(`Strategic mode ${newValue ? 'enabled' : 'disabled'}`);
         return { isStrategicModeEnabled: newValue };
       }),
