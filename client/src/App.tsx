@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { PageTransition } from "@/components/ui/page-transition";
 import { TaskProvider } from "@/context/TaskContext";
+import { AuthProvider } from "@/context/AuthContext";
 import NotFound from "@/pages/not-found";
 import DesktopPage from "./pages/desktop-page";
 import LandingPage from "./pages/landing-page";
@@ -115,6 +116,25 @@ function Router() {
 }
 
 function App() {
+  // AuthProvider is wrapped around the entire application
+  return (
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TaskProvider>
+            <TooltipProvider>
+              <Router />
+              <Toaster />
+            </TooltipProvider>
+          </TaskProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+}
+
+// This function registers all available agents - extracted from App for clarity
+function RegisterAgents() {
   // Register available agents with their actual components
   useEffect(() => {
     const agentStore = useAgentStore.getState();
