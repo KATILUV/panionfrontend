@@ -38,6 +38,18 @@ const CAPABILITY_CATEGORIES = [
  * Extract capabilities needed based on the message content
  */
 export async function extractCapabilities(message: string): Promise<string[]> {
+  // For basic conversational messages, don't trigger any special capabilities
+  if (isBasicConversation(message)) {
+    log(`Basic conversational message detected, no special capabilities needed`, 'capability-detection');
+    return [];
+  }
+  
+  // For messages about the system's own capabilities, use self-reflection only
+  if (isCapabilityQuestion(message)) {
+    log(`System capability question detected, using self_reflection only`, 'capability-detection');
+    return ['self_reflection'];
+  }
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -48,8 +60,14 @@ export async function extractCapabilities(message: string): Promise<string[]> {
           The possible capabilities are:
           ${CAPABILITY_CATEGORIES.map(c => `- ${c}`).join('\n')}
           
-          Respond with a JSON array of capability strings. Select only the capabilities that are directly relevant
-          to fulfilling the user's request. Be selective and precise.`
+          Important rules:
+          1. ONLY select capabilities that are DIRECTLY needed to address the user's specific request.
+          2. DO NOT select 'search' or 'web_scraping' unless the user explicitly asks to search the web or find current information.
+          3. DO NOT select 'research' unless the request clearly requires gathering extensive information from multiple sources.
+          4. For simple conversational questions, explanations, or opinions, return an EMPTY array [].
+          5. For questions about your own capabilities, select ONLY 'self_reflection'.
+          
+          Respond with a JSON object like {"capabilities": []} containing ONLY the minimum necessary capabilities.`
         },
         {
           role: "user",
@@ -85,6 +103,49 @@ export async function extractCapabilities(message: string): Promise<string[]> {
     log(`Error detecting capabilities: ${error}`, 'capability-detection');
     return [];
   }
+}
+
+/**
+ * Check if the message is a basic conversational message
+ */
+function isBasicConversation(message: string): boolean {
+  const normalizedMessage = message.toLowerCase().trim();
+  
+  // Simple greetings
+  if (/^(hi|hello|hey|greetings|howdy|hi there|hey there)(\s.*)?$/.test(normalizedMessage)) {
+    return true;
+  }
+  
+  // Simple questions that don't require special capabilities
+  if (/^(how are you|what('s| is) up|how('s| is) it going)(\?)?$/.test(normalizedMessage)) {
+    return true;
+  }
+  
+  // Simple thank you messages
+  if (/^(thanks|thank you|thx|ty)(\s.*)?$/.test(normalizedMessage)) {
+    return true;
+  }
+  
+  // Very short messages (likely conversational)
+  if (normalizedMessage.split(/\s+/).length < 4 && normalizedMessage.length < 20) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Check if the message is asking about the system's capabilities
+ */
+function isCapabilityQuestion(message: string): boolean {
+  const normalizedMessage = message.toLowerCase().trim();
+  
+  // Questions about capabilities or what the system can do
+  return /what (can|are) you (do|capable of|abilities|features|capabilities)/i.test(normalizedMessage) ||
+         /tell me (about )?your (capabilities|functions|features|abilities)/i.test(normalizedMessage) ||
+         /what (features|capabilities|functions) (do you have|are available)/i.test(normalizedMessage) ||
+         normalizedMessage === "what are your capabilities?" ||
+         normalizedMessage === "what can you do?";
 }
 
 /**

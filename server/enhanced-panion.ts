@@ -91,6 +91,18 @@ interface Reflection {
   timestamp: string;
 }
 
+// Enhanced metadata interface to properly type debate results
+interface EnhancedMetadata {
+  hasRequiredCapabilities: boolean;
+  capabilities: string[];
+  requestedAt: string;
+  client: string;
+  memoryContext: string;
+  reflection: string;
+  strategicPlan: StrategicPlan | null;
+  debateResults?: any; // Add typed debate results interface later
+}
+
 // Keep track of reflections for different sessions
 const sessionReflections: Record<string, Reflection[]> = {};
 
@@ -255,7 +267,7 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
     
     // 5. FORWARD REQUEST TO PANION API WITH ENHANCED CONTEXT
     // Prepare the metadata with enhanced context
-    const enhancedMetadata = {
+    const enhancedMetadata: EnhancedMetadata = {
       hasRequiredCapabilities,
       capabilities: detectedCapabilities,
       requestedAt: new Date().toISOString(),
