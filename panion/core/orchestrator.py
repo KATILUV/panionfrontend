@@ -35,7 +35,7 @@ class Orchestrator(BaseComponent):
         
         Args:
             plugin_manager: The plugin manager instance
-            dependency_manager: The dependency manager instance
+            dependency_resolver: The dependency resolver instance
             service_locator: The service locator instance
             error_handler: The error handler instance
         """
@@ -149,10 +149,10 @@ class Orchestrator(BaseComponent):
             if plugin_status.get('state') != 'active':
                 issues.append(f"Plugin manager state: {plugin_status.get('state')}")
             
-            # Check dependency manager health
-            dep_status = await self.dependency_manager.get_status()
+            # Check dependency resolver health
+            dep_status = await self.dependency_resolver.get_status()
             if dep_status.get('state') != 'active':
-                issues.append(f"Dependency manager state: {dep_status.get('state')}")
+                issues.append(f"Dependency resolver state: {dep_status.get('state')}")
             
             # Check orchestrator state
             if self._state != ComponentState.ACTIVE:
@@ -177,7 +177,7 @@ class Orchestrator(BaseComponent):
         return {
             'state': self._state.value,
             'plugin_manager_status': await self.plugin_manager.get_status(),
-            'dependency_manager_status': await self.dependency_manager.get_status(),
+            'dependency_resolver_status': await self.dependency_resolver.get_status(),
             'error_info': self.get_error_info(),
             'uptime': self.uptime
         }
