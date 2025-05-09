@@ -17,8 +17,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-from panion.core.plugin.base import BasePlugin
-from panion.core.plugin.plugin_base import PluginResult
+from panion.core.plugin.plugin_base import BasePlugin, PluginResult
 
 class DaddyDataAgent(BasePlugin):
     """
@@ -38,15 +37,16 @@ class DaddyDataAgent(BasePlugin):
                 author="Panion Team",
                 type="agent",
                 capabilities=[
-                    "web_scraping", 
+                        "web_scraping", 
                     "data_verification", 
                     "data_cleaning", 
                     "data_organization",
-                "excel_generation",
-                "data"
-            ],
-            dependencies=["bs4", "requests"]
+                    "excel_generation",
+                    "data"
+                ],
+                dependencies=["bs4", "requests"]
         )
+        super().__init__(metadata)
         self.config = self._load_config(config_path)
         self.active_tasks = {}
         self.data_cache = {}
