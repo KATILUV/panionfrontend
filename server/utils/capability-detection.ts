@@ -82,10 +82,10 @@ function saveToCapabilityCache(message: string, capabilities: string[]): void {
   
   // Check if cache is full and remove oldest entry if needed
   if (capabilityCache.size >= CACHE_SIZE) {
-    // Get the first (oldest) key
-    const oldestKey = capabilityCache.keys().next().value;
-    if (oldestKey) {
-      capabilityCache.delete(oldestKey);
+    // Get the oldest entry to remove (convert iterator to array first)
+    const keys = Array.from(capabilityCache.keys());
+    if (keys.length > 0) {
+      capabilityCache.delete(keys[0]);
     }
   }
   
@@ -240,7 +240,8 @@ export async function extractCapabilities(message: string): Promise<string[]> {
         : [];
       
       // Combine AI capabilities with knowledge graph capabilities
-      const combinedCapabilities = [...new Set([...aiCapabilities, ...relevantCapabilities])];
+      const combinedSet = new Set([...aiCapabilities, ...relevantCapabilities]);
+      const combinedCapabilities = Array.from(combinedSet);
       
       // Filter to only include valid capabilities
       const validCapabilities = combinedCapabilities.filter(c => 
@@ -351,7 +352,8 @@ function extractCapabilitiesFromKeywords(message: string): string[] {
   }
   
   // Remove duplicates and return
-  return [...new Set(capabilities)];
+  const uniqueSet = new Set(capabilities);
+  return Array.from(uniqueSet);
 }
 
 /**

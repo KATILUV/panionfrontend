@@ -169,11 +169,20 @@ async function generateSimpleResponse(message: string, sessionId: string): Promi
   try {
     // For other simple messages, try to use the Panion API directly 
     // without all the extra processing
+    // Add timeout to prevent hanging
+    const SIMPLE_API_TIMEOUT = 5000; // 5 seconds timeout for simple requests
+    
     const response = await axios.post(`${PANION_API_URL}/chat`, {
       content: message,
       session_id: sessionId,
       metadata: {
         fastPath: true
+      }
+    }, {
+      timeout: SIMPLE_API_TIMEOUT,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-ID': `simple-req-${Date.now()}`
       }
     });
     
@@ -426,14 +435,23 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
       
       log(`Sending filtered capabilities to Panion API: ${filteredCapabilities.join(', ')}`, 'panion');
       
-      // Forward the request to the Panion API with additional context
-      // and filtered capabilities
+      // Create a timeout for the API request to prevent hanging
+      const API_TIMEOUT = 10000; // 10 seconds timeout
+      
+      // Forward the request to the Panion API with additional context and filtered capabilities
+      // Add timeout to prevent hanging requests
       response = await axios.post(`${PANION_API_URL}/chat`, {
         content: messageContent,
         session_id: sessionId,
         metadata: {
           ...enhancedMetadata,
           capabilities: filteredCapabilities
+        }
+      }, {
+        timeout: API_TIMEOUT, // Add timeout to request
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Request-ID': `req-${Date.now()}-${sessionId.substring(0,8)}`
         }
       });
       
