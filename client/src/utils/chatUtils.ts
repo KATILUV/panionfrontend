@@ -2,6 +2,87 @@
 import { ChatMessage } from '../types/chat';
 
 /**
+ * Check if a message is a simple greeting or basic query
+ * that doesn't require complex processing
+ */
+export const isSimpleMessage = (message: string): boolean => {
+  const lowerMessage = message.trim().toLowerCase();
+  
+  // Single word greetings
+  if (['hi', 'hello', 'hey', 'sup', 'yo', 'hola', 'howdy', 'greetings'].includes(lowerMessage)) {
+    return true;
+  }
+  
+  // Short simple greetings and common phrases
+  const simplePatterns = [
+    /^(hi|hey|hello|sup)( there)?( panion)?[!.?]?$/i,
+    /^(good|great) (morning|afternoon|evening|day)[!.?]?$/i,
+    /^how are you( today)?[?]?$/i,
+    /^what'?s up[?]?$/i,
+    /^how'?s it going[?]?$/i,
+    /^nice to (meet|see) you[!.?]?$/i,
+    /^thanks?( you)?[!.?]?$/i,
+    /^who are you[?]?$/i,
+    /^what can you do[?]?$/i,
+    /^(could|can) you help( me)?[?]?$/i
+  ];
+  
+  return simplePatterns.some(pattern => pattern.test(lowerMessage));
+};
+
+/**
+ * Generate quick responses for simple messages without using the API
+ */
+export const getSimpleMessageResponse = (message: string): string => {
+  const lowerMessage = message.trim().toLowerCase();
+  const currentHour = new Date().getHours();
+  
+  // Handle different greeting types
+  if (['hi', 'hello', 'hey', 'sup', 'yo', 'hola', 'howdy', 'greetings'].includes(lowerMessage)) {
+    const responses = [
+      "Hello! How can I help you today?",
+      "Hi there! What can I assist you with?",
+      "Hey! What would you like to work on?",
+      "Greetings! How may I assist you today?"
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  // Time-specific greetings
+  if (/^good (morning|afternoon|evening)[!.?]?$/i.test(lowerMessage)) {
+    if (currentHour < 12) {
+      return "Good morning! How can I help you today?";
+    } else if (currentHour < 17) {
+      return "Good afternoon! What can I do for you?";
+    } else {
+      return "Good evening! How may I assist you tonight?";
+    }
+  }
+  
+  // How are you variations
+  if (/^how are you( today)?[?]?$/i.test(lowerMessage) || /^how'?s it going[?]?$/i.test(lowerMessage)) {
+    return "I'm doing well, thank you for asking! How can I assist you today?";
+  }
+  
+  // Thank you variations
+  if (/^thanks?( you)?[!.?]?$/i.test(lowerMessage)) {
+    return "You're welcome! Is there anything else I can help you with?";
+  }
+  
+  // Identity and capability questions
+  if (/^who are you[?]?$/i.test(lowerMessage)) {
+    return "I'm Panion, your intelligent assistant. I can help with a wide range of tasks, from answering questions to helping you gather and analyze data. What would you like to know?";
+  }
+  
+  if (/^what can you do[?]?$/i.test(lowerMessage) || /^(could|can) you help( me)?[?]?$/i.test(lowerMessage)) {
+    return "I can help with many tasks including answering questions, gathering information from the web, analyzing data, and connecting you with specialized agents for specific tasks. What would you like help with today?";
+  }
+  
+  // Fallback for other simple messages
+  return "How can I assist you today?";
+};
+
+/**
  * Generates a random string ID for chat messages
  */
 export const generateId = (): string => {

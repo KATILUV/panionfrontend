@@ -7,7 +7,9 @@ import {
   createChatMessage, 
   shouldUseStrategicMode, 
   checkIfNeedsMoreInfo, 
-  startProgressAnimation 
+  startProgressAnimation,
+  isSimpleMessage,
+  getSimpleMessageResponse
 } from '@/utils/chatUtils';
 
 interface UsePanionChatOptions {
@@ -79,6 +81,24 @@ export const usePanionChat = ({
       setMessages(prev => [...prev, userMessage]);
       setInputValue(''); // Clear input
       
+      // Check if this is a simple message that can be handled locally without an API call
+      if (isSimpleMessage(userInput)) {
+        console.log('Handling simple message locally:', userInput);
+        const quickResponse = getSimpleMessageResponse(userInput);
+        
+        // Add the response with minimal delay to feel natural
+        setTimeout(() => {
+          const responseMessage = createChatMessage(quickResponse, false);
+          setMessages(prev => [...prev, responseMessage]);
+          setAgentStatus('idle');
+          setIsLoading(false);
+          stopProgress();
+          setProcessingProgress(100);
+        }, 500);
+        
+        return;
+      }
+      
       // Check if the message requires more information before processing
       const moreInfoNeeded = checkIfNeedsMoreInfo(userInput);
       if (moreInfoNeeded) {
@@ -136,21 +156,29 @@ export const usePanionChat = ({
       if (!useDebate) {
         setProcessingStage("Preparing standard request...");
         
-        // Determine required capabilities for the task
-        const capabilitiesResponse = await fetch('/api/panion/detect-capabilities', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ message: userInput }),
-        });
+        // Initialize with empty capabilities (fallback)
+        let requiredCapabilities: string[] = [];
         
-        if (!capabilitiesResponse.ok) {
-          throw new Error('Failed to detect required capabilities');
+        try {
+          // Determine required capabilities for the task
+          const capabilitiesResponse = await fetch('/api/panion/detect-capabilities', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: userInput }),
+          });
+          
+          if (capabilitiesResponse.ok) {
+            const capabilitiesData = await capabilitiesResponse.json();
+            requiredCapabilities = capabilitiesData.capabilities || [];
+          } else {
+            console.warn('Capability detection returned error status, using empty capabilities');
+          }
+        } catch (capabilityError) {
+          console.warn('Capability detection failed, continuing with empty capabilities:', capabilityError);
+          // Continue with empty capabilities
         }
-        
-        const capabilitiesData = await capabilitiesResponse.json();
-        const requiredCapabilities = capabilitiesData.capabilities || [];
         
         console.log('Detected capabilities:', requiredCapabilities);
         
