@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import BusinessResultsSheet, { BusinessData } from '../BusinessResultsSheet';
+import { getQuickDebate, extractResponseFromDebate } from '@/services/debateService';
 
 interface ChatMessage {
   id: string;
@@ -98,6 +99,35 @@ const PanionChatAgent: React.FC = () => {
     enableAutomaticResourceOptimization: true,
     enableInternalDebate: true
   });
+  
+  // Function to determine if a question is complex enough to use the debate system
+  const isComplexQuestion = (text: string): boolean => {
+    // Don't use debate for very short queries
+    if (text.length < 15) return false;
+    
+    // Check for patterns that indicate complex questions
+    const complexPatterns = [
+      // Questions with multiple parts
+      /\band\b|\bor\b|\bas well as\b|\balso\b/i,
+      // Comparing/contrasting
+      /\bcompare\b|\bversus\b|\bvs\b|\bdifference\b|\bsimilar\b/i,
+      // Seeking explanation or reasoning
+      /\bwhy\b|\bhow\b|\bexplain\b|\bunderstand\b|\breason\b/i,
+      // Analysis requests
+      /\banalyze\b|\banalysis\b|\bassess\b|\bevaluate\b/i,
+      // Open-ended questions requiring judgment
+      /\bbest\b|\bworst\b|\bmost\b|\bleast\b|\bshould\b|\bwould\b|\bcould\b/i,
+      // Questions about implications
+      /\bimplication\b|\bconsequence\b|\bimpact\b|\beffect\b|\baffect\b/i,
+      // Questions seeking recommendations
+      /\brecommend\b|\bsuggestion\b|\badvice\b/i,
+      // Questions about future predictions
+      /\bprediction\b|\bforecast\b|\bfuture\b|\bexpect\b/i
+    ];
+    
+    // Consider it complex if it matches any complex pattern
+    return complexPatterns.some(pattern => pattern.test(text));
+  };
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -1462,7 +1492,40 @@ const PanionChatAgent: React.FC = () => {
           }
         };
       } else {
-        // Use standard mode
+        // Use standard mode with enhanced multi-agent debate for complex questions
+        if (isComplexQuestion(inputValue)) {
+          setProcessingStage("Using multi-agent debate for enhanced analysis...");
+          
+          try {
+            // Get context from previous messages for better understanding
+            const recentMessages = messages.slice(-5).map(m => m.content).join("\n");
+            
+            // Use the debate system to get a more comprehensive answer
+            const debateResult = await getQuickDebate(inputValue, recentMessages);
+            
+            // Extract the response from the debate result
+            responseContent = extractResponseFromDebate(debateResult);
+
+            // Create thinking content showing the insights from the debate
+            thinkingContent = "Enhanced response using multi-agent debate system:\n\n";
+            thinkingContent += `Confidence: ${Math.round(debateResult.confidence * 100)}%\n\n`;
+            thinkingContent += "Key insights from specialized agents:\n";
+            if (debateResult.insights && debateResult.insights.length > 0) {
+              debateResult.insights.forEach((insight, index) => {
+                thinkingContent += `${index + 1}. ${insight}\n`;
+              });
+            }
+            
+            // Skip standard API call since we already have our response
+            skipApiCall = true;
+          } catch (error) {
+            console.error("Error using debate system:", error);
+            // Fall back to standard mode if debate system fails
+            skipApiCall = false;
+          }
+        }
+        
+        // Prepare standard request body (will be used as fallback if debate fails or for simple questions)
         requestBody = {
           content: inputValue,  // changed from message to content to match backend
           sessionId,  // backend handles both sessionId and session_id formats now
@@ -1570,7 +1633,7 @@ const PanionChatAgent: React.FC = () => {
         clearInterval(progressInterval);
         setProcessingProgress(100);
         return;
-      } else {
+      } else if (!skipApiCall) {
         // For regular requests, use the standard endpoint
         response = await fetch(endpoint, {
           method: 'POST',
@@ -1579,24 +1642,30 @@ const PanionChatAgent: React.FC = () => {
           },
           body: JSON.stringify(requestBody),
         });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to send message to Panion using ${strategicMode ? 'strategic' : 'standard'} mode`);
+        }
+        
+        setProcessingStage("Formatting response...");
+        setProcessingProgress(80);
+        
+        const data = await response.json();
+        
+        console.log("Panion API response:", data); // Add logging to see what we get
+        
+        // Process strategic information if available
+        thinkingContent = data.thinking || '';
+        responseContent = '';
+        
+        // Debug logs to find out why content isn't showing up
+      } else {
+        // Skip API call - we're using the multi-agent debate system
+        // responseContent and thinkingContent have already been set
+        console.log("Using intelligent multi-agent debate instead of API call");
+        setProcessingStage("Using enhanced multi-agent debate system response...");
+        setProcessingProgress(80);
       }
-      
-      if (!response.ok) {
-        throw new Error(`Failed to send message to Panion using ${strategicMode ? 'strategic' : 'standard'} mode`);
-      }
-      
-      setProcessingStage("Formatting response...");
-      setProcessingProgress(80);
-      
-      const data = await response.json();
-      
-      console.log("Panion API response:", data); // Add logging to see what we get
-      
-      // Process strategic information if available
-      let thinkingContent = data.thinking || '';
-      let responseContent = '';
-      
-      // Debug logs to find out why content isn't showing up
       console.log("Data structure:", Object.keys(data));
       console.log("Response content from API:", data.response);
       

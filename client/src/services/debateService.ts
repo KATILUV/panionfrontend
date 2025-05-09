@@ -93,7 +93,8 @@ export async function getFullDebate(
       agents
     });
     
-    return await response.json().result;
+    const data = await response.json();
+    return data.result;
   } catch (error) {
     console.error("Error in debate service:", error);
     throw new Error("Failed to conduct debate");
