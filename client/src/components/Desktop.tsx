@@ -260,11 +260,16 @@ const Desktop: React.FC = () => {
     
     // Ensure taskbar is properly reset
     try {
-      // Import and use the taskbar reset utility
-      import('../utils/taskbarReset').then(module => {
-        module.forceResetTaskbar();
-        log.action('Reset taskbar to latest design');
-      });
+      // Use direct taskbar reset functionality
+      const taskbarStore = useTaskbarStore.getState();
+      
+      // 1. Clear localStorage entry for taskbar 
+      localStorage.removeItem('panion-taskbar-store');
+      
+      // 2. Reset taskbar to defaults
+      taskbarStore.resetTaskbar();
+      
+      log.action('Reset taskbar to latest design');
     } catch (err) {
       console.error("Error resetting taskbar:", err);
     }

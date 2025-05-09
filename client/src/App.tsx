@@ -143,11 +143,10 @@ function RegisterAgents() {
     // Check if any agents were registered
     console.log("App: Agent registration started");
     
-    // Force reset the taskbar to ensure the latest design is used
-    console.log("App: Force resetting taskbar to latest design");
-    import('../utils/taskbarReset').then(module => {
-      module.forceResetTaskbar();
-    });
+    // Reset the taskbar to ensure the latest design is used
+    console.log("App: Resetting taskbar to latest design");
+    // Direct reset using the built-in function
+    taskbarStore.resetTaskbar();
     
     // Force open only the Panion agent after a delay to ensure it's properly registered
     setTimeout(() => {
