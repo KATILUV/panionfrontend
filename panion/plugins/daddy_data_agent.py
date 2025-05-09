@@ -17,7 +17,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-from panion.core.base_plugin import BasePlugin
+from panion.core.plugins.base import BasePlugin, PluginMetadata, PluginResult
 
 class DaddyDataAgent(BasePlugin):
     """
@@ -27,16 +27,25 @@ class DaddyDataAgent(BasePlugin):
     
     def __init__(self, config_path: str = "config/daddy_data_config.yaml"):
         """Initialize the Daddy Data Agent with configuration."""
-        super().__init__()
-        self.name = "Daddy Data"
-        self.description = "Specialized agent for deep web research, data verification, and organization"
-        self.capabilities = [
-            "web_scraping", 
-            "data_verification", 
-            "data_cleaning", 
-            "data_organization",
-            "excel_generation"
-        ]
+        metadata = PluginMetadata(
+            id="daddy_data_agent",
+            name="Daddy Data",
+            description="Specialized agent for deep web research, data verification, and organization",
+            version="1.0.0",
+            author="Panion Team",
+            type="data",
+            capabilities=[
+                "web_scraping", 
+                "data_verification", 
+                "data_cleaning", 
+                "data_organization",
+                "excel_generation"
+            ],
+            parameters={},
+            dependencies=[],
+            config={}
+        )
+        super().__init__(metadata)
         self.config = self._load_config(config_path)
         self.active_tasks = {}
         self.data_cache = {}
@@ -47,7 +56,17 @@ class DaddyDataAgent(BasePlugin):
         self.data_dir = os.path.join("data", "daddy_data")
         os.makedirs(self.data_dir, exist_ok=True)
         
-    async def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def initialize(self) -> bool:
+        """Initialize the plugin."""
+        logging.info(f"Initializing {self.metadata.name} plugin")
+        return True
+        
+    async def cleanup(self) -> bool:
+        """Clean up resources used by the plugin."""
+        logging.info(f"Cleaning up {self.metadata.name} plugin")
+        return True
+        
+    async def execute(self, parameters: Dict[str, Any]) -> PluginResult:
         """
         Execute a specific action with the given parameters.
         
@@ -79,16 +98,18 @@ class DaddyDataAgent(BasePlugin):
             elif action_name == "get_task_status":
                 return await self.get_task_status(parameters.get("task_id", ""))
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action_name}"
-                }
+                return PluginResult(
+                    success=False,
+                    data={},
+                    error=f"Unknown action: {action_name}"
+                )
         except Exception as e:
             logging.error(f"Error executing action {action_name}: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return PluginResult(
+                success=False,
+                data={},
+                error=str(e)
+            )
     
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Load configuration from YAML file."""
@@ -114,7 +135,7 @@ class DaddyDataAgent(BasePlugin):
     async def search_businesses(self, 
                          query: str, 
                          location: str = "", 
-                         limit: int = 100) -> Dict[str, Any]:
+                         limit: int = 100) -> PluginResult:
         """
         Search for businesses based on query and location.
         
@@ -197,7 +218,7 @@ class DaddyDataAgent(BasePlugin):
     
     async def verify_data(self, 
                     data: List[Dict[str, Any]], 
-                    fields_to_verify: List[str] = []) -> Dict[str, Any]:
+                    fields_to_verify: List[str] = []) -> PluginResult:
         """
         Verify data accuracy by cross-referencing multiple sources.
         
@@ -298,7 +319,7 @@ class DaddyDataAgent(BasePlugin):
     async def organize_data(self, 
                       data: List[Dict[str, Any]], 
                       format: str = "excel", 
-                      structure: Dict[str, Any] = {}) -> Dict[str, Any]:
+                      structure: Dict[str, Any] = {}) -> PluginResult:
         """
         Organize verified data into structured formats.
         
@@ -378,12 +399,20 @@ class DaddyDataAgent(BasePlugin):
                 "error": str(e)
             }
     
-    async def get_task_status(self, task_id: str) -> Dict[str, Any]:
+    async def get_task_status(self, task_id: str) -> PluginResult:
         """Get the status of a task."""
         if task_id in self.active_tasks:
-            return self.active_tasks[task_id]
+            return PluginResult(
+                success=True,
+                data=self.active_tasks[task_id],
+                error=None
+            )
         else:
-            return {"status": "not_found", "error": f"Task {task_id} not found"}
+            return PluginResult(
+                success=False,
+                data={},
+                error=f"Task {task_id} not found"
+            )
     
     def _mock_search_source(self, source: str, query: str, location: str) -> List[Dict[str, Any]]:
         """

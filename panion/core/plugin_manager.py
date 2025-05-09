@@ -44,4 +44,4 @@ async def get_plugin_metadata(plugin_id: str) -> Optional[Dict[str, Any]]:
     return await deprecated_plugin_manager.get_plugin_metadata(plugin_id)
 
 # Create a singleton-like instance for direct imports
-plugin_manager = deprecated_plugin_manager
+plugin_manager = deprecated_plugin_manager()
