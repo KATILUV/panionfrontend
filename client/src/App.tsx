@@ -140,19 +140,12 @@ function RegisterAgents() {
     const agentStore = useAgentStore.getState();
     const taskbarStore = useTaskbarStore.getState();
     
-    // Force reset the taskbar to default settings
-    // This ensures no unwanted agents like database, brain-circuit, or daddy-data appear in the taskbar
-    try {
-      // First clear local storage to ensure clean state
-      localStorage.removeItem('panion-taskbar-store');
-      console.log("App: Forced taskbar reset");
-      
-      // Now apply the minimal preset (which uses the updated defaults)
-      taskbarStore.resetTaskbar();
-      taskbarStore.applyMinimalPreset();
-    } catch (error) {
-      console.error("Failed to reset taskbar:", error);
-    }
+    // Check if any agents were registered
+    console.log("App: Agent registration started");
+    
+    // Note: We've removed the forced taskbar reset to preserve user preferences
+    // If you need to reset the taskbar manually, use: 
+    // taskbarStore.resetTaskbar();
     
     // Force open only the Panion agent after a delay to ensure it's properly registered
     setTimeout(() => {
