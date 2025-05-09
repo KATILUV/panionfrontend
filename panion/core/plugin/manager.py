@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional, List
 
 # Import from consolidated plugin system
 # Use a relative import to avoid package issues
-from ..plugins.compat import deprecated_core_plugin_manager
+from .compat import deprecated_core_plugin_manager
 
 # Emit deprecation warning
 warnings.warn(

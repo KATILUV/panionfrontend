@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 
 # Import from consolidated plugin system
 # Use a relative import to avoid package issues
-from .plugins.base import BasePlugin as ConsolidatedBasePlugin
+from .plugin.base import BasePlugin as ConsolidatedBasePlugin
 
 # Emit deprecation warning
 warnings.warn(
