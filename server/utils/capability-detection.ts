@@ -52,8 +52,15 @@ export async function extractCapabilities(message: string): Promise<string[]> {
     return ['self_reflection'];
   }
   
+  // Check some common keywords for specific capabilities
+  const keywordCapabilities = extractCapabilitiesFromKeywords(message);
+  if (keywordCapabilities.length > 0) {
+    log(`Detected capabilities from keywords: ${keywordCapabilities.join(', ')}`, 'capability-detection');
+    // If we have capabilities from keywords, return them immediately to avoid API call
+    return keywordCapabilities;
+  }
+  
   // Query knowledge graph for relevant entities and relationships
-  let knowledgeInsights = '';
   let relevantCapabilities: string[] = [];
   
   try {
@@ -95,19 +102,34 @@ export async function extractCapabilities(message: string): Promise<string[]> {
         
         // Add relevant capabilities from knowledge graph
         relevantCapabilities = mappedCapabilities;
-        
         log(`Capabilities extracted from knowledge graph: ${relevantCapabilities.join(', ')}`, 'capability-detection');
-        
-        // Create knowledge insights for AI prompt
-        knowledgeInsights = `\nBased on knowledge graph analysis, these capabilities may be relevant: ${mappedCapabilities.join(', ')}`;
       }
+    }
+    
+    // If we got capabilities from knowledge graph, return them
+    if (relevantCapabilities.length > 0) {
+      return relevantCapabilities;
     }
   } catch (error) {
     log(`Error querying knowledge graph for capabilities: ${error}`, 'capability-detection');
     // Continue without knowledge graph insights
   }
   
+  // If we reach here, we need to try the AI-based extraction as a last resort
   try {
+    // Check if OpenAI API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      log(`OPENAI_API_KEY is not available, skipping AI capability detection`, 'capability-detection');
+      // Return a reasonable default for common tasks
+      return determineDefaultCapabilities(message);
+    }
+    
+    // Create knowledge insights for AI prompt
+    let knowledgeInsights = '';
+    if (relevantCapabilities.length > 0) {
+      knowledgeInsights = `\nBased on knowledge graph analysis, these capabilities may be relevant: ${relevantCapabilities.join(', ')}`;
+    }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -159,20 +181,106 @@ export async function extractCapabilities(message: string): Promise<string[]> {
       return validCapabilities;
     } catch (parseError) {
       log(`Error parsing capability detection response: ${parseError}`, 'capability-detection');
-      // Fallback to knowledge graph capabilities if AI parsing fails
+      // Fallback to knowledge graph capabilities or heuristic detection
       if (relevantCapabilities.length > 0) {
         return relevantCapabilities;
       }
-      return [];
+      return determineDefaultCapabilities(message);
     }
   } catch (error) {
-    log(`Error detecting capabilities: ${error}`, 'capability-detection');
-    // Fallback to knowledge graph capabilities if AI call fails
+    log(`Error detecting capabilities with AI: ${error}`, 'capability-detection');
+    // Fallback to knowledge graph capabilities or heuristic detection
     if (relevantCapabilities.length > 0) {
       return relevantCapabilities;
     }
-    return [];
+    return determineDefaultCapabilities(message);
   }
+}
+
+/**
+ * Determine default capabilities based on message content using heuristics
+ */
+function determineDefaultCapabilities(message: string): string[] {
+  const lowerMessage = message.toLowerCase();
+  const capabilities: string[] = [];
+  
+  // Check for common tasks
+  if (lowerMessage.includes('summarize') || lowerMessage.includes('summary')) {
+    capabilities.push('summarization');
+  }
+  
+  if (lowerMessage.includes('analyze') || lowerMessage.includes('analysis')) {
+    capabilities.push('data_analysis');
+  }
+  
+  if (lowerMessage.includes('plan') || lowerMessage.includes('steps')) {
+    capabilities.push('planning');
+  }
+  
+  if (lowerMessage.includes('search') || lowerMessage.includes('find information')) {
+    capabilities.push('search');
+  }
+  
+  if (lowerMessage.includes('write') || lowerMessage.includes('create content')) {
+    capabilities.push('creative_writing');
+  }
+  
+  // If no specific capabilities detected, leave empty for general conversation
+  log(`Determined default capabilities: ${capabilities.join(', ') || 'none'}`, 'capability-detection');
+  return capabilities;
+}
+
+/**
+ * Extract capabilities based on keywords in the message
+ */
+function extractCapabilitiesFromKeywords(message: string): string[] {
+  const lowerMessage = message.toLowerCase();
+  const capabilities: Set<string> = new Set();
+  
+  // Smokeshop specific keywords
+  if (lowerMessage.includes('smoke') && lowerMessage.includes('shop') ||
+      lowerMessage.includes('smokeshop')) {
+    capabilities.add('smokeshop_data');
+  }
+  
+  // Data analysis related keywords
+  if ((lowerMessage.includes('analyze') || lowerMessage.includes('analysis')) && 
+      (lowerMessage.includes('data') || lowerMessage.includes('information'))) {
+    capabilities.add('data_analysis');
+  }
+  
+  // Web scraping related keywords
+  if ((lowerMessage.includes('scrape') || lowerMessage.includes('extract')) && 
+      (lowerMessage.includes('website') || lowerMessage.includes('web') || 
+       lowerMessage.includes('online') || lowerMessage.includes('page'))) {
+    capabilities.add('web_scraping');
+  }
+  
+  // Search related keywords
+  if (lowerMessage.includes('search for') || lowerMessage.includes('find information about') ||
+      lowerMessage.includes('look up') || lowerMessage.includes('google')) {
+    capabilities.add('search');
+  }
+  
+  // Document processing
+  if (lowerMessage.includes('document') || lowerMessage.includes('pdf') || 
+      lowerMessage.includes('spreadsheet') || lowerMessage.includes('excel')) {
+    capabilities.add('document_processing');
+  }
+  
+  // Code related
+  if (lowerMessage.includes('code') || lowerMessage.includes('program') || 
+      lowerMessage.includes('script') || lowerMessage.includes('function')) {
+    capabilities.add('coding');
+  }
+  
+  // Strategic thinking
+  if (lowerMessage.includes('strategy') || lowerMessage.includes('strategic') || 
+      lowerMessage.includes('plan') || lowerMessage.includes('approach')) {
+    capabilities.add('strategic_thinking');
+  }
+  
+  return Array.from(capabilities);
 }
 
 /**
