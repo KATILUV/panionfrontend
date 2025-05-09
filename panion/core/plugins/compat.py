@@ -1,244 +1,271 @@
 """
 Plugin System Compatibility Module
 
-This module provides compatibility with older versions of the plugin system.
-It maps the new consolidated API to the old interfaces to maintain backward compatibility.
-
-IMPORTANT: This module is for transition purposes only and will be removed in a future version.
-New code should use the consolidated plugin system directly.
+This module provides compatibility layers between the old and new plugin systems.
+It allows for gradual migration by exposing legacy interfaces that use the new consolidated system.
 """
 
 import logging
-from typing import Dict, Any, Optional, List
+import asyncio
+from typing import Dict, Any, Optional, List, Type, Tuple, Union
 
-# Import the consolidated plugin system
-from .manager.plugin_manager import PluginManager
+from .manager import PluginManager
+from .base import BasePlugin, PluginMetadata, PluginResult
+from .exceptions import PluginError, PluginNotFoundError
 
 logger = logging.getLogger(__name__)
 
-class DeprecatedPluginManager:
-    """Compatibility wrapper for the old plugin_manager.py interface."""
+# Singleton instance of the new plugin manager
+_plugin_manager = None
+
+def deprecated_plugin_manager():
+    """
+    Legacy-compatible plugin manager.
     
-    def __init__(self):
-        """Initialize the compatibility wrapper."""
-        logger.warning(
-            "DeprecatedPluginManager is being used. This is a compatibility layer "
-            "that will be removed in a future version. Please migrate to the "
-            "consolidated plugin system in core/plugins/."
-        )
-        # Get a reference to the central plugin manager
-        self._plugin_manager = PluginManager.get_instance()
-        
+    This function returns a compatibility wrapper around the new plugin manager
+    that exposes the legacy interface from core/plugin/manager.py.
+    
+    Returns:
+        A compatibility wrapper object.
+    """
+    global _plugin_manager
+    if _plugin_manager is None:
+        _plugin_manager = PluginManager.get_instance()
+    
+    return LegacyPluginManagerWrapper(_plugin_manager)
+
+def deprecated_core_plugin_manager():
+    """
+    Legacy-compatible core plugin manager.
+    
+    This function returns a compatibility wrapper around the new plugin manager
+    that exposes the legacy interface from core/plugin_manager.py.
+    
+    Returns:
+        A compatibility wrapper object.
+    """
+    global _plugin_manager
+    if _plugin_manager is None:
+        _plugin_manager = PluginManager.get_instance()
+    
+    return LegacyCorePluginManagerWrapper(_plugin_manager)
+
+class LegacyPluginManagerWrapper:
+    """
+    Compatibility wrapper for the legacy plugin manager interface.
+    
+    This class wraps the new plugin manager and exposes methods that match
+    the interface of the legacy plugin manager in core/plugin/manager.py.
+    """
+    
+    def __init__(self, plugin_manager):
+        """Initialize with a new plugin manager instance."""
+        self._plugin_manager = plugin_manager
+    
     async def register_plugin(self, plugin_id: str, plugin_data: Dict[str, Any]) -> bool:
-        """Register a plugin (compatibility method).
+        """
+        Register a plugin with the manager.
         
         Args:
-            plugin_id: Plugin ID
-            plugin_data: Plugin data
+            plugin_id: Plugin ID.
+            plugin_data: Plugin metadata.
             
         Returns:
-            True if registration succeeded, False otherwise
+            Success status.
         """
-        try:
-            # Convert the old format to the new format
-            metadata = {
-                "id": plugin_id,
-                "name": plugin_data.get("name", plugin_id),
-                "description": plugin_data.get("description", ""),
-                "version": plugin_data.get("version", "1.0.0"),
-                "author": plugin_data.get("author", "Unknown"),
-                "license": plugin_data.get("license", ""),
-                "type": plugin_data.get("type", "standard"),
-                "capabilities": plugin_data.get("capabilities", []),
-                "parameters": plugin_data.get("parameters", {}),
-                "dependencies": plugin_data.get("dependencies", []),
-                "config": plugin_data.get("config", {})
-            }
-            return await self._plugin_manager.register_plugin(plugin_id, metadata)
-        except Exception as e:
-            logger.error(f"Error in compat register_plugin: {e}")
-            return False
-        
-    async def unregister_plugin(self, plugin_id: str) -> bool:
-        """Unregister a plugin (compatibility method).
-        
-        Args:
-            plugin_id: Plugin ID
-            
-        Returns:
-            True if unregistration succeeded, False otherwise
-        """
-        try:
-            return await self._plugin_manager.unregister_plugin(plugin_id)
-        except Exception as e:
-            logger.error(f"Error in compat unregister_plugin: {e}")
-            return False
-        
-    async def execute_plugin(self, plugin_id: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a plugin (compatibility method).
-        
-        Args:
-            plugin_id: Plugin ID
-            parameters: Execution parameters
-            
-        Returns:
-            Plugin execution result dictionary
-        """
-        try:
-            result = await self._plugin_manager.execute_plugin(plugin_id, parameters)
-            return result.data if result else {}
-        except Exception as e:
-            logger.error(f"Error in compat execute_plugin: {e}")
-            return {"error": str(e), "success": False}
-        
-    async def list_plugins(self) -> List[Dict[str, Any]]:
-        """List registered plugins (compatibility method).
-        
-        Returns:
-            List of plugin dictionaries
-        """
-        try:
-            plugins = await self._plugin_manager.list_plugins()
-            # Convert to the old format
-            return [
-                {
-                    "id": plugin.get("id", ""),
-                    "name": plugin.get("name", ""),
-                    "description": plugin.get("description", ""),
-                    "version": plugin.get("version", ""),
-                    "author": plugin.get("author", ""),
-                    "type": plugin.get("type", "standard"),
-                    "capabilities": plugin.get("capabilities", []),
-                    "status": plugin.get("status", "active")
-                }
-                for plugin in plugins
-            ]
-        except Exception as e:
-            logger.error(f"Error in compat list_plugins: {e}")
-            return []
-        
-    async def get_plugin_metadata(self, plugin_id: str) -> Optional[Dict[str, Any]]:
-        """Get plugin metadata (compatibility method).
-        
-        Args:
-            plugin_id: Plugin ID
-            
-        Returns:
-            Plugin metadata dictionary if found, None otherwise
-        """
-        try:
-            metadata = await self._plugin_manager.get_plugin_metadata(plugin_id)
-            if not metadata:
-                return None
-                
-            # Convert to the old format
-            return {
-                "id": metadata.id,
-                "name": metadata.name,
-                "description": metadata.description,
-                "version": metadata.version,
-                "author": metadata.author,
-                "type": metadata.type,
-                "capabilities": metadata.capabilities,
-                "parameters": metadata.parameters,
-                "dependencies": metadata.dependencies,
-                "config": metadata.config
-            }
-        except Exception as e:
-            logger.error(f"Error in compat get_plugin_metadata: {e}")
-            return None
-
-class DeprecatedCorePluginManager:
-    """Compatibility wrapper for the old plugin/manager.py interface."""
+        return await self._plugin_manager.register_plugin(plugin_id, plugin_data)
     
-    def __init__(self):
-        """Initialize the compatibility wrapper."""
-        logger.warning(
-            "DeprecatedCorePluginManager is being used. This is a compatibility layer "
-            "that will be removed in a future version. Please migrate to the "
-            "consolidated plugin system in core/plugins/."
-        )
-        # Get a reference to the central plugin manager
-        self._plugin_manager = PluginManager.get_instance()
-        
-    async def register_plugin(self, plugin_id: str, metadata: Dict[str, Any]) -> bool:
-        """Register a plugin (compatibility method).
+    async def unregister_plugin(self, plugin_id: str) -> bool:
+        """
+        Unregister a plugin.
         
         Args:
-            plugin_id: Plugin ID
-            metadata: Plugin metadata
+            plugin_id: Plugin ID.
             
         Returns:
-            True if registration succeeded, False otherwise
+            Success status.
         """
-        try:
-            # Ensure the metadata has the correct format expected by the consolidated system
-            formatted_metadata = {
-                "id": plugin_id,
-                "name": metadata.get("name", plugin_id),
-                "description": metadata.get("description", ""),
-                "version": metadata.get("version", "1.0.0"),
-                "author": metadata.get("author", "Unknown"),
-                "license": metadata.get("license", ""),
-                "type": metadata.get("type", "standard"),
-                "capabilities": metadata.get("capabilities", []),
-                "parameters": metadata.get("parameters", {}),
-                "dependencies": metadata.get("dependencies", []),
-                "config": metadata.get("config", {})
-            }
-            
-            return await self._plugin_manager.register_plugin(plugin_id, formatted_metadata)
-        except Exception as e:
-            logger.error(f"Error in compat core register_plugin: {e}")
-            return False
-        
-    async def get_plugin(self, plugin_id: str) -> Optional[Dict[str, Any]]:
-        """Get plugin details (compatibility method).
+        return await self._plugin_manager.unregister_plugin(plugin_id)
+    
+    async def execute_plugin(self, plugin_id: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute a plugin.
         
         Args:
-            plugin_id: Plugin ID
+            plugin_id: Plugin ID.
+            parameters: Execution parameters.
             
         Returns:
-            Plugin details dictionary if found, None otherwise
+            Execution result.
         """
-        try:
-            metadata = await self._plugin_manager.get_plugin_metadata(plugin_id)
-            if not metadata:
-                return None
-                
-            # Convert to the format expected by the old interface
-            return {
-                "id": metadata.id,
-                "name": metadata.name,
-                "description": metadata.description,
-                "version": metadata.version,
-                "author": metadata.author,
-                "type": metadata.type,
-                "capabilities": metadata.capabilities,
-                "parameters": metadata.parameters,
-                "status": "active"  # Assuming active by default
-            }
-        except Exception as e:
-            logger.error(f"Error in compat core get_plugin: {e}")
-            return None
-        
-    async def execute(self, plugin_id: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a plugin (compatibility method).
+        result = await self._plugin_manager.execute_plugin(plugin_id, parameters)
+        # Convert PluginResult to legacy format
+        return {
+            "success": result.success,
+            "data": result.data if result.success else None,
+            "error": result.error if not result.success else None
+        }
+    
+    async def get_plugin_metadata(self, plugin_id: str) -> Dict[str, Any]:
+        """
+        Get plugin metadata.
         
         Args:
-            plugin_id: Plugin ID
-            parameters: Execution parameters
+            plugin_id: Plugin ID.
             
         Returns:
-            Plugin execution result dictionary
+            Plugin metadata.
         """
-        try:
-            result = await self._plugin_manager.execute_plugin(plugin_id, parameters)
-            return result.data if result else {}
-        except Exception as e:
-            logger.error(f"Error in compat core execute: {e}")
-            return {"error": str(e), "success": False}
+        metadata = await self._plugin_manager.get_plugin_metadata(plugin_id)
+        if metadata:
+            # Convert to dict if it's a PluginMetadata object
+            if isinstance(metadata, PluginMetadata):
+                return {
+                    "id": metadata.id,
+                    "name": metadata.name,
+                    "description": metadata.description,
+                    "version": metadata.version,
+                    "author": metadata.author,
+                    "type": metadata.type,
+                    "capabilities": metadata.capabilities,
+                    "parameters": metadata.parameters,
+                    "dependencies": metadata.dependencies,
+                    "config": metadata.config
+                }
+            return metadata
+        return {}
+    
+    async def list_plugins(self) -> List[Dict[str, Any]]:
+        """
+        List all registered plugins.
+        
+        Returns:
+            List of plugin metadata.
+        """
+        return await self._plugin_manager.list_plugins()
+    
+    async def get_plugin_by_capability(self, capability: str) -> List[Dict[str, Any]]:
+        """
+        Find plugins with a specific capability.
+        
+        Args:
+            capability: Capability to search for.
+            
+        Returns:
+            List of matching plugin metadata.
+        """
+        plugins = await self._plugin_manager.list_plugins()
+        return [
+            plugin for plugin in plugins
+            if "capabilities" in plugin and capability in plugin["capabilities"]
+        ]
 
-# Create singleton-like instances for direct imports
-deprecated_plugin_manager = DeprecatedPluginManager()
-deprecated_core_plugin_manager = DeprecatedCorePluginManager()
+class LegacyCorePluginManagerWrapper:
+    """
+    Compatibility wrapper for the legacy core plugin manager interface.
+    
+    This class wraps the new plugin manager and exposes methods that match
+    the interface of the legacy plugin manager in core/plugin_manager.py.
+    """
+    
+    def __init__(self, plugin_manager):
+        """Initialize with a new plugin manager instance."""
+        self._plugin_manager = plugin_manager
+    
+    async def register_plugin(self, plugin_id: str, plugin_data: Dict[str, Any]) -> bool:
+        """
+        Register a plugin with the manager.
+        
+        Args:
+            plugin_id: Plugin ID.
+            plugin_data: Plugin metadata.
+            
+        Returns:
+            Success status.
+        """
+        # Convert legacy format to new metadata
+        metadata = PluginMetadata(
+            id=plugin_id,
+            name=plugin_data.get("name", plugin_id),
+            description=plugin_data.get("description", ""),
+            version=plugin_data.get("version", "1.0.0"),
+            author=plugin_data.get("author", "unknown"),
+            type=plugin_data.get("type", "utility"),
+            capabilities=plugin_data.get("capabilities", []),
+            parameters=plugin_data.get("parameters", {}),
+            dependencies=plugin_data.get("dependencies", []),
+            config=plugin_data.get("config", {})
+        )
+        
+        return await self._plugin_manager.register_plugin(plugin_id, metadata)
+    
+    async def execute_plugin(self, plugin_id: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute a plugin.
+        
+        Args:
+            plugin_id: Plugin ID.
+            parameters: Execution parameters.
+            
+        Returns:
+            Execution result.
+        """
+        result = await self._plugin_manager.execute_plugin(plugin_id, parameters)
+        # Convert PluginResult to legacy format
+        return {
+            "success": result.success,
+            "data": result.data if result.success else None,
+            "error": result.error if not result.success else None
+        }
+    
+    async def get_plugin_info(self, plugin_id: str) -> Dict[str, Any]:
+        """
+        Get plugin information.
+        
+        Args:
+            plugin_id: Plugin ID.
+            
+        Returns:
+            Plugin information.
+        """
+        metadata = await self._plugin_manager.get_plugin_metadata(plugin_id)
+        return metadata.to_dict() if metadata else {}
+    
+    async def list_all_plugins(self) -> List[str]:
+        """
+        List all registered plugin IDs.
+        
+        Returns:
+            List of plugin IDs.
+        """
+        plugins = await self._plugin_manager.list_plugins()
+        return [plugin["id"] for plugin in plugins]
+    
+    async def list_plugins_by_type(self, plugin_type: str) -> List[str]:
+        """
+        List plugins of a specific type.
+        
+        Args:
+            plugin_type: Plugin type to filter by.
+            
+        Returns:
+            List of matching plugin IDs.
+        """
+        plugins = await self._plugin_manager.list_plugins({"type": plugin_type})
+        return [plugin["id"] for plugin in plugins]
+    
+    async def find_plugins_by_capability(self, capability: str) -> List[str]:
+        """
+        Find plugins with a specific capability.
+        
+        Args:
+            capability: Capability to search for.
+            
+        Returns:
+            List of matching plugin IDs.
+        """
+        plugins = await self._plugin_manager.list_plugins()
+        return [
+            plugin["id"] for plugin in plugins
+            if "capabilities" in plugin and capability in plugin["capabilities"]
+        ]

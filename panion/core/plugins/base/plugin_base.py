@@ -1,205 +1,121 @@
 """
-Consolidated Plugin Base Module
+Base Plugin Module
 
-This module provides a unified base class for all plugins in the system.
-It consolidates functionality from various existing plugin base classes:
-- core/base_plugin.py
-- core/plugin/base.py
-
-This is the foundation of the consolidated plugin system.
+This module provides the foundation for the consolidated plugin system.
+It defines the basic plugin classes and types that all plugins must extend.
 """
 
-import logging
 import inspect
+import logging
+from typing import Dict, Any, Optional, Tuple, List, Type, ClassVar, Protocol, Set
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List, TypedDict, Union, Type, TypeGuard, Callable
-from dataclasses import dataclass, field
-from datetime import datetime
-from uuid import uuid4
+from dataclasses import dataclass, field, asdict, fields
 
 logger = logging.getLogger(__name__)
 
-# Type definitions for plugin system
-class PluginMetadata(TypedDict, total=False):
-    """Plugin metadata type definition."""
+@dataclass
+class PluginMetadata:
+    """Metadata for a plugin."""
     id: str
     name: str
     description: str
     version: str
     author: str
-    license: str
     type: str
-    capabilities: List[str]
-    parameters: Dict[str, Any]
-    dependencies: List[str]
-    config: Dict[str, Any]
+    capabilities: List[str] = field(default_factory=list)
+    parameters: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    dependencies: List[str] = field(default_factory=list)
+    config: Dict[str, Any] = field(default_factory=dict)
+    compatibility: Dict[str, Any] = field(default_factory=dict)
+    resource_requirements: Dict[str, Any] = field(default_factory=dict)
     
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert metadata to a dictionary.
+        
+        Returns:
+            Dictionary representation of metadata.
+        """
+        return asdict(self)
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'PluginMetadata':
+        """Create metadata from a dictionary.
+        
+        Args:
+            data: Dictionary representation of metadata.
+            
+        Returns:
+            PluginMetadata instance.
+        """
+        # Filter out unknown fields
+        known_fields = {f.name for f in fields(cls)}
+        filtered_data = {k: v for k, v in data.items() if k in known_fields}
+        return cls(**filtered_data)
+
 @dataclass
 class PluginResult:
-    """Result of plugin execution."""
-    success: bool = False
-    data: Dict[str, Any] = field(default_factory=dict)
+    """Result of a plugin execution."""
+    success: bool
+    data: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
-    execution_time: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metrics: Dict[str, Any] = field(default_factory=dict)
+    warnings: List[str] = field(default_factory=list)
 
 class BasePlugin(ABC):
     """
-    Unified base plugin class for all plugins in the system.
+    Base class for all plugins in the consolidated system.
     
-    This class consolidates functionality from various existing plugin base classes
-    and provides a standardized interface for all plugins.
+    All plugins must inherit from this class and implement its abstract methods.
     """
     
-    def __init__(self, metadata: Optional[PluginMetadata] = None):
-        """Initialize the plugin with optional metadata.
+    # Class variable to identify plugin subclasses
+    _plugin_marker: ClassVar[bool] = True
+    
+    def __init__(self, metadata: PluginMetadata):
+        """Initialize the plugin with metadata.
         
         Args:
-            metadata: Optional plugin metadata.
+            metadata: Plugin metadata.
         """
-        self._id = metadata["id"] if metadata and "id" in metadata else str(uuid4())
-        self._name = metadata["name"] if metadata and "name" in metadata else self._id
-        self._description = metadata["description"] if metadata and "description" in metadata else ""
-        self._version = metadata["version"] if metadata and "version" in metadata else "1.0.0"
-        self._author = metadata["author"] if metadata and "author" in metadata else "Unknown"
-        self._license = metadata["license"] if metadata and "license" in metadata else ""
-        self._type = metadata["type"] if metadata and "type" in metadata else "standard"
-        self._capabilities = metadata["capabilities"] if metadata and "capabilities" in metadata else []
-        self._parameters = metadata["parameters"] if metadata and "parameters" in metadata else {}
-        self._dependencies = metadata["dependencies"] if metadata and "dependencies" in metadata else []
-        self._config = metadata["config"] if metadata and "config" in metadata else {}
-        
-        # Internal state
+        self.metadata = metadata
         self._initialized = False
-        self._last_execution_time = None
-        self._execution_count = 0
-        self._errors = []
-        
-        logger.debug(f"Plugin {self._id} of type {self._type} initialized")
-        
-    @property
-    def id(self) -> str:
-        """Get the plugin ID."""
-        return self._id
-        
-    @property
-    def name(self) -> str:
-        """Get the plugin name."""
-        return self._name
-        
-    @property
-    def description(self) -> str:
-        """Get the plugin description."""
-        return self._description
-        
-    @property
-    def version(self) -> str:
-        """Get the plugin version."""
-        return self._version
-        
-    @property
-    def author(self) -> str:
-        """Get the plugin author."""
-        return self._author
-        
-    @property
-    def license(self) -> str:
-        """Get the plugin license."""
-        return self._license
-        
-    @property
-    def type(self) -> str:
-        """Get the plugin type."""
-        return self._type
-        
-    @property
-    def capabilities(self) -> List[str]:
-        """Get the plugin capabilities."""
-        return self._capabilities
-        
-    @property
-    def parameters(self) -> Dict[str, Any]:
-        """Get the plugin parameters."""
-        return self._parameters
-        
-    @property
-    def dependencies(self) -> List[str]:
-        """Get the plugin dependencies."""
-        return self._dependencies
-        
-    @property
-    def config(self) -> Dict[str, Any]:
-        """Get the plugin configuration."""
-        return self._config
-        
-    @property
-    def initialized(self) -> bool:
-        """Check if the plugin is initialized."""
-        return self._initialized
-        
-    @property
-    def last_execution_time(self) -> Optional[datetime]:
-        """Get the last execution time."""
-        return self._last_execution_time
-        
-    @property
-    def execution_count(self) -> int:
-        """Get the execution count."""
-        return self._execution_count
-        
-    @property
-    def errors(self) -> List[Dict[str, Any]]:
-        """Get the errors encountered during execution."""
-        return self._errors
-        
-    def get_metadata(self) -> PluginMetadata:
-        """Get the plugin metadata.
-        
-        Returns:
-            Plugin metadata dictionary.
-        """
-        return {
-            "id": self._id,
-            "name": self._name,
-            "description": self._description,
-            "version": self._version,
-            "author": self._author,
-            "license": self._license,
-            "type": self._type,
-            "capabilities": self._capabilities,
-            "parameters": self._parameters,
-            "dependencies": self._dependencies,
-            "config": self._config
-        }
-        
+        self._logger = logging.getLogger(f"plugin.{metadata.id}")
+    
+    @abstractmethod
     async def initialize(self) -> bool:
         """Initialize the plugin.
-        
-        This method should be overridden by plugin implementations
-        that require initialization.
         
         Returns:
             True if initialization succeeded, False otherwise.
         """
-        self._initialized = True
-        return True
+        pass
+    
+    @abstractmethod
+    async def execute(self, parameters: Dict[str, Any]) -> PluginResult:
+        """Execute the plugin functionality.
         
+        Args:
+            parameters: Parameters for execution.
+            
+        Returns:
+            Result of execution.
+        """
+        pass
+    
+    @abstractmethod
     async def cleanup(self) -> bool:
-        """Clean up plugin resources.
-        
-        This method should be overridden by plugin implementations
-        that need to clean up resources.
+        """Cleanup resources used by the plugin.
         
         Returns:
             True if cleanup succeeded, False otherwise.
         """
-        return True
+        pass
+    
+    def validate_parameters(self, parameters: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+        """Validate plugin parameters.
         
-    def validate_parameters(self, parameters: Dict[str, Any]) -> tuple[bool, Optional[str]]:
-        """Validate the input parameters.
-        
-        This method should be overridden by plugin implementations
-        that need to validate input parameters.
+        By default, this checks if all required parameters are present.
+        Subclasses can override for more complex validation.
         
         Args:
             parameters: Parameters to validate.
@@ -207,77 +123,128 @@ class BasePlugin(ABC):
         Returns:
             Tuple of (is_valid, error_message).
         """
-        # Default implementation always validates
+        # Default implementation: check if all required parameters are present
+        for param_name, param_info in self.metadata.parameters.items():
+            if param_info.get("required", False) and param_name not in parameters:
+                return False, f"Missing required parameter: {param_name}"
+        
         return True, None
+    
+    @property
+    def id(self) -> str:
+        """Get plugin ID."""
+        return self.metadata.id
+    
+    @property
+    def name(self) -> str:
+        """Get plugin name."""
+        return self.metadata.name
+    
+    @property
+    def description(self) -> str:
+        """Get plugin description."""
+        return self.metadata.description
+    
+    @property
+    def version(self) -> str:
+        """Get plugin version."""
+        return self.metadata.version
+    
+    @property
+    def author(self) -> str:
+        """Get plugin author."""
+        return self.metadata.author
+    
+    @property
+    def type(self) -> str:
+        """Get plugin type."""
+        return self.metadata.type
+    
+    @property
+    def capabilities(self) -> List[str]:
+        """Get plugin capabilities."""
+        return self.metadata.capabilities
+    
+    @property
+    def dependencies(self) -> List[str]:
+        """Get plugin dependencies."""
+        return self.metadata.dependencies
+    
+    @property
+    def initialized(self) -> bool:
+        """Check if plugin is initialized."""
+        return self._initialized
+    
+    @staticmethod
+    def is_plugin(cls: Type) -> bool:
+        """Determine if a class is a plugin.
         
-    @abstractmethod
-    async def execute(self, parameters: Dict[str, Any]) -> PluginResult:
-        """Execute the plugin's main functionality.
+        Args:
+            cls: Class to check.
+            
+        Returns:
+            True if the class is a plugin, False otherwise.
+        """
+        # Check if the class is a subclass of BasePlugin and not BasePlugin itself
+        return (
+            inspect.isclass(cls) and
+            cls is not BasePlugin and
+            issubclass(cls, BasePlugin) and
+            getattr(cls, "_plugin_marker", False)
+        )
+    
+    def log_debug(self, message: str) -> None:
+        """Log a debug message.
         
-        This method must be implemented by all plugin subclasses.
+        Args:
+            message: Message to log.
+        """
+        self._logger.debug(message)
+    
+    def log_info(self, message: str) -> None:
+        """Log an info message.
+        
+        Args:
+            message: Message to log.
+        """
+        self._logger.info(message)
+    
+    def log_warning(self, message: str) -> None:
+        """Log a warning message.
+        
+        Args:
+            message: Message to log.
+        """
+        self._logger.warning(message)
+    
+    def log_error(self, message: str) -> None:
+        """Log an error message.
+        
+        Args:
+            message: Message to log.
+        """
+        self._logger.error(message)
+    
+    def log_execution(self, parameters: Dict[str, Any], result: PluginResult) -> None:
+        """Log plugin execution.
         
         Args:
             parameters: Execution parameters.
+            result: Execution result.
+        """
+        if result.success:
+            self.log_info(f"Successfully executed with parameters: {parameters}")
+        else:
+            self.log_error(f"Failed to execute with parameters: {parameters}, error: {result.error}")
+        
+        for warning in result.warnings:
+            self.log_warning(f"Execution warning: {warning}")
             
+    async def get_metrics(self) -> Dict[str, Any]:
+        """Get plugin metrics.
+        
         Returns:
-            Plugin execution result.
+            Dictionary of metrics.
         """
-        raise NotImplementedError("Plugin subclasses must implement execute method")
-        
-    def is_capable_of(self, capability: str) -> bool:
-        """Check if the plugin has a specific capability.
-        
-        Args:
-            capability: Capability to check.
-            
-        Returns:
-            True if the plugin has the capability, False otherwise.
-        """
-        return capability in self._capabilities
-        
-    def add_capability(self, capability: str) -> None:
-        """Add a capability to the plugin.
-        
-        Args:
-            capability: Capability to add.
-        """
-        if capability not in self._capabilities:
-            self._capabilities.append(capability)
-            
-    def remove_capability(self, capability: str) -> None:
-        """Remove a capability from the plugin.
-        
-        Args:
-            capability: Capability to remove.
-        """
-        if capability in self._capabilities:
-            self._capabilities.remove(capability)
-            
-    def log_error(self, error: str, context: Optional[Dict[str, Any]] = None) -> None:
-        """Log an error encountered during plugin execution.
-        
-        Args:
-            error: Error message.
-            context: Optional error context.
-        """
-        error_entry = {
-            "timestamp": datetime.now(),
-            "message": error,
-            "context": context or {}
-        }
-        self._errors.append(error_entry)
-        logger.error(f"Plugin {self._id} error: {error}")
-        
-    @staticmethod
-    def is_plugin(obj: object) -> TypeGuard[Callable]:
-        """Check if an object is a plugin.
-        
-        Args:
-            obj: Object to check.
-            
-        Returns:
-            True if the object is a plugin, False otherwise.
-        """
-        return (inspect.isclass(obj) and 
-                issubclass(obj, BasePlugin) and 
-                obj != BasePlugin)
+        # Default implementation: no metrics
+        return {}

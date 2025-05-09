@@ -18,6 +18,10 @@ The consolidated system offers:
 from .base import BasePlugin, PluginMetadata, PluginResult
 from .interfaces import IPluginManager, PluginType, PluginState
 from .manager import PluginManager
+from .exceptions import (
+    PluginError, PluginErrorType, PluginNotFoundError,
+    PluginValidationError, PluginExecutionError, PluginDependencyError
+)
 
 # Import compatibility modules
 from .compat import deprecated_plugin_manager, deprecated_core_plugin_manager
@@ -35,6 +39,14 @@ __all__ = [
     
     # Management
     'PluginManager',
+    
+    # Exceptions
+    'PluginError',
+    'PluginErrorType',
+    'PluginNotFoundError',
+    'PluginValidationError',
+    'PluginExecutionError',
+    'PluginDependencyError',
     
     # Compatibility
     'deprecated_plugin_manager',

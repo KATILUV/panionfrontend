@@ -1,11 +1,14 @@
-"""Plugin interfaces package"""
+"""
+Plugin Interfaces Module
 
-from .plugin_interfaces import (
-    IPluginManager, IPluginDiscovery, IPluginFactory, IPluginRegistry,
-    IPluginExecutor, IPluginLifecycle, PluginType, PluginState, PluginErrorType
-)
+This module contains interface definitions for the plugin system.
+These interfaces define the contracts that plugin components must follow.
+"""
+
+from .plugin_interfaces import IPluginManager, PluginType, PluginState
 
 __all__ = [
-    'IPluginManager', 'IPluginDiscovery', 'IPluginFactory', 'IPluginRegistry',
-    'IPluginExecutor', 'IPluginLifecycle', 'PluginType', 'PluginState', 'PluginErrorType'
+    'IPluginManager',
+    'PluginType',
+    'PluginState',
 ]
