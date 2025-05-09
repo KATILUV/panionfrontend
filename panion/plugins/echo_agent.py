@@ -7,7 +7,8 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-from panion.core.plugins.base import BasePlugin, PluginMetadata, PluginResult
+from panion.core.plugins.base.plugin_base import BasePlugin, PluginMetadata, PluginResult
+from panion.core.plugins.interfaces.plugin_interfaces import PluginState
 
 class EchoAgent(BasePlugin):
     """A simple echo agent that returns the input message."""
@@ -24,8 +25,10 @@ class EchoAgent(BasePlugin):
             capabilities=["echo", "text_response"]
         )
         super().__init__(metadata)
+        self.logger = logging.getLogger("EchoAgent")
         self.is_running = False
         self.context = {}
+        self.state = PluginState.INACTIVE
     
     async def initialize(self) -> PluginResult:
         """Initialize the agent."""

@@ -27,6 +27,7 @@ class PluginState(Enum):
     REGISTERED = auto()            # Plugin is registered but not initialized
     INITIALIZED = auto()           # Plugin is initialized and ready to use
     ACTIVE = auto()                # Plugin is active and in use
+    INACTIVE = auto()              # Plugin is inactive (stopped but initialized)
     DISABLED = auto()              # Plugin is temporarily disabled
     ERROR = auto()                 # Plugin is in error state
     UNREGISTERED = auto()          # Plugin is unregistered

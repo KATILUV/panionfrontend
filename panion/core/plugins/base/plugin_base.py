@@ -56,10 +56,58 @@ class PluginMetadata:
 class PluginResult:
     """Result of a plugin execution."""
     success: bool
-    data: Optional[Dict[str, Any]] = None
+    message: str = "Operation completed"
     error: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
     metrics: Dict[str, Any] = field(default_factory=dict)
     warnings: List[str] = field(default_factory=list)
+    
+    @staticmethod
+    def success(message: str = "Operation successful", data: Optional[Dict[str, Any]] = None, 
+               metrics: Optional[Dict[str, Any]] = None, warnings: Optional[List[str]] = None) -> 'PluginResult':
+        """Create a success result.
+        
+        Args:
+            message: Success message.
+            data: Result data.
+            metrics: Execution metrics.
+            warnings: Execution warnings.
+            
+        Returns:
+            PluginResult instance for success.
+        """
+        return PluginResult(
+            success=True,
+            message=message,
+            data=data or {},
+            metrics=metrics or {},
+            warnings=warnings or []
+        )
+    
+    @staticmethod
+    def failure(message: str = "Operation failed", error: Optional[str] = None,
+               data: Optional[Dict[str, Any]] = None, metrics: Optional[Dict[str, Any]] = None,
+               warnings: Optional[List[str]] = None) -> 'PluginResult':
+        """Create a failure result.
+        
+        Args:
+            message: Failure message.
+            error: Error description.
+            data: Result data.
+            metrics: Execution metrics.
+            warnings: Execution warnings.
+            
+        Returns:
+            PluginResult instance for failure.
+        """
+        return PluginResult(
+            success=False,
+            message=message,
+            error=error or message,
+            data=data or {},
+            metrics=metrics or {},
+            warnings=warnings or []
+        )
 
 class BasePlugin(ABC):
     """
@@ -82,11 +130,11 @@ class BasePlugin(ABC):
         self._logger = logging.getLogger(f"plugin.{metadata.id}")
     
     @abstractmethod
-    async def initialize(self) -> bool:
+    async def initialize(self) -> PluginResult:
         """Initialize the plugin.
         
         Returns:
-            True if initialization succeeded, False otherwise.
+            PluginResult with success status and any initialization information.
         """
         pass
     
@@ -103,11 +151,11 @@ class BasePlugin(ABC):
         pass
     
     @abstractmethod
-    async def cleanup(self) -> bool:
+    async def cleanup(self) -> PluginResult:
         """Cleanup resources used by the plugin.
         
         Returns:
-            True if cleanup succeeded, False otherwise.
+            PluginResult with success status and any cleanup information.
         """
         pass
     
@@ -240,11 +288,14 @@ class BasePlugin(ABC):
         for warning in result.warnings:
             self.log_warning(f"Execution warning: {warning}")
             
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> PluginResult:
         """Get plugin metrics.
         
         Returns:
-            Dictionary of metrics.
+            PluginResult with plugin metrics.
         """
         # Default implementation: no metrics
-        return {}
+        return PluginResult.success(
+            message="Metrics retrieved successfully",
+            data={}
+        )
