@@ -12,7 +12,7 @@ and related functionality.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional, Set, Union, Type
+from typing import Dict, Any, List, Optional, Set, Union, Type, Tuple
 from enum import Enum
 from datetime import datetime
 

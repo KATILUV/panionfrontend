@@ -1,0 +1,13 @@
+name: {{PLUGIN_NAME}}
+description: {{PLUGIN_DESCRIPTION}}
+version: 1.0.0
+type: {{PLUGIN_TYPE}}
+author: Panion System
+dependencies:
+  {{DEPENDENCIES}}
+capabilities:
+  {{CAPABILITIES}}
+requirements:
+  {{REQUIREMENTS}}
+test_cases:
+  {{TEST_CASES}} 

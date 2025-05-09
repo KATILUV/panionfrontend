@@ -1,797 +1,505 @@
 """
-Plugin Manager Module
-Comprehensive plugin management system.
+Consolidated Plugin Manager Module
 
-This module consolidates functionality from multiple plugin manager implementations:
+This module provides a unified manager for all plugins in the system.
+It consolidates functionality from various existing plugin managers:
 - core/plugin_manager.py
 - core/plugin/manager.py
 
-It provides a complete plugin management system with support for plugin discovery,
-registration, lifecycle management, execution, and dependency handling.
+This is the central orchestrator of the consolidated plugin system.
 """
 
-import logging
-import asyncio
-import importlib
-import inspect
-import json
 import os
-import sys
-import uuid
-from datetime import datetime
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple, Type, Union
-import traceback
+import logging
+import inspect
+import importlib
 import time
+from typing import Dict, Any, Optional, List, Type, Tuple, Set, Union
+from pathlib import Path
+from asyncio import Lock
 
 from ..base.plugin_base import BasePlugin, PluginMetadata, PluginResult
-from ..interfaces.plugin_interfaces import (
-    IPluginManager, 
-    PluginType, 
-    PluginState, 
-    PluginErrorType
-)
 
-# Configure logging
 logger = logging.getLogger(__name__)
 
-class PluginError(Exception):
-    """Exception raised for plugin-related errors."""
+class PluginManager:
+    """
+    Unified plugin manager for the consolidated plugin system.
     
-    def __init__(
-        self, 
-        message: str, 
-        plugin_id: Optional[str] = None,
-        error_type: PluginErrorType = PluginErrorType.EXECUTION,
-        details: Optional[Dict[str, Any]] = None
-    ):
-        """Initialize the error.
+    This class serves as the central point for plugin management, including:
+    - Registration and discovery
+    - Lifecycle management
+    - Execution
+    - Dependency resolution
+    
+    It implements the singleton pattern to ensure a single system-wide instance.
+    """
+    
+    # Singleton instance
+    _instance = None
+    _initialized = False
+    
+    @classmethod
+    def get_instance(cls) -> 'PluginManager':
+        """Get the singleton instance of the plugin manager.
         
-        Args:
-            message: Error message
-            plugin_id: ID of the plugin that raised the error
-            error_type: Type of error
-            details: Additional error details
+        Returns:
+            The PluginManager singleton instance.
         """
-        self.message = message
-        self.plugin_id = plugin_id
-        self.error_type = error_type
-        self.details = details or {}
-        self.timestamp = datetime.now()
-        
-        super().__init__(self.message)
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
     
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert error to a dictionary."""
-        return {
-            "message": self.message,
-            "plugin_id": self.plugin_id,
-            "error_type": self.error_type.value,
-            "timestamp": self.timestamp.isoformat(),
-            "details": self.details
-        }
-
-class PluginManager(IPluginManager):
-    """Comprehensive plugin management system."""
-    
-    def __init__(self, plugin_dir: Optional[str] = None, config_path: Optional[str] = None):
-        """Initialize the plugin manager.
+    def __init__(self):
+        """Initialize the plugin manager."""
+        # Only initialize once (singleton pattern)
+        if PluginManager._initialized:
+            return
         
-        Args:
-            plugin_dir: Directory containing plugins (optional)
-            config_path: Path to configuration file (optional)
-        """
-        # Set up logging
-        self.logger = logging.getLogger(__name__)
-        
-        # Plugin storage
+        # Plugin registry
         self._plugins: Dict[str, BasePlugin] = {}
+        self._plugin_classes: Dict[str, Type[BasePlugin]] = {}
         self._metadata: Dict[str, PluginMetadata] = {}
-        self._states: Dict[str, PluginState] = {}
-        self._plugin_types: Dict[str, PluginType] = {}
-        self._instances: Dict[str, BasePlugin] = {}
+        
+        # Plugin discovery paths
+        self._plugin_dirs: List[str] = []
         
         # Plugin dependencies
         self._dependencies: Dict[str, Set[str]] = {}
         self._dependents: Dict[str, Set[str]] = {}
         
         # Plugin metrics
-        self._metrics: Dict[str, Dict[str, Any]] = {}
-        self._execution_history: Dict[str, List[Dict[str, Any]]] = {}
+        self._execution_times: Dict[str, List[float]] = {}
+        self._execution_counts: Dict[str, int] = {}
+        self._error_counts: Dict[str, int] = {}
         
-        # Plugin discovery
-        self.plugin_dir = plugin_dir
-        if self.plugin_dir:
-            self.plugin_dir = Path(self.plugin_dir)
-            self.plugin_dir.mkdir(parents=True, exist_ok=True)
+        # Concurrency control
+        self._execution_lock = Lock()
         
-        # Plugin configuration
-        self.config_path = config_path
-        self.config = self._load_config() if config_path else {}
+        # Set as initialized
+        PluginManager._initialized = True
         
-        # Lock for thread safety
-        self._lock = asyncio.Lock()
+        logger.info("Plugin manager initialized")
     
-    def _load_config(self) -> Dict[str, Any]:
-        """Load plugin manager configuration.
-        
-        Returns:
-            Configuration dictionary
-        """
-        try:
-            config_path = Path(self.config_path)
-            if not config_path.exists():
-                self.logger.warning(f"Config file not found: {config_path}")
-                return {}
-                
-            with open(config_path, 'r') as f:
-                if config_path.suffix == '.json':
-                    return json.load(f)
-                elif config_path.suffix in ['.yaml', '.yml']:
-                    import yaml
-                    return yaml.safe_load(f)
-                else:
-                    self.logger.warning(f"Unsupported config format: {config_path.suffix}")
-                    return {}
-        except Exception as e:
-            self.logger.error(f"Error loading config: {e}")
-            return {}
-    
-    async def discover_plugins(self, plugin_dir: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Discover plugins in the specified directory.
+    async def register_plugin_dir(self, plugin_dir: str) -> List[str]:
+        """Register a directory for plugin discovery.
         
         Args:
-            plugin_dir: Directory to search for plugins (uses self.plugin_dir if None)
+            plugin_dir: Directory containing plugins.
             
         Returns:
-            List of plugin metadata dictionaries
+            List of discovered plugin IDs.
         """
-        plugin_dir = plugin_dir or self.plugin_dir
-        if not plugin_dir:
-            self.logger.warning("No plugin directory specified")
+        plugin_dir_path = Path(plugin_dir)
+        if not plugin_dir_path.exists():
+            logger.warning(f"Plugin directory {plugin_dir} does not exist")
             return []
             
-        plugin_dir = Path(plugin_dir)
-        if not plugin_dir.exists():
-            self.logger.warning(f"Plugin directory not found: {plugin_dir}")
-            return []
+        if str(plugin_dir_path) not in self._plugin_dirs:
+            self._plugin_dirs.append(str(plugin_dir_path))
             
-        discovered = []
+        # Scan for plugins
+        plugin_files = list(plugin_dir_path.glob("*.py"))
+        plugin_ids = []
         
-        # Scan Python files
-        for py_file in plugin_dir.glob("**/*.py"):
-            if py_file.name.startswith('__'):
-                continue
-                
+        for plugin_file in plugin_files:
             try:
-                # Get module path relative to plugin_dir
-                rel_path = py_file.relative_to(plugin_dir)
-                module_path = '.'.join(rel_path.with_suffix('').parts)
-                
                 # Import module
-                spec = importlib.util.spec_from_file_location(module_path, py_file)
-                if not spec or not spec.loader:
-                    continue
-                    
+                module_name = plugin_file.stem
+                spec = importlib.util.spec_from_file_location(
+                    module_name, str(plugin_file)
+                )
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
                 
                 # Find plugin classes
-                for name, obj in inspect.getmembers(module):
-                    if (inspect.isclass(obj) and 
-                        issubclass(obj, BasePlugin) and 
-                        obj != BasePlugin):
-                        
-                        # Create plugin instance
-                        try:
-                            plugin = obj()
-                            metadata = plugin.get_metadata()
-                            discovered.append({
-                                "id": str(uuid.uuid4()),
-                                "class_name": obj.__name__,
-                                "module_path": module_path,
-                                "file_path": str(py_file),
-                                "metadata": metadata
-                            })
-                        except Exception as e:
-                            self.logger.warning(f"Error instantiating plugin {name}: {e}")
-                
+                for _, obj in inspect.getmembers(module):
+                    if BasePlugin.is_plugin(obj):
+                        # Create instance and register
+                        plugin_id = f"{module_name}.{obj.__name__}"
+                        self._plugin_classes[plugin_id] = obj
+                        plugin_ids.append(plugin_id)
+                        logger.info(f"Discovered plugin {plugin_id}")
             except Exception as e:
-                self.logger.warning(f"Error processing plugin file {py_file}: {e}")
-        
-        return discovered
+                logger.error(f"Error discovering plugin {plugin_file}: {e}")
+                
+        return plugin_ids
     
     async def scan_for_new_plugins(self) -> List[str]:
-        """Scan for new plugins.
+        """Scan registered directories for new plugins.
         
         Returns:
-            List of new plugin IDs discovered
+            List of newly discovered plugin IDs.
         """
-        if not self.plugin_dir:
-            return []
-            
-        discovered = await self.discover_plugins()
-        new_plugins = []
-        
-        async with self._lock:
-            for plugin_info in discovered:
-                plugin_id = plugin_info["id"]
-                if plugin_id not in self._metadata:
-                    try:
-                        # Register plugin
-                        metadata = PluginMetadata.from_dict(plugin_info["metadata"])
-                        await self.register_plugin(plugin_id, metadata, plugin_info)
-                        new_plugins.append(plugin_id)
-                    except Exception as e:
-                        self.logger.warning(f"Error registering plugin {plugin_id}: {e}")
-        
-        return new_plugins
+        new_plugin_ids = []
+        for plugin_dir in self._plugin_dirs:
+            plugin_ids = await self.register_plugin_dir(plugin_dir)
+            for plugin_id in plugin_ids:
+                if plugin_id not in self._plugins and plugin_id not in self._metadata:
+                    new_plugin_ids.append(plugin_id)
+        return new_plugin_ids
     
-    async def register_plugin(self, plugin_id: str, metadata: PluginMetadata, 
-                               plugin_info: Optional[Dict[str, Any]] = None) -> bool:
-        """Register a plugin.
+    async def register_plugin(self, plugin_id: str, metadata: Union[PluginMetadata, Dict[str, Any]]) -> bool:
+        """Register a plugin with the manager.
         
         Args:
-            plugin_id: Plugin ID
-            metadata: Plugin metadata
-            plugin_info: Additional plugin information (optional)
+            plugin_id: Unique plugin identifier.
+            metadata: Plugin metadata.
             
         Returns:
-            True if registration succeeded, False otherwise
+            True if registration succeeded, False otherwise.
         """
-        async with self._lock:
+        try:
+            # Check if already registered
             if plugin_id in self._metadata:
-                self.logger.warning(f"Plugin already registered: {plugin_id}")
+                logger.warning(f"Plugin {plugin_id} already registered")
                 return False
                 
-            try:
-                # Store metadata
-                self._metadata[plugin_id] = metadata
-                self._states[plugin_id] = PluginState.UNINITIALIZED
-                self._dependencies[plugin_id] = set()
-                self._dependents[plugin_id] = set()
-                self._metrics[plugin_id] = {
-                    "execution_count": 0,
-                    "error_count": 0,
-                    "avg_execution_time": 0.0,
-                    "last_executed": None
-                }
-                self._execution_history[plugin_id] = []
+            # Store metadata
+            self._metadata[plugin_id] = metadata
+            
+            # Update dependency tracking
+            dependencies = metadata.get("dependencies", [])
+            self._dependencies[plugin_id] = set(dependencies)
+            
+            # Update dependents tracking
+            for dep in dependencies:
+                if dep not in self._dependents:
+                    self._dependents[dep] = set()
+                self._dependents[dep].add(plugin_id)
                 
-                # Store plugin type if available
-                if plugin_info and "plugin_type" in plugin_info:
-                    plugin_type = plugin_info["plugin_type"]
-                    if isinstance(plugin_type, str):
-                        try:
-                            self._plugin_types[plugin_id] = PluginType(plugin_type)
-                        except ValueError:
-                            self._plugin_types[plugin_id] = PluginType.STANDARD
-                    elif isinstance(plugin_type, PluginType):
-                        self._plugin_types[plugin_id] = plugin_type
-                else:
-                    self._plugin_types[plugin_id] = PluginType.STANDARD
-                
-                # Register dependencies
-                for dep in metadata.dependencies:
-                    self._dependencies[plugin_id].add(dep)
-                    if dep in self._dependents:
-                        self._dependents[dep].add(plugin_id)
-                
-                self.logger.info(f"Registered plugin: {plugin_id} ({metadata.name})")
-                return True
-                
-            except Exception as e:
-                self.logger.error(f"Error registering plugin {plugin_id}: {e}")
-                return False
+            logger.info(f"Registered plugin {plugin_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Error registering plugin {plugin_id}: {e}")
+            return False
     
     async def unregister_plugin(self, plugin_id: str) -> bool:
-        """Unregister a plugin.
+        """Unregister a plugin from the manager.
         
         Args:
-            plugin_id: Plugin ID
+            plugin_id: Plugin ID to unregister.
             
         Returns:
-            True if unregistration succeeded, False otherwise
+            True if unregistration succeeded, False otherwise.
         """
-        async with self._lock:
+        try:
+            # Check if registered
             if plugin_id not in self._metadata:
-                self.logger.warning(f"Plugin not registered: {plugin_id}")
+                logger.warning(f"Plugin {plugin_id} not registered")
                 return False
                 
-            try:
-                # Check for dependents
-                if plugin_id in self._dependents and self._dependents[plugin_id]:
-                    dependent_plugins = self._dependents[plugin_id]
-                    self.logger.warning(
-                        f"Cannot unregister plugin {plugin_id}: "
-                        f"It has dependent plugins: {dependent_plugins}"
-                    )
-                    return False
+            # Clean up instance if exists
+            if plugin_id in self._plugins:
+                await self._plugins[plugin_id].cleanup()
+                del self._plugins[plugin_id]
                 
-                # Clean up if initialized
-                if (plugin_id in self._states and 
-                    self._states[plugin_id] != PluginState.UNINITIALIZED):
-                    await self.cleanup_plugin(plugin_id)
+            # Clean up class if exists
+            if plugin_id in self._plugin_classes:
+                del self._plugin_classes[plugin_id]
                 
-                # Remove from instance storage
-                if plugin_id in self._instances:
-                    del self._instances[plugin_id]
+            # Clean up dependency tracking
+            if plugin_id in self._dependencies:
+                del self._dependencies[plugin_id]
                 
-                # Remove from dependency tracking
-                for dep in self._dependencies.get(plugin_id, set()):
-                    if dep in self._dependents:
-                        self._dependents[dep].discard(plugin_id)
-                
-                # Remove metadata
-                del self._metadata[plugin_id]
-                if plugin_id in self._states:
-                    del self._states[plugin_id]
-                if plugin_id in self._dependencies:
-                    del self._dependencies[plugin_id]
-                if plugin_id in self._dependents:
-                    del self._dependents[plugin_id]
-                if plugin_id in self._metrics:
-                    del self._metrics[plugin_id]
-                if plugin_id in self._execution_history:
-                    del self._execution_history[plugin_id]
-                if plugin_id in self._plugin_types:
-                    del self._plugin_types[plugin_id]
-                
-                self.logger.info(f"Unregistered plugin: {plugin_id}")
-                return True
-                
-            except Exception as e:
-                self.logger.error(f"Error unregistering plugin {plugin_id}: {e}")
-                return False
+            # Clean up dependents tracking
+            for dep_set in self._dependents.values():
+                if plugin_id in dep_set:
+                    dep_set.remove(plugin_id)
+                    
+            # Clean up metadata
+            del self._metadata[plugin_id]
+            
+            logger.info(f"Unregistered plugin {plugin_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Error unregistering plugin {plugin_id}: {e}")
+            return False
     
     async def get_plugin_metadata(self, plugin_id: str) -> Optional[PluginMetadata]:
         """Get plugin metadata.
         
         Args:
-            plugin_id: Plugin ID
+            plugin_id: Plugin ID.
             
         Returns:
-            Plugin metadata if found, None otherwise
+            Plugin metadata if found, None otherwise.
         """
         return self._metadata.get(plugin_id)
     
-    async def list_plugins(self, filter_criteria: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        """List registered plugins.
+    async def get_plugin_instance(self, plugin_id: str) -> Optional[BasePlugin]:
+        """Get or create a plugin instance.
         
         Args:
-            filter_criteria: Optional filter criteria
+            plugin_id: Plugin ID.
             
         Returns:
-            List of plugin metadata dictionaries
+            Plugin instance if available, None otherwise.
         """
-        results = []
-        
-        for plugin_id, metadata in self._metadata.items():
-            # Skip if doesn't match filter criteria
-            if filter_criteria:
-                # Check metadata fields
-                metadata_dict = metadata.to_dict()
-                if not all(metadata_dict.get(k) == v for k, v in filter_criteria.items() 
-                          if k in metadata_dict):
-                    continue
+        try:
+            # Check if instance already exists
+            if plugin_id in self._plugins:
+                return self._plugins[plugin_id]
                 
-                # Check plugin state if specified
-                if "state" in filter_criteria and plugin_id in self._states:
-                    if self._states[plugin_id].value != filter_criteria["state"]:
-                        continue
-            
-            # Build result
-            plugin_info = {
-                "id": plugin_id,
-                "metadata": metadata.to_dict(),
-                "state": self._states.get(plugin_id, PluginState.UNINITIALIZED).value,
-                "plugin_type": self._plugin_types.get(plugin_id, PluginType.STANDARD).value,
-                "metrics": self._metrics.get(plugin_id, {}),
-                "dependencies": list(self._dependencies.get(plugin_id, set())),
-                "dependents": list(self._dependents.get(plugin_id, set()))
-            }
-            
-            results.append(plugin_info)
-        
-        return results
+            # Check if class is available
+            if plugin_id in self._plugin_classes:
+                # Create new instance
+                plugin_class = self._plugin_classes[plugin_id]
+                metadata = self._metadata.get(plugin_id, {})
+                plugin_instance = plugin_class(metadata)
+                
+                # Initialize plugin
+                await plugin_instance.initialize()
+                
+                # Store instance
+                self._plugins[plugin_id] = plugin_instance
+                
+                return plugin_instance
+                
+            logger.warning(f"No plugin class found for {plugin_id}")
+            return None
+        except Exception as e:
+            logger.error(f"Error creating plugin instance {plugin_id}: {e}")
+            return None
     
     async def execute_plugin(self, plugin_id: str, parameters: Dict[str, Any]) -> PluginResult:
-        """Execute a plugin.
+        """Execute a plugin with the given parameters.
         
         Args:
-            plugin_id: Plugin ID
-            parameters: Execution parameters
+            plugin_id: Plugin ID.
+            parameters: Execution parameters.
             
         Returns:
-            Plugin execution result
+            Plugin execution result.
         """
-        if plugin_id not in self._metadata:
-            raise PluginError(
-                f"Plugin not found: {plugin_id}",
-                plugin_id=plugin_id,
-                error_type=PluginErrorType.EXECUTION
-            )
-        
-        # Check plugin state
-        if plugin_id not in self._states or self._states[plugin_id] != PluginState.ACTIVE:
-            # Try to initialize if uninitialized
-            if (plugin_id in self._states and 
-                self._states[plugin_id] == PluginState.UNINITIALIZED):
-                success = await self.initialize_plugin(plugin_id)
-                if not success:
-                    raise PluginError(
-                        f"Failed to initialize plugin: {plugin_id}",
-                        plugin_id=plugin_id,
-                        error_type=PluginErrorType.INITIALIZATION
-                    )
-            else:
-                raise PluginError(
-                    f"Plugin not in active state: {plugin_id}",
-                    plugin_id=plugin_id,
-                    error_type=PluginErrorType.EXECUTION,
-                    details={"state": self._states.get(plugin_id, PluginState.UNINITIALIZED).value}
-                )
-        
-        # Get plugin instance
-        plugin = await self.get_plugin_instance(plugin_id)
-        if not plugin:
-            raise PluginError(
-                f"Failed to get plugin instance: {plugin_id}",
-                plugin_id=plugin_id,
-                error_type=PluginErrorType.EXECUTION
-            )
-        
-        # Validate parameters
-        is_valid, error_message = await plugin.validate(parameters)
-        if not is_valid:
-            raise PluginError(
-                f"Invalid parameters: {error_message}",
-                plugin_id=plugin_id,
-                error_type=PluginErrorType.VALIDATION,
-                details={"parameters": parameters}
-            )
-        
-        # Execute plugin
         try:
-            start_time = time.time()
-            result = await plugin.execute(parameters)
-            execution_time = time.time() - start_time
-            
-            # Update metrics
-            self._metrics[plugin_id]["execution_count"] += 1
-            self._metrics[plugin_id]["last_executed"] = datetime.now().isoformat()
-            
-            current_avg = self._metrics[plugin_id]["avg_execution_time"]
-            count = self._metrics[plugin_id]["execution_count"]
-            self._metrics[plugin_id]["avg_execution_time"] = (
-                (current_avg * (count - 1) + execution_time) / count
-            )
-            
-            # Update execution history
-            self._execution_history[plugin_id].append({
-                "timestamp": datetime.now().isoformat(),
-                "parameters": parameters,
-                "success": result.success,
-                "execution_time": execution_time,
-                "error": result.error
-            })
-            
-            # Truncate history if too long
-            if len(self._execution_history[plugin_id]) > 100:
-                self._execution_history[plugin_id] = self._execution_history[plugin_id][-100:]
-            
-            # Update plugin metrics
-            if not result.success:
-                self._metrics[plugin_id]["error_count"] += 1
-            
-            plugin.log_execution(result.success, execution_time)
-            
-            return result
-            
+            # Get plugin instance
+            plugin = await self.get_plugin_instance(plugin_id)
+            if not plugin:
+                return PluginResult(
+                    success=False,
+                    error=f"Plugin {plugin_id} not found or could not be instantiated",
+                )
+                
+            # Validate parameters
+            is_valid, error_msg = plugin.validate_parameters(parameters)
+            if not is_valid:
+                return PluginResult(
+                    success=False,
+                    error=f"Invalid parameters: {error_msg}",
+                )
+                
+            # Execute plugin
+            async with self._execution_lock:
+                # Track execution start time
+                start_time = time.time()
+                
+                # Execute
+                result = await plugin.execute(parameters)
+                
+                # Track execution time
+                execution_time = time.time() - start_time
+                if plugin_id not in self._execution_times:
+                    self._execution_times[plugin_id] = []
+                self._execution_times[plugin_id].append(execution_time)
+                
+                # Track execution count
+                if plugin_id not in self._execution_counts:
+                    self._execution_counts[plugin_id] = 0
+                self._execution_counts[plugin_id] += 1
+                
+                # Track errors
+                if not result.success and plugin_id not in self._error_counts:
+                    self._error_counts[plugin_id] = 0
+                if not result.success:
+                    self._error_counts[plugin_id] += 1
+                    
+                return result
         except Exception as e:
-            # Update metrics
-            self._metrics[plugin_id]["execution_count"] += 1
-            self._metrics[plugin_id]["error_count"] += 1
-            self._metrics[plugin_id]["last_executed"] = datetime.now().isoformat()
-            
-            # Update execution history
-            self._execution_history[plugin_id].append({
-                "timestamp": datetime.now().isoformat(),
-                "parameters": parameters,
-                "success": False,
-                "execution_time": time.time() - start_time,
-                "error": str(e)
-            })
-            
-            # Log error
-            self.logger.error(f"Error executing plugin {plugin_id}: {e}")
-            traceback.print_exc()
-            
-            # Create and return error result
+            logger.error(f"Error executing plugin {plugin_id}: {e}")
             return PluginResult(
                 success=False,
-                data={},
-                error=str(e),
-                warnings=["An exception occurred during execution"],
-                metrics={"execution_time": time.time() - start_time},
-                execution_time=time.time() - start_time
+                error=f"Error executing plugin: {str(e)}",
             )
     
     async def validate_plugin_parameters(self, plugin_id: str, parameters: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         """Validate plugin parameters.
         
         Args:
-            plugin_id: Plugin ID
-            parameters: Parameters to validate
+            plugin_id: Plugin ID.
+            parameters: Parameters to validate.
             
         Returns:
-            Tuple of (is_valid, error_message)
+            Tuple of (is_valid, error_message).
         """
-        plugin = await self.get_plugin_instance(plugin_id)
-        if not plugin:
-            return False, f"Plugin not found: {plugin_id}"
-            
-        return await plugin.validate(parameters)
+        try:
+            # Get plugin instance
+            plugin = await self.get_plugin_instance(plugin_id)
+            if not plugin:
+                return False, f"Plugin {plugin_id} not found or could not be instantiated"
+                
+            # Validate parameters
+            return plugin.validate_parameters(parameters)
+        except Exception as e:
+            logger.error(f"Error validating parameters for plugin {plugin_id}: {e}")
+            return False, f"Error validating parameters: {str(e)}"
     
+    async def get_plugin_metrics(self, plugin_id: str) -> Dict[str, Any]:
+        """Get plugin performance metrics.
+        
+        Args:
+            plugin_id: Plugin ID.
+            
+        Returns:
+            Dictionary of metrics.
+        """
+        metrics = {
+            "execution_count": self._execution_counts.get(plugin_id, 0),
+            "error_count": self._error_counts.get(plugin_id, 0),
+            "average_execution_time": 0.0,
+            "min_execution_time": 0.0,
+            "max_execution_time": 0.0,
+        }
+        
+        # Calculate time-based metrics if available
+        if plugin_id in self._execution_times and self._execution_times[plugin_id]:
+            times = self._execution_times[plugin_id]
+            metrics["average_execution_time"] = sum(times) / len(times)
+            metrics["min_execution_time"] = min(times)
+            metrics["max_execution_time"] = max(times)
+            
+        return metrics
+    
+    async def list_plugins(self, filter_criteria: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """List registered plugins.
+        
+        Args:
+            filter_criteria: Optional filter criteria.
+            
+        Returns:
+            List of plugin metadata dictionaries.
+        """
+        plugins = []
+        
+        for plugin_id, metadata in self._metadata.items():
+            # Skip if doesn't match filter criteria
+            if filter_criteria:
+                match = True
+                for key, value in filter_criteria.items():
+                    if key not in metadata or metadata[key] != value:
+                        match = False
+                        break
+                if not match:
+                    continue
+                    
+            # Add metrics and status to metadata
+            plugin_info = dict(metadata)
+            plugin_info["id"] = plugin_id
+            plugin_info["metrics"] = await self.get_plugin_metrics(plugin_id)
+            plugin_info["status"] = "active" if plugin_id in self._plugins else "inactive"
+            
+            plugins.append(plugin_info)
+            
+        return plugins
+    
+    async def get_plugin_dependencies(self, plugin_id: str) -> List[str]:
+        """Get plugin dependencies.
+        
+        Args:
+            plugin_id: Plugin ID.
+            
+        Returns:
+            List of dependency plugin IDs.
+        """
+        return list(self._dependencies.get(plugin_id, set()))
+    
+    async def get_plugin_dependents(self, plugin_id: str) -> List[str]:
+        """Get plugins that depend on this plugin.
+        
+        Args:
+            plugin_id: Plugin ID.
+            
+        Returns:
+            List of dependent plugin IDs.
+        """
+        return list(self._dependents.get(plugin_id, set()))
+    
+    async def check_compatibility(self, plugin_id: str, target_plugin_id: str) -> bool:
+        """Check if two plugins are compatible.
+        
+        Args:
+            plugin_id: Plugin ID.
+            target_plugin_id: Target plugin ID.
+            
+        Returns:
+            True if compatible, False otherwise.
+        """
+        # For now, just check if they have circular dependencies
+        deps1 = await self.get_plugin_dependencies(plugin_id)
+        deps2 = await self.get_plugin_dependencies(target_plugin_id)
+        
+        return (
+            target_plugin_id not in deps1 and  # Target is not a dependency of plugin
+            plugin_id not in deps2  # Plugin is not a dependency of target
+        )
+        
     async def initialize_plugin(self, plugin_id: str) -> bool:
         """Initialize a plugin.
         
         Args:
-            plugin_id: Plugin ID
+            plugin_id: Plugin ID.
             
         Returns:
-            True if initialization succeeded, False otherwise
+            True if initialization succeeded, False otherwise.
         """
-        if plugin_id not in self._metadata:
-            self.logger.warning(f"Plugin not registered: {plugin_id}")
-            return False
-        
-        # Check if already initialized
-        if (plugin_id in self._states and 
-            self._states[plugin_id] != PluginState.UNINITIALIZED):
-            self.logger.info(f"Plugin already initialized: {plugin_id}")
-            return True
-        
-        # Get plugin instance
         try:
+            # Get plugin instance (this will initialize it)
             plugin = await self.get_plugin_instance(plugin_id)
-            if not plugin:
-                self.logger.error(f"Failed to get plugin instance: {plugin_id}")
-                return False
-            
-            # Initialize plugin
-            success = await plugin.initialize()
-            if success:
-                self._states[plugin_id] = PluginState.ACTIVE
-                self.logger.info(f"Initialized plugin: {plugin_id}")
-            else:
-                self._states[plugin_id] = PluginState.ERROR
-                self.logger.warning(f"Plugin initialization failed: {plugin_id}")
-            
-            return success
-            
+            return plugin is not None
         except Exception as e:
-            self._states[plugin_id] = PluginState.ERROR
-            self.logger.error(f"Error initializing plugin {plugin_id}: {e}")
+            logger.error(f"Error initializing plugin {plugin_id}: {e}")
             return False
     
     async def enable_plugin(self, plugin_id: str) -> bool:
         """Enable a plugin.
         
         Args:
-            plugin_id: Plugin ID
+            plugin_id: Plugin ID.
             
         Returns:
-            True if enabling succeeded, False otherwise
+            True if enabling succeeded, False otherwise.
         """
-        if plugin_id not in self._metadata:
-            self.logger.warning(f"Plugin not registered: {plugin_id}")
-            return False
-        
-        # Check if already active
-        if plugin_id in self._states and self._states[plugin_id] == PluginState.ACTIVE:
-            self.logger.info(f"Plugin already active: {plugin_id}")
-            return True
-        
-        # Initialize if necessary
-        if (plugin_id in self._states and 
-            self._states[plugin_id] == PluginState.UNINITIALIZED):
-            success = await self.initialize_plugin(plugin_id)
-            if not success:
-                return False
-        
-        # Enable plugin
-        self._states[plugin_id] = PluginState.ACTIVE
-        self.logger.info(f"Enabled plugin: {plugin_id}")
-        return True
+        # Same as initialize for now
+        return await self.initialize_plugin(plugin_id)
     
     async def disable_plugin(self, plugin_id: str) -> bool:
         """Disable a plugin.
         
         Args:
-            plugin_id: Plugin ID
+            plugin_id: Plugin ID.
             
         Returns:
-            True if disabling succeeded, False otherwise
+            True if disabling succeeded, False otherwise.
         """
-        if plugin_id not in self._metadata:
-            self.logger.warning(f"Plugin not registered: {plugin_id}")
+        try:
+            # Clean up instance if exists
+            if plugin_id in self._plugins:
+                await self._plugins[plugin_id].cleanup()
+                del self._plugins[plugin_id]
+                return True
+            return True  # Already disabled
+        except Exception as e:
+            logger.error(f"Error disabling plugin {plugin_id}: {e}")
             return False
-        
-        # Check if already disabled
-        if plugin_id in self._states and self._states[plugin_id] == PluginState.DISABLED:
-            self.logger.info(f"Plugin already disabled: {plugin_id}")
-            return True
-        
-        # Check for dependents
-        if plugin_id in self._dependents and self._dependents[plugin_id]:
-            active_dependents = []
-            for dep in self._dependents[plugin_id]:
-                if dep in self._states and self._states[dep] == PluginState.ACTIVE:
-                    active_dependents.append(dep)
-            
-            if active_dependents:
-                self.logger.warning(
-                    f"Cannot disable plugin {plugin_id}: "
-                    f"It has active dependent plugins: {active_dependents}"
-                )
-                return False
-        
-        # Disable plugin
-        self._states[plugin_id] = PluginState.DISABLED
-        self.logger.info(f"Disabled plugin: {plugin_id}")
-        return True
     
     async def cleanup_plugin(self, plugin_id: str) -> bool:
         """Clean up a plugin's resources.
         
         Args:
-            plugin_id: Plugin ID
+            plugin_id: Plugin ID.
             
         Returns:
-            True if cleanup succeeded, False otherwise
+            True if cleanup succeeded, False otherwise.
         """
-        if plugin_id not in self._metadata:
-            self.logger.warning(f"Plugin not registered: {plugin_id}")
-            return False
-        
-        # Get plugin instance
-        plugin = await self.get_plugin_instance(plugin_id)
-        if not plugin:
-            # No instance to clean up
-            return True
-        
-        try:
-            # Call cleanup method
-            await plugin.cleanup()
-            
-            # Update state
-            if plugin_id in self._states:
-                self._states[plugin_id] = PluginState.UNINITIALIZED
-            
-            # Remove from instances
-            if plugin_id in self._instances:
-                del self._instances[plugin_id]
-            
-            self.logger.info(f"Cleaned up plugin: {plugin_id}")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Error cleaning up plugin {plugin_id}: {e}")
-            return False
-    
-    async def get_plugin_instance(self, plugin_id: str) -> Optional[BasePlugin]:
-        """Get plugin instance.
-        
-        Args:
-            plugin_id: Plugin ID
-            
-        Returns:
-            Plugin instance if found, None otherwise
-        """
-        # Return cached instance if available
-        if plugin_id in self._instances:
-            return self._instances[plugin_id]
-        
-        # Check if registered
-        if plugin_id not in self._metadata:
-            self.logger.warning(f"Plugin not registered: {plugin_id}")
-            return None
-        
-        # Create new instance
-        try:
-            # Get plugin class
-            plugin_class = await self.get_plugin_class(plugin_id)
-            if not plugin_class:
-                self.logger.error(f"Failed to get plugin class: {plugin_id}")
-                return None
-            
-            # Instantiate plugin
-            plugin = plugin_class()
-            
-            # Cache instance
-            self._instances[plugin_id] = plugin
-            
-            return plugin
-            
-        except Exception as e:
-            self.logger.error(f"Error getting plugin instance {plugin_id}: {e}")
-            return None
-    
-    async def get_plugin_class(self, plugin_id: str) -> Optional[Type[BasePlugin]]:
-        """Get plugin class.
-        
-        Args:
-            plugin_id: Plugin ID
-            
-        Returns:
-            Plugin class if found, None otherwise
-        """
-        # Implementation would depend on how plugin classes are stored
-        # This is a placeholder that would need to be adapted to the actual implementation
-        return None
-    
-    async def get_plugin_dependencies(self, plugin_id: str) -> List[str]:
-        """Get plugin dependencies.
-        
-        Args:
-            plugin_id: Plugin ID
-            
-        Returns:
-            List of dependency plugin IDs
-        """
-        return list(self._dependencies.get(plugin_id, set()))
-    
-    async def check_compatibility(self, plugin_id: str, target_plugin_id: str) -> bool:
-        """Check if two plugins are compatible.
-        
-        Args:
-            plugin_id: Plugin ID
-            target_plugin_id: Target plugin ID
-            
-        Returns:
-            True if compatible, False otherwise
-        """
-        # Check if both plugins are registered
-        if plugin_id not in self._metadata or target_plugin_id not in self._metadata:
-            return False
-        
-        # Get compatibility information
-        metadata = self._metadata[plugin_id]
-        compatibility = metadata.compatibility
-        
-        # Check compatibility
-        if not compatibility:
-            # No compatibility constraints
-            return True
-        
-        target_metadata = self._metadata[target_plugin_id]
-        
-        # Check if target plugin is listed in compatibility
-        if target_metadata.name in compatibility:
-            version_constraint = compatibility[target_metadata.name]
-            # Simple version check for now
-            return target_metadata.version == version_constraint
-        
-        # Not explicitly listed
-        return True
-    
-    async def get_plugin_metrics(self, plugin_id: str) -> Dict[str, Any]:
-        """Get plugin performance metrics.
-        
-        Args:
-            plugin_id: Plugin ID
-            
-        Returns:
-            Dictionary of metrics
-        """
-        if plugin_id not in self._metrics:
-            return {}
-        
-        metrics = self._metrics[plugin_id].copy()
-        
-        # Add recent execution history (last 5 executions)
-        if plugin_id in self._execution_history:
-            metrics["recent_executions"] = self._execution_history[plugin_id][-5:]
-        
-        return metrics
+        # Same as disable for now
+        return await self.disable_plugin(plugin_id)

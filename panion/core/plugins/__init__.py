@@ -1,45 +1,42 @@
 """
-Consolidated Plugin System
+Consolidated Plugin System Package
 
-This module provides a comprehensive plugin system for the Panion platform.
-It consolidates functionality from multiple previous implementations into a 
-coherent and well-organized structure.
+This package provides a unified plugin system for Panion.
+It consolidates functionality from various existing plugin implementations:
+- core/base_plugin.py
+- core/plugin_manager.py
+- core/plugin/*.py
 
-Key components:
-- Base plugin definitions
-- Plugin interfaces
-- Plugin management
-- Plugin utilities
-- Plugin templates
-
-Design principles:
-1. Separation of concerns
-2. Clear interfaces
-3. Comprehensive error handling
-4. Scalable architecture
+The consolidated system offers:
+- A standardized plugin base class
+- Unified interfaces for plugin operations
+- Centralized plugin management
+- Backward compatibility with legacy implementations
 """
 
+# Import key components
 from .base import BasePlugin, PluginMetadata, PluginResult
-from .interfaces import (
-    IPluginManager, IPluginDiscovery, IPluginFactory, IPluginRegistry,
-    IPluginExecutor, IPluginLifecycle, PluginType, PluginState, PluginErrorType
-)
-from .manager import PluginManager, PluginError
+from .interfaces import IPluginManager, PluginType, PluginState
+from .manager import PluginManager
 
-# Create a singleton instance
-plugin_manager = PluginManager()
+# Import compatibility modules
+from .compat import deprecated_plugin_manager, deprecated_core_plugin_manager
 
 __all__ = [
-    # Base classes
-    'BasePlugin', 'PluginMetadata', 'PluginResult',
+    # Base plugin components
+    'BasePlugin',
+    'PluginMetadata',
+    'PluginResult',
     
     # Interfaces
-    'IPluginManager', 'IPluginDiscovery', 'IPluginFactory', 'IPluginRegistry',
-    'IPluginExecutor', 'IPluginLifecycle', 'PluginType', 'PluginState', 'PluginErrorType',
+    'IPluginManager',
+    'PluginType',
+    'PluginState',
     
-    # Manager
-    'PluginManager', 'PluginError',
+    # Management
+    'PluginManager',
     
-    # Singleton
-    'plugin_manager'
+    # Compatibility
+    'deprecated_plugin_manager',
+    'deprecated_core_plugin_manager',
 ]
