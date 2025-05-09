@@ -3,10 +3,10 @@
  * This helps fix issues with ghost windows and outdated taskbar state
  */
 
-import { useTaskbarStore } from '../state/taskbarStore';
+import { useTaskbarStore, TaskbarWidgetType } from '../state/taskbarStore';
 import { log } from '../state/systemLogStore';
 
-export const DEFAULT_WIDGETS = ['notifications', 'aiStatus', 'clock'];
+export const DEFAULT_WIDGETS: TaskbarWidgetType[] = ['notifications', 'aiStatus', 'clock'];
 export const DEFAULT_PINNED_AGENTS = ['panion', 'clara', 'notes'];
 
 /**
@@ -55,9 +55,22 @@ export const forceResetTaskbar = () => {
     taskbarStore.setShowLabels(false);
     taskbarStore.setAutohide(false);
     
-    // Clear and reset widgets
-    taskbarStore.clearVisibleWidgets();
-    DEFAULT_WIDGETS.forEach(widget => taskbarStore.toggleWidget(widget));
+    // Clear visible widgets by using a for-loop approach
+    // (Since we can't directly set the array, we'll use the toggle method which exists)
+    const currentWidgets = [...taskbarStore.visibleWidgets];
+    // First remove all current widgets
+    currentWidgets.forEach(widget => {
+      if (taskbarStore.isWidgetVisible(widget)) {
+        taskbarStore.toggleWidget(widget);
+      }
+    });
+    
+    // Then add all default widgets
+    DEFAULT_WIDGETS.forEach(widget => {
+      if (!taskbarStore.isWidgetVisible(widget)) {
+        taskbarStore.toggleWidget(widget);
+      }
+    });
     
     // Clear and reset pinned agents
     taskbarStore.clearPinnedAgents();

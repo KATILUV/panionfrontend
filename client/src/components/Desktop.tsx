@@ -267,7 +267,7 @@ const Desktop: React.FC = () => {
     // Check for windows that don't have a corresponding agent
     Object.keys(windows).forEach(windowId => {
       if (!registeredIds.includes(windowId)) {
-        log.warning(`Found ghost window with ID ${windowId}. Removing...`);
+        log.warn(`Found ghost window with ID ${windowId}. Removing...`);
         // Remove the ghost window
         useAgentStore.setState(state => {
           const updatedWindows = {...state.windows};

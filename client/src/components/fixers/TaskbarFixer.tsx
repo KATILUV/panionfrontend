@@ -70,7 +70,7 @@ const TaskbarFixer: React.FC = () => {
         }
       } else {
         // No taskbar data found, initialize with defaults
-        log.warning("TaskbarFixer: No taskbar data found, performing force reset");
+        log.warn("TaskbarFixer: No taskbar data found, performing force reset");
         forceResetTaskbar();
       }
     } catch (error) {
