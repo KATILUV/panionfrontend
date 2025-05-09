@@ -239,13 +239,32 @@ export async function queryKnowledge(query: string): Promise<{
   summary: string;
 }> {
   try {
-    // If knowledge graph is empty, return empty results
+    // If knowledge graph is empty, attempt to build initial knowledge from base files
     if (Object.keys(knowledgeBase.entities).length === 0) {
-      return {
-        relevantEntities: [],
-        relevantRelationships: [],
-        summary: "No knowledge available yet."
-      };
+      try {
+        // Import the base knowledge text file
+        const fs = require('fs');
+        const path = require('path');
+        const baseKnowledgePath = path.join(process.cwd(), 'data', 'base_knowledge', 'panion_system.txt');
+        
+        if (fs.existsSync(baseKnowledgePath)) {
+          const baseKnowledgeText = fs.readFileSync(baseKnowledgePath, 'utf8');
+          // Add this knowledge to the graph
+          await addKnowledge(baseKnowledgeText);
+          log('Initialized knowledge graph with base knowledge', 'knowledge-graph');
+        }
+      } catch (initError) {
+        log(`Error initializing knowledge graph: ${initError}`, 'knowledge-graph');
+      }
+      
+      // If still empty after initialization attempt, return empty results
+      if (Object.keys(knowledgeBase.entities).length === 0) {
+        return {
+          relevantEntities: [],
+          relevantRelationships: [],
+          summary: "No knowledge available yet."
+        };
+      }
     }
     
     // Use AI to determine what to look for in the knowledge graph

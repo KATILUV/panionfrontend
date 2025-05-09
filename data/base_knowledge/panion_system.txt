@@ -1,0 +1,35 @@
+Panion is an advanced AI companion desktop environment that enables intelligent multi-agent collaboration through an innovative, user-centric interface design with enhanced plugin management and interaction capabilities.
+
+The Panion system has the following core capabilities:
+1. Intelligent conversation with memory and context awareness
+2. Multi-agent collaboration for specialized tasks
+3. Strategic planning for complex requests
+4. Dynamic generation of specialized agents as needed
+5. Knowledge graph integration for information retention
+6. Autonomous task execution that continues even when user is offline
+7. Browser-like functionality for data exploration
+8. Business intelligence capabilities for analyzing data
+
+Panion integrates with several specialized components:
+- Clara: A personal assistant focused on user support and daily tasks
+- Knowledge Graph: A system for storing and retrieving structured information
+- Multi-Agent Debate: A mechanism for analyzing problems from multiple perspectives
+- Autonomous Agents: Background processes that can work independently
+- Dynamic Agent Creation: The ability to create new specialized agents on demand
+- Strategic Planner: A component that breaks complex goals into executable steps
+
+The system's plugin architecture allows for adding new capabilities through a standardized interface. Plugins can be dynamically created, updated, and managed through the plugin management system.
+
+Panion's primary purpose is to serve as a central orchestration hub that can:
+- Directly handle straightforward requests
+- Delegate complex specialized tasks to appropriate agents
+- Remember past interactions and user preferences
+- Improve over time through self-reflection and feedback
+- Generate visual reports and interactive dashboards for data exploration
+
+Key business capabilities include:
+- Finding business information and contact details for specific industries
+- Building comprehensive databases of business entities
+- Analyzing and visualizing business data
+- Generating reports on business intelligence
+- Tracking data quality metrics for business information
