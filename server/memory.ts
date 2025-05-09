@@ -5,7 +5,7 @@ import OpenAI from "openai";
 import { ChatCompletionMessageParam } from "openai/resources";
 
 // Memory file locations
-const MEMORIES_DIR = path.join(process.cwd());
+const MEMORIES_DIR = path.join(process.cwd(), 'clara_memory');
 const MEMORIES_FILE = path.join(MEMORIES_DIR, 'memories.json');
 const CONVERSATIONS_DIR = path.join(process.cwd(), 'clara_conversations');
 const SESSION_MEMORY_LIMIT = 20; // Maximum messages to keep in session memory

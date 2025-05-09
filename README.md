@@ -72,6 +72,9 @@ The Python-based core system provides:
 - `/panion`: Python core system
 - `/shared`: Shared types and schemas
 - `/data`: Data storage
+- `/clara_memory`: User memory and conversation storage
+- `/attached_assets`: Design documents and reference materials
+- `/uploads`: User uploaded files
 
 ## Features
 - **Chat interface**: Natural language interaction with all agents
@@ -81,3 +84,14 @@ The Python-based core system provides:
 - **Strategic multi-step planning**: Breaks down complex tasks
 - **Visual knowledge exploration**: Interactive data visualization
 - **Memory system**: Remembers past interactions and user preferences
+
+## Development Notes
+
+### Reference Materials
+The `/attached_assets` directory contains various reference materials and design documents used during development, including:
+- Feature specifications
+- Design mockups
+- Error logs
+- Requirements documents
+
+These files serve as documentation for the development process and can be used for reference when understanding design decisions.
