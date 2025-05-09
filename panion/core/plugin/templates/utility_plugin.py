@@ -1,419 +1,392 @@
 """
 Utility Plugin Template
-A template for creating utility-based Panion plugins.
+
+This template provides a foundation for creating utility plugins that perform
+simple functions or operations. It extends the BasicPlugin with utility-specific 
+functionality.
 """
 
 import logging
-from typing import Dict, Any, List, Optional
-from core.base_plugin import BasePlugin
-from core.reflection import reflection_system
-from core.service_locator import service_locator
-import datetime
-import time
-import json
-import hashlib
-import os
+from typing import Dict, Any, Optional, List, Callable, Set
+from datetime import datetime
 
-# Template variables:
-# PLUGIN_NAME: The name of the plugin
-# PLUGIN_DESCRIPTION: A description of the plugin's functionality
-# REQUIREMENTS: Implementation requirements and notes
+from .basic_plugin import BasicPlugin
+from ..plugin_base import PluginResult
 
-class UtilityPluginTemplate(BasePlugin):
-    def __init__(self):
-        super().__init__()
-        self.logger = logging.getLogger(__name__)
-        self.name = "{{PLUGIN_NAME}}"
-        self.description = "{{PLUGIN_DESCRIPTION}}"
-        self.version = "0.1.0"
-        self.required_parameters = []  # List of required parameter names
-        self.optional_parameters = {}  # Dict of optional parameters with default values
-        self._initialize_utility()
+class UtilityPlugin(BasicPlugin):
+    """
+    Utility Plugin Template
+    
+    A template for plugins that provide utility functions and operations.
+    This template includes methods for registering and executing utility functions.
+    
+    Features:
+    - Function registration system
+    - Function execution with parameter validation
+    - Usage statistics tracking
+    - Function documentation
+    """
+    
+    def __init__(
+        self,
+        name: str,
+        version: str,
+        description: str,
+        author: str,
+        tags: Optional[List[str]] = None,
+        dependencies: Optional[List[str]] = None
+    ):
+        """Initialize the utility plugin.
         
-    def _initialize_utility(self) -> None:
-        """Initialize the utility."""
-        try:
-            reflection_system.log_thought(
-                self.name,
-                f"Initializing {self.name} utility",
-                {"version": self.version}
-            )
-            
-            # Initialize utility state
-            self._state = {
-                "initialized_at": datetime.now().isoformat(),
-                "last_used": None,
-                "usage_count": 0,
-                "error_count": 0,
-                "cache": {},
-                "settings": self._load_settings()
-            }
-            
-            # Initialize utility components
-            self._initialize_components()
-            
-            # Register utility with service locator
-            service_locator.register_service(
-                f"{self.name.lower()}_utility",
-                self
-            )
-            
-            self.logger.info(f"Initialized {self.name} utility")
-            reflection_system.log_thought(
-                self.name,
-                f"Initialized {self.name} utility successfully",
-                {"status": "active"}
-            )
-            
-        except Exception as e:
-            error_msg = f"Error initializing utility: {e}"
-            self.logger.error(error_msg)
-            reflection_system.log_thought(
-                self.name,
-                error_msg,
-                {"error": str(e)}
-            )
-            raise
+        Args:
+            name: Plugin name
+            version: Plugin version
+            description: Plugin description
+            author: Plugin author
+            tags: Optional list of tags/categories
+            dependencies: Optional list of dependencies
+        """
+        super().__init__(
+            name=name,
+            version=version,
+            description=description,
+            author=author,
+            tags=tags,
+            dependencies=dependencies
+        )
         
-    def _initialize_components(self) -> None:
-        """Initialize utility components."""
-        try:
-            # Initialize cache
-            self._cache = {}
-            
-            # Initialize metrics
-            self._metrics = {
-                "total_operations": 0,
-                "successful_operations": 0,
-                "failed_operations": 0,
-                "average_operation_time": 0
-            }
-            
-            # Initialize resource pool
-            self._resource_pool = {}
-            
-            # Initialize event handlers
-            self._event_handlers = {}
-            
-        except Exception as e:
-            self.logger.error(f"Error initializing components: {e}")
-            raise
+        # Utility-specific initialization
+        self._functions: Dict[str, Callable] = {}
+        self._function_descriptions: Dict[str, str] = {}
+        self._function_parameters: Dict[str, Dict[str, Any]] = {}
+        self._function_usage: Dict[str, int] = {}
+        self._function_success_count: Dict[str, int] = {}
+        self._function_failure_count: Dict[str, int] = {}
+        self._function_execution_times: Dict[str, float] = {}
+        self._registered_functions: Set[str] = set()
+    
+    def register_function(
+        self, 
+        func: Callable,
+        name: Optional[str] = None,
+        description: str = "",
+        parameters: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """Register a function with the utility plugin.
         
-    def _load_settings(self) -> Dict[str, Any]:
-        """Load utility settings."""
+        Args:
+            func: The function to register
+            name: Optional name for the function (defaults to function name)
+            description: Optional description of the function
+            parameters: Optional dictionary describing expected parameters
+            
+        Returns:
+            bool: True if registration successful, False otherwise
+        """
         try:
-            # Load settings from configuration
-            settings = {
-                "cache_size": 1000,
-                "timeout": 30,
-                "max_retries": 3,
-                "log_level": "INFO",
-                "performance_mode": False
-            }
+            func_name = name or func.__name__
             
-            # Override with environment variables if available
-            for key in settings:
-                env_key = f"{self.name.upper()}_{key.upper()}"
-                if env_key in os.environ:
-                    settings[key] = os.environ[env_key]
-                    
-            return settings
-            
-        except Exception as e:
-            self.logger.error(f"Error loading settings: {e}")
-            return {}
-        
-    async def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute the utility."""
-        try:
-            reflection_system.log_thought(
-                self.name,
-                f"Executing {self.name} utility",
-                {"parameters": parameters}
-            )
-            
-            # Validate parameters
-            self._validate_parameters(parameters)
-            
-            # Update state
-            self._state["last_used"] = datetime.now().isoformat()
-            self._state["usage_count"] += 1
-            
-            # Check cache
-            cache_key = self._generate_cache_key(parameters)
-            if cache_key in self._cache:
-                return self._cache[cache_key]
+            if func_name in self._functions:
+                self.logger.warning(f"Function {func_name} already registered with {self.metadata.name} plugin")
+                return False
                 
-            # Execute utility operation
-            start_time = time.time()
-            result = await self._execute_operation(parameters)
-            execution_time = time.time() - start_time
+            self._functions[func_name] = func
+            self._function_descriptions[func_name] = description or func.__doc__ or ""
+            self._function_parameters[func_name] = parameters or {}
+            self._function_usage[func_name] = 0
+            self._function_success_count[func_name] = 0
+            self._function_failure_count[func_name] = 0
+            self._function_execution_times[func_name] = 0.0
+            self._registered_functions.add(func_name)
             
-            # Update metrics
-            self._update_metrics(execution_time, True)
-            
-            # Cache result
-            self._cache_result(cache_key, result)
-            
-            # Log success
-            self.logger.info(f"Utility operation completed in {execution_time:.2f}s")
-            
-            return result
-            
+            self.logger.info(f"Function {func_name} registered with {self.metadata.name} plugin")
+            return True
         except Exception as e:
-            error_msg = f"Error executing utility: {e}"
-            self.logger.error(error_msg)
-            reflection_system.log_thought(
-                self.name,
-                error_msg,
-                {"error": str(e)}
+            self.logger.error(f"Error registering function with {self.metadata.name} plugin: {str(e)}")
+            return False
+    
+    def unregister_function(self, func_name: str) -> bool:
+        """Unregister a function from the utility plugin.
+        
+        Args:
+            func_name: Name of the function to unregister
+            
+        Returns:
+            bool: True if unregistration successful, False otherwise
+        """
+        try:
+            if func_name not in self._functions:
+                self.logger.warning(f"Function {func_name} not registered with {self.metadata.name} plugin")
+                return False
+                
+            del self._functions[func_name]
+            del self._function_descriptions[func_name]
+            del self._function_parameters[func_name]
+            del self._function_usage[func_name]
+            del self._function_success_count[func_name]
+            del self._function_failure_count[func_name]
+            del self._function_execution_times[func_name]
+            self._registered_functions.remove(func_name)
+            
+            self.logger.info(f"Function {func_name} unregistered from {self.metadata.name} plugin")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error unregistering function from {self.metadata.name} plugin: {str(e)}")
+            return False
+    
+    async def _validate_parameters(self, func_name: str, parameters: Dict[str, Any]) -> Optional[str]:
+        """Validate parameters for a function.
+        
+        Args:
+            func_name: Name of the function
+            parameters: Parameters to validate
+            
+        Returns:
+            Optional[str]: Error message if validation fails, None otherwise
+        """
+        required_params = self._function_parameters.get(func_name, {}).get("required", [])
+        
+        for param in required_params:
+            if param not in parameters:
+                return f"Missing required parameter: {param}"
+                
+        return None
+    
+    async def execute_function(self, func_name: str, parameters: Dict[str, Any]) -> PluginResult:
+        """Execute a registered function.
+        
+        Args:
+            func_name: Name of the function to execute
+            parameters: Parameters to pass to the function
+            
+        Returns:
+            PluginResult: Result of the function execution
+        """
+        if not self._is_running:
+            return PluginResult(
+                success=False,
+                message=f"{self.metadata.name} plugin is not running",
+                error="Plugin not running"
             )
             
-            # Update error metrics
-            self._state["error_count"] += 1
-            self._update_metrics(0, False)
+        if func_name not in self._functions:
+            return PluginResult(
+                success=False,
+                message=f"Function {func_name} not found in {self.metadata.name} plugin",
+                error=f"Unknown function: {func_name}"
+            )
             
-            return {
-                "status": "failure",
-                "error": str(e)
-            }
+        # Validate parameters
+        validation_error = await self._validate_parameters(func_name, parameters)
+        if validation_error:
+            return PluginResult(
+                success=False,
+                message=f"Parameter validation failed for {func_name}: {validation_error}",
+                error=validation_error
+            )
             
-    def _generate_cache_key(self, parameters: Dict[str, Any]) -> str:
-        """Generate cache key from parameters."""
-        return hashlib.md5(
-            json.dumps(parameters, sort_keys=True).encode()
-        ).hexdigest()
+        # Execute function
+        start_time = datetime.now()
+        self._function_usage[func_name] += 1
         
-    async def _execute_operation(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute the actual utility operation."""
         try:
-            # Process input
-            input_data = parameters.get('input_data', {})
+            func = self._functions[func_name]
             
-            # Apply utility-specific processing
-            processed_data = self._process_data(input_data)
-            
-            # Generate result
-            result = {
-                "status": "success",
-                "data": processed_data,
-                "metadata": {
-                    "processed_at": datetime.now().isoformat(),
-                    "utility_version": self.version,
-                    "cache_hit": False
-                }
-            }
-            
-            return result
-            
-        except Exception as e:
-            self.logger.error(f"Error in utility operation: {e}")
-            raise
-            
-    def _process_data(self, data: Any) -> Any:
-        """Process input data."""
-        try:
-            if isinstance(data, dict):
-                return self._process_dict(data)
-            elif isinstance(data, list):
-                return self._process_list(data)
-            elif isinstance(data, str):
-                return self._process_string(data)
+            # Check if function is async
+            if hasattr(func, "__await__"):
+                result = await func(**parameters)
             else:
-                return data
+                result = func(**parameters)
                 
-        except Exception as e:
-            self.logger.error(f"Error processing data: {e}")
-            raise
+            # Process result
+            execution_time = (datetime.now() - start_time).total_seconds()
+            self._function_execution_times[func_name] += execution_time
+            self._function_success_count[func_name] += 1
             
-    def _process_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process dictionary data."""
-        result = {}
-        for key, value in data.items():
-            result[key] = self._process_data(value)
-        return result
-        
-    def _process_list(self, data: List[Any]) -> List[Any]:
-        """Process list data."""
-        return [self._process_data(item) for item in data]
-        
-    def _process_string(self, data: str) -> str:
-        """Process string data."""
-        return data.strip()
-        
-    def _cache_result(self, key: str, result: Dict[str, Any]) -> None:
-        """Cache operation result."""
-        try:
-            # Check cache size
-            if len(self._cache) >= self._state["settings"]["cache_size"]:
-                # Remove oldest entry
-                oldest_key = min(
-                    self._cache.keys(),
-                    key=lambda k: self._cache[k]["timestamp"]
+            # Handle result wrapping
+            if isinstance(result, PluginResult):
+                return result
+            else:
+                return PluginResult(
+                    success=True,
+                    message=f"Function {func_name} executed successfully",
+                    data=result
                 )
-                del self._cache[oldest_key]
                 
-            # Add to cache
-            self._cache[key] = {
-                "result": result,
-                "timestamp": datetime.now().isoformat()
-            }
-            
         except Exception as e:
-            self.logger.error(f"Error caching result: {e}")
+            execution_time = (datetime.now() - start_time).total_seconds()
+            self._function_execution_times[func_name] += execution_time
+            self._function_failure_count[func_name] += 1
             
-    def _update_metrics(self, execution_time: float, success: bool) -> None:
-        """Update utility metrics."""
-        try:
-            self._metrics["total_operations"] += 1
+            self.logger.error(f"Error executing function {func_name}: {str(e)}")
+            return PluginResult(
+                success=False,
+                message=f"Error executing function {func_name}",
+                error=str(e)
+            )
+    
+    async def get_function_info(self, func_name: str) -> PluginResult:
+        """Get information about a registered function.
+        
+        Args:
+            func_name: Name of the function
             
-            if success:
-                self._metrics["successful_operations"] += 1
-            else:
-                self._metrics["failed_operations"] += 1
-                
-            # Update average operation time
-            current_avg = self._metrics["average_operation_time"]
-            total_ops = self._metrics["total_operations"]
-            self._metrics["average_operation_time"] = (
-                (current_avg * (total_ops - 1) + execution_time) / total_ops
+        Returns:
+            PluginResult: Function information
+        """
+        if func_name not in self._functions:
+            return PluginResult(
+                success=False,
+                message=f"Function {func_name} not found in {self.metadata.name} plugin",
+                error=f"Unknown function: {func_name}"
             )
             
-        except Exception as e:
-            self.logger.error(f"Error updating metrics: {e}")
-        
-    def _validate_parameters(self, parameters: Dict[str, Any]) -> None:
-        """Validate input parameters."""
-        errors = []
-        
-        # Check required parameters
-        for param in self.required_parameters:
-            if param not in parameters:
-                errors.append(f"Missing required parameter: {param}")
-        
-        # Set default values for optional parameters
-        for param, default in self.optional_parameters.items():
-            if param not in parameters:
-                parameters[param] = default
-        
-        # Validate parameter types and values
-        if 'input_data' in parameters:
-            if not isinstance(parameters['input_data'], (dict, list, str, int, float, bool)):
-                errors.append("input_data must be a dictionary, list, string, number, or boolean")
-                
-        if 'options' in parameters:
-            if not isinstance(parameters['options'], dict):
-                errors.append("options must be a dictionary")
-            else:
-                # Validate specific options
-                if 'cache_enabled' in parameters['options']:
-                    if not isinstance(parameters['options']['cache_enabled'], bool):
-                        errors.append("cache_enabled must be a boolean")
-                        
-                if 'cache_ttl' in parameters['options']:
-                    ttl = parameters['options']['cache_ttl']
-                    if not isinstance(ttl, (int, float)):
-                        errors.append("cache_ttl must be a number")
-                    elif ttl <= 0:
-                        errors.append("cache_ttl must be positive")
-                        
-                if 'timeout' in parameters['options']:
-                    timeout = parameters['options']['timeout']
-                    if not isinstance(timeout, (int, float)):
-                        errors.append("timeout must be a number")
-                    elif timeout <= 0:
-                        errors.append("timeout must be positive")
-                        
-                if 'max_retries' in parameters['options']:
-                    retries = parameters['options']['max_retries']
-                    if not isinstance(retries, int):
-                        errors.append("max_retries must be an integer")
-                    elif retries < 0:
-                        errors.append("max_retries must be non-negative")
-                        
-                if 'performance_mode' in parameters['options']:
-                    if not isinstance(parameters['options']['performance_mode'], bool):
-                        errors.append("performance_mode must be a boolean")
-                        
-        if 'transformations' in parameters:
-            if not isinstance(parameters['transformations'], list):
-                errors.append("transformations must be a list")
-            else:
-                for transform in parameters['transformations']:
-                    if not isinstance(transform, dict):
-                        errors.append("each transformation must be a dictionary")
-                    else:
-                        if 'type' not in transform:
-                            errors.append("each transformation must have a type")
-                        elif not isinstance(transform['type'], str):
-                            errors.append("transformation type must be a string")
-                            
-        if 'filters' in parameters:
-            if not isinstance(parameters['filters'], list):
-                errors.append("filters must be a list")
-            else:
-                for filter_item in parameters['filters']:
-                    if not isinstance(filter_item, dict):
-                        errors.append("each filter must be a dictionary")
-                    else:
-                        if 'field' not in filter_item:
-                            errors.append("each filter must have a field")
-                        elif not isinstance(filter_item['field'], str):
-                            errors.append("filter field must be a string")
-                            
-        if 'sort' in parameters:
-            if not isinstance(parameters['sort'], dict):
-                errors.append("sort must be a dictionary")
-            else:
-                for field, direction in parameters['sort'].items():
-                    if not isinstance(field, str):
-                        errors.append("sort field must be a string")
-                    if not isinstance(direction, str) or direction not in ['asc', 'desc']:
-                        errors.append("sort direction must be 'asc' or 'desc'")
-                        
-        if 'limit' in parameters:
-            if not isinstance(parameters['limit'], int):
-                errors.append("limit must be an integer")
-            elif parameters['limit'] <= 0:
-                errors.append("limit must be positive")
-                
-        if 'offset' in parameters:
-            if not isinstance(parameters['offset'], int):
-                errors.append("offset must be an integer")
-            elif parameters['offset'] < 0:
-                errors.append("offset must be non-negative")
-                
-        if 'format' in parameters:
-            if not isinstance(parameters['format'], str):
-                errors.append("format must be a string")
-            elif parameters['format'] not in ['json', 'xml', 'yaml', 'csv']:
-                errors.append("format must be one of: json, xml, yaml, csv")
-                
-        if 'encoding' in parameters:
-            if not isinstance(parameters['encoding'], str):
-                errors.append("encoding must be a string")
-            elif parameters['encoding'] not in ['utf-8', 'ascii', 'latin-1']:
-                errors.append("encoding must be one of: utf-8, ascii, latin-1")
-                
-        if 'compression' in parameters:
-            if not isinstance(parameters['compression'], str):
-                errors.append("compression must be a string")
-            elif parameters['compression'] not in ['none', 'gzip', 'deflate']:
-                errors.append("compression must be one of: none, gzip, deflate")
-        
-        if errors:
-            raise ValueError("\n".join(errors))
-        
-    def get_utility_info(self) -> Dict[str, Any]:
-        """Get utility information."""
-        return {
-            "name": self.name,
-            "description": self.description,
-            "version": self.version,
-            "status": "active",
-            "required_parameters": self.required_parameters,
-            "optional_parameters": self.optional_parameters
+        function_info = {
+            "name": func_name,
+            "description": self._function_descriptions[func_name],
+            "parameters": self._function_parameters.get(func_name, {}),
+            "usage_count": self._function_usage.get(func_name, 0),
+            "success_count": self._function_success_count.get(func_name, 0),
+            "failure_count": self._function_failure_count.get(func_name, 0),
+            "total_execution_time": self._function_execution_times.get(func_name, 0.0),
+            "average_execution_time": (
+                self._function_execution_times.get(func_name, 0.0) / 
+                max(1, self._function_usage.get(func_name, 0))
+            )
         }
-
-# Template for singleton instance:
-# {{PLUGIN_NAME.lower()}}_utility = {{PLUGIN_NAME}}Utility() 
+        
+        return PluginResult(
+            success=True,
+            message=f"Function {func_name} information retrieved successfully",
+            data=function_info
+        )
+    
+    async def list_functions(self) -> PluginResult:
+        """List all registered functions.
+        
+        Returns:
+            PluginResult: List of registered functions
+        """
+        functions = []
+        
+        for func_name in self._registered_functions:
+            functions.append({
+                "name": func_name,
+                "description": self._function_descriptions[func_name],
+                "usage_count": self._function_usage.get(func_name, 0)
+            })
+            
+        return PluginResult(
+            success=True,
+            message=f"{len(functions)} functions registered with {self.metadata.name} plugin",
+            data=functions
+        )
+    
+    async def get_function_statistics(self) -> PluginResult:
+        """Get statistics for all registered functions.
+        
+        Returns:
+            PluginResult: Function statistics
+        """
+        statistics = {
+            "total_functions": len(self._registered_functions),
+            "total_usage": sum(self._function_usage.values()),
+            "total_successes": sum(self._function_success_count.values()),
+            "total_failures": sum(self._function_failure_count.values()),
+            "total_execution_time": sum(self._function_execution_times.values()),
+            "functions": {}
+        }
+        
+        for func_name in self._registered_functions:
+            usage = self._function_usage.get(func_name, 0)
+            statistics["functions"][func_name] = {
+                "usage_count": usage,
+                "success_count": self._function_success_count.get(func_name, 0),
+                "failure_count": self._function_failure_count.get(func_name, 0),
+                "success_rate": (
+                    self._function_success_count.get(func_name, 0) / max(1, usage) * 100
+                ),
+                "average_execution_time": (
+                    self._function_execution_times.get(func_name, 0.0) / max(1, usage)
+                )
+            }
+            
+        return PluginResult(
+            success=True,
+            message=f"Function statistics retrieved successfully for {self.metadata.name} plugin",
+            data=statistics
+        )
+    
+    async def _process_action(self, action: str, parameters: Dict[str, Any]) -> PluginResult:
+        """Process a utility plugin action.
+        
+        Args:
+            action: Name of the action to perform
+            parameters: Parameters for the action
+            
+        Returns:
+            PluginResult: Result of the action
+        """
+        # Handle utility-specific actions
+        if action == "execute_function":
+            func_name = parameters.get("function_name")
+            func_params = parameters.get("parameters", {})
+            
+            if not func_name:
+                return PluginResult(
+                    success=False,
+                    message="Missing function_name parameter",
+                    error="Missing required parameter: 'function_name'"
+                )
+                
+            return await self.execute_function(func_name, func_params)
+            
+        elif action == "get_function_info":
+            func_name = parameters.get("function_name")
+            
+            if not func_name:
+                return PluginResult(
+                    success=False,
+                    message="Missing function_name parameter",
+                    error="Missing required parameter: 'function_name'"
+                )
+                
+            return await self.get_function_info(func_name)
+            
+        elif action == "list_functions":
+            return await self.list_functions()
+            
+        elif action == "get_function_statistics":
+            return await self.get_function_statistics()
+            
+        # Fall back to basic plugin action handling
+        return await super()._process_action(action, parameters)
+    
+    async def cleanup(self) -> PluginResult:
+        """Clean up utility plugin resources.
+        
+        Returns:
+            PluginResult: Result of cleanup
+        """
+        try:
+            # Clear function registrations
+            self._functions.clear()
+            self._function_descriptions.clear()
+            self._function_parameters.clear()
+            self._function_usage.clear()
+            self._function_success_count.clear()
+            self._function_failure_count.clear()
+            self._function_execution_times.clear()
+            self._registered_functions.clear()
+            
+            # Clean up other resources
+            result = await super().cleanup()
+            
+            return result
+        except Exception as e:
+            self.logger.error(f"Error cleaning up {self.metadata.name} utility plugin resources: {str(e)}")
+            return PluginResult(
+                success=False,
+                message=f"Failed to clean up {self.metadata.name} utility plugin resources",
+                error=str(e)
+            )
