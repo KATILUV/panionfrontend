@@ -48,8 +48,8 @@ const EnhancedChatAgent: React.FC = () => {
   const toggleStrategicModeStore = useAgentStore(state => state.toggleStrategicMode);
   
   // Wrapper function for toggleStrategicMode
-  const toggleStrategicMode = (value: boolean) => {
-    toggleStrategicModeStore(value);
+  const toggleStrategicMode = () => {
+    toggleStrategicModeStore();
   };
   
   // Local state
@@ -201,21 +201,19 @@ const EnhancedChatAgent: React.FC = () => {
       // Check if we should use strategic mode
       const shouldUseStrategy = strategicMode || shouldUseStrategicMode(inputValue);
       
-      if (strategicMode !== shouldUseStrategy) {
+      if (strategicMode !== shouldUseStrategy && shouldUseStrategy) {
         // Update strategic mode state if auto-detection enabled it
-        toggleStrategicMode(shouldUseStrategy);
+        toggleStrategicMode();
         
-        if (shouldUseStrategy) {
-          // Let user know we're switching to strategic mode
-          const strategicModeMessage: ChatMessage = {
-            id: generateId(),
-            content: `I'll use strategic planning mode for this complex task to provide a more comprehensive analysis.`,
-            isUser: false,
-            timestamp: formatTime(new Date()),
-          };
-          
-          setMessages(prev => [...prev, strategicModeMessage]);
-        }
+        // Let user know we're switching to strategic mode
+        const strategicModeMessage: ChatMessage = {
+          id: generateId(),
+          content: `I'll use strategic planning mode for this complex task to provide a more comprehensive analysis.`,
+          isUser: false,
+          timestamp: formatTime(new Date()),
+        };
+        
+        setMessages(prev => [...prev, strategicModeMessage]);
       }
       
       setProcessingStage("Detecting capabilities...");

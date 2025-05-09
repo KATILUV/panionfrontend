@@ -150,6 +150,9 @@ const checkPanionAPIMiddleware = async (req: Request, res: Response, next: NextF
 // Proxy endpoint for Panion API - chat capability
 router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
   try {
+    // Debug log full request body
+    log(`Chat request body: ${JSON.stringify(req.body)}`, 'panion-debug');
+    
     const { 
       message, 
       content,
@@ -162,6 +165,7 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
     const messageContent = content || message;
     
     if (!messageContent || typeof messageContent !== 'string') {
+      log(`Invalid message content: ${JSON.stringify(messageContent)}`, 'panion-error');
       return res.status(400).json({ 
         error: 'Invalid request',
         message: 'Message content is required and must be a string' 
