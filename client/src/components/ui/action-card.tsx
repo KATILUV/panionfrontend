@@ -1,34 +1,34 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useThemeStore } from '../../state/themeStore';
+import { useThemeStore } from '@/state/themeStore';
 
-interface SimpleActionCardProps {
+// Define action card props type
+export interface ActionCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
   onClick: () => void;
-  color?: string;
-  colorIndex?: number;
+  color?: string;      
+  colorIndex?: number; 
   shortcut?: string;
   badge?: string;
   badgeColor?: string;
 }
 
-const SimpleActionCard: React.FC<SimpleActionCardProps> = ({ 
+// Enhanced Action Card component that works for both simple and full dashboard
+const ActionCard: React.FC<ActionCardProps> = ({ 
   title, 
   description, 
   icon, 
   onClick, 
-  color,
-  colorIndex = 0, 
+  color, 
+  colorIndex = 0,
   shortcut,
   badge,
   badgeColor = "bg-primary" 
 }) => {
-  // Get theme accent directly in the component
+  // Get the accent color for dynamic styling
   const accent = useThemeStore(state => state.accent);
-  
-  // Refs for reliable event handling
   const buttonRef = useRef<HTMLDivElement>(null);
   const clickHandled = useRef(false);
   
@@ -41,7 +41,7 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
     if (clickHandled.current) return;
     clickHandled.current = true;
     
-    console.log(`SimpleActionCard: Clicked ${title}`);
+    console.log(`ActionCard: Clicked ${title}`);
     
     // Force button to show active state
     if (buttonRef.current) {
@@ -76,12 +76,12 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
     };
   }, []);
   
-  // If color is provided directly, use it, otherwise calculate based on accent theme
-  const getColorGradient = () => {
+  // Get gradient based on theme and index
+  const getCardGradient = () => {
     // If a specific color was provided, use it
     if (color) return color;
     
-    // Otherwise, calculate color based on theme accent and index
+    // Otherwise, calculate gradient based on theme accent and index
     const variant = colorIndex % 3;
     
     switch (accent) {
@@ -124,8 +124,8 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
     }
   };
   
-  // Get the color gradient based on current theme
-  const gradientColor = getColorGradient();
+  // Get the current gradient based on theme
+  const gradientColor = getCardGradient();
   
   return (
     <div 
@@ -171,4 +171,4 @@ const SimpleActionCard: React.FC<SimpleActionCardProps> = ({
   );
 };
 
-export default SimpleActionCard;
+export default ActionCard;
