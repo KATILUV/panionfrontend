@@ -7,6 +7,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "" 
 });
 
+// LRU Cache for capability detection results
+// This will significantly reduce API calls for similar queries
+type CacheEntry = {
+  capabilities: string[];
+  timestamp: number;
+};
+
+const CACHE_SIZE = 100; // Maximum entries in cache
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour cache lifetime
+const capabilityCache: Map<string, CacheEntry> = new Map();
+
 /**
  * Available capability categories
  */
@@ -37,6 +48,57 @@ const CAPABILITY_CATEGORIES = [
 import * as knowledgeGraph from '../knowledge-graph';
 
 /**
+ * Get a cache key for capability detection
+ */
+function getCacheKey(message: string): string {
+  // Create a normalized form of the message to improve cache hits
+  return message.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * Check if a message is in the capability cache
+ */
+function checkCapabilityCache(message: string): string[] | null {
+  const cacheKey = getCacheKey(message);
+  const entry = capabilityCache.get(cacheKey);
+  
+  // Return null if not in cache or entry is expired
+  if (!entry || (Date.now() - entry.timestamp > CACHE_TTL)) {
+    if (entry) {
+      capabilityCache.delete(cacheKey); // Clean up expired entry
+    }
+    return null;
+  }
+  
+  log(`Using cached capabilities for message: "${message.substring(0, 30)}..."`, 'capability-detection');
+  return entry.capabilities;
+}
+
+/**
+ * Save capabilities to cache
+ */
+function saveToCapabilityCache(message: string, capabilities: string[]): void {
+  const cacheKey = getCacheKey(message);
+  
+  // Check if cache is full and remove oldest entry if needed
+  if (capabilityCache.size >= CACHE_SIZE) {
+    // Get the first (oldest) key
+    const oldestKey = capabilityCache.keys().next().value;
+    if (oldestKey) {
+      capabilityCache.delete(oldestKey);
+    }
+  }
+  
+  // Add new entry
+  capabilityCache.set(cacheKey, {
+    capabilities,
+    timestamp: Date.now()
+  });
+  
+  log(`Saved capabilities to cache for message: "${message.substring(0, 30)}..."`, 'capability-detection');
+}
+
+/**
  * Extract capabilities needed based on the message content
  */
 export async function extractCapabilities(message: string): Promise<string[]> {
@@ -52,10 +114,18 @@ export async function extractCapabilities(message: string): Promise<string[]> {
     return ['self_reflection'];
   }
   
+  // Check cache first to avoid expensive processing
+  const cachedCapabilities = checkCapabilityCache(message);
+  if (cachedCapabilities !== null) {
+    return cachedCapabilities;
+  }
+  
   // Check some common keywords for specific capabilities
   const keywordCapabilities = extractCapabilitiesFromKeywords(message);
   if (keywordCapabilities.length > 0) {
     log(`Detected capabilities from keywords: ${keywordCapabilities.join(', ')}`, 'capability-detection');
+    // Save to cache
+    saveToCapabilityCache(message, keywordCapabilities);
     // If we have capabilities from keywords, return them immediately to avoid API call
     return keywordCapabilities;
   }

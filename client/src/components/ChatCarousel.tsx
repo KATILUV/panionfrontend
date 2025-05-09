@@ -1,31 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useThemeStore } from '../state/themeStore';
 import { windowTextStyles } from './ui/window-components.ts';
+import { ChatMessage } from '@/types/chat';
 
-// Define the Message interface that ChatCarousel uses
+// Define the Message interface for ChatCarousel's internal use
+// This ensures compatibility with both ChatMessage and other message formats
 interface Message {
   id?: string;
   content: string;
   isUser: boolean;
   timestamp: string;
   imageUrl?: string;
+  thinking?: string;
 }
 
 interface ChatCarouselProps {
-  messages: Message[];
+  messages: Message[] | ChatMessage[];
   isLoading: boolean;
 }
 
 const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
-  const [currentIndex, setCurrentIndex] = useState(messages.length > 0 ? messages.length - 1 : 0);
+  // Initialize state outside of any conditions to prevent hook ordering issues
+  const [currentIndex, setCurrentIndex] = useState(0);
   const accent = useThemeStore((state) => state.accent);
   const isDarkMode = true; // Always dark mode for Panion
 
-  // Always show the latest message when new messages arrive
-  React.useEffect(() => {
-    setCurrentIndex(messages.length - 1);
+  // Set initial index and update when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      setCurrentIndex(messages.length - 1);
+    } else {
+      setCurrentIndex(0);
+    }
   }, [messages.length]);
 
   // Format timestamp to readable time
