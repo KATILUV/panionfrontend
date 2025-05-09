@@ -8,130 +8,64 @@ import { taskManager } from './autonomous-agent';
 import { getStrategicPlan, StrategicPlan } from './strategic-planner';
 import { handleAnthropicChatRequest } from './anthropic';
 
+import { extractCapabilities as detectCapabilities } from './utils/capability-detection';
+
 /**
  * Advanced capability extraction using AI and keyword detection
  * Determines which capabilities are needed to respond to a user message
  */
 async function extractCapabilities(message: string, sessionId: string = 'default'): Promise<string[]> {
   try {
-    // First try the OpenAI-based capability detection for more accurate results
-    const aiDetectedCapabilities = await extractCapabilitiesWithAI(message);
+    // Use the centralized capability detection utility
+    const capabilities = await detectCapabilities(message);
     
-    if (aiDetectedCapabilities.length > 0) {
-      return aiDetectedCapabilities;
+    // Add business-specific capabilities based on keywords
+    const lowercaseMessage = message.toLowerCase();
+    let result = [...capabilities];
+    
+    // Detect specialized capabilities based on business context
+    if (lowercaseMessage.includes('smoke shop') || 
+        lowercaseMessage.includes('smokeshop') || 
+        lowercaseMessage.includes('dispensary')) {
+      if (!result.includes('business_research')) result.push('business_research');
+      if (!result.includes('contact_finder')) result.push('contact_finder');
     }
+    
+    if (lowercaseMessage.includes('contact info') || 
+        lowercaseMessage.includes('contact detail') || 
+        lowercaseMessage.includes('email') || 
+        lowercaseMessage.includes('phone number') ||
+        lowercaseMessage.includes('owner') ||
+        lowercaseMessage.includes('manager')) {
+      if (!result.includes('contact_finder')) result.push('contact_finder');
+    }
+    
+    return result;
   } catch (error) {
-    // If AI detection fails, fall back to keyword-based detection
-    log(`AI capability detection failed, falling back to keyword detection: ${error}`, 'panion');
-  }
-
-  // Fallback to keyword-based capability detection
-  const lowercaseMessage = message.toLowerCase();
-  const capabilities: string[] = [];
-  
-  // Enhanced pattern matching for capabilities - more comprehensive keyword sets
-  const capabilityPatterns = {
-    'search': ['search', 'find', 'locate', 'look up', 'discover', 'where is', 'how to find'],
-    'data_analysis': ['analyze', 'data', 'statistics', 'trends', 'patterns', 'metrics', 'numbers', 'graph', 'chart'],
-    'planning': ['plan', 'steps', 'strategy', 'organize', 'schedule', 'procedure', 'process', 'roadmap'],
-    'creative_writing': ['creative', 'write', 'content', 'story', 'blog', 'article', 'essay', 'summarize'],
-    'coding': ['code', 'program', 'develop', 'script', 'function', 'class', 'api', 'algorithm'],
-    'visual_processing': ['image', 'picture', 'photo', 'visualization', 'diagram', 'draw', 'sketch'],
-    'memory_recall': ['remember', 'recall', 'previous', 'history', 'earlier', 'before', 'past conversation'],
-    'coordination': ['coordinate', 'team', 'collaborate', 'assign', 'delegate', 'manage', 'organize people'],
-    'business_research': ['business', 'company', 'contact', 'owner', 'industry', 'competitor', 'market'],
-    'strategic_thinking': ['strategic', 'vision', 'direction', 'goal', 'objective', 'mission', 'big picture'],
-    'deep_learning': ['machine learning', 'deep learning', 'neural network', 'ai model', 'training data'],
-    'legal_analysis': ['legal', 'law', 'regulation', 'compliance', 'contract', 'terms', 'agreement', 'policy'],
-  };
-  
-  // Check for each capability
-  Object.entries(capabilityPatterns).forEach(([capability, keywords]) => {
-    if (keywords.some(keyword => lowercaseMessage.includes(keyword))) {
-      capabilities.push(capability);
+    // If detection fails, fall back to keyword-based detection
+    log(`Capability detection failed, falling back to basic detection: ${error}`, 'panion');
+    
+    // Simple fallback capabilities
+    const lowercaseMessage = message.toLowerCase();
+    const capabilities: string[] = [];
+    
+    if (lowercaseMessage.includes('business') || lowercaseMessage.includes('company')) {
+      capabilities.push('business_research');
     }
-  });
-  
-  // Detect specialized capabilities based on business context
-  if (lowercaseMessage.includes('smoke shop') || 
-      lowercaseMessage.includes('smokeshop') || 
-      lowercaseMessage.includes('dispensary')) {
-    capabilities.push('business_research');
-    capabilities.push('contact_finder');
+    
+    if (lowercaseMessage.includes('contact') || lowercaseMessage.includes('email') || 
+        lowercaseMessage.includes('phone')) {
+      capabilities.push('contact_finder');
+    }
+    
+    // Always include some base capabilities in fallback mode
+    capabilities.push('search');
+    
+    return capabilities;
   }
-  
-  if (lowercaseMessage.includes('contact info') || 
-      lowercaseMessage.includes('contact detail') || 
-      lowercaseMessage.includes('email') || 
-      lowercaseMessage.includes('phone number') ||
-      lowercaseMessage.includes('owner') ||
-      lowercaseMessage.includes('manager')) {
-    capabilities.push('contact_finder');
-  }
-  
-  // Return detected capabilities, or an empty array if none are detected
-  return capabilities;
 }
 
-/**
- * Use OpenAI to detect required capabilities from a user message
- */
-async function extractCapabilitiesWithAI(message: string): Promise<string[]> {
-  try {
-    // Create a complete list of available capabilities
-    const availableCapabilities = [
-      'search', 'data_analysis', 'planning', 'creative_writing', 'coding',
-      'visual_processing', 'memory_recall', 'coordination', 'business_research',
-      'strategic_thinking', 'deep_learning', 'legal_analysis', 'contact_finder',
-      'web_research', 'data_visualization', 'document_processing'
-    ];
-    
-    // Ask OpenAI to determine which capabilities are needed
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `You are a capability detector for an AI agent system. Your job is to analyze a user message and determine which capabilities are needed to address it properly.
-          
-          Available capabilities:
-          ${availableCapabilities.map(c => `- ${c}`).join('\n')}
-          
-          Respond with a JSON array containing only the capabilities needed. Be precise and minimal - only include capabilities that are directly relevant to the request.`
-        },
-        {
-          role: "user",
-          content: `User message: "${message}"`
-        }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.1
-    });
-    
-    // Extract capabilities from response
-    try {
-      const content = response.choices[0].message.content;
-      const result = JSON.parse(content);
-      
-      if (result.capabilities && Array.isArray(result.capabilities)) {
-        // Filter to only include valid capabilities from our list
-        return result.capabilities.filter((c: string) => 
-          availableCapabilities.includes(c)
-        );
-      } else {
-        // In case the format isn't exactly what we expected
-        log(`Unexpected AI capability response format: ${content}`, 'panion');
-        return [];
-      }
-    } catch (parseError) {
-      log(`Error parsing AI capability response: ${parseError}`, 'panion');
-      return [];
-    }
-  } catch (error) {
-    log(`Error in AI capability detection: ${error}`, 'panion');
-    throw error;
-  }
-}
+// The extractCapabilitiesWithAI function is now handled by the centralized capability-detection utility
 
 // Initialize OpenAI client for memory operations
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
@@ -197,7 +131,7 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
     const preReflection = await performPreRequestReflection(messageContent, sessionId);
     
     // 1. DETECT AND EXTRACT CAPABILITIES NEEDED
-    // Improved capability detection - using AI to infer required capabilities
+    // Use provided capabilities or extract them using our utility
     let detectedCapabilities = capabilities.length > 0 
       ? capabilities 
       : await extractCapabilities(messageContent);
