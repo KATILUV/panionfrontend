@@ -7,7 +7,7 @@ or background tasks. It extends the BasicPlugin with service-specific functional
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List, Callable
+from typing import Dict, Any, Optional, List, Callable, TypeVar
 from datetime import datetime
 
 from .basic_plugin import BasicPlugin
@@ -267,7 +267,10 @@ class ServicePlugin(BasicPlugin):
                     
                     # Call update callback if set
                     if self._on_update_callback and result.success:
-                        await self._on_update_callback(result)
+                        if hasattr(self._on_update_callback, "__await__"):
+                            await self._on_update_callback(result)
+                        else:
+                            self._on_update_callback(result)
                     
                     # Update health status
                     if result.success:

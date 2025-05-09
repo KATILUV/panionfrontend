@@ -279,7 +279,7 @@ class UtilityPlugin(BasicPlugin):
         return PluginResult(
             success=True,
             message=f"{len(functions)} functions registered with {self.metadata.name} plugin",
-            data=functions
+            data={"functions": functions}
         )
     
     async def get_function_statistics(self) -> PluginResult:
