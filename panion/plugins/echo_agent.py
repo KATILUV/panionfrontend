@@ -156,3 +156,65 @@ class EchoAgent(BasePlugin):
                 message=f"Failed to shut down Echo agent: {str(e)}",
                 error=str(e)
             )
+            
+    async def execute(self, parameters: Dict[str, Any]) -> PluginResult:
+        """Execute the plugin functionality.
+        
+        This is the main entry point for plugin execution required by BasePlugin.
+        
+        Args:
+            parameters: Parameters for execution.
+            
+        Returns:
+            Result of execution.
+        """
+        try:
+            if "action" not in parameters:
+                return PluginResult.failure(message="Missing required parameter: 'action'")
+                
+            action = parameters.get("action")
+            
+            if action == "process_message":
+                if "message" not in parameters:
+                    return PluginResult.failure(message="Missing required parameter: 'message'")
+                message_param = parameters.get("message")
+                if not isinstance(message_param, dict):
+                    return PluginResult.failure(message="Message parameter must be a dictionary")
+                return await self.process_message(message_param)
+            elif action == "start":
+                return await self.start()
+            elif action == "stop":
+                return await self.stop()
+            elif action == "pause":
+                return await self.pause()
+            elif action == "resume":
+                return await self.resume()
+            elif action == "update":
+                return await self.update()
+            else:
+                return PluginResult.failure(message=f"Unknown action: {action}")
+        except Exception as e:
+            self.logger.error(f"Error executing plugin: {str(e)}")
+            return PluginResult.failure(
+                message=f"Failed to execute Echo agent: {str(e)}",
+                error=str(e)
+            )
+            
+    async def cleanup(self) -> PluginResult:
+        """Cleanup resources used by the plugin.
+        
+        Required by BasePlugin.
+        
+        Returns:
+            PluginResult with success status and any cleanup information.
+        """
+        try:
+            self.logger.info("Cleaning up echo agent resources")
+            # No specific resources to clean up
+            return PluginResult.success(message="Echo agent resources cleaned up successfully")
+        except Exception as e:
+            self.logger.error(f"Error cleaning up echo agent resources: {str(e)}")
+            return PluginResult.failure(
+                message=f"Failed to clean up Echo agent resources: {str(e)}",
+                error=str(e)
+            )

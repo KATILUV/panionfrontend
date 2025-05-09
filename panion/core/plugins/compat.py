@@ -3,6 +3,11 @@ Plugin System Compatibility Module
 
 This module provides compatibility layers between the old and new plugin systems.
 It allows for gradual migration by exposing legacy interfaces that use the new consolidated system.
+
+Key Components:
+1. LegacyPluginAdapter - Adapts legacy plugins to work with the new BasePlugin interface
+2. LegacyPluginManagerWrapper - Wraps the new plugin manager with the legacy interface
+3. LegacyCorePluginManagerWrapper - Wraps the new plugin manager with the core legacy interface
 """
 
 import logging
@@ -17,6 +22,233 @@ logger = logging.getLogger(__name__)
 
 # Singleton instance of the new plugin manager
 _plugin_manager = None
+
+class LegacyPluginAdapter(BasePlugin):
+    """
+    Adapter for legacy plugin implementations to the new BasePlugin interface.
+    
+    This allows legacy plugins to be used with the new plugin system without
+    requiring their code to be rewritten.
+    """
+    
+    def __init__(self, legacy_plugin, plugin_id: str, plugin_type: str = "utility"):
+        """
+        Initialize with a legacy plugin instance.
+        
+        Args:
+            legacy_plugin: The legacy plugin instance to adapt.
+            plugin_id: A unique identifier for the plugin.
+            plugin_type: The type of plugin (default: "utility").
+        """
+        # Create metadata from legacy plugin attributes
+        name = getattr(legacy_plugin, "name", plugin_id)
+        description = getattr(legacy_plugin, "description", f"Legacy plugin: {name}")
+        version = getattr(legacy_plugin, "version", "1.0.0")
+        author = getattr(legacy_plugin, "author", "Unknown")
+        capabilities = getattr(legacy_plugin, "capabilities", [])
+        
+        metadata = PluginMetadata(
+            id=plugin_id,
+            name=name,
+            description=description,
+            version=version,
+            author=author,
+            type=plugin_type,
+            capabilities=capabilities
+        )
+        
+        super().__init__(metadata)
+        self.legacy_plugin = legacy_plugin
+    
+    async def initialize(self) -> PluginResult:
+        """
+        Initialize the legacy plugin.
+        
+        Returns:
+            PluginResult with initialization status.
+        """
+        try:
+            # Call initialize if it exists
+            if hasattr(self.legacy_plugin, "initialize"):
+                if asyncio.iscoroutinefunction(self.legacy_plugin.initialize):
+                    result = await self.legacy_plugin.initialize()
+                else:
+                    result = self.legacy_plugin.initialize()
+                
+                # Handle various return types
+                if isinstance(result, bool):
+                    return PluginResult(
+                        success=result,
+                        message="Legacy plugin initialization complete" if result else "Legacy plugin initialization failed"
+                    )
+                elif isinstance(result, dict):
+                    success = result.get("success", True)
+                    message = result.get("message", "Legacy plugin initialization complete")
+                    return PluginResult(
+                        success=success,
+                        message=message,
+                        data=result
+                    )
+                else:
+                    return PluginResult(
+                        success=True,
+                        message="Legacy plugin initialization complete",
+                        data={"result": result}
+                    )
+            else:
+                # No initialize method
+                return PluginResult(
+                    success=True,
+                    message="Legacy plugin has no initialization method"
+                )
+        except Exception as e:
+            logger.error(f"Error initializing legacy plugin {self.id}: {str(e)}")
+            return PluginResult(
+                success=False,
+                message=f"Error initializing legacy plugin: {str(e)}",
+                error=str(e)
+            )
+    
+    async def execute(self, parameters: Dict[str, Any]) -> PluginResult:
+        """
+        Execute the legacy plugin.
+        
+        Args:
+            parameters: Execution parameters.
+            
+        Returns:
+            PluginResult with execution status.
+        """
+        try:
+            # Handle different execution methods
+            if "method" in parameters:
+                method_name = parameters["method"]
+                method_args = parameters.get("args", {})
+                
+                if hasattr(self.legacy_plugin, method_name):
+                    method = getattr(self.legacy_plugin, method_name)
+                    
+                    if asyncio.iscoroutinefunction(method):
+                        result = await method(**method_args)
+                    else:
+                        result = method(**method_args)
+                    
+                    # Handle various return types
+                    if isinstance(result, bool):
+                        return PluginResult(
+                            success=result,
+                            message=f"Method {method_name} execution complete",
+                            data={"result": result}
+                        )
+                    elif isinstance(result, dict):
+                        success = result.get("success", True)
+                        message = result.get("message", f"Method {method_name} execution complete")
+                        return PluginResult(
+                            success=success,
+                            message=message,
+                            data=result
+                        )
+                    else:
+                        return PluginResult(
+                            success=True,
+                            message=f"Method {method_name} execution complete",
+                            data={"result": result}
+                        )
+                else:
+                    return PluginResult(
+                        success=False,
+                        message=f"Method {method_name} not found in legacy plugin",
+                        error=f"Method {method_name} not found"
+                    )
+            # Use the execute method if no specific method is specified
+            elif hasattr(self.legacy_plugin, "execute"):
+                if asyncio.iscoroutinefunction(self.legacy_plugin.execute):
+                    result = await self.legacy_plugin.execute(parameters)
+                else:
+                    result = self.legacy_plugin.execute(parameters)
+                
+                # Handle various return types
+                if isinstance(result, bool):
+                    return PluginResult(
+                        success=result,
+                        message="Legacy plugin execution complete" if result else "Legacy plugin execution failed"
+                    )
+                elif isinstance(result, dict):
+                    success = result.get("success", True)
+                    message = result.get("message", "Legacy plugin execution complete")
+                    return PluginResult(
+                        success=success,
+                        message=message,
+                        data=result
+                    )
+                else:
+                    return PluginResult(
+                        success=True,
+                        message="Legacy plugin execution complete",
+                        data={"result": result}
+                    )
+            else:
+                return PluginResult(
+                    success=False,
+                    message="Legacy plugin has no execute method and no specific method was requested",
+                    error="No execute method available"
+                )
+        except Exception as e:
+            logger.error(f"Error executing legacy plugin {self.id}: {str(e)}")
+            return PluginResult(
+                success=False,
+                message=f"Error executing legacy plugin: {str(e)}",
+                error=str(e)
+            )
+    
+    async def cleanup(self) -> PluginResult:
+        """
+        Clean up the legacy plugin.
+        
+        Returns:
+            PluginResult with cleanup status.
+        """
+        try:
+            # Call cleanup if it exists
+            if hasattr(self.legacy_plugin, "cleanup"):
+                if asyncio.iscoroutinefunction(self.legacy_plugin.cleanup):
+                    result = await self.legacy_plugin.cleanup()
+                else:
+                    result = self.legacy_plugin.cleanup()
+                
+                # Handle various return types
+                if isinstance(result, bool):
+                    return PluginResult(
+                        success=result,
+                        message="Legacy plugin cleanup complete" if result else "Legacy plugin cleanup failed"
+                    )
+                elif isinstance(result, dict):
+                    success = result.get("success", True)
+                    message = result.get("message", "Legacy plugin cleanup complete")
+                    return PluginResult(
+                        success=success,
+                        message=message,
+                        data=result
+                    )
+                else:
+                    return PluginResult(
+                        success=True,
+                        message="Legacy plugin cleanup complete",
+                        data={"result": result}
+                    )
+            else:
+                # No cleanup method
+                return PluginResult(
+                    success=True,
+                    message="Legacy plugin has no cleanup method"
+                )
+        except Exception as e:
+            logger.error(f"Error cleaning up legacy plugin {self.id}: {str(e)}")
+            return PluginResult(
+                success=False,
+                message=f"Error cleaning up legacy plugin: {str(e)}",
+                error=str(e)
+            )
 
 def deprecated_plugin_manager():
     """
