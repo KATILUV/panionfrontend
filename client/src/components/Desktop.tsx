@@ -247,9 +247,9 @@ const Desktop: React.FC = () => {
     setIsMobile(isMobileScreen);
   }, [isMobileScreen]);
   
-  // Initialize agent registry and system logs when component mounts
+  // Initialize system logs and clean up ghost windows when component mounts
   useEffect(() => {
-    initializeAgentRegistry();
+    // Don't call initializeAgentRegistry() anymore - we register agents in App.tsx only
     
     // Add initial system logs to demonstrate functionality
     log.info('Panion OS initialized');
@@ -258,6 +258,24 @@ const Desktop: React.FC = () => {
     
     // Simple initialization - no complex layouts
     log.action('Using simplified layout system');
+    
+    // Clean up any ghost windows by ensuring windows match agent registry
+    const registry = useAgentStore.getState().registry;
+    const windows = useAgentStore.getState().windows;
+    const registeredIds = registry.map(agent => agent.id);
+    
+    // Check for windows that don't have a corresponding agent
+    Object.keys(windows).forEach(windowId => {
+      if (!registeredIds.includes(windowId)) {
+        log.warning(`Found ghost window with ID ${windowId}. Removing...`);
+        // Remove the ghost window
+        useAgentStore.setState(state => {
+          const updatedWindows = {...state.windows};
+          delete updatedWindows[windowId];
+          return { windows: updatedWindows };
+        });
+      }
+    });
     
     // Clean, simplified approach to taskbar reset - no multi-phase redundancy
     try {
