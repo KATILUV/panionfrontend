@@ -519,12 +519,17 @@ router.post('/api/panion/strategic', checkPanionAPIMiddleware, async (req: Reque
     log(`Strategic operation request: ${goal}`, 'panion');
     
     // Execute strategic operation - this is handled via the chat API
+    // Extract capabilities from the request parameters or use a default set
+    const userCapabilities = parameters?.capabilities || [];
+    
+    // Only include capabilities that are explicitly needed, avoiding triggering web_research by default
     const chatPayload = {
       session_id: parameters?.sessionId || 'default-session',
       content: goal, // The goal statement is sent as chat content
       metadata: {
         hasRequiredCapabilities: true,
-        capabilities: ['strategic_thinking', 'web_research', 'data_integration'],
+        // Don't include web_research by default, let the system detect if it's needed
+        capabilities: userCapabilities.length > 0 ? userCapabilities : ['strategic_thinking', 'self_reflection'],
         parameters: parameters || {},
         client: 'frontend'
       }

@@ -297,11 +297,26 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
         enhancedMetadata.debateResults = debateResult;
       }
       
+      // Filter out 'web_research' from capabilities unless explicitly requested
+      // to prevent automatic online mode triggering
+      const filteredCapabilities = detectedCapabilities.filter(
+        cap => cap !== 'web_research' || messageContent.toLowerCase().includes('search online') || 
+        messageContent.toLowerCase().includes('look online') ||
+        messageContent.toLowerCase().includes('search the web') ||
+        messageContent.toLowerCase().includes('find online')
+      );
+      
+      log(`Sending filtered capabilities to Panion API: ${filteredCapabilities.join(', ')}`, 'panion');
+      
       // Forward the request to the Panion API with additional context
+      // and filtered capabilities
       response = await axios.post(`${PANION_API_URL}/chat`, {
         content: messageContent,
         session_id: sessionId,
-        metadata: enhancedMetadata
+        metadata: {
+          ...enhancedMetadata,
+          capabilities: filteredCapabilities
+        }
       });
       
       response = response.data;
