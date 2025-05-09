@@ -196,7 +196,31 @@ class PluginDiscovery:
         for name, plugin_class in self._discovered_plugins.items():
             try:
                 logger.info(f"Instantiating plugin: {name}")
-                plugin = plugin_class()
+                # Handle different plugin class constructors with required args
+                if hasattr(plugin_class, '__init__'):
+                    init_signature = inspect.signature(plugin_class.__init__)
+                    params = init_signature.parameters
+                    
+                    # Check if plugin requires non-optional constructor parameters
+                    required_params = [p for p in params.values() 
+                                      if p.default == inspect.Parameter.empty and p.name != 'self']
+                    
+                    if not required_params:
+                        # No required parameters, can instantiate directly
+                        plugin = plugin_class()
+                    else:
+                        # Has required parameters, use default values
+                        logger.warning(f"Plugin {name} has required parameters, using defaults")
+                        plugin = plugin_class(
+                            name=name,
+                            version="0.1.0",
+                            description=f"Auto-discovered plugin: {name}",
+                            author="Plugin Discovery System"
+                        )
+                else:
+                    # No __init__ method, can instantiate directly
+                    plugin = plugin_class()
+                    
                 instantiated_plugins[name] = plugin
             except Exception as e:
                 logger.error(f"Error instantiating plugin {name}: {str(e)}")

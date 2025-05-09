@@ -1,251 +1,214 @@
 """
-Tests for the plugin discovery system.
+Test Plugin Discovery
+
+Integration tests for the plugin discovery system, ensuring it can properly
+discover, load, and instantiate plugins.
 """
 
-import pytest
 import os
 import tempfile
+import unittest
 from pathlib import Path
-from typing import Dict, Any
-from datetime import datetime
-from core.plugin.discovery import PluginDiscovery, PluginInfo
-from core.plugin.base import BasePlugin, PluginMetadata
 
-class TestPlugin(BasePlugin):
-    """Test plugin for discovery."""
-    metadata = PluginMetadata(
-        name="test_plugin",
-        version="1.0.0",
-        description="Test plugin for discovery",
-        author="Test Author",
-        capabilities=["test_capability"],
-        dependencies={"dependency1": ">=1.0.0"}
-    )
-    
-    def initialize(self):
-        """Initialize plugin."""
-        pass
-    
-    def execute(self, data):
-        """Execute plugin."""
-        return data
+from panion.core.plugin.discovery import PluginDiscovery
+from panion.core.plugin.base import BasePlugin
+from panion.core.plugin.templates.basic_plugin import BasicPlugin
+from panion.core.plugin.templates.service_plugin import ServicePlugin
+from panion.core.plugin.templates.utility_plugin import UtilityPlugin
 
-class TestPlugin2(BasePlugin):
-    """Another test plugin for discovery."""
-    metadata = PluginMetadata(
-        name="test_plugin2",
-        version="2.0.0",
-        description="Another test plugin",
-        author="Test Author",
-        capabilities=["test_capability", "another_capability"],
-        dependencies={"test_plugin": ">=1.0.0"}
-    )
-    
-    def initialize(self):
-        """Initialize plugin."""
-        pass
-    
-    def execute(self, data):
-        """Execute plugin."""
-        return data
+# Helper function to create test plugins
+def create_test_plugin_file(directory, filename, plugin_class_code):
+    """Create a test plugin file in the specified directory."""
+    file_path = os.path.join(directory, filename)
+    with open(file_path, 'w') as f:
+        f.write(plugin_class_code)
+    return file_path
 
-@pytest.fixture
-def temp_dir():
-    """Create a temporary directory with test plugins."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Create plugin directory
-        plugin_dir = Path(temp_dir) / "plugins"
-        plugin_dir.mkdir(parents=True)
+class TestPluginDiscovery(unittest.TestCase):
+    """Test cases for the PluginDiscovery class."""
+    
+    def setUp(self):
+        """Set up the test environment."""
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.plugin_dir = self.temp_dir.name
+        self.discovery = PluginDiscovery()
         
         # Create test plugin files
-        plugin_files = {
-            "test_plugin.py": TestPlugin,
-            "test_plugin2.py": TestPlugin2
-        }
+        self.basic_plugin_code = """
+from panion.core.plugin.templates.basic_plugin import BasicPlugin
+
+class TestBasicPlugin(BasicPlugin):
+    PLUGIN_NAME = "test_basic_plugin"
+    
+    def __init__(self):
+        super().__init__(
+            name="Test Basic Plugin",
+            version="1.0.0",
+            description="A test basic plugin",
+            author="Test Author"
+        )
+"""
         
-        for filename, plugin_class in plugin_files.items():
-            with open(plugin_dir / filename, "w") as f:
-                f.write(f"""
-\"\"\"Test plugin module.\"\"\"
+        self.service_plugin_code = """
+from panion.core.plugin.templates.service_plugin import ServicePlugin
+from panion.core.plugin.plugin_base import PluginResult
 
-from core.plugin.base import BasePlugin, PluginMetadata
-
-class {plugin_class.__name__}(BasePlugin):
-    \"\"\"{plugin_class.__doc__}\"\"\"
-    metadata = PluginMetadata(
-        name="{plugin_class.metadata.name}",
-        version="{plugin_class.metadata.version}",
-        description="{plugin_class.metadata.description}",
-        author="{plugin_class.metadata.author}",
-        capabilities={plugin_class.metadata.capabilities},
-        dependencies={plugin_class.metadata.dependencies}
-    )
+class TestServicePlugin(ServicePlugin):
+    PLUGIN_NAME = "test_service_plugin"
     
-    def initialize(self):
-        \"\"\"Initialize plugin.\"\"\"
-        pass
-    
-    def execute(self, data):
-        \"\"\"Execute plugin.\"\"\"
-        return data
-""")
+    def __init__(self):
+        super().__init__(
+            name="Test Service Plugin",
+            version="1.0.0",
+            description="A test service plugin",
+            author="Test Author",
+            service_type="background",
+            update_interval=10.0
+        )
         
-        yield temp_dir
+    async def _service_update(self):
+        return PluginResult(
+            success=True,
+            message="Service update completed",
+            data={"updated": True}
+        )
+"""
+        
+        self.utility_plugin_code = """
+from panion.core.plugin.templates.utility_plugin import UtilityPlugin
 
-@pytest.fixture
-def discovery(temp_dir):
-    """Create a plugin discovery instance."""
-    # Add plugin directory to Python path
-    sys.path.insert(0, str(temp_dir))
+class TestUtilityPlugin(UtilityPlugin):
+    PLUGIN_NAME = "test_utility_plugin"
     
-    # Create discovery instance
-    discovery = PluginDiscovery()
-    
-    # Discover plugins
-    discovery.discover_plugins(Path(temp_dir) / "plugins")
-    
-    yield discovery
-    
-    # Clean up
-    sys.path.pop(0)
+    def __init__(self):
+        super().__init__(
+            name="Test Utility Plugin",
+            version="1.0.0",
+            description="A test utility plugin",
+            author="Test Author"
+        )
+        
+        # Register a test function
+        def test_function(param1, param2=None):
+            return {"param1": param1, "param2": param2}
+            
+        self.register_function(
+            test_function,
+            name="test_function",
+            description="A test function",
+            parameters={"param1": {"type": "str", "required": True}, 
+                       "param2": {"type": "str", "required": False}}
+        )
+"""
+        
+        # Create the plugin files
+        create_test_plugin_file(self.plugin_dir, "test_basic_plugin.py", self.basic_plugin_code)
+        create_test_plugin_file(self.plugin_dir, "test_service_plugin.py", self.service_plugin_code)
+        create_test_plugin_file(self.plugin_dir, "test_utility_plugin.py", self.utility_plugin_code)
+        
+        # Add the plugin directory
+        self.discovery.add_plugin_directory(self.plugin_dir)
+        
+    def tearDown(self):
+        """Clean up the test environment."""
+        self.temp_dir.cleanup()
+        
+    def test_add_plugin_directory(self):
+        """Test adding a plugin directory."""
+        # Create a new temporary directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Add it to the discovery system
+            result = self.discovery.add_plugin_directory(temp_dir)
+            self.assertTrue(result)
+            
+            # Try to add it again (should fail)
+            result = self.discovery.add_plugin_directory(temp_dir)
+            self.assertFalse(result)
+            
+            # Try to add a non-existent directory (should fail)
+            result = self.discovery.add_plugin_directory("/non/existent/directory")
+            self.assertFalse(result)
+            
+    def test_remove_plugin_directory(self):
+        """Test removing a plugin directory."""
+        # Create a new temporary directory and add it
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self.discovery.add_plugin_directory(temp_dir)
+            
+            # Remove it
+            result = self.discovery.remove_plugin_directory(temp_dir)
+            self.assertTrue(result)
+            
+            # Try to remove it again (should fail)
+            result = self.discovery.remove_plugin_directory(temp_dir)
+            self.assertFalse(result)
+            
+    def test_discover_plugins(self):
+        """Test discovering plugins."""
+        # Discover plugins
+        plugins = self.discovery.discover_plugins()
+        
+        # Check that we found all the test plugins
+        self.assertIn("test_basic_plugin", plugins)
+        self.assertIn("test_service_plugin", plugins)
+        self.assertIn("test_utility_plugin", plugins)
+        
+        # Check that the plugins have the right types
+        self.assertTrue(issubclass(plugins["test_basic_plugin"], BasicPlugin))
+        self.assertTrue(issubclass(plugins["test_service_plugin"], ServicePlugin))
+        self.assertTrue(issubclass(plugins["test_utility_plugin"], UtilityPlugin))
+        
+    def test_get_plugin_class(self):
+        """Test getting a plugin class by name."""
+        # Discover plugins first
+        self.discovery.discover_plugins()
+        
+        # Get a plugin class
+        plugin_class = self.discovery.get_plugin_class("test_basic_plugin")
+        self.assertIsNotNone(plugin_class)
+        # Only check if plugin_class is not None
+        if plugin_class is not None:
+            self.assertTrue(issubclass(plugin_class, BasicPlugin))
+        
+        # Try to get a non-existent plugin class
+        non_existent_plugin = self.discovery.get_plugin_class("non_existent_plugin")
+        self.assertIsNone(non_existent_plugin)
+        
+    def test_instantiate_plugins(self):
+        """Test instantiating plugins."""
+        # Discover plugins first
+        self.discovery.discover_plugins()
+        
+        # Instantiate plugins
+        instances = self.discovery.instantiate_plugins()
+        
+        # Check that we have all the plugins
+        self.assertIn("test_basic_plugin", instances)
+        self.assertIn("test_service_plugin", instances)
+        self.assertIn("test_utility_plugin", instances)
+        
+        # Check that the instances have the right types
+        self.assertIsInstance(instances["test_basic_plugin"], BasicPlugin)
+        self.assertIsInstance(instances["test_service_plugin"], ServicePlugin)
+        self.assertIsInstance(instances["test_utility_plugin"], UtilityPlugin)
+        
+        # Check specific properties and methods
+        self.assertEqual(instances["test_basic_plugin"].metadata.name, "Test Basic Plugin")
+        self.assertEqual(instances["test_service_plugin"].metadata.name, "Test Service Plugin")
+        self.assertEqual(instances["test_utility_plugin"].metadata.name, "Test Utility Plugin")
+        
+    def test_discover_and_instantiate(self):
+        """Test discovering and instantiating plugins in one step."""
+        # Create a new PluginDiscovery instance
+        discovery = PluginDiscovery()
+        
+        # Discover and instantiate plugins
+        classes, instances = discovery.discover_and_instantiate([self.plugin_dir])
+        
+        # Check the results
+        self.assertIn("test_basic_plugin", classes)
+        self.assertIn("test_basic_plugin", instances)
+        self.assertIsInstance(instances["test_basic_plugin"], BasicPlugin)
 
-def test_plugin_discovery(discovery):
-    """Test plugin discovery functionality."""
-    # Check if plugins were discovered
-    assert len(discovery._plugins) == 2
-    assert "test_plugin" in discovery._plugins
-    assert "test_plugin2" in discovery._plugins
-    
-    # Check plugin info
-    plugin_info = discovery._plugins["test_plugin"]
-    assert isinstance(plugin_info, PluginInfo)
-    assert plugin_info.name == "test_plugin"
-    assert plugin_info.version == "1.0.0"
-    assert plugin_info.description == "Test plugin for discovery"
-    assert plugin_info.author == "Test Author"
-    assert "test_capability" in plugin_info.capabilities
-    assert "dependency1" in plugin_info.dependencies
-
-def test_plugin_info_retrieval(discovery):
-    """Test plugin info retrieval."""
-    # Get plugin info
-    plugin_info = discovery.get_plugin_info("test_plugin")
-    
-    # Check info
-    assert plugin_info is not None
-    assert plugin_info.name == "test_plugin"
-    assert plugin_info.version == "1.0.0"
-    
-    # Test non-existent plugin
-    assert discovery.get_plugin_info("non_existent") is None
-
-def test_dependency_management(discovery):
-    """Test dependency management."""
-    # Get dependencies
-    deps = discovery.get_plugin_dependencies("test_plugin2")
-    assert "test_plugin" in deps
-    assert deps["test_plugin"] == ">=1.0.0"
-    
-    # Check dependencies
-    satisfied, missing = discovery.check_dependencies("test_plugin2")
-    assert satisfied
-    assert not missing
-    
-    # Test with missing dependency
-    discovery._plugins.pop("test_plugin")
-    satisfied, missing = discovery.check_dependencies("test_plugin2")
-    assert not satisfied
-    assert "Dependency test_plugin not found" in missing
-
-def test_version_management(discovery):
-    """Test version management."""
-    # Get versions
-    versions = discovery.get_plugin_versions()
-    assert versions["test_plugin"] == "1.0.0"
-    assert versions["test_plugin2"] == "2.0.0"
-    
-    # Check version compatibility
-    assert discovery._check_version_compatibility("1.0.0", ">=1.0.0")
-    assert not discovery._check_version_compatibility("0.9.0", ">=1.0.0")
-
-def test_capability_management(discovery):
-    """Test capability management."""
-    # Get capabilities
-    capabilities = discovery.get_plugin_capabilities()
-    assert "test_capability" in capabilities["test_plugin"]
-    assert "another_capability" in capabilities["test_plugin2"]
-    
-    # Find plugins by capability
-    plugins = discovery.find_plugins_by_capability("test_capability")
-    assert "test_plugin" in plugins
-    assert "test_plugin2" in plugins
-    
-    plugins = discovery.find_plugins_by_capability("another_capability")
-    assert "test_plugin2" in plugins
-    assert "test_plugin" not in plugins
-
-def test_plugin_validation(discovery):
-    """Test plugin validation."""
-    # Validate plugin
-    valid, issues = discovery.validate_plugin("test_plugin")
-    assert valid
-    assert not issues
-    
-    # Test with invalid version
-    discovery._plugins["test_plugin"].version = "invalid"
-    valid, issues = discovery.validate_plugin("test_plugin")
-    assert not valid
-    assert "Invalid version format" in issues[0]
-    
-    # Test with missing capabilities
-    discovery._plugins["test_plugin"].capabilities.clear()
-    valid, issues = discovery.validate_plugin("test_plugin")
-    assert not valid
-    assert "No capabilities defined" in issues
-
-def test_plugin_status(discovery):
-    """Test plugin status reporting."""
-    # Get status
-    status = discovery.get_plugin_status()
-    
-    # Check status
-    assert "test_plugin" in status
-    assert "test_plugin2" in status
-    
-    plugin_status = status["test_plugin"]
-    assert plugin_status["version"] == "1.0.0"
-    assert plugin_status["enabled"]
-    assert plugin_status["valid"]
-    assert not plugin_status["issues"]
-    assert plugin_status["dependencies_satisfied"]
-    assert not plugin_status["missing_dependencies"]
-    assert "test_capability" in plugin_status["capabilities"]
-
-def test_empty_directory(discovery, temp_dir):
-    """Test discovery with empty directory."""
-    # Create empty directory
-    empty_dir = Path(temp_dir) / "empty"
-    empty_dir.mkdir()
-    
-    # Discover plugins
-    plugins = discovery.discover_plugins(empty_dir)
-    
-    # Check result
-    assert not plugins
-
-def test_invalid_plugin(discovery, temp_dir):
-    """Test discovery of invalid plugin."""
-    # Create invalid plugin
-    invalid_dir = Path(temp_dir) / "plugins"
-    with open(invalid_dir / "invalid_plugin.py", "w") as f:
-        f.write("""
-\"\"\"Invalid plugin module.\"\"\"
-
-# Missing plugin class
-""")
-    
-    # Discover plugins
-    discovery.discover_plugins(invalid_dir)
-    
-    # Check result
-    assert "invalid_plugin" not in discovery._plugins 
+if __name__ == "__main__":
+    unittest.main()
