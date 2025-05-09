@@ -88,7 +88,7 @@ class EchoAgent(BasePlugin):
         try:
             if self.is_running:
                 self.logger.debug("Echo agent is running")
-            return PluginResult.success(
+            return PluginResult.success_result(
                 message="Echo agent updated successfully",
                 data={"status": "running" if self.is_running else "idle"}
             )
@@ -103,7 +103,7 @@ class EchoAgent(BasePlugin):
                 'is_running': self.is_running,
                 'last_update': datetime.now().isoformat()
             }
-            return PluginResult.success(
+            return PluginResult.success_result(
                 message="Echo agent metrics retrieved successfully",
                 data=metrics
             )
@@ -115,7 +115,7 @@ class EchoAgent(BasePlugin):
         """Update the agent's context."""
         try:
             self.context = context
-            return PluginResult.success(message="Context updated successfully")
+            return PluginResult.success_result(message="Context updated successfully")
         except Exception as e:
             self.logger.error(f"Error updating context: {str(e)}")
             return PluginResult.failure(message=f"Failed to update context: {str(e)}")
@@ -134,7 +134,7 @@ class EchoAgent(BasePlugin):
                 "timestamp": datetime.now().isoformat(),
             }
             
-            return PluginResult.success(
+            return PluginResult.success_result(
                 message="Message processed successfully",
                 data=response_data
             )
@@ -151,7 +151,7 @@ class EchoAgent(BasePlugin):
         try:
             self.logger.info("Shutting down echo agent")
             self.is_running = False
-            return PluginResult.success(message="Echo agent shut down successfully")
+            return PluginResult.success_result(message="Echo agent shut down successfully")
         except Exception as e:
             self.logger.error(f"Error shutting down echo agent: {str(e)}")
             return PluginResult.failure(
@@ -213,7 +213,7 @@ class EchoAgent(BasePlugin):
         try:
             self.logger.info("Cleaning up echo agent resources")
             # No specific resources to clean up
-            return PluginResult.success(message="Echo agent resources cleaned up successfully")
+            return PluginResult.success_result(message="Echo agent resources cleaned up successfully")
         except Exception as e:
             self.logger.error(f"Error cleaning up echo agent resources: {str(e)}")
             return PluginResult.failure(
