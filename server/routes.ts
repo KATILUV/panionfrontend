@@ -22,6 +22,7 @@ import agentRoutes from "./routes/agentRoutes";
 import collaborationRoutes from "./routes/collaborationRoutes";
 import daddyDataRoutes from "./routes/daddyDataRoutes";
 import scheduledTaskRoutes from "./routes/scheduledTaskRoutes";
+import knowledgeRoutes from "./routes/knowledgeRoutes";
 // Import strategic planner functions
 import { 
   createPlan, 

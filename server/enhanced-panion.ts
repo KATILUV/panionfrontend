@@ -3,6 +3,7 @@ import axios from 'axios';
 import { log } from './vite';
 import { v4 as uuidv4 } from 'uuid';
 import * as memory from './memory';
+import * as knowledgeGraph from './knowledge-graph';
 import OpenAI from 'openai';
 import { taskManager } from './autonomous-agent';
 import { getStrategicPlan, StrategicPlan } from './strategic-planner';
@@ -392,6 +393,7 @@ Here's my initial analysis: ${originalResponse}`;
 
 /**
  * Perform pre-request reflection to analyze user intent and plan response
+ * Enhanced with knowledge graph awareness
  */
 async function performPreRequestReflection(
   message: string, 
@@ -407,7 +409,22 @@ async function performPreRequestReflection(
       `${msg.isUser ? 'User' : 'Panion'}: ${msg.content}`
     ).join('\n');
     
-    // Ask OpenAI to perform reflection
+    // Query knowledge graph for relevant information
+    let knowledgeInsights = '';
+    try {
+      const knowledgeResults = await knowledgeGraph.queryKnowledge(message);
+      if (knowledgeResults.relevantEntities.length > 0 || knowledgeResults.relevantRelationships.length > 0) {
+        knowledgeInsights = `\n\nKnowledge Graph Insights: ${knowledgeResults.summary}`;
+        
+        // Log that knowledge graph provided insights
+        log(`Knowledge graph provided insights for: "${message}"`, 'panion');
+      }
+    } catch (error) {
+      log(`Error querying knowledge graph: ${error}`, 'panion');
+      // Continue without knowledge insights
+    }
+    
+    // Ask OpenAI to perform reflection with added knowledge graph context
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -421,6 +438,7 @@ async function performPreRequestReflection(
           5. What capabilities might be needed to fulfill this request
           6. Any potential ambiguities that might need clarification
           7. Whether previous context is essential to understand this request
+          8. Whether knowledge from the knowledge graph should be applied
           
           Be concise but thorough. Your analysis helps Panion respond intelligently.`
         },
@@ -430,6 +448,7 @@ async function performPreRequestReflection(
           ${formattedHistory}
           
           Current user message: "${message}"
+          ${knowledgeInsights}
           
           Analyze this message comprehensively:`
         }
@@ -444,6 +463,20 @@ async function performPreRequestReflection(
     // Store reflection
     if (!sessionReflections[sessionId]) {
       sessionReflections[sessionId] = [];
+    }
+    
+    // Update knowledge graph with new information from this interaction
+    try {
+      // Only update knowledge graph if message has substantive content
+      if (message.length > 20) {
+        // Run this asynchronously in the background
+        knowledgeGraph.addKnowledge(message).catch(error => {
+          log(`Error adding to knowledge graph: ${error}`, 'panion');
+        });
+      }
+    } catch (error) {
+      log(`Error with knowledge graph update: ${error}`, 'panion');
+      // Continue without updating knowledge graph
     }
     
     sessionReflections[sessionId].push({
