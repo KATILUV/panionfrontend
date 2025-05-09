@@ -701,11 +701,14 @@ class DaddyDataAgent(BasePlugin):
         
         return file_path
     
-    async def stop(self) -> bool:
+    async def stop(self) -> PluginResult:
         """Stop the plugin and clean up resources."""
         logging.info("Stopping Daddy Data Agent")
         # Clean up any resources
-        return True
+        return PluginResult(
+            success=True,
+            message="Daddy Data Agent stopped successfully"
+        )
 
 def run_plugin() -> bool:
     """Entry point for the plugin."""
