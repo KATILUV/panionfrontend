@@ -266,18 +266,40 @@ export const useTaskbarStore = create<TaskbarState>()(
         return []; // Return empty array for convenience
       },
       
-      // Reset taskbar to default state (clearing persisted data)
+      // Reset taskbar to default state (with nuclear approach for persistence)
       resetTaskbar: () => {
         log.info("Resetting taskbar to factory defaults");
-        // Clear local storage for this store
+        
+        // 1. First try to directly clear localStorage
         try {
+          // Clear the persisted state directly
           localStorage.removeItem('panion-taskbar-store');
-          console.log("Cleared taskbar store from local storage");
+          console.log("Phase 1: Cleared taskbar store from localStorage");
         } catch (err) {
-          console.error("Failed to clear localStorage:", err);
+          console.error("Failed in Phase 1 to clear localStorage:", err);
         }
         
-        // Set all values back to defaults
+        // 2. Manually write a clean state to localStorage
+        try {
+          const cleanState = {
+            state: {
+              position: { location: 'bottom', alignment: 'center' },
+              enableBlur: true,
+              showLabels: false,
+              autohide: false,
+              visibleWidgets: [...DEFAULT_WIDGETS],
+              pinnedAgents: [...DEFAULT_PINNED_AGENTS],
+            },
+            version: 0
+          };
+          
+          localStorage.setItem('panion-taskbar-store', JSON.stringify(cleanState));
+          console.log("Phase 2: Manually wrote clean state to localStorage");
+        } catch (err) {
+          console.error("Failed in Phase 2 to write clean state:", err);
+        }
+        
+        // 3. Set component state directly (this will be persisted by middleware)
         set({ 
           position: { location: 'bottom', alignment: 'center' },
           enableBlur: true,

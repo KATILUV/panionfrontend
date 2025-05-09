@@ -259,25 +259,60 @@ const Desktop: React.FC = () => {
     // Simple initialization - no complex layouts
     log.action('Using simplified layout system');
     
-    // Perform a drastic reset of application state
+    // Perform a comprehensive reset of taskbar state using our enhanced approach
     try {
-      // Direct approach - clear localStorage for taskbar
-      localStorage.removeItem('panion-taskbar-store');
-      console.log("Cleared taskbar store from localStorage");
+      log.info('Resetting taskbar to latest design...');
       
-      // Reset taskbar to defaults using the store we imported
-      const taskbarStore = useTaskbarStore.getState();
-      if (taskbarStore && taskbarStore.resetTaskbar) {
-        taskbarStore.resetTaskbar();
-      } else {
-        console.error("Failed to get taskbarStore - direct approach");
-        // Try a direct approach if the store is unavailable
-        try {
-          localStorage.removeItem('panion-taskbar-store');
-          console.log("Manually cleared taskbar store");
-        } catch (err) {
-          console.error("Failed manual reset:", err);
+      // PHASE 1: Direct localStorage removal
+      try {
+        localStorage.removeItem('panion-taskbar-store');
+        console.log("Phase 1: Directly cleared taskbar store from localStorage");
+      } catch (err) {
+        console.error("Phase 1 failed:", err);
+      }
+      
+      // PHASE 2: Write clean state directly to localStorage
+      try {
+        const cleanTaskbarState = {
+          state: {
+            position: { location: 'bottom', alignment: 'center' },
+            enableBlur: true,
+            showLabels: false,
+            autohide: false,
+            visibleWidgets: ['quickSave', 'systemConsole', 'layoutManager', 'versionNumber', 'searchBar'],
+            pinnedAgents: ['panion', 'clara', 'notes', 'browser', 'marketplace'],
+          },
+          version: 0
+        };
+        
+        localStorage.setItem('panion-taskbar-store', JSON.stringify(cleanTaskbarState));
+        console.log("Phase 2: Manually wrote clean taskbar state to localStorage");
+      } catch (err) {
+        console.error("Phase 2 failed:", err);
+      }
+      
+      // PHASE 3: Use the store's reset function
+      try {
+        const taskbarStore = useTaskbarStore.getState();
+        if (taskbarStore && taskbarStore.resetTaskbar) {
+          taskbarStore.resetTaskbar();
+          console.log("Phase 3: Used store's resetTaskbar function");
+        } else {
+          console.error("Phase 3 failed: Could not get taskbarStore");
         }
+      } catch (err) {
+        console.error("Phase 3 failed:", err);
+      }
+      
+      // PHASE 4: Apply a specific preset as a fallback
+      try {
+        const taskbarStore = useTaskbarStore.getState();
+        if (taskbarStore && taskbarStore.applyMinimalPreset) {
+          taskbarStore.applyMinimalPreset();
+          console.log("Phase 4: Applied minimal preset as fallback");
+        }
+      } catch (err) {
+        console.error("Phase 4 failed:", err);
       }
       
       // Verify the reset worked
@@ -292,11 +327,11 @@ const Desktop: React.FC = () => {
         } catch (err) {
           console.error("Error checking taskbar state:", err);
         }
-      }, 100);
+      }, 200);
       
-      log.action('Taskbar reset to factory defaults');
+      log.action('Taskbar reset to factory defaults with enhanced approach');
     } catch (err) {
-      console.error("Error resetting taskbar:", err);
+      console.error("Error during taskbar reset sequence:", err);
     }
     
     // Only open Panion Chat on startup (no split view)

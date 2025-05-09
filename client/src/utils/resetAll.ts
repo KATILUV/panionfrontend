@@ -37,6 +37,26 @@ export function clearAllStorage() {
     }
   });
   
+  // For the taskbar store, also try to write a clean state to overcome persistence
+  try {
+    const cleanTaskbarState = {
+      state: {
+        position: { location: 'bottom', alignment: 'center' },
+        enableBlur: true,
+        showLabels: false,
+        autohide: false,
+        visibleWidgets: ['quickSave', 'systemConsole', 'layoutManager', 'versionNumber', 'searchBar'],
+        pinnedAgents: ['panion', 'clara', 'notes', 'browser', 'marketplace'],
+      },
+      version: 0
+    };
+    
+    localStorage.setItem('panion-taskbar-store', JSON.stringify(cleanTaskbarState));
+    console.log("Manually wrote clean taskbar state to localStorage");
+  } catch (err) {
+    console.error("Failed to write clean taskbar state", err);
+  }
+  
   // Also do a general localStorage.clear() to catch any we missed
   try {
     localStorage.clear();
@@ -60,23 +80,20 @@ export function resetAllStores() {
     taskbarStore.resetTaskbar();
     console.log("Reset taskbar store");
     
-    // Reset windows - use agent store to close all agents instead
+    // Reset windows - close all agents
     const agentStore = useAgentStore.getState();
-    if (agentStore.closeAllAgents) {
-      agentStore.closeAllAgents();
-      console.log("Closed all windows/agents");
-    } else {
-      console.log("Could not find closeAllAgents method, using alternative approach");
-      // Try direct approach to close windows
-      const agents = agentStore.registry || {};
-      Object.keys(agents).forEach(id => {
-        try {
-          agentStore.closeAgent(id);
-        } catch (e) {
-          console.error(`Failed to close agent ${id}`, e);
-        }
-      });
-    }
+    console.log("Closing all agents using direct approach");
+    
+    // Use direct approach to close windows - closeAllAgents doesn't exist in the type
+    const agents = agentStore.registry || {};
+    Object.keys(agents).forEach(id => {
+      try {
+        agentStore.closeAgent(id);
+        console.log(`Closed agent ${id}`);
+      } catch (e) {
+        console.error(`Failed to close agent ${id}`, e);
+      }
+    });
     
     // Reset system log
     const systemLogStore = useSystemLogStore.getState();
