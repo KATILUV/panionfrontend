@@ -1596,6 +1596,10 @@ const PanionChatAgent: React.FC = () => {
       let thinkingContent = data.thinking || '';
       let responseContent = '';
       
+      // Debug logs to find out why content isn't showing up
+      console.log("Data structure:", Object.keys(data));
+      console.log("Response content from API:", data.response);
+      
       // Handle different response formats based on the endpoint used
       if (strategicMode && shouldUseAdvancedPlannerMode && data.id && data.steps) {
         // This is a strategic plan from the /api/strategic/plans endpoint
@@ -1658,7 +1662,9 @@ const PanionChatAgent: React.FC = () => {
         });
       } else {
         // Regular response from chat or strategic endpoints
-        responseContent = data.response;
+        // Ensure we have valid response content
+        responseContent = data.response || "I received your message, but I'm not sure how to respond.";
+        console.log("Setting response content:", responseContent);
         
         // Check for additional_info which may include capabilities information
         if (data.additional_info && !thinkingContent) {
@@ -1712,6 +1718,7 @@ const PanionChatAgent: React.FC = () => {
       }
       
       // Create bot message
+      console.log("Creating bot message with content:", responseContent);
       const botMessage: ChatMessage = {
         id: generateId(),
         content: responseContent,
@@ -1719,6 +1726,9 @@ const PanionChatAgent: React.FC = () => {
         timestamp: formatTime(new Date()),
         thinking: thinkingContent,
       };
+      
+      // Add logs to check message content before and after setting
+      console.log("Bot message object:", botMessage);
       
       // Update messages
       setMessages(prev => [...prev, botMessage]);
@@ -1973,20 +1983,26 @@ const PanionChatAgent: React.FC = () => {
                   </div>
                 ) : (
                   <div className="whitespace-pre-wrap">
-                    {message.content && message.content.split('\n').map((line, i) => {
-                      if (line.trim() === '') return <br key={i} />;
-                      
-                      // Replace markdown-style bold with strong elements
-                      const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                      
-                      return (
-                        <p 
-                          key={i} 
-                          dangerouslySetInnerHTML={{ __html: formattedLine }} 
-                          className="mb-1 last:mb-0"
-                        />
-                      );
-                    })}
+                    {message.content ? (
+                      // If we have content, split and process it
+                      message.content.split('\n').map((line, i) => {
+                        if (line.trim() === '') return <br key={i} />;
+                        
+                        // Replace markdown-style bold with strong elements
+                        const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        
+                        return (
+                          <p 
+                            key={i} 
+                            dangerouslySetInnerHTML={{ __html: formattedLine }} 
+                            className="mb-1 last:mb-0"
+                          />
+                        );
+                      })
+                    ) : (
+                      // If content is undefined or null, show a placeholder
+                      <p className="text-muted-foreground italic">No message content available</p>
+                    )}
                   </div>
                 )}
                 <div className="text-xs mt-1 opacity-70 text-right">
