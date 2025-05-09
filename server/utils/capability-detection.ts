@@ -16,7 +16,7 @@ type CacheEntry = {
 
 const CACHE_SIZE = 100; // Maximum entries in cache
 const CACHE_TTL = 1000 * 60 * 60; // 1 hour cache lifetime
-const capabilityCache: Map<string, CacheEntry> = new Map();
+const capabilityCache: Record<string, CacheEntry> = {};
 
 /**
  * Available capability categories
@@ -60,12 +60,12 @@ function getCacheKey(message: string): string {
  */
 function checkCapabilityCache(message: string): string[] | null {
   const cacheKey = getCacheKey(message);
-  const entry = capabilityCache.get(cacheKey);
+  const entry = capabilityCache[cacheKey];
   
   // Return null if not in cache or entry is expired
   if (!entry || (Date.now() - entry.timestamp > CACHE_TTL)) {
     if (entry) {
-      capabilityCache.delete(cacheKey); // Clean up expired entry
+      delete capabilityCache[cacheKey]; // Clean up expired entry
     }
     return null;
   }
@@ -81,19 +81,30 @@ function saveToCapabilityCache(message: string, capabilities: string[]): void {
   const cacheKey = getCacheKey(message);
   
   // Check if cache is full and remove oldest entry if needed
-  if (capabilityCache.size >= CACHE_SIZE) {
-    // Get the oldest entry to remove (convert iterator to array first)
-    const keys = Array.from(capabilityCache.keys());
-    if (keys.length > 0) {
-      capabilityCache.delete(keys[0]);
+  const cacheSize = Object.keys(capabilityCache).length;
+  if (cacheSize >= CACHE_SIZE) {
+    // Get the oldest entry to remove
+    let oldestKey = '';
+    let oldestTime = Infinity;
+    
+    for (const key in capabilityCache) {
+      if (capabilityCache[key].timestamp < oldestTime) {
+        oldestTime = capabilityCache[key].timestamp;
+        oldestKey = key;
+      }
+    }
+    
+    // Remove the oldest entry
+    if (oldestKey) {
+      delete capabilityCache[oldestKey];
     }
   }
   
   // Add new entry
-  capabilityCache.set(cacheKey, {
+  capabilityCache[cacheKey] = {
     capabilities,
     timestamp: Date.now()
-  });
+  };
   
   log(`Saved capabilities to cache for message: "${message.substring(0, 30)}..."`, 'capability-detection');
 }
@@ -102,32 +113,69 @@ function saveToCapabilityCache(message: string, capabilities: string[]): void {
  * Extract capabilities needed based on the message content
  */
 export async function extractCapabilities(message: string): Promise<string[]> {
+  // Normalize message for better caching and matching
+  const normalizedMessage = message.toLowerCase().trim().replace(/\s+/g, ' ');
+  
+  // Early exit for very short messages (likely greetings) - optimization
+  if (normalizedMessage.length < 5) {
+    log(`Extremely short message detected, treating as basic conversation`, 'capability-detection');
+    return [];
+  }
+  
   // For basic conversational messages, don't trigger any special capabilities
-  if (isBasicConversation(message)) {
+  if (isBasicConversation(normalizedMessage)) {
     log(`Basic conversational message detected, no special capabilities needed`, 'capability-detection');
     return [];
   }
   
   // For messages about the system's own capabilities, use self-reflection only
-  if (isCapabilityQuestion(message)) {
+  if (isCapabilityQuestion(normalizedMessage)) {
     log(`System capability question detected, using self_reflection only`, 'capability-detection');
     return ['self_reflection'];
   }
   
   // Check cache first to avoid expensive processing
-  const cachedCapabilities = checkCapabilityCache(message);
+  const cachedCapabilities = checkCapabilityCache(normalizedMessage);
   if (cachedCapabilities !== null) {
     return cachedCapabilities;
   }
   
   // Check some common keywords for specific capabilities
-  const keywordCapabilities = extractCapabilitiesFromKeywords(message);
+  const keywordCapabilities = extractCapabilitiesFromKeywords(normalizedMessage);
   if (keywordCapabilities.length > 0) {
     log(`Detected capabilities from keywords: ${keywordCapabilities.join(', ')}`, 'capability-detection');
     // Save to cache
-    saveToCapabilityCache(message, keywordCapabilities);
+    saveToCapabilityCache(normalizedMessage, keywordCapabilities);
     // If we have capabilities from keywords, return them immediately to avoid API call
     return keywordCapabilities;
+  }
+  
+  // Check for similar past messages to avoid repeated API calls for similar inputs
+  // This is an additional optimization to prevent similar questions causing new API calls
+  try {
+    // Convert all cache entries into array of key strings
+    const cacheEntries = Object.entries(capabilityCache);
+    for (const [key, entry] of cacheEntries) {
+      // Skip very short cache entries (not enough data for meaningful comparison)
+      if (key.length < 15) continue;
+      
+      // Simple similarity check based on word overlap
+      const keyWords = key.split(' ');
+      const messageWords = normalizedMessage.split(' ');
+      const commonWords = keyWords.filter(word => messageWords.includes(word));
+      
+      // If more than 70% of words match between the messages, reuse the cached capabilities
+      if (commonWords.length >= 3 && 
+          (commonWords.length / Math.max(keyWords.length, messageWords.length)) > 0.7) {
+        log(`Using capabilities from similar message: "${key.substring(0, 30)}..."`, 'capability-detection');
+        // Also cache for the current message to speed up future identical requests
+        saveToCapabilityCache(normalizedMessage, entry.capabilities);
+        return entry.capabilities;
+      }
+    }
+  } catch (error) {
+    log(`Error in similarity check: ${error}`, 'capability-detection');
+    // Continue with normal processing if similarity check fails
   }
   
   // Query knowledge graph for relevant entities and relationships
