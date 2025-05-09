@@ -11,14 +11,13 @@ from pathlib import Path
 import json
 from injector import inject, singleton
 
-from core.plugin.interfaces import IPluginManager, IPluginTester
-from core.plugin.dependency_manager import DependencyManager
-from core.base import BaseComponent, ComponentMetadata, ComponentState
-from core.config import plugin_config, system_config
-from core.events import event_bus, Event, EventType
-from core.error_handling import ErrorHandler, with_error_recovery
-from core.service_locator import ServiceLocator
-from core.plugin.compat import deprecated_core_plugin_manager
+from panion.core.plugin.interfaces import IPluginManager
+from panion.core.plugin.dependency_resolver import DependencyResolver
+from panion.core.base import BaseComponent, ComponentMetadata, ComponentState
+from panion.core.config import config_manager
+from panion.core.events import event_bus, Event, EventType
+from panion.core.error_handling import ErrorHandler, with_error_recovery
+from panion.core.service_locator import ServiceLocator
 
 @singleton
 class Orchestrator(BaseComponent):
@@ -28,7 +27,7 @@ class Orchestrator(BaseComponent):
     def __init__(
         self,
         plugin_manager: IPluginManager,
-        dependency_manager: DependencyManager,
+        dependency_resolver: DependencyResolver,
         service_locator: ServiceLocator,
         error_handler: ErrorHandler
     ):
@@ -54,7 +53,7 @@ class Orchestrator(BaseComponent):
         
         self.logger = logging.getLogger(__name__)
         self.plugin_manager = plugin_manager
-        self.dependency_manager = dependency_manager
+        self.dependency_resolver = dependency_resolver
         self.service_locator = service_locator
         self.error_handler = error_handler
             
@@ -75,7 +74,7 @@ class Orchestrator(BaseComponent):
             
             # Initialize components
             await self.plugin_manager.start()
-            await self.dependency_manager.start()
+            await self.dependency_resolver.start()
             
             self._state = ComponentState.ACTIVE
             self.logger.info("Orchestrator initialized successfully")
@@ -92,7 +91,7 @@ class Orchestrator(BaseComponent):
         
         # Start components
         await self.plugin_manager.start()
-        await self.dependency_manager.start()
+        await self.dependency_resolver.start()
     
     async def stop(self) -> None:
         """Stop the orchestrator."""
@@ -101,7 +100,7 @@ class Orchestrator(BaseComponent):
         
         # Stop components
         await self.plugin_manager.stop()
-        await self.dependency_manager.stop()
+        await self.dependency_resolver.stop()
         
         self._state = ComponentState.STOPPED
     
@@ -112,7 +111,7 @@ class Orchestrator(BaseComponent):
         
         # Pause components
         await self.plugin_manager.pause()
-        await self.dependency_manager.pause()
+        await self.dependency_resolver.pause()
     
     async def resume(self) -> None:
         """Resume the orchestrator."""
@@ -121,7 +120,7 @@ class Orchestrator(BaseComponent):
         
         # Resume components
         await self.plugin_manager.resume()
-        await self.dependency_manager.resume()
+        await self.dependency_resolver.resume()
     
     async def update(self) -> None:
         """Update the orchestrator state."""
@@ -129,7 +128,7 @@ class Orchestrator(BaseComponent):
             try:
                 # Update components
                 await self.plugin_manager.update()
-                await self.dependency_manager.update()
+                await self.dependency_resolver.update()
                 
                 # Update metrics
                 await self.plugin_manager.update_metrics()
