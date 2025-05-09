@@ -26,18 +26,22 @@ class DaddyDataAgent(BasePlugin):
     cleaning, and organization.
     """
     
-    def __init__(self, config_path: str = "config/daddy_data_config.yaml"):
+    def __init__(self, metadata=None, config_path: str = "config/daddy_data_config.yaml"):
         """Initialize the Daddy Data Agent with configuration."""
-        super().__init__(
-            name="Daddy Data",
-            version="1.0.0",
-            description="Specialized agent for deep web research, data verification, and organization",
-            author="Panion Team",
-            tags=[
-                "web_scraping", 
-                "data_verification", 
-                "data_cleaning", 
-                "data_organization",
+        if metadata is None:
+            from panion.core.plugin.plugin_base import PluginMetadata
+            metadata = PluginMetadata(
+                id="daddy_data_agent",
+                name="Daddy Data",
+                version="1.0.0",
+                description="Specialized agent for deep web research, data verification, and organization",
+                author="Panion Team",
+                type="agent",
+                capabilities=[
+                    "web_scraping", 
+                    "data_verification", 
+                    "data_cleaning", 
+                    "data_organization",
                 "excel_generation",
                 "data"
             ],
