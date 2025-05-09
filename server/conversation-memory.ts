@@ -25,6 +25,8 @@ interface MemoryEntry {
   importance: number; // 0-10 score
   tags: string[];
   embedding?: number[]; // Vector embedding for semantic search
+  metadata?: Record<string, any>; // Additional metadata
+  isTemporary?: boolean; // Flag for temporary messages that can be cleaned up
 }
 
 // Memory chunk (summarized conversation segment)
@@ -166,13 +168,25 @@ function saveConversation(sessionId: string): void {
 }
 
 /**
+ * Additional options for adding a message
+ */
+interface AddMessageOptions {
+  importance?: number;
+  tags?: string[];
+  isTemporary?: boolean;
+  metadata?: Record<string, any>;
+}
+
+/**
  * Add a message to the conversation memory
+ * @returns The id of the added message
  */
 export async function addMessage(
   sessionId: string,
   role: 'user' | 'assistant' | 'system',
-  content: string
-): Promise<void> {
+  content: string,
+  options?: AddMessageOptions
+): Promise<string> {
   const conversation = getConversation(sessionId);
   
   // Create memory entry
@@ -181,8 +195,10 @@ export async function addMessage(
     role,
     content,
     timestamp: Date.now(),
-    importance: 5, // Default medium importance
-    tags: []
+    importance: options?.importance ?? 5, // Default medium importance or use provided value
+    tags: options?.tags ?? [],
+    isTemporary: options?.isTemporary ?? false,
+    metadata: options?.metadata ?? {}
   };
   
   // Add to short-term memory
@@ -223,6 +239,9 @@ export async function addMessage(
   if (role === 'assistant') {
     saveConversation(sessionId);
   }
+  
+  // Return the message ID
+  return entry.id;
 }
 
 /**
@@ -445,17 +464,38 @@ async function summarizeConversation(sessionId: string): Promise<void> {
 }
 
 /**
+ * Structure of conversation context returned by getRelevantContext
+ */
+export interface ConversationContextResult {
+  messages: Array<{
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+    timestamp: number;
+  }>;
+  facts: string[];
+  relevantPastConversations: string[];
+  formattedContext: string; // Backwards compatibility with string format
+}
+
+/**
  * Get relevant context for a new message
  */
 export async function getRelevantContext(
   sessionId: string,
   query: string,
   maxTokens: number = 2000
-): Promise<string> {
+): Promise<ConversationContextResult> {
   const conversation = getConversation(sessionId);
   
   // Always include short-term memory (most recent messages)
-  let context = conversation.shortTermMemory.map(entry => 
+  const messages = conversation.shortTermMemory.map(entry => ({
+    role: entry.role,
+    content: entry.content,
+    timestamp: entry.timestamp
+  }));
+  
+  // Format messages as string for backward compatibility
+  let formattedContext = messages.map(entry => 
     `${entry.role}: ${entry.content}`
   ).join('\n\n');
   
@@ -466,8 +506,11 @@ export async function getRelevantContext(
     .map(fact => fact.content);
   
   if (relevantFacts.length > 0) {
-    context += '\n\nKey information:\n' + relevantFacts.map(f => `- ${f}`).join('\n');
+    formattedContext += '\n\nKey information:\n' + relevantFacts.map(f => `- ${f}`).join('\n');
   }
+  
+  // Array to hold relevant past conversations
+  const relevantPastConversations: string[] = [];
   
   // If we have OpenAI API, try to add semantically relevant chunks
   if (process.env.OPENAI_API_KEY && conversation.mediumTermMemory.length > 0) {
@@ -496,13 +539,16 @@ export async function getRelevantContext(
           scoredChunks.sort((a, b) => b.similarity - a.similarity);
           
           // Add top 3 most relevant chunks
-          const relevantChunks = scoredChunks.slice(0, 3)
-            .filter(item => item.similarity > 0.7) // Only if reasonably similar
-            .map(item => item.chunk.summary);
+          const topChunks = scoredChunks.slice(0, 3)
+            .filter(item => item.similarity > 0.7); // Only if reasonably similar
           
-          if (relevantChunks.length > 0) {
-            context += '\n\nRelevant past conversation:\n' + 
-              relevantChunks.map(s => `"${s}"`).join('\n\n');
+          // Extract summaries for the result
+          relevantPastConversations.push(...topChunks.map(item => item.chunk.summary));
+          
+          // Add to formatted context for backward compatibility
+          if (relevantPastConversations.length > 0) {
+            formattedContext += '\n\nRelevant past conversation:\n' + 
+              relevantPastConversations.map(s => `"${s}"`).join('\n\n');
           }
         }
       }
@@ -511,7 +557,12 @@ export async function getRelevantContext(
     }
   }
   
-  return context;
+  return {
+    messages,
+    facts: relevantFacts,
+    relevantPastConversations,
+    formattedContext
+  };
 }
 
 /**

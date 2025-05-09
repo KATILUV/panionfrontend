@@ -112,7 +112,12 @@ function saveToCapabilityCache(message: string, capabilities: string[]): void {
 /**
  * Extract capabilities needed based on the message content
  */
-export async function extractCapabilities(message: string): Promise<string[]> {
+import { ConversationContextResult } from '../conversation-memory';
+
+export async function extractCapabilities(
+  message: string, 
+  conversationContext?: ConversationContextResult | null
+): Promise<string[]> {
   // Normalize message for better caching and matching
   const normalizedMessage = message.toLowerCase().trim().replace(/\s+/g, ' ');
   
@@ -254,6 +259,29 @@ export async function extractCapabilities(message: string): Promise<string[]> {
       knowledgeInsights = `\nBased on knowledge graph analysis, these capabilities may be relevant: ${relevantCapabilities.join(', ')}`;
     }
     
+    // Add conversation context if available
+    let conversationInsights = '';
+    if (conversationContext && conversationContext.messages && conversationContext.messages.length > 0) {
+      // Add memory flag
+      relevantCapabilities.push('memory_recall');
+      
+      // Create context summary
+      const messageCount = conversationContext.messages.length;
+      const hasRelevantPast = conversationContext.relevantPastConversations && 
+                             conversationContext.relevantPastConversations.length > 0;
+      
+      conversationInsights = `\nThis message is part of an ongoing conversation with ${messageCount} previous messages.`;
+      
+      if (hasRelevantPast) {
+        conversationInsights += ` There are also relevant past conversations about related topics.`;
+      }
+      
+      // Add memory_recall to capabilities since we have context
+      if (!knowledgeInsights.includes('memory_recall')) {
+        knowledgeInsights += knowledgeInsights ? ', memory_recall' : '\nBased on conversation history, the memory_recall capability may be relevant.';
+      }
+    }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -277,6 +305,7 @@ export async function extractCapabilities(message: string): Promise<string[]> {
           role: "user",
           content: `User message: "${message}"
           ${knowledgeInsights}
+          ${conversationInsights}
           
           What capabilities would be needed to address this request? Respond with a JSON array of capability strings.`
         }
