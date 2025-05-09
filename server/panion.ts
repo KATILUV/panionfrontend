@@ -176,18 +176,52 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
       });
     }
     
-    // Add the message to conversation memory
-    await conversationMemory.addMessage(sessionId, 'user', messageContent);
+    // Add the message to conversation memory with improved error handling
+    try {
+      await conversationMemory.addMessage(sessionId, 'user', messageContent, {
+        importance: 7, // Higher importance for user messages
+        tags: ['user_request']
+      });
+    } catch (memError) {
+      log(`Error adding message to memory (non-critical): ${memError}`, 'memory');
+      // Continue without failing - this is non-critical
+    }
     
     // Start request timing
     const requestStartTime = Date.now();
     
-    // Detect capabilities if not provided
+    // Detect capabilities if not provided, with enhanced context awareness
     let capabilities = requestedCapabilities;
     if (!capabilities || capabilities.length === 0) {
       try {
-        capabilities = await extractCapabilities(messageContent);
-        log(`Auto-detected capabilities: ${capabilities.join(', ') || 'none'}`, 'panion');
+        // Get relevant context for capability detection
+        let detectionContext: conversationMemory.ConversationContextResult | null = null;
+        try {
+          // Add the message temporarily to include in context retrieval
+          // Not adding to memory yet as we'll add it properly later
+          const tempMessageId = await conversationMemory.addMessage(
+            sessionId, 
+            'user', 
+            messageContent, 
+            { isTemporary: true }
+          );
+          
+          // Get relevant conversation context for capability detection
+          detectionContext = await conversationMemory.getRelevantContext(
+            sessionId, 
+            messageContent
+          );
+          
+          // If this was just for detection, we'd remove the temp message
+          // But since we're actually processing the message, we keep it
+        } catch (memoryError) {
+          log(`Non-critical error accessing conversation context for capability detection: ${memoryError}`, 'panion-error');
+          // Continue without context
+        }
+        
+        // Use the enhanced context-aware capability detection
+        capabilities = await extractCapabilities(messageContent, detectionContext);
+        log(`Auto-detected capabilities with context: ${capabilities.join(', ') || 'none'}`, 'panion');
       } catch (capError) {
         log(`Error auto-detecting capabilities: ${capError}`, 'panion-error');
         // Continue with empty capabilities - the endpoint should still function
@@ -212,11 +246,19 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
 
     // Use our optimized bridge for communication with Python
     try {
-      // Get relevant conversation context
-      const conversationContext = await conversationMemory.getRelevantContext(
-        sessionId, 
-        messageContent
-      );
+      // Get relevant conversation context with error handling
+      let conversationContext = null;
+      try {
+        conversationContext = await conversationMemory.getRelevantContext(
+          sessionId, 
+          messageContent,
+          1000 // Limit tokens for better performance
+        );
+        log(`Retrieved conversation context with ${conversationContext?.messages?.length || 0} messages for chat`, 'memory');
+      } catch (contextError) {
+        log(`Error retrieving conversation context (non-critical): ${contextError}`, 'memory');
+        // Continue without context - the system can still work without it, just less contextually aware
+      }
       
       // Use the bridge to communicate with Panion API
       const responseData = await panionBridge.request('/chat', {
@@ -264,9 +306,27 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
         responseData.response = responseData.message;
       }
       
-      // Add the assistant response to conversation memory
+      // Add the assistant response to conversation memory with improved error handling
       if (responseData.response) {
-        await conversationMemory.addMessage(sessionId, 'assistant', responseData.response);
+        try {
+          await conversationMemory.addMessage(
+            sessionId, 
+            'assistant', 
+            responseData.response, 
+            {
+              importance: 7, // Higher importance for assistant responses
+              tags: ['assistant_response'],
+              metadata: {
+                capabilities: capabilities || [],
+                responseTime: requestDuration
+              }
+            }
+          );
+          log(`Successfully saved assistant response to memory for session ${sessionId}`, 'memory');
+        } catch (memError) {
+          log(`Error saving assistant response to memory (non-critical): ${memError}`, 'memory');
+          // Continue without failing - this is non-critical
+        }
       }
       
       return res.json(responseData);
@@ -320,9 +380,28 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
         response.data.response = response.data.message;
       }
       
-      // Add the assistant response to conversation memory
+      // Add the assistant response to conversation memory with improved error handling
       if (response.data.response) {
-        await conversationMemory.addMessage(sessionId, 'assistant', response.data.response);
+        try {
+          await conversationMemory.addMessage(
+            sessionId, 
+            'assistant', 
+            response.data.response, 
+            {
+              importance: 7, // Higher importance for assistant responses
+              tags: ['assistant_response', 'http_fallback'],
+              metadata: {
+                capabilities: capabilities || [],
+                responseTime: requestDuration,
+                via: 'http_fallback'
+              }
+            }
+          );
+          log(`Successfully saved assistant response to memory via HTTP fallback for session ${sessionId}`, 'memory');
+        } catch (memError) {
+          log(`Error saving assistant response to memory via fallback (non-critical): ${memError}`, 'memory');
+          // Continue without failing - this is non-critical
+        }
       }
       
       return res.json(response.data);
