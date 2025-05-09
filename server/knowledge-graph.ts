@@ -69,6 +69,23 @@ try {
     knowledgeBase = emptyKnowledgeBase;
     fs.writeFileSync(knowledgeGraphPath, JSON.stringify(knowledgeBase, null, 2));
     log('Initialized new knowledge graph', 'knowledge-graph');
+    
+    // Try to initialize with base knowledge
+    const baseKnowledgePath = path.join(process.cwd(), 'data', 'base_knowledge', 'panion_system.txt');
+    if (fs.existsSync(baseKnowledgePath)) {
+      const baseKnowledge = fs.readFileSync(baseKnowledgePath, 'utf8');
+      log('Found base knowledge file, initializing knowledge graph...', 'knowledge-graph');
+      
+      // We'll initialize it asynchronously
+      setTimeout(async () => {
+        try {
+          await addKnowledge(baseKnowledge);
+          log('Successfully initialized knowledge graph with base knowledge', 'knowledge-graph');
+        } catch (initError) {
+          log(`Failed to initialize knowledge graph with base knowledge: ${initError}`, 'knowledge-graph');
+        }
+      }, 1000);
+    }
   }
 } catch (error) {
   log(`Error loading knowledge graph: ${error}`, 'knowledge-graph');
