@@ -39,6 +39,7 @@ import taskRoutes from "./routes/taskRoutes";
 import panionRoutes, { startPanionAPI, shutdownPanionAPI } from "./panion";
 import { handleEnhancedChat } from "./enhanced-panion";
 import { handleAnthropicChat, analyzeImageWithClaude } from "./anthropic";
+import strategicAnalysisRoutes from "./routes/strategicAnalysisRoutes";
 
 // Configure multer for handling file uploads
 const upload = multer({
@@ -266,6 +267,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use Multi-agent Debate routes
   app.use(debateRoutes);
+  
+  // Use Strategic Analysis routes
+  app.use(strategicAnalysisRoutes);
   
   // Try to start the Panion API
   try {
