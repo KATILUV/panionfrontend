@@ -10,6 +10,7 @@ import { extractCapabilities } from './utils/capability-detection';
 import OpenAI from 'openai';
 import panionBridge from './panion-bridge';
 import * as conversationMemory from './conversation-memory';
+import * as startupOptimizer from './startup-optimizer';
 
 // Create router
 const router = Router();
@@ -434,8 +435,53 @@ router.post('/api/panion/goals', checkPanionAPIMiddleware, async (req: Request, 
 // Proxy endpoint for Panion API - get system stats
 router.get('/api/panion/system/stats', checkPanionAPIMiddleware, async (_req: Request, res: Response) => {
   try {
-    const response = await axios.get(`${PANION_API_URL}/system/stats`);
-    res.json(response.data);
+    // Use optimized bridge with timing metrics
+    const startTime = Date.now();
+    
+    try {
+      // Use bridge for optimized communication
+      const data = await panionBridge.request('/system/stats');
+      
+      // Add custom performance metrics
+      const systemData = data as any;
+      if (systemData && typeof systemData === 'object') {
+        // Add bridge performance metrics to the response
+        systemData.bridge_metrics = {
+          response_time_ms: Date.now() - startTime,
+          communication_mode: 'http_direct',
+          timestamp: new Date().toISOString()
+        };
+      }
+      
+      // Add timing information to logs
+      const requestDuration = Date.now() - startTime;
+      log(`System stats request processed in ${requestDuration}ms via bridge`, 'panion-perf');
+      
+      res.json(systemData);
+    } catch (bridgeError) {
+      // Log error but fall back to HTTP
+      log(`Bridge communication failed for system stats, falling back to HTTP: ${bridgeError}`, 'panion-error');
+      
+      // Fall back to direct HTTP request
+      const response = await axios.get(`${PANION_API_URL}/system/stats`);
+      
+      // Add custom performance metrics
+      const systemData = response.data;
+      if (systemData && typeof systemData === 'object') {
+        // Add fallback performance metrics to the response
+        systemData.bridge_metrics = {
+          response_time_ms: Date.now() - startTime,
+          communication_mode: 'http_fallback',
+          timestamp: new Date().toISOString()
+        };
+      }
+      
+      // Add timing information
+      const requestDuration = Date.now() - startTime;
+      log(`System stats request processed in ${requestDuration}ms via HTTP fallback`, 'panion-perf');
+      
+      res.json(systemData);
+    }
   } catch (error) {
     log(`Error getting panion system stats: ${error}`, 'panion');
     res.status(500).json({ 
@@ -1881,6 +1927,24 @@ export function shutdownPanionAPI() {
     panionProcess.kill();
     panionProcess = null;
     panionApiStarted = false;
+  }
+  
+  // Save conversation memory
+  try {
+    log('Saving conversation memory...', 'memory');
+    conversationMemory.cleanupInactiveConversations(24); // Clean up old conversations
+    log('Conversation memory saved successfully', 'memory');
+  } catch (error) {
+    log(`Error saving conversation memory: ${error}`, 'memory');
+  }
+  
+  // Save startup optimizer state
+  try {
+    log('Saving warm cache for faster future startups...', 'startup');
+    startupOptimizer.saveWarmCache(); 
+    log('Warm cache saved successfully', 'startup');
+  } catch (error) {
+    log(`Error saving warm cache: ${error}`, 'startup');
   }
 }
 
