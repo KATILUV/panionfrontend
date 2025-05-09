@@ -22,7 +22,6 @@ import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
 import MarketplaceAgent from "./components/agents/MarketplaceAgent";
 import BrowserAgent from "./components/agents/BrowserAgent";
-// StatusExample removed in the code audit
 import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
 import PanionChatAgent from "./components/agents/PanionChatAgent";
 import CollaborationAgent from "./components/agents/CollaborationAgent";
@@ -198,24 +197,7 @@ function App() {
       defaultSize: { width: 800, height: 600 }
     });
     
-    // Design Example Agent - Frame.io Inspired
-    const designIcon = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M7 2H17L22 7V17L17 22H7L2 17V7L7 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `;
-    
-    // Make Frame.io Design window more stable with smaller size and fixed position
-    agentStore.registerAgent({
-      id: 'design',
-      title: 'Frame.io Design',
-      icon: designIcon,
-      component: () => <StatusExample />,
-      defaultPosition: { x: 500, y: 100 },
-      defaultSize: { width: 600, height: 550 }
-    });
+    // Design Example Agent removed in the code audit
     
     // Marketplace Agent
     const marketplaceIcon = `
