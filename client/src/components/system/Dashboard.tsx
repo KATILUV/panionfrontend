@@ -34,9 +34,7 @@ import RotatingTagline from '../RotatingTagline';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import ActionCard from '@/components/ui/action-card';
-
-// Note: ActionCard component imported from '@/components/ui/action-card'
+import ActionCard, { ActionCardProps } from '@/components/ui/action-card';
 
 // Workspace Layout Template Card
 interface LayoutTemplateProps {
