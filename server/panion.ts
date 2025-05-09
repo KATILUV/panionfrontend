@@ -1065,7 +1065,7 @@ router.get('/api/panion/capabilities', checkPanionAPIMiddleware, async (_req: Re
 // Detect required capabilities for a message
 router.post('/api/panion/detect-capabilities', async (req: Request, res: Response) => {
   try {
-    const { message } = req.body;
+    const { message, sessionId = 'default' } = req.body;
     
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ 
@@ -1076,14 +1076,51 @@ router.post('/api/panion/detect-capabilities', async (req: Request, res: Respons
     
     log(`Detecting capabilities for message: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`, 'capability-detection');
     
-    // Use the capability detection utility
-    const capabilities = await extractCapabilities(message);
+    const startTime = Date.now();
+    
+    // Get conversation context if available
+    let conversationContext = null;
+    try {
+      // Temporarily add the message to memory to include in context retrieval
+      // This helps get better context but we'll remove it if this is just capability detection
+      const tempMessageId = await conversationMemory.addMessage(sessionId, 'user', message, { 
+        importance: 5, 
+        tags: ['capability_detection']
+      });
+      
+      // Get relevant conversation context
+      conversationContext = await conversationMemory.getRelevantContext(
+        sessionId, 
+        message
+      );
+      
+      // Remove the temporary message if this is just for detection
+      if (tempMessageId && req.body.detectOnly === true) {
+        // Only remove if this is just for detection, not a real message
+        await conversationMemory.cleanupInactiveConversations(0.01); // 36 seconds (immediate cleanup)
+      }
+    } catch (memoryError) {
+      log(`Non-critical error accessing conversation memory: ${memoryError}`, 'memory');
+      // Continue without context
+    }
+    
+    // Extract capabilities with the enhanced context
+    const capabilities = await extractCapabilities(message, conversationContext);
     
     log(`Detected capabilities: ${capabilities.join(', ') || 'none'}`, 'capability-detection');
+    
+    // Add timing metrics
+    const detectionTime = Date.now() - startTime;
     
     res.json({
       success: true,
       capabilities,
+      metrics: {
+        detection_time_ms: detectionTime,
+        message_length: message.length,
+        context_available: conversationContext !== null,
+        has_chat_history: conversationContext?.messages?.length > 0 || false
+      },
       message: 'Capabilities detected successfully'
     });
   } catch (error) {
