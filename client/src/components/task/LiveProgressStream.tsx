@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Task, useTaskContext } from '@/context/TaskContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
+import { Task, useTaskContext } from '@/context/TaskContext';
+import { cn } from '@/lib/utils';
+import { Clock, AlertTriangle } from 'lucide-react';
 
 interface LiveProgressStreamProps {
   taskId: string;
@@ -18,129 +19,138 @@ const LiveProgressStream: React.FC<LiveProgressStreamProps> = ({
   autoScroll = true,
   showHeader = true
 }) => {
-  const { getTask, subscribeToTask, unsubscribeFromTask } = useTaskContext();
+  const { state } = useTaskContext();
   const [task, setTask] = useState<Task | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   
-  // Subscribe to task updates when the component mounts
+  // Update task from context when it changes
   useEffect(() => {
-    // Get initial task state
-    const initialTask = getTask(taskId);
-    if (initialTask) {
-      setTask(initialTask);
-      setLogs(initialTask.logs || []);
+    if (state.tasks[taskId]) {
+      setTask(state.tasks[taskId]);
     }
-    
-    // Subscribe to task updates
-    subscribeToTask(taskId);
-    
-    // Clean up when component unmounts
-    return () => {
-      unsubscribeFromTask(taskId);
-    };
-  }, [taskId, getTask, subscribeToTask, unsubscribeFromTask]);
+  }, [taskId, state.tasks]);
   
-  // Update the task state when it changes in context
+  // Auto-scroll to bottom when logs are updated
   useEffect(() => {
-    const currentTask = getTask(taskId);
-    if (currentTask && JSON.stringify(currentTask) !== JSON.stringify(task)) {
-      setTask(currentTask);
-      setLogs(currentTask.logs || []);
+    if (autoScroll && bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [taskId, getTask, task]);
+  }, [task?.logs, autoScroll]);
   
-  // Auto-scroll to bottom when logs update
-  useEffect(() => {
-    if (autoScroll && scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      }
+  // Format timestamp
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch (error) {
+      return '';
     }
-  }, [logs, autoScroll]);
+  };
   
-  // Render a loading state if no task is available
   if (!task) {
     return (
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-muted/20 p-4">
-          <CardTitle className="text-md">Loading task...</CardTitle>
+      <Card>
+        <CardHeader className="p-4">
+          <CardTitle className="text-lg">Task Progress</CardTitle>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+        <CardContent className="p-4 flex justify-center items-center h-48">
+          <div className="text-center text-muted-foreground">
+            <Clock className="h-10 w-10 mx-auto mb-2" />
+            <p>Task information not available</p>
           </div>
         </CardContent>
       </Card>
     );
   }
   
-  // Helper function to format task status
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline">Pending</Badge>;
-      case 'in_progress':
-        return <Badge variant="secondary" className="bg-blue-500 text-white">In Progress</Badge>;
-      case 'paused':
-        return <Badge variant="outline" className="border-yellow-500 text-yellow-500">Paused</Badge>;
-      case 'completed':
-        return <Badge variant="outline" className="border-green-500 text-green-500">Completed</Badge>;
-      case 'failed':
-        return <Badge variant="destructive">Failed</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-  
-  // Helper function to format timestamp from log line
-  const extractTimestamp = (logLine: string) => {
-    const match = logLine.match(/\[(.*?)\]/);
-    if (match && match[1]) {
-      return match[1];
-    }
-    return '';
-  };
-  
-  // Helper function to extract message from log line
-  const extractMessage = (logLine: string) => {
-    const message = logLine.replace(/\[.*?\]/, '').trim();
-    return message;
-  };
-  
   return (
-    <Card className="overflow-hidden">
+    <Card>
       {showHeader && (
-        <CardHeader className="bg-muted/20 p-4">
+        <CardHeader className="p-4 pb-2">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-md">{task.description}</CardTitle>
-              <CardDescription className="text-xs mt-1">
-                {task.agentType} task • Started {new Date(task.startTime).toLocaleString()}
-              </CardDescription>
+            <CardTitle className="text-lg">Live Progress</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              Progress: {Math.round(task.progress)}%
             </div>
-            {getStatusBadge(task.status)}
           </div>
-          <Progress value={task.progress} className="h-2 mt-2" />
+          <Progress 
+            className="h-2 mt-2" 
+            value={task.progress} 
+          />
         </CardHeader>
       )}
       
-      <CardContent className="p-0">
-        <ScrollArea ref={scrollAreaRef} className="h-[var(--stream-height)]" style={{ '--stream-height': `${height}px` } as React.CSSProperties}>
-          <div className="py-3 px-4 space-y-2 text-sm font-mono">
-            {logs.map((log, index) => (
-              <div key={index} className="grid grid-cols-[80px_1fr] gap-2">
-                <span className="text-xs text-muted-foreground">{extractTimestamp(log)}</span>
-                <span className={extractMessage(log).includes('Error') ? 'text-destructive' : ''}>{extractMessage(log)}</span>
+      <CardContent className={cn("p-4 pt-2", !showHeader && "pt-4")}>
+        <ScrollArea 
+          ref={scrollAreaRef} 
+          className="pr-4" 
+          style={{ height: `${height}px` }}
+        >
+          <div className="space-y-1 font-mono text-sm">
+            {task.logs.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-muted-foreground">
+                <div className="text-center">
+                  <Clock className="h-8 w-8 mx-auto mb-2" />
+                  <p>Waiting for task to start...</p>
+                </div>
               </div>
-            ))}
-            
-            {task.status === 'in_progress' && (
-              <div className="grid grid-cols-[80px_1fr] gap-2">
-                <span className="text-xs text-muted-foreground">...</span>
-                <span className="animate-pulse">Processing...</span>
-              </div>
+            ) : (
+              <>
+                {task.logs.map((log, index) => {
+                  // Check if log contains timestamp (example format: [2025-05-08T12:30:45.123Z])
+                  const timestampMatch = log.match(/\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)\]/);
+                  
+                  // Extract timestamp from log if available
+                  const timestamp = timestampMatch ? timestampMatch[1] : null;
+                  
+                  // Clean log message by removing timestamp if found
+                  const message = timestamp 
+                    ? log.replace(`[${timestamp}]`, '').trim() 
+                    : log;
+                  
+                  // Determine if this is an error or warning message
+                  const isError = message.toLowerCase().includes('error') || 
+                                  message.toLowerCase().includes('exception') || 
+                                  message.toLowerCase().includes('failed');
+                  
+                  const isWarning = message.toLowerCase().includes('warning') || 
+                                  message.toLowerCase().includes('warn');
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className={cn(
+                        "py-1 border-l-2 pl-2",
+                        isError ? "border-red-500 bg-red-50 text-red-900" : 
+                        isWarning ? "border-yellow-500 bg-yellow-50 text-yellow-900" : 
+                        "border-muted"
+                      )}
+                    >
+                      {/* Show timestamp if available */}
+                      {timestamp && (
+                        <span className="text-xs text-muted-foreground mr-2">
+                          {formatTimestamp(timestamp)}
+                        </span>
+                      )}
+                      
+                      {/* Show error icon for errors */}
+                      {isError && (
+                        <AlertTriangle className="inline-block h-3 w-3 text-red-500 mr-1" />
+                      )}
+                      
+                      {/* Log message */}
+                      <span className={cn(
+                        isError ? "text-red-700" : 
+                        isWarning ? "text-yellow-700" : ""
+                      )}>
+                        {message}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div ref={bottomRef} />
+              </>
             )}
           </div>
         </ScrollArea>
