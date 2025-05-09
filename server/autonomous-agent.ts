@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { broadcastTaskEvent } from './websocket';
 import OpenAI from 'openai';
 
 // Initialize OpenAI
@@ -293,6 +294,14 @@ async function processTask(taskId: string, checkpoint?: string): Promise<void> {
   // Log that processing has started
   task.logs.push(`[${new Date().toISOString()}] Started processing task`);
   
+  // Emit task started event via WebSocket
+  broadcastTaskEvent(taskId, {
+    type: 'task_update',
+    status: task.status,
+    progress: task.progress,
+    message: 'Task processing started',
+  });
+  
   try {
     // Set initial task steps based on agent type
     if (task.steps.length === 0) {
@@ -413,6 +422,15 @@ async function processTask(taskId: string, checkpoint?: string): Promise<void> {
       // Update step status
       step.status = 'in_progress';
       task.logs.push(`[${new Date().toISOString()}] Started step: ${step.description}`);
+      
+      // Emit step status change via WebSocket
+      broadcastTaskEvent(taskId, {
+        type: 'step_update',
+        stepId: step.id,
+        status: step.status,
+        description: step.description,
+        message: `Started step: ${step.description}`,
+      });
 
       try {
         // Update progress
