@@ -6,6 +6,7 @@ import * as memory from './memory';
 import OpenAI from 'openai';
 import { taskManager } from './autonomous-agent';
 import { getStrategicPlan, StrategicPlan } from './strategic-planner';
+import { handleAnthropicChatRequest } from './anthropic';
 
 // Simple capability extraction function - will be implemented in full later
 async function extractCapabilities(message: string): Promise<string[]> {
@@ -490,7 +491,7 @@ async function performMetaReflection(sessionId: string): Promise<void> {
 }
 
 /**
- * Generate a fallback response using OpenAI directly if the Panion API fails
+ * Generate a fallback response using Anthropic or OpenAI if the Panion API fails
  */
 async function generateFallbackResponse(
   message: string,
@@ -504,7 +505,7 @@ async function generateFallbackResponse(
     const conversationHistory = await memory.getConversationHistory(sessionId);
     const recentMessages = conversationHistory.slice(-SESSION_MEMORY_LIMIT);
     
-    // Format conversation history for the prompt
+    // Format conversation history for the prompt (works for both OpenAI and Anthropic)
     const formattedMessages = recentMessages.map(msg => ({
       role: msg.isUser ? 'user' : 'assistant',
       content: msg.content
@@ -512,7 +513,14 @@ async function generateFallbackResponse(
     
     // Prepare system message with all context
     let systemMessage = `You are Panion, an advanced AI assistant with memory, self-reflection, and strategic planning capabilities. 
-    You help users with a wide range of tasks and can coordinate with specialized agents when needed.`;
+    You help users with a wide range of tasks and can coordinate with specialized agents when needed.
+    
+    Your responses should be:
+    - Direct and concise while being complete
+    - Helpful and user-focused
+    - Conversational but professional
+    - Specific rather than generic
+    - Honest about limitations`;
     
     // Add memory context if available
     if (memoryContext && memoryContext !== 'No relevant previous context found.') {
@@ -532,7 +540,44 @@ async function generateFallbackResponse(
     // Add instructions for the response format
     systemMessage += `\n\nRespond in a helpful, informative way. If the request is unclear, ask for clarification.`;
     
-    // Create messages array for the API call
+    // First try using Anthropic if we have an API key
+    if (process.env.ANTHROPIC_API_KEY) {
+      try {
+        // Fix message formatting for Anthropic
+        const anthropicMessages = formattedMessages.map(msg => {
+          // Ensure roles are strictly 'user' or 'assistant' as required by Anthropic API
+          const role = msg.role === 'user' ? 'user' : 'assistant';
+          return { role, content: msg.content };
+        });
+        
+        // Add the current message
+        const allMessages = [...anthropicMessages, { role: 'user', content: message }];
+        
+        // Use Claude for enhanced conversational ability
+        const claudeResponse = await handleAnthropicChatRequest(
+          message,
+          sessionId,
+          allMessages,
+          systemMessage
+        );
+        
+        // Format response to match Panion API format
+        return {
+          response: claudeResponse.response,
+          thinking: `Fallback response generated using Claude model.\n\nPre-analysis:\n${preReflection}`,
+          model: "claude-3-7-sonnet-20250219",
+          additional_info: {
+            model: "claude-3-7-sonnet-20250219",
+            fallback: true
+          }
+        };
+      } catch (claudeError) {
+        log(`Claude API error, falling back to OpenAI: ${claudeError}`, 'panion');
+        // Proceed to OpenAI fallback
+      }
+    }
+    
+    // Create messages array for the OpenAI API call
     const messages = [
       { role: 'system', content: systemMessage },
       ...formattedMessages,
@@ -551,6 +596,7 @@ async function generateFallbackResponse(
     return {
       response: response.choices[0].message.content,
       thinking: `Fallback response generated using OpenAI directly.\n\nPre-analysis:\n${preReflection}`,
+      model: "gpt-4o",
       additional_info: {
         timestamp: new Date().toISOString(),
         session_id: sessionId,
