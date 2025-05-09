@@ -258,13 +258,15 @@ const Desktop: React.FC = () => {
     // Simple initialization - no complex layouts
     log.action('Using simplified layout system');
     
-    // Unpin the smokeshop agent from the taskbar if present
+    // Ensure taskbar is properly reset
     try {
-      // First try the direct method that modifies localStorage
-      unpinAgentDirectly('smokeshop');
-      log.action('Removed smokeshop agent from taskbar');
+      // Import and use the taskbar reset utility
+      import('../utils/taskbarReset').then(module => {
+        module.forceResetTaskbar();
+        log.action('Reset taskbar to latest design');
+      });
     } catch (err) {
-      console.error("Error removing smokeshop agent:", err);
+      console.error("Error resetting taskbar:", err);
     }
     
     // Only open Panion Chat on startup (no split view)
