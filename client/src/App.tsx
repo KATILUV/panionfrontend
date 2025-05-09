@@ -116,6 +116,9 @@ function Router() {
   );
 }
 
+// Import the new TaskbarFixer component
+import TaskbarFixer from './components/fixers/TaskbarFixer';
+
 function App() {
   // AuthProvider is wrapped around the entire application
   return (
@@ -124,6 +127,8 @@ function App() {
         <AuthProvider>
           <TaskProvider>
             <TooltipProvider>
+              {/* Add TaskbarFixer to fix ghost windows and broken taskbar */}
+              <TaskbarFixer />
               <Router />
               <Toaster />
             </TooltipProvider>
