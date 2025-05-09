@@ -1420,7 +1420,7 @@ router.post('/api/panion/autonomous-task', checkPanionAPIMiddleware, async (req:
 });
 
 // Clara API endpoints
-router.post('/api/clara/chat', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+router.post('/api/clara/chat', async (req: Request, res: Response) => {
   try {
     const { message, sessionId = 'default', userId = 'anonymous' } = req.body;
     
@@ -1431,24 +1431,94 @@ router.post('/api/clara/chat', checkPanionAPIMiddleware, async (req: Request, re
       });
     }
     
-    // Forward the request to the Panion API - Clara endpoint
-    const response = await axios.post(`${PANION_API_URL}/clara/chat`, {
-      content: message,
-      session_id: sessionId,
-      user_id: userId
-    });
+    // Check if Panion API is running
+    if (!panionApiStarted) {
+      log(`Panion API service is not running, using fallback for Clara`, 'panion-error');
+      
+      // Send default response since we can't access the Clara API
+      return res.json({
+        response: "I'm Clara, your emotional support companion. I'm currently operating in limited mode and can't access all my capabilities. How can I help you today?",
+        thinking: "Clara API service is not running, using fallback response",
+        success: true,
+        fallback: true
+      });
+    }
     
-    res.json(response.data);
+    try {
+      // Forward the request to the Panion API - Clara endpoint
+      const response = await axios.post(`${PANION_API_URL}/clara/chat`, {
+        content: message,
+        session_id: sessionId,
+        user_id: userId
+      });
+      
+      return res.json(response.data);
+    } catch (claraApiError) {
+      log(`Error in Clara chat API: ${claraApiError}`, 'panion-error');
+      
+      // Use OpenAI as fallback if we have the key
+      try {
+        if (process.env.OPENAI_API_KEY) {
+          log(`Using OpenAI fallback for Clara chat`, 'panion-debug');
+          const openaiClient = new OpenAI({ 
+            apiKey: process.env.OPENAI_API_KEY || ""
+          });
+          
+          const fallbackResponse = await openaiClient.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `You are Clara, an emotional support AI companion. You are warm, compassionate, and empathetic.
+                You focus on providing emotional support and personal guidance.
+                Since you're operating in fallback mode, note that some advanced capabilities may not be available,
+                but you'll do your best to provide supportive and helpful guidance to the user.`
+              },
+              {
+                role: "user",
+                content: message
+              }
+            ],
+            temperature: 0.7
+          });
+          
+          // Format the response
+          const responseText = fallbackResponse.choices[0].message.content || 
+            "I'm having trouble processing your request right now, but I'm here for you. How can I help?";
+            
+          return res.json({
+            response: responseText,
+            thinking: "The Clara API was unavailable, so I've provided a direct response using OpenAI as a backup.",
+            success: true,
+            fallback: true
+          });
+        }
+      } catch (fallbackError) {
+        log(`Fallback to OpenAI also failed for Clara: ${fallbackError}`, 'panion-error');
+      }
+      
+      // If all else fails, use a generic supportive message
+      return res.json({
+        response: "Hi, I'm Clara. I'm experiencing some technical difficulties at the moment, but I'm still here for you. How are you feeling today?",
+        thinking: "Multiple fallbacks failed. Using generic supportive response.",
+        success: true,
+        fallback: true
+      });
+    }
   } catch (error) {
-    log(`Error in Clara chat: ${error}`, 'panion');
-    res.status(500).json({ 
-      error: 'Clara API error',
-      message: 'Error communicating with Clara API' 
+    log(`Critical error in Clara chat: ${error}`, 'panion-error');
+    
+    // Even in the worst case, still return something helpful rather than an error
+    return res.json({ 
+      response: "I'm Clara, your emotional support companion. I seem to be having some technical difficulties, but I'd still like to help if I can. How are you feeling today?",
+      thinking: `Error details: ${error}`,
+      success: false,
+      error: 'Temporary system issue'
     });
   }
 });
 
-router.post('/api/clara/goal', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+router.post('/api/clara/goal', async (req: Request, res: Response) => {
   try {
     const { message, sessionId = 'default' } = req.body;
     
@@ -1459,37 +1529,90 @@ router.post('/api/clara/goal', checkPanionAPIMiddleware, async (req: Request, re
       });
     }
     
-    // Forward the request to the Panion API - Clara goal creation
-    const response = await axios.post(`${PANION_API_URL}/clara/goal`, {
-      content: message,
-      session_id: sessionId
-    });
+    // Check if Panion API is running
+    if (!panionApiStarted) {
+      log(`Panion API service is not running, using fallback for Clara goal creation`, 'panion-error');
+      
+      return res.json({
+        success: false,
+        goal_id: 'temp_' + Date.now(),
+        message: "I've noted your goal, but I'm currently in limited mode and can't process it fully. Please try again later when my systems are back online.",
+        fallback: true
+      });
+    }
     
-    res.json(response.data);
+    try {
+      // Forward the request to the Panion API - Clara goal creation
+      const response = await axios.post(`${PANION_API_URL}/clara/goal`, {
+        content: message,
+        session_id: sessionId
+      });
+      
+      return res.json(response.data);
+    } catch (goalsApiError) {
+      log(`Error in Clara goal creation API: ${goalsApiError}`, 'panion-error');
+      
+      // Return a helpful response even when the API fails
+      return res.json({
+        success: false,
+        goal_id: 'temp_' + Date.now(),
+        message: "I've made note of your goal, but I'm having trouble saving it in my system right now. Could you try again in a few moments?",
+        error: "Temporary system issue"
+      });
+    }
   } catch (error) {
-    log(`Error in Clara goal creation: ${error}`, 'panion');
-    res.status(500).json({ 
-      error: 'Clara API error',
-      message: 'Error communicating with Clara API' 
+    log(`Critical error in Clara goal creation: ${error}`, 'panion-error');
+    
+    // Even in the worst case, provide a helpful response
+    return res.json({
+      success: false,
+      message: "I'd like to help with your goal, but I'm experiencing some technical difficulties. Please try again shortly.",
+      error: "System error"
     });
   }
 });
 
-router.get('/api/clara/goals', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+router.get('/api/clara/goals', async (req: Request, res: Response) => {
   try {
-    // Forward the request to the Panion API - Clara goals
-    const response = await axios.get(`${PANION_API_URL}/clara/goals`);
-    res.json(response.data);
+    // Check if Panion API is running
+    if (!panionApiStarted) {
+      log(`Panion API service is not running, using fallback for Clara goals listing`, 'panion-error');
+      
+      // Return empty goals list with explanatory message
+      return res.json({
+        goals: [],
+        message: "I'm unable to retrieve your goals right now as my systems are in limited mode.",
+        fallback: true
+      });
+    }
+    
+    try {
+      // Forward the request to the Panion API - Clara goals
+      const response = await axios.get(`${PANION_API_URL}/clara/goals`);
+      return res.json(response.data);
+    } catch (goalsApiError) {
+      log(`Error getting Clara goals: ${goalsApiError}`, 'panion-error');
+      
+      // Return empty goals with a helpful message
+      return res.json({
+        goals: [],
+        message: "I'm having trouble retrieving your goals at the moment. Please try again shortly.",
+        error: "Temporary system issue"
+      });
+    }
   } catch (error) {
-    log(`Error getting Clara goals: ${error}`, 'panion');
-    res.status(500).json({ 
-      error: 'Clara API error',
-      message: 'Error communicating with Clara API' 
+    log(`Critical error getting Clara goals: ${error}`, 'panion-error');
+    
+    // Even in worst case, return something useful to the user
+    return res.json({
+      goals: [],
+      message: "I'm experiencing technical difficulties retrieving your goals. Please try again later.",
+      error: "System error"
     });
   }
 });
 
-router.post('/api/clara/expand-dream', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+router.post('/api/clara/expand-dream', async (req: Request, res: Response) => {
   try {
     const { goalId, message } = req.body;
     
@@ -1500,18 +1623,84 @@ router.post('/api/clara/expand-dream', checkPanionAPIMiddleware, async (req: Req
       });
     }
     
-    // Forward the request to the Panion API - Clara dream expansion
-    const response = await axios.post(`${PANION_API_URL}/clara/expand-dream`, {
-      goal_id: goalId,
-      content: message
-    });
+    // Check if Panion API is running
+    if (!panionApiStarted) {
+      log(`Panion API service is not running, using fallback for Clara dream expansion`, 'panion-error');
+      
+      // Return fallback response
+      return res.json({
+        success: false,
+        expansion: "I'd love to expand on your dream, but I'm currently operating in limited mode. Please try again when my systems are fully online.",
+        fallback: true
+      });
+    }
     
-    res.json(response.data);
+    try {
+      // Forward the request to the Panion API - Clara dream expansion
+      const response = await axios.post(`${PANION_API_URL}/clara/expand-dream`, {
+        goal_id: goalId,
+        content: message
+      });
+      
+      return res.json(response.data);
+    } catch (dreamApiError) {
+      log(`Error in Clara dream expansion API: ${dreamApiError}`, 'panion-error');
+      
+      // Try to provide a helpful generic expansion using OpenAI if available
+      try {
+        if (process.env.OPENAI_API_KEY) {
+          log(`Using OpenAI fallback for Clara dream expansion`, 'panion-debug');
+          const openaiClient = new OpenAI({ 
+            apiKey: process.env.OPENAI_API_KEY || ""
+          });
+          
+          const fallbackResponse = await openaiClient.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `You are Clara, an emotional support AI companion who helps users expand on their dreams and goals.
+                The user has shared a goal or dream with you, and is now providing more details about it.
+                Your task is to respond warmly and help them further develop their dream, providing encouragement and asking thoughtful questions.`
+              },
+              {
+                role: "user",
+                content: message
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 400
+          });
+          
+          // Format the response
+          const expansionText = fallbackResponse.choices[0].message.content || 
+            "That's a beautiful dream. Could you tell me more about what inspires you about this goal?";
+            
+          return res.json({
+            success: true,
+            expansion: expansionText,
+            fallback: true
+          });
+        }
+      } catch (fallbackError) {
+        log(`Fallback to OpenAI also failed for dream expansion: ${fallbackError}`, 'panion-error');
+      }
+      
+      // If all else fails, provide a generic supportive response
+      return res.json({
+        success: false,
+        expansion: "Your dream is really meaningful. I'm having trouble processing all the details right now, but I'd love to hear more about what this means to you.",
+        error: "Temporary system issue"
+      });
+    }
   } catch (error) {
-    log(`Error in Clara dream expansion: ${error}`, 'panion');
-    res.status(500).json({ 
-      error: 'Clara API error',
-      message: 'Error communicating with Clara API' 
+    log(`Critical error in Clara dream expansion: ${error}`, 'panion-error');
+    
+    // Even in worst case, return something encouraging
+    return res.json({
+      success: false,
+      expansion: "I appreciate you sharing more about your dream with me. I'm experiencing some technical difficulties processing it right now, but please know that I value your aspirations.",
+      error: "System error"
     });
   }
 });
