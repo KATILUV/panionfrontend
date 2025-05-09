@@ -7,6 +7,7 @@ export interface ChatMessage {
   isUser: boolean;
   timestamp: string;
   thinking?: string;
+  imageUrl?: string;
   component?: React.ReactNode;
 }
 
@@ -17,6 +18,7 @@ export interface ChatResponse {
   conversationId?: string;
   timestamp?: string;
   additional_info?: Record<string, any>;
+  imageUrl?: string;
 }
 
 // Define common capability types for better organization and consistency

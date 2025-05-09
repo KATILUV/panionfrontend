@@ -48,7 +48,8 @@ export const useChat = () => {
       }
       
       // Add user message to state
-      const userMessage: Message = {
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
         content,
         isUser: true,
         timestamp: new Date().toISOString(),
@@ -120,11 +121,13 @@ export const useChat = () => {
       log.memory(`Retrieving relevant memories for context`);
       
       // Add AI response to state
-      const aiMessage: Message = {
+      const aiMessage: ChatMessage = {
+        id: Date.now().toString(),
         content: data.response,
         isUser: false,
         timestamp: new Date().toISOString(),
-        imageUrl: data.imageUrl, // Include image URL if provided by the API
+        thinking: data.thinking,
+        imageUrl: data.imageUrl // Include image URL if provided by the API
       };
       
       log.action(`Clara responded with: "${data.response.substring(0, 50)}${data.response.length > 50 ? '...' : ''}"`);

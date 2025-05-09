@@ -83,18 +83,23 @@ export const usePanionChat = ({
       
       // Check if this is a simple message that can be handled locally without an API call
       if (isSimpleMessage(userInput)) {
-        console.log('Handling simple message locally:', userInput);
+        console.log('FAST PATH DETECTED: Handling simple message locally:', userInput);
         const quickResponse = getSimpleMessageResponse(userInput);
         
         // Add the response with minimal delay to feel natural
         setTimeout(() => {
-          const responseMessage = createChatMessage(quickResponse, false);
+          const responseMessage = createChatMessage(
+            quickResponse, 
+            false,
+            "Fast response path activated for simple greeting. No API call was made to generate this response."
+          );
           setMessages(prev => [...prev, responseMessage]);
           setAgentStatus('idle');
           setIsLoading(false);
           stopProgress();
           setProcessingProgress(100);
-        }, 500);
+          console.log('FAST PATH COMPLETE: Response generated locally');
+        }, 300); // Reduce delay for faster response
         
         return;
       }
