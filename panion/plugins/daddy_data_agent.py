@@ -199,22 +199,26 @@ class DaddyDataAgent(BasePlugin):
                 "results": limited_results
             }
             
-            return {
-                "task_id": task_id,
-                "status": "completed",
-                "count": len(limited_results),
-                "results": limited_results
-            }
+            return PluginResult(
+                success=True,
+                data={
+                    "task_id": task_id,
+                    "status": "completed",
+                    "count": len(limited_results),
+                    "results": limited_results
+                },
+                error=None
+            )
         
         except Exception as e:
             logging.error(f"Error in search_businesses: {e}")
             self.active_tasks[task_id]["status"] = "failed"
             self.active_tasks[task_id]["error"] = str(e)
-            return {
-                "task_id": task_id,
-                "status": "failed",
-                "error": str(e)
-            }
+            return PluginResult(
+                success=False,
+                data={"task_id": task_id},
+                error=str(e)
+            )
     
     async def verify_data(self, 
                     data: List[Dict[str, Any]], 
@@ -297,24 +301,28 @@ class DaddyDataAgent(BasePlugin):
                 "high_confidence": high_confidence_data
             }
             
-            return {
-                "task_id": task_id,
-                "status": "completed",
-                "total_verified": len(verified_data),
-                "high_confidence_count": len(high_confidence_data),
-                "threshold": threshold,
-                "results": high_confidence_data
-            }
+            return PluginResult(
+                success=True,
+                data={
+                    "task_id": task_id,
+                    "status": "completed",
+                    "total_verified": len(verified_data),
+                    "high_confidence_count": len(high_confidence_data),
+                    "threshold": threshold,
+                    "results": high_confidence_data
+                },
+                error=None
+            )
         
         except Exception as e:
             logging.error(f"Error in verify_data: {e}")
             self.active_tasks[task_id]["status"] = "failed"
             self.active_tasks[task_id]["error"] = str(e)
-            return {
-                "task_id": task_id,
-                "status": "failed",
-                "error": str(e)
-            }
+            return PluginResult(
+                success=False,
+                data={"task_id": task_id},
+                error=str(e)
+            )
     
     async def organize_data(self, 
                       data: List[Dict[str, Any]], 
@@ -381,23 +389,27 @@ class DaddyDataAgent(BasePlugin):
             self.active_tasks[task_id]["file_path"] = file_path
             self.active_tasks[task_id]["progress"] = 100
             
-            return {
-                "task_id": task_id,
-                "status": "completed",
-                "format": format,
-                "file_path": file_path,
-                "row_count": len(processed_data)
-            }
+            return PluginResult(
+                success=True,
+                data={
+                    "task_id": task_id,
+                    "status": "completed",
+                    "format": format,
+                    "file_path": file_path,
+                    "row_count": len(processed_data)
+                },
+                error=None
+            )
             
         except Exception as e:
             logging.error(f"Error in organize_data: {e}")
             self.active_tasks[task_id]["status"] = "failed"
             self.active_tasks[task_id]["error"] = str(e)
-            return {
-                "task_id": task_id,
-                "status": "failed",
-                "error": str(e)
-            }
+            return PluginResult(
+                success=False,
+                data={"task_id": task_id},
+                error=str(e)
+            )
     
     async def get_task_status(self, task_id: str) -> PluginResult:
         """Get the status of a task."""
