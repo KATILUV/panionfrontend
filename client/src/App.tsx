@@ -19,6 +19,7 @@ import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
 import MarketplaceAgent from "./components/agents/MarketplaceAgent";
+import BrowserAgent from "./components/agents/BrowserAgent";
 import { StatusExample } from "./components/agents/StatusExample";
 import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
 import PanionChatAgent from "./components/agents/PanionChatAgent";
@@ -260,6 +261,24 @@ function App() {
       component: () => <PanionChatAgent />,
       defaultPosition: { x: 650, y: 200 },
       defaultSize: { width: 500, height: 600 }
+    });
+    
+    // Browser Agent
+    const browserIcon = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M2 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    
+    agentStore.registerAgent({
+      id: 'browser',
+      title: 'Data Browser',
+      icon: browserIcon,
+      component: () => <BrowserAgent />,
+      defaultPosition: { x: 450, y: 200 },
+      defaultSize: { width: 800, height: 600 }
     });
     
     // Collaboration Agent
