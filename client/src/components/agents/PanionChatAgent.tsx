@@ -1973,7 +1973,7 @@ const PanionChatAgent: React.FC = () => {
                   </div>
                 ) : (
                   <div className="whitespace-pre-wrap">
-                    {message.content.split('\n').map((line, i) => {
+                    {message.content && message.content.split('\n').map((line, i) => {
                       if (line.trim() === '') return <br key={i} />;
                       
                       // Replace markdown-style bold with strong elements
