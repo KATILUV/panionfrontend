@@ -1662,8 +1662,9 @@ const PanionChatAgent: React.FC = () => {
         });
       } else {
         // Regular response from chat or strategic endpoints
-        // Ensure we have valid response content
-        responseContent = data.response || "I received your message, but I'm not sure how to respond.";
+        // Ensure we have valid response content - check both response and message fields 
+        // since the API can return either format
+        responseContent = data.response || data.message || "I received your message, but I'm not sure how to respond.";
         console.log("Setting response content:", responseContent);
         
         // Check for additional_info which may include capabilities information

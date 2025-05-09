@@ -207,6 +207,12 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
       response.data.thinking = thinking;
     }
     
+    // Standardize the response format - ensure we have the 'response' field for consistency
+    // Some API endpoints return 'message' instead of 'response'
+    if (response.data.message && !response.data.response) {
+      response.data.response = response.data.message;
+    }
+    
     res.json(response.data);
   } catch (error) {
     log(`Error in panion chat: ${error}`, 'panion');
@@ -460,13 +466,18 @@ router.post('/api/panion/scrape/enhanced', checkPanionAPIMiddleware, async (req:
       const response = await axios.post(`${PANION_API_URL}/chat`, chatPayload);
       
       // Extract operation ID from the response if available
-      const responseText = response.data.response || '';
+      // Check both response and message fields since the API can return either format
+      const responseText = response.data.response || response.data.message || '';
       const operationIdMatch = responseText.match(/Operation ID: (op_\d+)/);
       const operationId = operationIdMatch ? operationIdMatch[1] : null;
       
+      // Ensure we have a consistent message format
+      const responseMessage = response.data.response || response.data.message || 'Strategic scraping operation initiated';
+      
       return res.json({
         status: 'strategic_initiated',
-        message: response.data.response,
+        message: responseMessage,
+        response: responseMessage, // Add response field for consistency
         operation_id: operationId,
         thinking: response.data.thinking
       });
@@ -522,13 +533,18 @@ router.post('/api/panion/strategic', checkPanionAPIMiddleware, async (req: Reque
     const response = await axios.post(`${PANION_API_URL}/chat`, chatPayload);
     
     // Extract operation ID from the response if available
-    const responseText = response.data.response || '';
+    // Check both response and message fields since the API can return either format
+    const responseText = response.data.response || response.data.message || '';
     const operationIdMatch = responseText.match(/Operation ID: (op_\d+)/);
     const operationId = operationIdMatch ? operationIdMatch[1] : null;
     
+    // Ensure we have a consistent message format
+    const responseMessage = response.data.response || response.data.message || 'Strategic operation initiated';
+    
     return res.json({
       status: 'initiated',
-      message: response.data.response,
+      message: responseMessage,
+      response: responseMessage, // Add response field for consistency
       operation_id: operationId,
       thinking: response.data.thinking
     });
