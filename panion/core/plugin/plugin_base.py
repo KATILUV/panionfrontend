@@ -63,7 +63,7 @@ class PluginResult:
     warnings: List[str] = field(default_factory=list)
     
     @staticmethod
-    def success(message: str = "Operation successful", data: Optional[Dict[str, Any]] = None, 
+    def success_result(message: str = "Operation successful", data: Optional[Dict[str, Any]] = None, 
                metrics: Optional[Dict[str, Any]] = None, warnings: Optional[List[str]] = None) -> 'PluginResult':
         """Create a success result.
         
@@ -169,7 +169,7 @@ class BasePlugin(ABC):
         Returns:
             PluginResult with success status and any startup information.
         """
-        return PluginResult.success(message=f"Plugin {self.id} started")
+        return PluginResult.success_result(message=f"Plugin {self.id} started")
     
     async def stop(self) -> PluginResult:
         """Stop the plugin.

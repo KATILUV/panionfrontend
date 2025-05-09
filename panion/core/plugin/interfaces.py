@@ -11,6 +11,37 @@ from typing import Any, Dict, List, Optional, Protocol, TypeVar, Union
 
 from .plugin_base import PluginResult
 
+# For backward compatibility with existing code
+class IPlugin(Protocol):
+    """Legacy interface for plugins used by existing code."""
+    
+    def initialize(self) -> Any:
+        """Initialize the plugin."""
+        ...
+        
+    def execute(self, action: str, parameters: Dict[str, Any]) -> Any:
+        """Execute a plugin action.
+        
+        Args:
+            action: Name of the action to execute.
+            parameters: Parameters for the action.
+            
+        Returns:
+            Result of the action.
+        """
+        ...
+        
+class PluginState:
+    """Legacy enum for plugin states."""
+    UNINITIALIZED = "uninitialized"
+    INITIALIZING = "initializing"
+    INITIALIZED = "initialized"
+    STARTING = "starting"
+    STARTED = "started"
+    STOPPING = "stopping"
+    STOPPED = "stopped"
+    FAILED = "failed"
+
 # Type variables for generics
 T = TypeVar('T')
 

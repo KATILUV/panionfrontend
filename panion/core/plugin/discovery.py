@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Type, Any, Tuple
 
-from .base import BasePlugin
+from .plugin_base import BasePlugin, PluginMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -229,8 +229,16 @@ class PluginDiscovery:
                         )
                         plugin = plugin_class(metadata)
                 else:
-                    # No __init__ method, can instantiate directly
-                    plugin = plugin_class()
+                    # No __init__ method, can instantiate with default metadata
+                    metadata = PluginMetadata(
+                        id=name,
+                        name=getattr(plugin_class, "plugin_name", name),
+                        description=getattr(plugin_class, "plugin_description", "No description provided"),
+                        version=getattr(plugin_class, "plugin_version", "0.1.0"),
+                        author=getattr(plugin_class, "plugin_author", "Unknown"),
+                        type=getattr(plugin_class, "plugin_type", "generic")
+                    )
+                    plugin = plugin_class(metadata)
                     
                 instantiated_plugins[name] = plugin
             except Exception as e:
