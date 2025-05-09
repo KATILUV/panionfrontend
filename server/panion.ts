@@ -7,6 +7,7 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { taskManager } from './autonomous-agent';
 import { extractCapabilities } from './utils/capability-detection';
+import OpenAI from 'openai';
 
 // Create router
 const router = Router();
@@ -148,7 +149,7 @@ const checkPanionAPIMiddleware = async (req: Request, res: Response, next: NextF
 };
 
 // Proxy endpoint for Panion API - chat capability
-router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, res: Response) => {
+router.post('/api/panion/chat', async (req: Request, res: Response) => {
   try {
     // Debug log full request body
     log(`Chat request body: ${JSON.stringify(req.body)}`, 'panion-debug');
@@ -158,7 +159,7 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
       content,
       sessionId = 'default',
       hasRequiredCapabilities = true, 
-      capabilities = []
+      capabilities: requestedCapabilities = []
     } = req.body;
     
     // Support both 'message' and 'content' parameters for flexibility
@@ -172,11 +173,34 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
       });
     }
     
-    // Log capability information
-    if (capabilities && capabilities.length > 0) {
-      log(`Message requires capabilities: ${capabilities.join(', ')}`, 'panion');
+    // Detect capabilities if not provided
+    let capabilities = requestedCapabilities;
+    if (!capabilities || capabilities.length === 0) {
+      try {
+        capabilities = await extractCapabilities(messageContent);
+        log(`Auto-detected capabilities: ${capabilities.join(', ') || 'none'}`, 'panion');
+      } catch (capError) {
+        log(`Error auto-detecting capabilities: ${capError}`, 'panion-error');
+        // Continue with empty capabilities - the endpoint should still function
+        capabilities = [];
+      }
+    } else {
+      log(`Using provided capabilities: ${capabilities.join(', ')}`, 'panion');
     }
-    
+
+    // Check if Panion API is running
+    if (!panionApiStarted) {
+      log(`Panion API service is not running, using fallback`, 'panion-error');
+      
+      // Send default response since we can't access the Panion API
+      return res.json({
+        response: "I'm sorry, but I'm currently operating in limited mode. The full Panion system is unavailable at the moment. I'll do my best to assist with basic queries.",
+        thinking: "Panion API service is not running, using fallback response",
+        success: true,
+        fallback: true
+      });
+    }
+
     // Forward the request to the Panion API with additional info
     const response = await axios.post(`${PANION_API_URL}/chat`, {
       content: messageContent,
@@ -188,7 +212,7 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
         client: 'frontend',
       }
     });
-    
+  
     // Add thinking details to the response
     let thinking = '';
     
@@ -218,12 +242,57 @@ router.post('/api/panion/chat', checkPanionAPIMiddleware, async (req: Request, r
       response.data.response = response.data.message;
     }
     
-    res.json(response.data);
+    return res.json(response.data);
   } catch (error) {
-    log(`Error in panion chat: ${error}`, 'panion');
-    res.status(500).json({ 
-      error: 'Panion API error',
-      message: 'Error communicating with Panion API' 
+    // This catch block handles any errors in the entire process
+    log(`Error in panion chat: ${error}`, 'panion-error');
+    
+    // Use OpenAI as fallback if we have the key
+    try {
+      if (process.env.OPENAI_API_KEY) {
+        log(`Using OpenAI fallback for chat`, 'panion-debug');
+        const openaiClient = new OpenAI({ 
+          apiKey: process.env.OPENAI_API_KEY || ""
+        });
+        
+        const fallbackResponse = await openaiClient.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `You are Panion, an intelligent AI assistant. Answer the user's question with clarity and accuracy. 
+              Since you're operating in fallback mode, note that some advanced capabilities may not be available, 
+              but you'll do your best to provide helpful information with what you can access.`
+            },
+            {
+              role: "user",
+              content: req.body.content || req.body.message
+            }
+          ],
+          temperature: 0.7
+        });
+        
+        // Format the response
+        const responseText = fallbackResponse.choices[0].message.content || 
+          "I'm having trouble processing your request at the moment. Please try again.";
+          
+        return res.json({
+          response: responseText,
+          thinking: "The main Panion API was unavailable, so I've provided a direct response using OpenAI as a backup system.",
+          success: true,
+          fallback: true
+        });
+      }
+    } catch (fallbackError) {
+      log(`Fallback to OpenAI also failed: ${fallbackError}`, 'panion-error');
+    }
+    
+    // If all else fails, send a friendly error message
+    return res.json({ 
+      response: "I'm sorry, but I'm experiencing connection issues. I can't process your request right now. Please try again in a moment.",
+      thinking: `Error details: ${error}`,
+      success: false,
+      error: 'Connection error'
     });
   }
 });

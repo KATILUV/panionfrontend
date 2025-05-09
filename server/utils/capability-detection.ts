@@ -235,52 +235,53 @@ function determineDefaultCapabilities(message: string): string[] {
  */
 function extractCapabilitiesFromKeywords(message: string): string[] {
   const lowerMessage = message.toLowerCase();
-  const capabilities: Set<string> = new Set();
+  const capabilities: string[] = [];
   
   // Smokeshop specific keywords
   if (lowerMessage.includes('smoke') && lowerMessage.includes('shop') ||
       lowerMessage.includes('smokeshop')) {
-    capabilities.add('smokeshop_data');
+    capabilities.push('smokeshop_data');
   }
   
   // Data analysis related keywords
   if ((lowerMessage.includes('analyze') || lowerMessage.includes('analysis')) && 
       (lowerMessage.includes('data') || lowerMessage.includes('information'))) {
-    capabilities.add('data_analysis');
+    capabilities.push('data_analysis');
   }
   
   // Web scraping related keywords
   if ((lowerMessage.includes('scrape') || lowerMessage.includes('extract')) && 
       (lowerMessage.includes('website') || lowerMessage.includes('web') || 
        lowerMessage.includes('online') || lowerMessage.includes('page'))) {
-    capabilities.add('web_scraping');
+    capabilities.push('web_scraping');
   }
   
   // Search related keywords
   if (lowerMessage.includes('search for') || lowerMessage.includes('find information about') ||
       lowerMessage.includes('look up') || lowerMessage.includes('google')) {
-    capabilities.add('search');
+    capabilities.push('search');
   }
   
   // Document processing
   if (lowerMessage.includes('document') || lowerMessage.includes('pdf') || 
       lowerMessage.includes('spreadsheet') || lowerMessage.includes('excel')) {
-    capabilities.add('document_processing');
+    capabilities.push('document_processing');
   }
   
   // Code related
   if (lowerMessage.includes('code') || lowerMessage.includes('program') || 
       lowerMessage.includes('script') || lowerMessage.includes('function')) {
-    capabilities.add('coding');
+    capabilities.push('coding');
   }
   
   // Strategic thinking
   if (lowerMessage.includes('strategy') || lowerMessage.includes('strategic') || 
       lowerMessage.includes('plan') || lowerMessage.includes('approach')) {
-    capabilities.add('strategic_thinking');
+    capabilities.push('strategic_thinking');
   }
   
-  return Array.from(capabilities);
+  // Remove duplicates and return
+  return [...new Set(capabilities)];
 }
 
 /**
