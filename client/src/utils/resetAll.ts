@@ -5,9 +5,8 @@
 
 import { useAgentStore } from '../state/agentStore';
 import { useTaskbarStore } from '../state/taskbarStore';
-import { useWindowStore } from '../state/windowStore';
-import { useSystemLogStore } from '../state/systemLogStore';
 import { log } from '../state/systemLogStore';
+import { useSystemLogStore } from '../state/systemLogStore';
 
 /**
  * Clear all localStorage items related to the application
@@ -61,10 +60,23 @@ export function resetAllStores() {
     taskbarStore.resetTaskbar();
     console.log("Reset taskbar store");
     
-    // Reset windows
-    const windowStore = useWindowStore.getState();
-    windowStore.closeAllWindows();
-    console.log("Closed all windows");
+    // Reset windows - use agent store to close all agents instead
+    const agentStore = useAgentStore.getState();
+    if (agentStore.closeAllAgents) {
+      agentStore.closeAllAgents();
+      console.log("Closed all windows/agents");
+    } else {
+      console.log("Could not find closeAllAgents method, using alternative approach");
+      // Try direct approach to close windows
+      const agents = agentStore.registry || {};
+      Object.keys(agents).forEach(id => {
+        try {
+          agentStore.closeAgent(id);
+        } catch (e) {
+          console.error(`Failed to close agent ${id}`, e);
+        }
+      });
+    }
     
     // Reset system log
     const systemLogStore = useSystemLogStore.getState();

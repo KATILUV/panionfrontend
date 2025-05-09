@@ -7,6 +7,7 @@ import { useAgentStore, AgentId } from '../state/agentStore';
 import { useThemeStore } from '../state/themeStore';
 import { useSystemLogStore, log } from '../state/systemLogStore';
 import { useUserPrefsStore } from '../state/userPrefsStore';
+import { useTaskbarStore } from '../state/taskbarStore';
 import { initializeAgentRegistry } from '../state/agentStore';
 import { MessageSquare, FileText, Settings, PlusCircle, Layout, Layers, X } from 'lucide-react';
 import { ApplyLayout } from '../lib/layoutUtils';
@@ -258,28 +259,25 @@ const Desktop: React.FC = () => {
     // Simple initialization - no complex layouts
     log.action('Using simplified layout system');
     
-    // Perform a complete reset of all application state
+    // Perform a drastic reset of application state
     try {
-      // Import the nuclear reset function (which handles everything)
-      import('../utils/resetAll').then(module => {
-        // Clear all localStorage and reset all stores
-        module.clearAllStorage();
-        
-        // Get fresh instances of the stores
-        const taskbarStore = useTaskbarStore.getState();
-        taskbarStore.resetTaskbar();
-        
-        log.action('Complete application reset performed');
-      }).catch(err => {
-        console.error("Failed to import reset module:", err);
-        
-        // Fallback direct reset
-        const taskbarStore = useTaskbarStore.getState();
-        localStorage.removeItem('panion-taskbar-store');
-        taskbarStore.resetTaskbar();
-      });
+      // Direct approach - clear localStorage for taskbar
+      localStorage.removeItem('panion-taskbar-store');
+      console.log("Cleared taskbar store from localStorage");
+      
+      // Reset taskbar to defaults
+      const taskbarStore = useTaskbarStore.getState();
+      taskbarStore.resetTaskbar();
+      
+      // Verify the reset worked
+      setTimeout(() => {
+        const currentPinned = useTaskbarStore.getState().pinnedAgents;
+        console.log("After resetting taskbar, pinned agents:", currentPinned);
+      }, 100);
+      
+      log.action('Taskbar reset to factory defaults');
     } catch (err) {
-      console.error("Error during application reset:", err);
+      console.error("Error resetting taskbar:", err);
     }
     
     // Only open Panion Chat on startup (no split view)
