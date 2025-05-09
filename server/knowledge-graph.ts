@@ -58,6 +58,41 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
+// Initialize knowledge graph with base knowledge
+async function initializeKnowledgeGraph(): Promise<void> {
+  const baseKnowledgePath = path.join(process.cwd(), 'data', 'base_knowledge', 'panion_system.txt');
+  log(`Checking for base knowledge at ${baseKnowledgePath}`, 'knowledge-graph');
+  
+  try {
+    if (fs.existsSync(baseKnowledgePath)) {
+      const baseKnowledge = fs.readFileSync(baseKnowledgePath, 'utf8');
+      log(`Found base knowledge file (${baseKnowledge.length} chars), initializing knowledge graph...`, 'knowledge-graph');
+      
+      // Directly extract knowledge
+      const extractedKnowledge = await extractKnowledge(baseKnowledge);
+      log(`Extracted ${extractedKnowledge.entities.length} entities and ${extractedKnowledge.relationships.length} relationships`, 'knowledge-graph');
+      
+      // Add entities to knowledge base
+      extractedKnowledge.entities.forEach(entity => {
+        knowledgeBase.entities[entity.id] = entity;
+      });
+      
+      // Add relationships to knowledge base
+      extractedKnowledge.relationships.forEach(relationship => {
+        knowledgeBase.relationships[relationship.id] = relationship;
+      });
+      
+      // Save updated knowledge base
+      saveKnowledgeGraph();
+      log(`Successfully initialized knowledge graph with ${Object.keys(knowledgeBase.entities).length} entities and ${Object.keys(knowledgeBase.relationships).length} relationships`, 'knowledge-graph');
+    } else {
+      log('Base knowledge file not found, knowledge graph will remain empty until populated through usage', 'knowledge-graph');
+    }
+  } catch (error) {
+    log(`Error initializing knowledge graph: ${error}`, 'knowledge-graph');
+  }
+}
+
 // Load or initialize knowledge graph
 let knowledgeBase: KnowledgeBase;
 try {
@@ -69,23 +104,16 @@ try {
     knowledgeBase = emptyKnowledgeBase;
     fs.writeFileSync(knowledgeGraphPath, JSON.stringify(knowledgeBase, null, 2));
     log('Initialized new knowledge graph', 'knowledge-graph');
-    
-    // Try to initialize with base knowledge
-    const baseKnowledgePath = path.join(process.cwd(), 'data', 'base_knowledge', 'panion_system.txt');
-    if (fs.existsSync(baseKnowledgePath)) {
-      const baseKnowledge = fs.readFileSync(baseKnowledgePath, 'utf8');
-      log('Found base knowledge file, initializing knowledge graph...', 'knowledge-graph');
-      
-      // We'll initialize it asynchronously
-      setTimeout(async () => {
-        try {
-          await addKnowledge(baseKnowledge);
-          log('Successfully initialized knowledge graph with base knowledge', 'knowledge-graph');
-        } catch (initError) {
-          log(`Failed to initialize knowledge graph with base knowledge: ${initError}`, 'knowledge-graph');
-        }
-      }, 1000);
-    }
+  }
+  
+  // If the knowledge graph is empty, initialize it with base knowledge
+  if (Object.keys(knowledgeBase.entities).length === 0) {
+    // Schedule initialization for after server startup
+    setTimeout(() => {
+      initializeKnowledgeGraph().catch(err => {
+        log(`Error in scheduled knowledge graph initialization: ${err}`, 'knowledge-graph');
+      });
+    }, 3000);
   }
 } catch (error) {
   log(`Error loading knowledge graph: ${error}`, 'knowledge-graph');

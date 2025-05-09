@@ -502,7 +502,21 @@ async function performPreRequestReflection(
     try {
       const knowledgeResults = await knowledgeGraph.queryKnowledge(message);
       if (knowledgeResults.relevantEntities.length > 0 || knowledgeResults.relevantRelationships.length > 0) {
-        knowledgeInsights = `\n\nKnowledge Graph Insights: ${knowledgeResults.summary}`;
+        // Create detailed insights from knowledge graph results
+        let entityDetails = '';
+        if (knowledgeResults.relevantEntities.length > 0) {
+          entityDetails = `\nEntities found (${knowledgeResults.relevantEntities.length}):\n`;
+          for (const entity of knowledgeResults.relevantEntities) {
+            entityDetails += `- ${entity.name} (${entity.type}): ${entity.attributes.description || 'No description'}\n`;
+            
+            // Include capabilities if available
+            if (entity.attributes.capabilities && Array.isArray(entity.attributes.capabilities)) {
+              entityDetails += `  Capabilities: ${entity.attributes.capabilities.join(', ')}\n`;
+            }
+          }
+        }
+        
+        knowledgeInsights = `\n\nKnowledge Graph Insights:\n${knowledgeResults.summary}\n${entityDetails}`;
         
         // Log that knowledge graph provided insights
         log(`Knowledge graph provided insights for: "${message}"`, 'panion');

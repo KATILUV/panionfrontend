@@ -1,8 +1,150 @@
 {
-  "entities": {},
-  "relationships": {},
+  "entities": {
+    "b9f16d35-69f1-4c43-9292-a0a7849a20e1": {
+      "id": "b9f16d35-69f1-4c43-9292-a0a7849a20e1",
+      "name": "Panion",
+      "type": "product",
+      "attributes": {
+        "description": "An advanced AI companion desktop environment",
+        "capabilities": [
+          "Intelligent conversation",
+          "Multi-agent collaboration",
+          "Strategic planning",
+          "Dynamic generation of agents",
+          "Knowledge graph integration",
+          "Autonomous task execution",
+          "Browser-like functionality",
+          "Business intelligence capabilities"
+        ]
+      },
+      "created": "2025-05-09T04:32:36.001Z",
+      "lastUpdated": "2025-05-09T04:32:36.001Z"
+    },
+    "f7ec0295-35b9-4958-bcde-d609e1a6d463": {
+      "id": "f7ec0295-35b9-4958-bcde-d609e1a6d463",
+      "name": "Clara",
+      "type": "product",
+      "attributes": {
+        "description": "A personal assistant focused on user support and daily tasks"
+      },
+      "created": "2025-05-09T04:32:36.001Z",
+      "lastUpdated": "2025-05-09T04:32:36.001Z"
+    },
+    "fe368a22-b078-43ed-aaff-12d6ab2a6327": {
+      "id": "fe368a22-b078-43ed-aaff-12d6ab2a6327",
+      "name": "Knowledge Graph",
+      "type": "concept",
+      "attributes": {
+        "description": "A system for storing and retrieving structured information"
+      },
+      "created": "2025-05-09T04:32:36.001Z",
+      "lastUpdated": "2025-05-09T04:32:36.001Z"
+    },
+    "6e9e95f3-4378-4825-aa79-b7a00394d2cc": {
+      "id": "6e9e95f3-4378-4825-aa79-b7a00394d2cc",
+      "name": "Multi-Agent Debate",
+      "type": "concept",
+      "attributes": {
+        "description": "A mechanism for analyzing problems from multiple perspectives"
+      },
+      "created": "2025-05-09T04:32:36.001Z",
+      "lastUpdated": "2025-05-09T04:32:36.001Z"
+    },
+    "227c8094-fd2b-4ae3-8fba-7f8d1d360bb2": {
+      "id": "227c8094-fd2b-4ae3-8fba-7f8d1d360bb2",
+      "name": "Autonomous Agents",
+      "type": "concept",
+      "attributes": {
+        "description": "Background processes that can work independently"
+      },
+      "created": "2025-05-09T04:32:36.001Z",
+      "lastUpdated": "2025-05-09T04:32:36.001Z"
+    },
+    "71b9b7e3-9b6f-4b13-aff8-030e5ad81fb0": {
+      "id": "71b9b7e3-9b6f-4b13-aff8-030e5ad81fb0",
+      "name": "Dynamic Agent Creation",
+      "type": "concept",
+      "attributes": {
+        "description": "The ability to create new specialized agents on demand"
+      },
+      "created": "2025-05-09T04:32:36.001Z",
+      "lastUpdated": "2025-05-09T04:32:36.001Z"
+    },
+    "095422a4-a74f-4755-b7a2-d9bfa51357dc": {
+      "id": "095422a4-a74f-4755-b7a2-d9bfa51357dc",
+      "name": "Strategic Planner",
+      "type": "concept",
+      "attributes": {
+        "description": "A component that breaks complex goals into executable steps"
+      },
+      "created": "2025-05-09T04:32:36.001Z",
+      "lastUpdated": "2025-05-09T04:32:36.001Z"
+    }
+  },
+  "relationships": {
+    "f16aa4b4-ac84-4268-81e0-e77e7850ae2a": {
+      "id": "f16aa4b4-ac84-4268-81e0-e77e7850ae2a",
+      "sourceId": "b9f16d35-69f1-4c43-9292-a0a7849a20e1",
+      "targetId": "f7ec0295-35b9-4958-bcde-d609e1a6d463",
+      "type": "integrates_with",
+      "strength": 0.9,
+      "attributes": {},
+      "created": "2025-05-09T04:32:36.001Z",
+      "lastUpdated": "2025-05-09T04:32:36.001Z"
+    },
+    "f87fc17b-8ecd-4a1f-86ec-2077000a45b9": {
+      "id": "f87fc17b-8ecd-4a1f-86ec-2077000a45b9",
+      "sourceId": "b9f16d35-69f1-4c43-9292-a0a7849a20e1",
+      "targetId": "fe368a22-b078-43ed-aaff-12d6ab2a6327",
+      "type": "integrates_with",
+      "strength": 0.9,
+      "attributes": {},
+      "created": "2025-05-09T04:32:36.002Z",
+      "lastUpdated": "2025-05-09T04:32:36.002Z"
+    },
+    "ab4d68d1-3f0f-4512-82f4-2b8d3b7608a4": {
+      "id": "ab4d68d1-3f0f-4512-82f4-2b8d3b7608a4",
+      "sourceId": "b9f16d35-69f1-4c43-9292-a0a7849a20e1",
+      "targetId": "6e9e95f3-4378-4825-aa79-b7a00394d2cc",
+      "type": "integrates_with",
+      "strength": 0.9,
+      "attributes": {},
+      "created": "2025-05-09T04:32:36.002Z",
+      "lastUpdated": "2025-05-09T04:32:36.002Z"
+    },
+    "b7c1ab56-6482-4476-8f3d-0aa251e5bcea": {
+      "id": "b7c1ab56-6482-4476-8f3d-0aa251e5bcea",
+      "sourceId": "b9f16d35-69f1-4c43-9292-a0a7849a20e1",
+      "targetId": "227c8094-fd2b-4ae3-8fba-7f8d1d360bb2",
+      "type": "integrates_with",
+      "strength": 0.9,
+      "attributes": {},
+      "created": "2025-05-09T04:32:36.002Z",
+      "lastUpdated": "2025-05-09T04:32:36.002Z"
+    },
+    "c1c204ba-4f70-46d0-866a-c5043d8ec5ae": {
+      "id": "c1c204ba-4f70-46d0-866a-c5043d8ec5ae",
+      "sourceId": "b9f16d35-69f1-4c43-9292-a0a7849a20e1",
+      "targetId": "71b9b7e3-9b6f-4b13-aff8-030e5ad81fb0",
+      "type": "integrates_with",
+      "strength": 0.9,
+      "attributes": {},
+      "created": "2025-05-09T04:32:36.002Z",
+      "lastUpdated": "2025-05-09T04:32:36.002Z"
+    },
+    "0d8ed8b4-832b-44c0-afaa-e736139150b5": {
+      "id": "0d8ed8b4-832b-44c0-afaa-e736139150b5",
+      "sourceId": "b9f16d35-69f1-4c43-9292-a0a7849a20e1",
+      "targetId": "095422a4-a74f-4755-b7a2-d9bfa51357dc",
+      "type": "integrates_with",
+      "strength": 0.9,
+      "attributes": {},
+      "created": "2025-05-09T04:32:36.002Z",
+      "lastUpdated": "2025-05-09T04:32:36.002Z"
+    }
+  },
   "metadata": {
-    "lastUpdated": "2025-05-09T03:50:50.051Z",
+    "lastUpdated": "2025-05-09T04:32:36.002Z",
     "version": "1.0.0"
   }
 }
