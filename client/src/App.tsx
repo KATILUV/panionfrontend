@@ -22,7 +22,7 @@ import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
 import MarketplaceAgent from "./components/agents/MarketplaceAgent";
 import BrowserAgent from "./components/agents/BrowserAgent";
-import { StatusExample } from "./components/agents/StatusExample";
+// StatusExample removed in the code audit
 import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
 import PanionChatAgent from "./components/agents/PanionChatAgent";
 import CollaborationAgent from "./components/agents/CollaborationAgent";
