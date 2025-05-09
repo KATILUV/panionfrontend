@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as memory from './memory';
 import * as knowledgeGraph from './knowledge-graph';
 import OpenAI from 'openai';
+import { ChatCompletionMessageParam } from 'openai/resources';
 import { taskManager } from './autonomous-agent';
 import { getStrategicPlan, StrategicPlan } from './strategic-planner';
 import { handleAnthropicChatRequest } from './anthropic';
@@ -427,7 +428,7 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
       // Filter out 'web_research' from capabilities unless explicitly requested
       // to prevent automatic online mode triggering
       const filteredCapabilities = detectedCapabilities.filter(
-        cap => cap !== 'web_research' || messageContent.toLowerCase().includes('search online') || 
+        (cap: string) => cap !== 'web_research' || messageContent.toLowerCase().includes('search online') || 
         messageContent.toLowerCase().includes('look online') ||
         messageContent.toLowerCase().includes('search the web') ||
         messageContent.toLowerCase().includes('find online')
@@ -521,7 +522,7 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
     // Strategic plan if available
     if (strategicPlan) {
       enhancedThinking += `Strategic plan:\n${strategicPlan.planDescription}\n`;
-      enhancedThinking += `Steps:\n${strategicPlan.steps.map((step, index) => 
+      enhancedThinking += `Steps:\n${strategicPlan.steps.map((step: any, index: number) => 
         `${index+1}. ${step.description}`).join('\n')}\n\n`;
     }
     
@@ -669,7 +670,7 @@ async function performPreRequestReflection(
           8. Whether knowledge from the knowledge graph should be applied
           
           Be concise but thorough. Your analysis helps Panion respond intelligently.`
-        },
+        } as ChatCompletionMessageParam,
         {
           role: "user",
           content: `Recent conversation history:
@@ -679,8 +680,8 @@ async function performPreRequestReflection(
           ${knowledgeInsights}
           
           Analyze this message comprehensively:`
-        }
-      ],
+        } as ChatCompletionMessageParam
+      ] as ChatCompletionMessageParam[],
       temperature: 0.7,
       max_tokens: 500
     });
@@ -748,7 +749,7 @@ async function performPostResponseReflection(
           5. How the response could be improved in the future
           
           Be honest but constructive. Your feedback helps Panion improve.`
-        },
+        } as ChatCompletionMessageParam,
         {
           role: "user",
           content: `Pre-request analysis:
@@ -759,8 +760,8 @@ async function performPostResponseReflection(
           Panion's response: "${response}"
           
           Evaluate this response:`
-        }
-      ],
+        } as ChatCompletionMessageParam
+      ] as ChatCompletionMessageParam[],
       temperature: 0.7,
       max_tokens: 500
     });
@@ -823,15 +824,15 @@ async function performMetaReflection(sessionId: string): Promise<void> {
           4. Potential new capabilities that should be developed
           
           This meta-level analysis helps Panion evolve its capabilities over time.`
-        },
+        } as ChatCompletionMessageParam,
         {
           role: "user",
           content: `Recent reflections from session ${sessionId}:
           ${formattedReflections}
           
           Perform a meta-analysis across these reflections:`
-        }
-      ],
+        } as ChatCompletionMessageParam
+      ] as ChatCompletionMessageParam[],
       temperature: 0.7,
       max_tokens: 500
     });
@@ -897,7 +898,7 @@ async function generateFallbackResponse(
     // Add strategic plan if available
     if (strategicPlan) {
       systemMessage += `\n\nStrategic plan for this request:\n${strategicPlan.planDescription}\n`;
-      systemMessage += `Steps:\n${strategicPlan.steps.map((step, index) => 
+      systemMessage += `Steps:\n${strategicPlan.steps.map((step: any, index: number) => 
         `${index+1}. ${step.description}`).join('\n')}`;
     }
     
@@ -948,10 +949,13 @@ async function generateFallbackResponse(
     }
     
     // Create messages array for the OpenAI API call
-    const messages = [
-      { role: 'system', content: systemMessage },
-      ...formattedMessages,
-      { role: 'user', content: message }
+    const messages: ChatCompletionMessageParam[] = [
+      { role: 'system', content: systemMessage } as ChatCompletionMessageParam,
+      ...formattedMessages.map(msg => ({ 
+        role: msg.role as 'user' | 'assistant' | 'system', 
+        content: msg.content 
+      } as ChatCompletionMessageParam)),
+      { role: 'user', content: message } as ChatCompletionMessageParam
     ];
     
     // Generate response using OpenAI
