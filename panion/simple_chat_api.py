@@ -503,7 +503,7 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                             thinking += f"Detected capabilities: {', '.join(capabilities)}\n\n"
                             thinking += f"Location detected: {location}\n\n"
                             thinking += f"Created background task: {task_id}\n\n"
-                            thinking += "Delegating to Daddy Data agent which has business_research, web_research, and contact_finder capabilities.\n\n"
+                            thinking += "Delegating to Daddy Data agent which has business_research, data_collection, and contact_finder capabilities.\n\n"
                             thinking += "Task is now running in the background and will continue even if the user disconnects."
                         else:
                             response = "I'd be happy to help you find smoke shop data. Could you please specify which city or location you're interested in?"
@@ -534,23 +534,44 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     elif capabilities:
                         capability_responses = {
                             "data_analysis": "I'm analyzing the data you provided. I'll extract key insights and prepare visualizations as needed.",
-                            "web_research": "I'm researching this topic online to gather the most relevant and up-to-date information for you.",
                             "business_research": "I'm gathering business information and market data related to your query.",
                             "contact_finder": "I'm searching for contact information and will compile a structured database for you."
                         }
                         
-                        # Check if we match any capabilities
-                        match_found = False
-                        for cap in capabilities:
-                            if cap in capability_responses:
-                                response = capability_responses[cap]
-                                thinking = f"Using capability: {cap} to process your request."
-                                match_found = True
-                                break
-                                
-                        if not match_found:
-                            response = f"I'm working on your request that requires these capabilities: {', '.join(capabilities)}. I'll provide a detailed response shortly."
-                            thinking = f"Processing request with capabilities: {', '.join(capabilities)}"
+                        # Check for web_research capability - only use if explicitly asked for online searching
+                        # Look for explicit indicators that user wants online research
+                        explicitly_wants_web_research = (
+                            "search online" in content.lower() or 
+                            "find online" in content.lower() or
+                            "search the web" in content.lower() or
+                            "look online" in content.lower() or
+                            "find on the internet" in content.lower() or
+                            "current information" in content.lower() or
+                            "latest news" in content.lower()
+                        )
+                        
+                        if "web_research" in capabilities and explicitly_wants_web_research:
+                            response = "I'm researching this topic online to gather the most relevant and up-to-date information for you."
+                            thinking = "Using capability: web_research to process your request."
+                        else:
+                            # Check if we match any other capabilities
+                            match_found = False
+                            for cap in capabilities:
+                                # Skip web_research unless explicitly requested
+                                if cap == "web_research" and not explicitly_wants_web_research:
+                                    continue
+                                    
+                                if cap in capability_responses:
+                                    response = capability_responses[cap]
+                                    thinking = f"Using capability: {cap} to process your request."
+                                    match_found = True
+                                    break
+                                    
+                            if not match_found:
+                                # Filter out web_research from the displayed capabilities unless explicitly requested
+                                displayed_caps = [c for c in capabilities if c != "web_research" or explicitly_wants_web_research]
+                                response = f"I'm working on your request that requires these capabilities: {', '.join(displayed_caps)}. I'll provide a detailed response shortly."
+                                thinking = f"Processing request with capabilities: {', '.join(displayed_caps)}"
                             
                     # Handle web scraping requests
                     elif re.search(r"(scrape|find|get|collect|search).*(business|store|restaurant|shop|company)", content.lower()) or \
