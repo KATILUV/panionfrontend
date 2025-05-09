@@ -9,13 +9,13 @@ import { AgentStatus } from './AgentStatus';
 import { useAgentStore, Agent } from '../../state/agentStore';
 import { Spinner } from '@/components/ui/spinner';
 import { useIntelligence } from '@/hooks/use-intelligence';
+import { useDebate } from '@/hooks/use-debate';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import BusinessResultsSheet, { BusinessData } from '../BusinessResultsSheet';
-import { getQuickDebate, extractResponseFromDebate } from '@/services/debateService';
 
 interface ChatMessage {
   id: string;
@@ -1493,6 +1493,10 @@ const PanionChatAgent: React.FC = () => {
         };
       } else {
         // Use standard mode with enhanced multi-agent debate for complex questions
+        let useDebateSystem = false;
+        let debateResponseContent = '';
+        let debateThinkingContent = '';
+        
         if (isComplexQuestion(inputValue)) {
           setProcessingStage("Using multi-agent debate for enhanced analysis...");
           
@@ -1504,26 +1508,32 @@ const PanionChatAgent: React.FC = () => {
             const debateResult = await getQuickDebate(inputValue, recentMessages);
             
             // Extract the response from the debate result
-            responseContent = extractResponseFromDebate(debateResult);
+            debateResponseContent = extractResponseFromDebate(debateResult);
 
             // Create thinking content showing the insights from the debate
-            thinkingContent = "Enhanced response using multi-agent debate system:\n\n";
-            thinkingContent += `Confidence: ${Math.round(debateResult.confidence * 100)}%\n\n`;
-            thinkingContent += "Key insights from specialized agents:\n";
+            debateThinkingContent = "Enhanced response using multi-agent debate system:\n\n";
+            debateThinkingContent += `Confidence: ${Math.round(debateResult.confidence * 100)}%\n\n`;
+            debateThinkingContent += "Key insights from specialized agents:\n";
             if (debateResult.insights && debateResult.insights.length > 0) {
               debateResult.insights.forEach((insight, index) => {
-                thinkingContent += `${index + 1}. ${insight}\n`;
+                debateThinkingContent += `${index + 1}. ${insight}\n`;
               });
             }
             
-            // Skip standard API call since we already have our response
-            skipApiCall = true;
-          } catch (error) {
-            console.error("Error using debate system:", error);
-            // Fall back to standard mode if debate system fails
-            skipApiCall = false;
+            // Successfully used debate system
+            useDebateSystem = true;
+            console.log("Successfully used debate system for complex query");
+          } catch (debateError) {
+            // Log the error but continue with standard API call as fallback
+            console.error("Error using debate system:", debateError);
+            useDebateSystem = false;
           }
         }
+        
+        // Initialize variables to use for response
+        let responseContent = '';
+        let thinkingContent = '';
+        let skipApiCall = false;
         
         // Prepare standard request body (will be used as fallback if debate fails or for simple questions)
         requestBody = {
@@ -1666,6 +1676,10 @@ const PanionChatAgent: React.FC = () => {
         setProcessingStage("Using enhanced multi-agent debate system response...");
         setProcessingProgress(80);
       }
+      
+      // Define data variable that will be used if we didn't skip the API call
+      const data = skipApiCall ? { response: responseContent } : await response.json();
+      
       console.log("Data structure:", Object.keys(data));
       console.log("Response content from API:", data.response);
       
