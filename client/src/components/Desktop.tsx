@@ -265,14 +265,33 @@ const Desktop: React.FC = () => {
       localStorage.removeItem('panion-taskbar-store');
       console.log("Cleared taskbar store from localStorage");
       
-      // Reset taskbar to defaults
+      // Reset taskbar to defaults using the store we imported
       const taskbarStore = useTaskbarStore.getState();
-      taskbarStore.resetTaskbar();
+      if (taskbarStore && taskbarStore.resetTaskbar) {
+        taskbarStore.resetTaskbar();
+      } else {
+        console.error("Failed to get taskbarStore - direct approach");
+        // Try a direct approach if the store is unavailable
+        try {
+          localStorage.removeItem('panion-taskbar-store');
+          console.log("Manually cleared taskbar store");
+        } catch (err) {
+          console.error("Failed manual reset:", err);
+        }
+      }
       
       // Verify the reset worked
       setTimeout(() => {
-        const currentPinned = useTaskbarStore.getState().pinnedAgents;
-        console.log("After resetting taskbar, pinned agents:", currentPinned);
+        try {
+          const taskbarState = useTaskbarStore.getState();
+          if (taskbarState && taskbarState.pinnedAgents) {
+            console.log("After resetting taskbar, pinned agents:", taskbarState.pinnedAgents);
+          } else {
+            console.log("Could not verify taskbar reset - store may be unavailable");
+          }
+        } catch (err) {
+          console.error("Error checking taskbar state:", err);
+        }
       }, 100);
       
       log.action('Taskbar reset to factory defaults');
