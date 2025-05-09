@@ -27,25 +27,21 @@ class DaddyDataAgent(BasePlugin):
     
     def __init__(self, config_path: str = "config/daddy_data_config.yaml"):
         """Initialize the Daddy Data Agent with configuration."""
-        metadata = PluginMetadata(
-            id="daddy_data_agent",
+        super().__init__(
             name="Daddy Data",
-            description="Specialized agent for deep web research, data verification, and organization",
             version="1.0.0",
+            description="Specialized agent for deep web research, data verification, and organization",
             author="Panion Team",
-            type="data",
-            capabilities=[
+            tags=[
                 "web_scraping", 
                 "data_verification", 
                 "data_cleaning", 
                 "data_organization",
-                "excel_generation"
+                "excel_generation",
+                "data"
             ],
-            parameters={},
-            dependencies=[],
-            config={}
+            dependencies=["bs4", "requests"]
         )
-        super().__init__(metadata)
         self.config = self._load_config(config_path)
         self.active_tasks = {}
         self.data_cache = {}
