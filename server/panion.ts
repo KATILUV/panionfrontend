@@ -383,8 +383,31 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
 // Proxy endpoint for Panion API - get agents
 router.get('/api/panion/agents', checkPanionAPIMiddleware, async (_req: Request, res: Response) => {
   try {
-    const response = await axios.get(`${PANION_API_URL}/agents`);
-    res.json(response.data);
+    // Use the optimized bridge for communication
+    const startTime = Date.now();
+    
+    try {
+      // Use bridge for optimized communication
+      const data = await panionBridge.request('/agents');
+      
+      // Add timing information
+      const requestDuration = Date.now() - startTime;
+      log(`Agents request processed in ${requestDuration}ms via bridge`, 'panion-perf');
+      
+      res.json(data);
+    } catch (bridgeError) {
+      // Log error but fall back to HTTP
+      log(`Bridge communication failed for agents, falling back to HTTP: ${bridgeError}`, 'panion-error');
+      
+      // Fall back to direct HTTP request
+      const response = await axios.get(`${PANION_API_URL}/agents`);
+      
+      // Add timing information
+      const requestDuration = Date.now() - startTime;
+      log(`Agents request processed in ${requestDuration}ms via HTTP fallback`, 'panion-perf');
+      
+      res.json(response.data);
+    }
   } catch (error) {
     log(`Error getting panion agents: ${error}`, 'panion');
     res.status(500).json({ 
@@ -675,41 +698,104 @@ router.post('/api/panion/strategic', checkPanionAPIMiddleware, async (req: Reque
     
     log(`Strategic operation request: ${goal}`, 'panion');
     
-    // Execute strategic operation - this is handled via the chat API
+    // Start request timing
+    const requestStartTime = Date.now();
+    
     // Extract capabilities from the request parameters or use a default set
     const userCapabilities = parameters?.capabilities || [];
+    const sessionId = parameters?.sessionId || 'default-session';
     
-    // Only include capabilities that are explicitly needed, avoiding triggering web_research by default
-    const chatPayload = {
-      session_id: parameters?.sessionId || 'default-session',
-      content: goal, // The goal statement is sent as chat content
-      metadata: {
-        hasRequiredCapabilities: true,
-        // Don't include web_research by default, let the system detect if it's needed
-        capabilities: userCapabilities.length > 0 ? userCapabilities : ['strategic_thinking', 'self_reflection'],
-        parameters: parameters || {},
-        client: 'frontend'
-      }
-    };
+    // Add the strategic goal to conversation memory
+    await conversationMemory.addMessage(sessionId, 'user', goal);
     
-    const response = await axios.post(`${PANION_API_URL}/chat`, chatPayload);
+    // Get relevant conversation context
+    const conversationContext = await conversationMemory.getRelevantContext(
+      sessionId, 
+      goal
+    );
     
-    // Extract operation ID from the response if available
-    // Check both response and message fields since the API can return either format
-    const responseText = response.data.response || response.data.message || '';
-    const operationIdMatch = responseText.match(/Operation ID: (op_\d+)/);
-    const operationId = operationIdMatch ? operationIdMatch[1] : null;
-    
-    // Ensure we have a consistent message format
-    const responseMessage = response.data.response || response.data.message || 'Strategic operation initiated';
-    
-    return res.json({
-      status: 'initiated',
-      message: responseMessage,
-      response: responseMessage, // Add response field for consistency
-      operation_id: operationId,
-      thinking: response.data.thinking
-    });
+    try {
+      // Use the bridge to communicate with Panion API
+      const responseData = await panionBridge.request('/chat', {
+        content: goal,
+        session_id: sessionId,
+        context: conversationContext,
+        metadata: {
+          hasRequiredCapabilities: true,
+          // Don't include web_research by default, let the system detect if it's needed
+          capabilities: userCapabilities.length > 0 ? userCapabilities : ['strategic_thinking', 'self_reflection'],
+          parameters: parameters || {},
+          client: 'frontend',
+          requestedAt: new Date().toISOString()
+        }
+      });
+      
+      // Add timing information
+      const requestDuration = Date.now() - requestStartTime;
+      log(`Strategic operation processed in ${requestDuration}ms via bridge`, 'panion-perf');
+      
+      // Extract operation ID from the response if available
+      // Check both response and message fields for the operation ID
+      const responseText = responseData.response || responseData.message || '';
+      const operationIdMatch = responseText.match(/Operation ID: (op_\d+)/);
+      const operationId = operationIdMatch ? operationIdMatch[1] : `op_${Date.now()}`;
+      
+      // Ensure we have a consistent message format
+      const responseMessage = responseData.response || responseData.message || 'Strategic operation initiated';
+      
+      // Add the assistant response to conversation memory
+      await conversationMemory.addMessage(sessionId, 'assistant', responseMessage);
+      
+      return res.json({
+        status: 'initiated',
+        message: responseMessage,
+        response: responseMessage, // Add response field for consistency
+        operation_id: operationId,
+        thinking: responseData.thinking
+      });
+    } catch (bridgeError) {
+      // Log error but fall back to HTTP
+      log(`Bridge communication failed for strategic operation, falling back to HTTP: ${bridgeError}`, 'panion-error');
+      
+      // Fall back to direct HTTP request
+      const chatPayload = {
+        session_id: sessionId,
+        content: goal, // The goal statement is sent as chat content
+        metadata: {
+          hasRequiredCapabilities: true,
+          // Don't include web_research by default, let the system detect if it's needed
+          capabilities: userCapabilities.length > 0 ? userCapabilities : ['strategic_thinking', 'self_reflection'],
+          parameters: parameters || {},
+          client: 'frontend'
+        }
+      };
+      
+      const response = await axios.post(`${PANION_API_URL}/chat`, chatPayload);
+      
+      // Add timing information
+      const requestDuration = Date.now() - requestStartTime;
+      log(`Strategic operation processed in ${requestDuration}ms via HTTP fallback`, 'panion-perf');
+      
+      // Extract operation ID from the response if available
+      // Check both response and message fields for the operation ID
+      const responseText = response.data.response || response.data.message || '';
+      const operationIdMatch = responseText.match(/Operation ID: (op_\d+)/);
+      const operationId = operationIdMatch ? operationIdMatch[1] : `op_${Date.now()}`;
+      
+      // Ensure we have a consistent message format
+      const responseMessage = response.data.response || response.data.message || 'Strategic operation initiated';
+      
+      // Add the assistant response to conversation memory
+      await conversationMemory.addMessage(sessionId, 'assistant', responseMessage);
+      
+      return res.json({
+        status: 'initiated',
+        message: responseMessage,
+        response: responseMessage, // Add response field for consistency
+        operation_id: operationId,
+        thinking: response.data.thinking
+      });
+    }
   } catch (error) {
     log(`Strategic operation error: ${error}`, 'panion');
     res.status(500).json({ 

@@ -12,6 +12,10 @@ import axios from 'axios';
 const PANION_API_PORT = process.env.PANION_API_PORT || 8000;
 const PANION_API_URL = `http://localhost:${PANION_API_PORT}`;
 
+// Set to false to disable WebSocket connection attempts after repeated failures
+// Will be useful until Python side implements WebSockets
+const ENABLE_WEBSOCKET = false;
+
 // Request tracking
 interface PendingRequest {
   id: string;
@@ -43,8 +47,12 @@ class PanionBridge {
   };
   
   constructor() {
-    // Initialize with HTTP fallback (will try WebSocket later)
-    this.initWebSocket();
+    // Initialize with HTTP fallback (will try WebSocket later if enabled)
+    if (ENABLE_WEBSOCKET) {
+      this.initWebSocket();
+    } else {
+      log('WebSocket connections disabled, using HTTP only', 'panion-bridge');
+    }
     
     // Clean up old requests periodically
     setInterval(() => this.cleanupStaleRequests(), 30000);
@@ -57,6 +65,10 @@ class PanionBridge {
    * Initialize WebSocket connection to Python service
    */
   private initWebSocket(): void {
+    if (!ENABLE_WEBSOCKET) {
+      return; // Skip WebSocket initialization if disabled
+    }
+    
     // Close existing connection if any
     if (this.ws) {
       try {
@@ -210,8 +222,8 @@ class PanionBridge {
     const batchSize = this.requestQueue.length;
     this.stats.batchedRequests += batchSize;
     
-    // If WebSocket is connected, send via WebSocket
-    if (this.connected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+    // If WebSocket is enabled and connected, send via WebSocket
+    if (ENABLE_WEBSOCKET && this.connected && this.ws && this.ws.readyState === WebSocket.OPEN) {
       // Process all queued requests at once
       const batch = this.requestQueue.map(item => {
         const requestId = uuidv4();
