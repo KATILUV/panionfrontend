@@ -7,7 +7,8 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-from panion.core.plugin.base import BasePlugin, PluginMetadata, PluginResult
+from panion.core.plugin.base import BasePlugin
+from panion.core.plugin.plugin_base import PluginResult
 from panion.core.plugin.interfaces import PluginState
 
 class EchoAgent(BasePlugin):

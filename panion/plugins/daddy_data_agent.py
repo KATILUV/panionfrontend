@@ -17,7 +17,8 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-from panion.core.plugin.base import BasePlugin, PluginMetadata, PluginResult
+from panion.core.plugin.base import BasePlugin
+from panion.core.plugin.plugin_base import PluginResult
 
 class DaddyDataAgent(BasePlugin):
     """
