@@ -119,18 +119,24 @@ export async function extractCapabilities(message: string): Promise<string[]> {
   // Early exit for very short messages (likely greetings) - optimization
   if (normalizedMessage.length < 5) {
     log(`Extremely short message detected, treating as basic conversation`, 'capability-detection');
+    // Cache this result to avoid future processing
+    saveToCapabilityCache(normalizedMessage, []);
     return [];
   }
   
   // For basic conversational messages, don't trigger any special capabilities
   if (isBasicConversation(normalizedMessage)) {
     log(`Basic conversational message detected, no special capabilities needed`, 'capability-detection');
+    // Save to cache for future fast matching
+    saveToCapabilityCache(normalizedMessage, []);
     return [];
   }
   
   // For messages about the system's own capabilities, use self-reflection only
   if (isCapabilityQuestion(normalizedMessage)) {
     log(`System capability question detected, using self_reflection only`, 'capability-detection');
+    // Save to cache for future fast matching
+    saveToCapabilityCache(normalizedMessage, ['self_reflection']);
     return ['self_reflection'];
   }
   
