@@ -1,13 +1,13 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import ClaraOrb from '../components/ClaraOrb';
-import ChatBubble from '../components/ChatBubble';
-import ChatInput from '../components/ChatInput';
+import { ChatMessageComponent } from '@/components/chat/ChatMessage';
+import { ChatInput } from '@/components/chat/ChatInput';
 import TypingIndicator from '../components/TypingIndicator';
 import RotatingTagline from '../components/RotatingTagline';
 import { ErrorMessage } from '../components/ui/error-message';
 import { useChat } from '../hooks/useChat';
 import { useThemeStore } from '@/state/themeStore';
-import { Message } from '../types/chat';
+import { ChatMessage } from '@/types/chat';
 
 const ChatPage: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
@@ -120,10 +120,12 @@ const ChatPage: React.FC = () => {
             </div>
           ) : (
             <>
-              {messages.map((message: Message, index: number) => (
-                <ChatBubble 
+              {messages.map((message: ChatMessage, index: number) => (
+                <ChatMessageComponent 
                   key={index} 
-                  message={message} 
+                  message={message}
+                  showThinking={false}
+                  toggleThinking={() => {}}
                 />
               ))}
               {isLoading && <TypingIndicator />}

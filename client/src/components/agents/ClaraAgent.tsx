@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 const ClaraAgent: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
   const accent = useThemeStore((state) => state.accent);
+  const [message, setMessage] = useState<string>('');
   
   // Track Clara's status
   const [status, setStatus] = useState<AgentStatusType>(messages.length > 0 ? "active" : "idle");
@@ -129,7 +130,10 @@ const ClaraAgent: React.FC = () => {
             <ChatInput 
               value={message}
               onChange={setMessage}
-              onSubmit={() => handleSendMessage(message)}
+              onSubmit={() => {
+                handleSendMessage(message);
+                setMessage('');
+              }}
               isLoading={isLoading}
               placeholder="Type a message to Clara..."
             />
