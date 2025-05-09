@@ -171,7 +171,7 @@ export const usePanionChat = ({
           };
         } else {
           requestBody = {
-            message: userInput,
+            content: userInput,
             sessionId,
             capabilities: requiredCapabilities,
           };
