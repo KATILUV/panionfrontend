@@ -8,46 +8,129 @@ import { taskManager } from './autonomous-agent';
 import { getStrategicPlan, StrategicPlan } from './strategic-planner';
 import { handleAnthropicChatRequest } from './anthropic';
 
-// Simple capability extraction function - will be implemented in full later
-async function extractCapabilities(message: string): Promise<string[]> {
+/**
+ * Advanced capability extraction using AI and keyword detection
+ * Determines which capabilities are needed to respond to a user message
+ */
+async function extractCapabilities(message: string, sessionId: string = 'default'): Promise<string[]> {
+  try {
+    // First try the OpenAI-based capability detection for more accurate results
+    const aiDetectedCapabilities = await extractCapabilitiesWithAI(message);
+    
+    if (aiDetectedCapabilities.length > 0) {
+      return aiDetectedCapabilities;
+    }
+  } catch (error) {
+    // If AI detection fails, fall back to keyword-based detection
+    log(`AI capability detection failed, falling back to keyword detection: ${error}`, 'panion');
+  }
+
+  // Fallback to keyword-based capability detection
   const lowercaseMessage = message.toLowerCase();
   const capabilities: string[] = [];
   
-  // Basic pattern matching for capabilities
-  if (lowercaseMessage.includes('search') || lowercaseMessage.includes('find') || lowercaseMessage.includes('locate')) {
-    capabilities.push('search');
+  // Enhanced pattern matching for capabilities - more comprehensive keyword sets
+  const capabilityPatterns = {
+    'search': ['search', 'find', 'locate', 'look up', 'discover', 'where is', 'how to find'],
+    'data_analysis': ['analyze', 'data', 'statistics', 'trends', 'patterns', 'metrics', 'numbers', 'graph', 'chart'],
+    'planning': ['plan', 'steps', 'strategy', 'organize', 'schedule', 'procedure', 'process', 'roadmap'],
+    'creative_writing': ['creative', 'write', 'content', 'story', 'blog', 'article', 'essay', 'summarize'],
+    'coding': ['code', 'program', 'develop', 'script', 'function', 'class', 'api', 'algorithm'],
+    'visual_processing': ['image', 'picture', 'photo', 'visualization', 'diagram', 'draw', 'sketch'],
+    'memory_recall': ['remember', 'recall', 'previous', 'history', 'earlier', 'before', 'past conversation'],
+    'coordination': ['coordinate', 'team', 'collaborate', 'assign', 'delegate', 'manage', 'organize people'],
+    'business_research': ['business', 'company', 'contact', 'owner', 'industry', 'competitor', 'market'],
+    'strategic_thinking': ['strategic', 'vision', 'direction', 'goal', 'objective', 'mission', 'big picture'],
+    'deep_learning': ['machine learning', 'deep learning', 'neural network', 'ai model', 'training data'],
+    'legal_analysis': ['legal', 'law', 'regulation', 'compliance', 'contract', 'terms', 'agreement', 'policy'],
+  };
+  
+  // Check for each capability
+  Object.entries(capabilityPatterns).forEach(([capability, keywords]) => {
+    if (keywords.some(keyword => lowercaseMessage.includes(keyword))) {
+      capabilities.push(capability);
+    }
+  });
+  
+  // Detect specialized capabilities based on business context
+  if (lowercaseMessage.includes('smoke shop') || 
+      lowercaseMessage.includes('smokeshop') || 
+      lowercaseMessage.includes('dispensary')) {
+    capabilities.push('business_research');
+    capabilities.push('contact_finder');
   }
   
-  if (lowercaseMessage.includes('analyze') || lowercaseMessage.includes('data') || lowercaseMessage.includes('statistics')) {
-    capabilities.push('data_analysis');
-  }
-  
-  if (lowercaseMessage.includes('plan') || lowercaseMessage.includes('steps') || lowercaseMessage.includes('strategy')) {
-    capabilities.push('planning');
-  }
-  
-  if (lowercaseMessage.includes('creative') || lowercaseMessage.includes('write') || lowercaseMessage.includes('content')) {
-    capabilities.push('creative_writing');
-  }
-  
-  if (lowercaseMessage.includes('code') || lowercaseMessage.includes('program') || lowercaseMessage.includes('develop')) {
-    capabilities.push('coding');
-  }
-  
-  if (lowercaseMessage.includes('image') || lowercaseMessage.includes('picture') || lowercaseMessage.includes('photo')) {
-    capabilities.push('visual_processing');
-  }
-  
-  if (lowercaseMessage.includes('remember') || lowercaseMessage.includes('recall') || lowercaseMessage.includes('previous')) {
-    capabilities.push('memory_recall');
-  }
-  
-  if (lowercaseMessage.includes('coordinate') || lowercaseMessage.includes('team') || lowercaseMessage.includes('collaborate')) {
-    capabilities.push('coordination');
+  if (lowercaseMessage.includes('contact info') || 
+      lowercaseMessage.includes('contact detail') || 
+      lowercaseMessage.includes('email') || 
+      lowercaseMessage.includes('phone number') ||
+      lowercaseMessage.includes('owner') ||
+      lowercaseMessage.includes('manager')) {
+    capabilities.push('contact_finder');
   }
   
   // Return detected capabilities, or an empty array if none are detected
   return capabilities;
+}
+
+/**
+ * Use OpenAI to detect required capabilities from a user message
+ */
+async function extractCapabilitiesWithAI(message: string): Promise<string[]> {
+  try {
+    // Create a complete list of available capabilities
+    const availableCapabilities = [
+      'search', 'data_analysis', 'planning', 'creative_writing', 'coding',
+      'visual_processing', 'memory_recall', 'coordination', 'business_research',
+      'strategic_thinking', 'deep_learning', 'legal_analysis', 'contact_finder',
+      'web_research', 'data_visualization', 'document_processing'
+    ];
+    
+    // Ask OpenAI to determine which capabilities are needed
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a capability detector for an AI agent system. Your job is to analyze a user message and determine which capabilities are needed to address it properly.
+          
+          Available capabilities:
+          ${availableCapabilities.map(c => `- ${c}`).join('\n')}
+          
+          Respond with a JSON array containing only the capabilities needed. Be precise and minimal - only include capabilities that are directly relevant to the request.`
+        },
+        {
+          role: "user",
+          content: `User message: "${message}"`
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.1
+    });
+    
+    // Extract capabilities from response
+    try {
+      const content = response.choices[0].message.content;
+      const result = JSON.parse(content);
+      
+      if (result.capabilities && Array.isArray(result.capabilities)) {
+        // Filter to only include valid capabilities from our list
+        return result.capabilities.filter((c: string) => 
+          availableCapabilities.includes(c)
+        );
+      } else {
+        // In case the format isn't exactly what we expected
+        log(`Unexpected AI capability response format: ${content}`, 'panion');
+        return [];
+      }
+    } catch (parseError) {
+      log(`Error parsing AI capability response: ${parseError}`, 'panion');
+      return [];
+    }
+  } catch (error) {
+    log(`Error in AI capability detection: ${error}`, 'panion');
+    throw error;
+  }
 }
 
 // Initialize OpenAI client for memory operations
@@ -132,6 +215,21 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
       messageContent.toLowerCase().includes('strategy') ||
       detectedCapabilities.includes('planning') ||
       detectedCapabilities.includes('strategic_thinking');
+      
+    // 2.5 DETERMINE IF TASK SHOULD BE DELEGATED TO AUTONOMOUS AGENT
+    const needsAutonomousAgent = 
+      preReflection.includes('lengthy task') ||
+      preReflection.includes('should be automated') ||
+      preReflection.includes('needs background processing') ||
+      preReflection.includes('requires continuous monitoring') ||
+      preReflection.includes('data collection task') ||
+      preReflection.includes('web scraping') ||
+      (detectedCapabilities.includes('business_research') && 
+       (messageContent.toLowerCase().includes('collect') || 
+        messageContent.toLowerCase().includes('find all') ||
+        messageContent.toLowerCase().includes('gather') || 
+        messageContent.toLowerCase().includes('scrape'))) ||
+      (detectedCapabilities.includes('contact_finder') && messageContent.toLowerCase().includes('all'));
     
     // 3. RETRIEVE RELEVANT MEMORY CONTEXT
     const relevantMemories = await memory.getRelevantMemories(messageContent);
@@ -155,6 +253,56 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
       );
       
       log(`Generated strategic plan for request: ${JSON.stringify(strategicPlan)}`, 'panion');
+    }
+    
+    // 4.5 CREATE AUTONOMOUS AGENT TASK (if needed)
+    let autonomousAgentTaskId: string | null = null;
+    if (needsAutonomousAgent) {
+      try {
+        // Create a descriptive task name based on the request
+        const taskName = messageContent.length > 50 
+          ? messageContent.substring(0, 50) + '...' 
+          : messageContent;
+        
+        // Prepare steps based on the strategic plan if available
+        const steps = strategicPlan ? strategicPlan.steps.map(step => step.description) : [];
+        
+        // Create the task with the autonomous agent
+        const taskId = `task-${Date.now()}`;
+        
+        const newTask = {
+          id: taskId,
+          agentType: 'data_collection', // Default agent type
+          description: messageContent,
+          status: 'pending' as const,
+          progress: 0,
+          steps: steps.map((stepDesc, index) => ({
+            id: `step-${index}`,
+            description: stepDesc,
+            status: 'pending' as const
+          })),
+          startTime: new Date(),
+          logs: [`Task created based on user request: "${taskName}"`],
+          priority: 'medium' as const,
+          resources: {
+            capabilities: detectedCapabilities.join(','),
+            sessionId
+          }
+        };
+        
+        // Create the task in the task manager
+        taskManager.createTask(taskId, newTask);
+        
+        // Start the task
+        taskManager.startTask(taskId);
+        
+        autonomousAgentTaskId = taskId;
+        
+        log(`Created autonomous agent task ${taskId} for request: ${messageContent}`, 'panion');
+      } catch (error) {
+        log(`Error creating autonomous agent task: ${error}`, 'panion');
+        // Continue with normal processing if task creation fails
+      }
     }
     
     // 5. FORWARD REQUEST TO PANION API WITH ENHANCED CONTEXT
@@ -250,9 +398,30 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
       response.response = response.message;
     }
     
+    // If an autonomous agent task was created, update the response to indicate that
+    if (autonomousAgentTaskId) {
+      // Add task information to the response
+      const originalResponse = response.response;
+      
+      // Create a new response that acknowledges the background task
+      response.response = `I've started working on your request in the background. This complex task will continue running even when we're not actively chatting.
+
+You can track progress on the "Tasks" page or I'll notify you when it's complete. The task ID is: ${autonomousAgentTaskId}
+
+Here's my initial analysis: ${originalResponse}`;
+    }
+    
     // Add memory stats and reflection data
     if (!response.additional_info) {
       response.additional_info = {};
+    }
+    
+    // Add autonomous agent task information if created
+    if (autonomousAgentTaskId) {
+      response.additional_info.autonomousTask = {
+        taskId: autonomousAgentTaskId,
+        status: 'in_progress'
+      };
     }
     
     // Add memory information
@@ -543,6 +712,8 @@ async function generateFallbackResponse(
     // First try using Anthropic if we have an API key
     if (process.env.ANTHROPIC_API_KEY) {
       try {
+        log('Attempting to generate fallback response with Claude...', 'panion');
+        
         // Fix message formatting for Anthropic
         const anthropicMessages = formattedMessages.map(msg => {
           // Ensure roles are strictly 'user' or 'assistant' as required by Anthropic API
@@ -556,25 +727,29 @@ async function generateFallbackResponse(
         // Use Claude for enhanced conversational ability
         const claudeResponse = await handleAnthropicChatRequest(
           message,
-          sessionId,
-          allMessages,
-          systemMessage
+          systemMessage,
+          allMessages
         );
+        
+        log('Successfully generated response with Claude', 'panion');
         
         // Format response to match Panion API format
         return {
-          response: claudeResponse.response,
-          thinking: `Fallback response generated using Claude model.\n\nPre-analysis:\n${preReflection}`,
+          response: claudeResponse,
+          thinking: `Fallback response generated using Claude model.\n\nSystem prompt:\n${systemMessage.substring(0, 200)}...\n\nPre-analysis:\n${preReflection}`,
           model: "claude-3-7-sonnet-20250219",
           additional_info: {
             model: "claude-3-7-sonnet-20250219",
-            fallback: true
+            fallback: true,
+            enhancedResponse: true
           }
         };
       } catch (claudeError) {
         log(`Claude API error, falling back to OpenAI: ${claudeError}`, 'panion');
         // Proceed to OpenAI fallback
       }
+    } else {
+      log('No ANTHROPIC_API_KEY available, using OpenAI for fallback response', 'panion');
     }
     
     // Create messages array for the OpenAI API call
