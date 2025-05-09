@@ -18,7 +18,7 @@ import PanionChatAgent from './agents/PanionChatAgent';
 import DaddyDataAgent from './agents/DaddyDataAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
-import SimpleEmptyStateDashboard from './system/SimpleEmptyStateDashboard';
+import Dashboard from './system/Dashboard';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence } from 'framer-motion';
 import { useScreenSize, useOrientation } from '../hooks/use-mobile';
@@ -296,7 +296,7 @@ const Desktop: React.FC = () => {
 
   // Simple empty dashboard without particle effects
   const EmptyDashboard = () => {
-    return <SimpleEmptyStateDashboard />;
+    return <Dashboard simple={true} />;
   };
 
   return (
