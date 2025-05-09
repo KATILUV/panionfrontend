@@ -30,7 +30,7 @@ import TaskSchedulerAgent from "./components/agents/TaskSchedulerAgent";
 import DaddyDataAgent from "./components/agents/DaddyDataAgent";
 import { useAgentStore } from "./state/agentStore";
 import { useTaskbarStore } from "./state/taskbarStore";
-import ThemeProvider from "./components/common/ThemeProvider";
+import UnifiedThemeProvider from "./components/common/UnifiedThemeProvider";
 
 function Router() {
   return (
@@ -118,7 +118,7 @@ function Router() {
 function App() {
   // AuthProvider is wrapped around the entire application
   return (
-    <ThemeProvider>
+    <UnifiedThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TaskProvider>
@@ -129,7 +129,7 @@ function App() {
           </TaskProvider>
         </AuthProvider>
       </QueryClientProvider>
-    </ThemeProvider>
+    </UnifiedThemeProvider>
   );
 }
 
@@ -355,14 +355,14 @@ function RegisterAgents() {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+      <UnifiedThemeProvider>
         <TooltipProvider>
           <TaskProvider>
             <Toaster />
             <Router />
           </TaskProvider>
         </TooltipProvider>
-      </ThemeProvider>
+      </UnifiedThemeProvider>
     </QueryClientProvider>
   );
 }
