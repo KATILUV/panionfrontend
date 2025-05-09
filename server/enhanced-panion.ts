@@ -8,6 +8,7 @@ import OpenAI from 'openai';
 import { taskManager } from './autonomous-agent';
 import { getStrategicPlan, StrategicPlan } from './strategic-planner';
 import { handleAnthropicChatRequest } from './anthropic';
+import { quickDebate } from './multi-agent-debate';
 
 import { extractCapabilities as detectCapabilities } from './utils/capability-detection';
 
@@ -150,6 +151,18 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
       messageContent.toLowerCase().includes('strategy') ||
       detectedCapabilities.includes('planning') ||
       detectedCapabilities.includes('strategic_thinking');
+    
+    // 2.25 DETERMINE IF MULTI-AGENT DEBATE WOULD BE BENEFICIAL
+    const needsMultiAgentDebate = 
+      preReflection.includes('requires multiple perspectives') ||
+      preReflection.includes('controversial topic') ||
+      preReflection.includes('complex ethical considerations') ||
+      preReflection.includes('would benefit from debate') ||
+      preReflection.includes('different viewpoints needed') ||
+      messageContent.toLowerCase().includes('debate') ||
+      messageContent.toLowerCase().includes('consider different perspectives') ||
+      messageContent.toLowerCase().includes('pros and cons') ||
+      (messageContent.toLowerCase().includes('should') && messageContent.length > 50);
       
     // 2.5 DETERMINE IF TASK SHOULD BE DELEGATED TO AUTONOMOUS AGENT
     const needsAutonomousAgent = 
@@ -253,6 +266,25 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
     };
     
     try {
+      // If multi-agent debate would be beneficial, use it before going to the API
+      if (needsMultiAgentDebate) {
+        log(`Using multi-agent debate for query: "${messageContent}"`, 'panion');
+        
+        // Get conversation history for context
+        const conversationHistory = await memory.getConversationHistory(sessionId);
+        const contextStr = conversationHistory.slice(-SESSION_MEMORY_LIMIT)
+          .map(msg => `${msg.isUser ? 'User' : 'Panion'}: ${msg.content}`)
+          .join('\n');
+        
+        // Conduct a quick debate with multiple perspectives
+        const debateResult = await quickDebate(messageContent, contextStr);
+        
+        log(`Debate completed with ${debateResult.insights.length} insights`, 'panion');
+        
+        // Create enhanced metadata with debate results
+        enhancedMetadata.debateResults = debateResult;
+      }
+      
       // Forward the request to the Panion API with additional context
       response = await axios.post(`${PANION_API_URL}/chat`, {
         content: messageContent,
@@ -261,6 +293,25 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
       });
       
       response = response.data;
+      
+      // If we used a debate, enhance the response with it
+      if (needsMultiAgentDebate && enhancedMetadata.debateResults) {
+        // If the response doesn't have an additional_info field, create it
+        if (!response.additional_info) {
+          response.additional_info = {};
+        }
+        
+        // Add debate results to the response
+        response.additional_info.debate = enhancedMetadata.debateResults;
+        
+        // Enhance the thinking section with debate insights
+        if (response.thinking) {
+          response.thinking += `\n\nMulti-Agent Debate Insights:\n`;
+          response.thinking += enhancedMetadata.debateResults.insights.map((insight: string) => 
+            `- ${insight}`
+          ).join('\n');
+        }
+      }
     } catch (error) {
       // Handle API error - use OpenAI as fallback
       log(`Error from Panion API, using OpenAI fallback: ${error}`, 'panion');

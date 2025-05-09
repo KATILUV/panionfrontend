@@ -23,6 +23,7 @@ import collaborationRoutes from "./routes/collaborationRoutes";
 import daddyDataRoutes from "./routes/daddyDataRoutes";
 import scheduledTaskRoutes from "./routes/scheduledTaskRoutes";
 import knowledgeRoutes from "./routes/knowledgeRoutes";
+import debateRoutes from "./routes/debateRoutes";
 // Import strategic planner functions
 import { 
   createPlan, 
@@ -259,6 +260,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use Task routes
   app.use(taskRoutes);
+
+  // Use Knowledge Graph routes
+  app.use(knowledgeRoutes);
+  
+  // Use Multi-agent Debate routes
+  app.use(debateRoutes);
   
   // Try to start the Panion API
   try {
