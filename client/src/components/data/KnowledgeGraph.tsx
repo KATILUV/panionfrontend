@@ -12,14 +12,14 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
-interface Node {
+export interface Node {
   id: string;
   type: 'business' | 'owner' | 'location' | 'category';
   name: string;
   properties?: Record<string, any>;
 }
 
-interface Link {
+export interface Link {
   source: string;
   target: string;
   type: string;
