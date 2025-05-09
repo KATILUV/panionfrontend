@@ -149,15 +149,18 @@ function RegisterAgents() {
     // Direct reset using the built-in function
     taskbarStore.resetTaskbar();
     
-    // Force open only the Panion agent after a delay to ensure it's properly registered
+    // Only open the Panion agent after a delay to ensure it's properly registered
+    // We'll no longer automatically open any other agents to avoid mobile window pop-ups at the beginning
     setTimeout(() => {
       try {
-        console.log('App: Forcing open Panion agent');
+        console.log('App: Opening only Panion agent');
+        // Only open the main Panion chat agent at startup
         agentStore.openAgent('panion');
+        // All other agents will remain closed until user explicitly opens them
       } catch (err) {
         console.error('App: Error opening Panion agent', err);
       }
-    }, 3000);
+    }, 1000);
     
     // Clara Agent
     const claraIcon = `

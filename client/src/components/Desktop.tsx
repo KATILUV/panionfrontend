@@ -272,20 +272,12 @@ const Desktop: React.FC = () => {
       console.error("Error configuring taskbar:", err);
     }
     
-    // Only open Panion Chat on startup (no split view)
-    setTimeout(() => {
-      try {
-        // Only open the Panion chat agent (no other windows)
-        openAgent('panion');
-        
-        toast({
-          title: "Welcome to Panion",
-          description: "Panion Chat is ready to assist you"
-        });
-      } catch (err) {
-        console.error("Error initializing Panion Chat:", err);
-      }
-    }, 2000); // Delay to ensure everything is loaded
+    // Don't automatically open any windows on startup to prevent mobile pop-ups
+    // The App.tsx RegisterAgents function will handle opening Panion if needed
+    toast({
+      title: "Welcome to Panion",
+      description: "Click on an agent icon in the taskbar to get started"
+    });
     
     log.action('System ready for user interaction');
     
