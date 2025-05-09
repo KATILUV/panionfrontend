@@ -36,6 +36,7 @@ import browserRoutes from "./routes/browserRoutes";
 import taskRoutes from "./routes/taskRoutes";
 import panionRoutes, { startPanionAPI, shutdownPanionAPI } from "./panion";
 import { handleEnhancedChat } from "./enhanced-panion";
+import { handleAnthropicChat, analyzeImageWithClaude } from "./anthropic";
 
 // Configure multer for handling file uploads
 const upload = multer({
@@ -301,6 +302,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Claude (Anthropic) AI chat endpoint
+  app.post('/api/claude/chat', async (req, res) => {
+    try {
+      await handleAnthropicChat(req, res);
+    } catch (error) {
+      console.error('Error in Claude chat:', error);
+      res.status(500).json({ 
+        error: 'Claude API error',
+        message: 'Error processing chat request',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Claude image analysis endpoint
+  app.post('/api/claude/analyze-image', upload.single('image'), async (req: Request & { file?: Express.Multer.File }, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No image file provided' });
+      }
+      
+      // Get prompt if provided or use default
+      const { prompt } = req.body;
+      
+      // Convert buffer to base64
+      const imageBase64 = req.file.buffer.toString('base64');
+      
+      // Analyze image with Claude
+      const analysis = await analyzeImageWithClaude(
+        imageBase64,
+        prompt || "Analyze this image in detail and describe what you see."
+      );
+      
+      // Send back the description
+      res.status(200).json({
+        success: true,
+        response: analysis,
+        model: "claude-3-7-sonnet-20250219"
+      });
+    } catch (error) {
+      console.error('Error analyzing image with Claude:', error);
+      res.status(500).json({
+        error: 'Claude API error',
+        message: 'Error analyzing image',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Upload and analyze image
   app.post('/api/upload-image', upload.single('image'), async (req: Request & { file?: Express.Multer.File }, res) => {
     try {
