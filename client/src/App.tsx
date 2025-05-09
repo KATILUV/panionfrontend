@@ -367,4 +367,12 @@ function RegisterAgents() {
   );
 }
 
-export default App;
+// Call the agent registration from the main App
+function AppWithAgents() {
+  // Register all agents
+  RegisterAgents();
+  
+  return <App />;
+}
+
+export default AppWithAgents;

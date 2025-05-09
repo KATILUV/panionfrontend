@@ -9,10 +9,11 @@ import {
 } from 'lucide-react';
 import RotatingTagline from '@/components/RotatingTagline';
 import { useThemeStore } from '@/state/themeStore';
+import PasswordProtection from '@/components/auth/PasswordProtection';
 
 
 
-const LandingPage: React.FC = () => {
+const LandingPage = () => {
   const [_, setLocation] = useLocation();
   const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
   const featuresRef = useRef<HTMLDivElement>(null);
@@ -193,8 +194,9 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen overflow-auto">
-      {/* Hero Section with Dynamic Theme */}
+    <PasswordProtection>
+      <div className="flex flex-col min-h-screen overflow-auto">
+        {/* Hero Section with Dynamic Theme */}
       <section className={`relative py-16 sm:py-24 md:py-40 bg-gradient-to-br ${getHeroGradient()} ${currentTheme === 'dark' ? 'text-white' : 'text-white'} overflow-hidden`}>
         {/* Particle effect background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -763,6 +765,7 @@ const LandingPage: React.FC = () => {
       
 {/* Footer removed as requested */}
     </div>
+    </PasswordProtection>
   );
 };
 
