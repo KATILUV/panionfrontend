@@ -1,19 +1,18 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ClaraOrb from '../components/ClaraOrb';
-import { ChatMessageComponent } from '@/components/chat/ChatMessage';
-import { ChatInput } from '@/components/chat/ChatInput';
-import TypingIndicator from '../components/TypingIndicator';
+import { ChatInterface } from '@/components/chat/ChatInterface';
 import RotatingTagline from '../components/RotatingTagline';
 import { ErrorMessage } from '../components/ui/error-message';
 import { useChat } from '../hooks/useChat';
 import { useThemeStore } from '@/state/themeStore';
-import { ChatMessage } from '@/types/chat';
+import { ChatMessage, AgentStatusType } from '@/types/chat';
 
 const ChatPage: React.FC = () => {
   const { messages, isLoading, error, sendMessage } = useChat();
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const currentTheme = useThemeStore(state => state.getCurrentTheme());
   const accent = useThemeStore(state => state.accent);
+  const [message, setMessage] = useState("");
 
   // Generate gradient classes based on current theme and accent
   const getGradient = () => {
@@ -73,20 +72,30 @@ const ChatPage: React.FC = () => {
       : 'from-white to-transparent';
   };
 
-  // Scroll to bottom of chat when new messages arrive
+  // Determine the agent status
+  const [agentStatus, setAgentStatus] = useState<AgentStatusType>('idle');
+  
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    if (error) {
+      setAgentStatus('error');
+    } else if (isLoading) {
+      setAgentStatus('thinking');
+    } else if (messages.length > 0) {
+      setAgentStatus('active');
+    } else {
+      setAgentStatus('idle');
     }
-  }, [messages]);
+  }, [isLoading, error, messages.length]);
 
-  const handleSendMessage = (message: string, imageFile?: File | null) => {
-    sendMessage(message, imageFile);
+  // Handle send message (we're using the simplified interface)
+  const handleSendMessage = (text: string) => {
+    sendMessage(text);
+    setMessage('');
   };
 
   return (
     <div className={`h-screen flex flex-col items-center bg-gradient-to-br ${getGradient()}`}>
-      <div className="w-full max-w-2xl flex flex-col h-full">
+      <div className="w-full max-w-2xl flex flex-col h-full p-2">
         {/* Header */}
         <div className="text-center pt-6 mb-2">
           <h1 className={`text-2xl font-semibold ${getTextColor()} mb-1`}>Clara</h1>
@@ -108,32 +117,23 @@ const ChatPage: React.FC = () => {
         {/* Orb */}
         <ClaraOrb isProcessing={isLoading} />
 
-        {/* Chat Messages Container */}
-        <div 
-          ref={chatContainerRef}
-          className={`flex-1 overflow-y-auto pr-2 space-y-2 scrollbar-thin ${getScrollbarColor()}`}
-        >
-          {messages.length === 0 ? (
-            <div className={`flex flex-col items-center justify-center h-full text-center ${getEmptyStateTextColor()} space-y-4`}>
-              <p>Welcome to Clara! How can I assist you today?</p>
-              <p className="text-sm">Ask me anything or share an image with me.</p>
-            </div>
-          ) : (
-            <>
-              {messages.map((message: ChatMessage, index: number) => (
-                <ChatMessageComponent 
-                  key={index} 
-                  message={message}
-                  showThinking={false}
-                  toggleThinking={() => {}}
-                />
-              ))}
-              {isLoading && <TypingIndicator />}
-            </>
-          )}
+        {/* ChatInterface - unified component */}
+        <div className="flex-1 relative">
+          <ChatInterface
+            messages={messages}
+            inputValue={message}
+            setInputValue={setMessage}
+            isLoading={isLoading}
+            agentStatus={agentStatus}
+            sendMessage={handleSendMessage}
+            messagesEndRef={chatContainerRef}
+            title="Clara"
+            subtitle="Personal Assistant"
+            showSettings={false}
+          />
           
-          {error && (
-            <div className="px-4 py-4">
+          {error && !messages.some(m => m.content.includes(error)) && (
+            <div className="absolute bottom-16 left-0 right-0 px-4 py-4 z-10">
               <ErrorMessage
                 type={error.toLowerCase().includes('network') ? 'network' : 
                       error.toLowerCase().includes('timeout') ? 'timeout' :
@@ -145,19 +145,11 @@ const ChatPage: React.FC = () => {
                 message={error}
                 retryFn={() => sendMessage(messages[messages.length - 1]?.content || "")}
                 size="md"
-                variant={error.toLowerCase().includes('retrying') ? 'inline' : 'card'}
-                dismissable={!error.toLowerCase().includes('retrying')}
+                variant="inline"
+                dismissable={true}
               />
             </div>
           )}
-        </div>
-        
-        {/* Chat Input - Fixed at bottom */}
-        <div className={`sticky bottom-0 pb-6 pt-2 bg-gradient-to-t ${getBottomGradient()}`}>
-          <ChatInput 
-            onSendMessage={handleSendMessage}
-            isLoading={isLoading}
-          />
         </div>
       </div>
     </div>
