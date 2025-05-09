@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { taskManager } from './autonomous-agent';
+import { extractCapabilities } from './utils/capability-detection';
 
 // Create router
 const router = Router();
@@ -769,6 +770,40 @@ router.get('/api/panion/capabilities', checkPanionAPIMiddleware, async (_req: Re
     res.status(500).json({ 
       error: 'Panion API error',
       message: 'Error getting available capabilities' 
+    });
+  }
+});
+
+// Detect required capabilities for a message
+router.post('/api/panion/detect-capabilities', async (req: Request, res: Response) => {
+  try {
+    const { message } = req.body;
+    
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ 
+        error: 'Invalid request',
+        message: 'Message content is required and must be a string' 
+      });
+    }
+    
+    log(`Detecting capabilities for message: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`, 'capability-detection');
+    
+    // Use the capability detection utility
+    const capabilities = await extractCapabilities(message);
+    
+    log(`Detected capabilities: ${capabilities.join(', ') || 'none'}`, 'capability-detection');
+    
+    res.json({
+      success: true,
+      capabilities,
+      message: 'Capabilities detected successfully'
+    });
+  } catch (error) {
+    log(`Error detecting capabilities: ${error}`, 'capability-detection');
+    res.status(500).json({ 
+      error: 'Capability detection error',
+      message: 'Error detecting required capabilities',
+      capabilities: [] // Return empty array on error to allow fallback
     });
   }
 });
