@@ -1079,7 +1079,7 @@ router.post('/api/panion/detect-capabilities', async (req: Request, res: Respons
     const startTime = Date.now();
     
     // Get conversation context if available
-    let conversationContext = null;
+    let conversationContext: conversationMemory.ConversationContextResult | null = null;
     try {
       // Temporarily add the message to memory to include in context retrieval
       // This helps get better context but we'll remove it if this is just capability detection
@@ -1119,7 +1119,7 @@ router.post('/api/panion/detect-capabilities', async (req: Request, res: Respons
         detection_time_ms: detectionTime,
         message_length: message.length,
         context_available: conversationContext !== null,
-        has_chat_history: conversationContext?.messages?.length > 0 || false
+        has_chat_history: conversationContext !== null && Array.isArray(conversationContext.messages) && conversationContext.messages.length > 0
       },
       message: 'Capabilities detected successfully'
     });
