@@ -86,7 +86,10 @@ export const usePanionChat = ({
         console.log('FAST PATH DETECTED: Handling simple message locally:', userInput);
         const quickResponse = getSimpleMessageResponse(userInput);
         
-        // Add the response with minimal delay to feel natural
+        // For very simple single-word greetings like "hi", respond immediately with no delay
+        const isSingleWordGreeting = ['hi', 'hello', 'hey', 'hi!', 'hello!', 'hey!'].includes(userInput.trim().toLowerCase());
+        
+        // Add the response with minimal or no delay based on greeting type
         setTimeout(() => {
           const responseMessage = createChatMessage(
             quickResponse, 
@@ -99,7 +102,7 @@ export const usePanionChat = ({
           stopProgress();
           setProcessingProgress(100);
           console.log('FAST PATH COMPLETE: Response generated locally');
-        }, 300); // Reduce delay for faster response
+        }, isSingleWordGreeting ? 0 : 200); // Immediate for single words, slight delay for longer greetings
         
         return;
       }
@@ -165,24 +168,40 @@ export const usePanionChat = ({
         let requiredCapabilities: string[] = [];
         
         try {
-          // Determine required capabilities for the task
-          const capabilitiesResponse = await fetch('/api/panion/detect-capabilities', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message: userInput }),
-          });
+          console.log('Detecting capabilities for:', userInput);
           
-          if (capabilitiesResponse.ok) {
-            const capabilitiesData = await capabilitiesResponse.json();
-            requiredCapabilities = capabilitiesData.capabilities || [];
+          // First determine if we should even try capability detection
+          // Skip for shorter messages to improve performance
+          if (userInput.length < 20) {
+            console.log('Message too short, skipping capability detection');
+            requiredCapabilities = [];
           } else {
-            console.warn('Capability detection returned error status, using empty capabilities');
+            // Determine required capabilities for the task
+            const capabilitiesResponse = await fetch('/api/panion/detect-capabilities', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ message: userInput }),
+              // Add timeout to prevent hanging
+              signal: AbortSignal.timeout(5000)
+            });
+            
+            if (capabilitiesResponse.ok) {
+              const capabilitiesData = await capabilitiesResponse.json();
+              requiredCapabilities = capabilitiesData.capabilities || [];
+              console.log('Successfully detected capabilities:', requiredCapabilities);
+            } else {
+              console.warn('Capability detection returned error status:', capabilitiesResponse.status, capabilitiesResponse.statusText);
+              console.warn('Using empty capabilities as fallback');
+              requiredCapabilities = [];
+            }
           }
         } catch (capabilityError) {
-          console.warn('Capability detection failed, continuing with empty capabilities:', capabilityError);
+          console.warn('Capability detection failed with error:', capabilityError);
+          console.warn('Continuing with empty capabilities as fallback');
           // Continue with empty capabilities
+          requiredCapabilities = [];
         }
         
         console.log('Detected capabilities:', requiredCapabilities);

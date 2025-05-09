@@ -8,26 +8,36 @@ import { ChatMessage } from '../types/chat';
 export const isSimpleMessage = (message: string): boolean => {
   const lowerMessage = message.trim().toLowerCase();
   
-  // Single word greetings
-  if (['hi', 'hello', 'hey', 'sup', 'yo', 'hola', 'howdy', 'greetings'].includes(lowerMessage)) {
+  // Single word greetings - these should absolutely be handled locally
+  if (['hi', 'hello', 'hey', 'sup', 'yo', 'hola', 'howdy', 'greetings', 'hi!', 'hello!', 'hey!'].includes(lowerMessage)) {
+    console.log('Single word greeting detected:', lowerMessage);
     return true;
   }
   
   // Short simple greetings and common phrases
   const simplePatterns = [
-    /^(hi|hey|hello|sup)( there)?( panion)?[!.?]?$/i,
+    /^(hi|hey|hello|sup)( there)?( panion| clara)?[!.?]?$/i,
     /^(good|great) (morning|afternoon|evening|day)[!.?]?$/i,
-    /^how are you( today)?[?]?$/i,
+    /^how are you( today| doing)?[?]?$/i,
     /^what'?s up[?]?$/i,
     /^how'?s it going[?]?$/i,
     /^nice to (meet|see) you[!.?]?$/i,
     /^thanks?( you)?[!.?]?$/i,
     /^who are you[?]?$/i,
     /^what can you do[?]?$/i,
-    /^(could|can) you help( me)?[?]?$/i
+    /^(could|can) you help( me)?[?]?$/i,
+    /^hello( there)?[!.?]?$/i,
+    /^(morning|afternoon|evening)[!.?]?$/i,
+    /^(hi|hey|hello).*panion.*$/i,
+    /^(hi|hey|hello).*clara.*$/i
   ];
   
-  return simplePatterns.some(pattern => pattern.test(lowerMessage));
+  const isPattern = simplePatterns.some(pattern => pattern.test(lowerMessage));
+  if (isPattern) {
+    console.log('Pattern-matched simple greeting:', lowerMessage);
+  }
+  
+  return isPattern;
 };
 
 /**
@@ -38,12 +48,14 @@ export const getSimpleMessageResponse = (message: string): string => {
   const currentHour = new Date().getHours();
   
   // Handle different greeting types
-  if (['hi', 'hello', 'hey', 'sup', 'yo', 'hola', 'howdy', 'greetings'].includes(lowerMessage)) {
+  if (['hi', 'hello', 'hey', 'sup', 'yo', 'hola', 'howdy', 'greetings', 'hi!', 'hello!', 'hey!'].includes(lowerMessage) || 
+      /^(hi|hey|hello).*$/i.test(lowerMessage)) {
     const responses = [
       "Hello! How can I help you today?",
       "Hi there! What can I assist you with?",
       "Hey! What would you like to work on?",
-      "Greetings! How may I assist you today?"
+      "Greetings! How may I assist you today?",
+      "Hi! I'm ready to help with whatever you need."
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   }
