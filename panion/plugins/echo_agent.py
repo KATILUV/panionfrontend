@@ -58,7 +58,7 @@ class EchoAgent(BasePlugin):
         try:
             self.logger.info("Stopping echo agent")
             self.is_running = False
-            return PluginResult.success(message="Echo agent stopped successfully")
+            return PluginResult.success_result(message="Echo agent stopped successfully")
         except Exception as e:
             self.logger.error(f"Error stopping echo agent: {str(e)}")
             return PluginResult.failure(message=f"Failed to stop Echo agent: {str(e)}")
@@ -68,7 +68,7 @@ class EchoAgent(BasePlugin):
         try:
             self.logger.info("Pausing echo agent")
             self.is_running = False
-            return PluginResult.success(message="Echo agent paused successfully")
+            return PluginResult.success_result(message="Echo agent paused successfully")
         except Exception as e:
             self.logger.error(f"Error pausing echo agent: {str(e)}")
             return PluginResult.failure(message=f"Failed to pause Echo agent: {str(e)}")
@@ -78,7 +78,7 @@ class EchoAgent(BasePlugin):
         try:
             self.logger.info("Resuming echo agent")
             self.is_running = True
-            return PluginResult.success(message="Echo agent resumed successfully")
+            return PluginResult.success_result(message="Echo agent resumed successfully")
         except Exception as e:
             self.logger.error(f"Error resuming echo agent: {str(e)}")
             return PluginResult.failure(message=f"Failed to resume Echo agent: {str(e)}")
