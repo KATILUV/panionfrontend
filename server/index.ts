@@ -3,11 +3,40 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
 import { initializeWebSocketServer, setWebSocketServer } from "./websocket";
+import { optimizeStartup, isSystemReady } from "./startup-optimizer";
+import * as conversationMemory from "./conversation-memory";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// System readiness middleware
+app.use((req, res, next) => {
+  // Allow health checks and static resources during startup
+  if (req.path === '/health' || 
+      req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    return next();
+  }
+  
+  // If system isn't ready yet, return a 503 for API requests
+  if (!isSystemReady() && req.path.startsWith('/api/')) {
+    return res.status(503).json({
+      error: 'System starting up',
+      message: 'The system is still initializing. Please try again in a few seconds.'
+    });
+  }
+  
+  next();
+});
+
+// Register health check endpoint
+app.get('/health', (_req, res) => {
+  res.json({
+    status: isSystemReady() ? 'ready' : 'starting',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Set CORS headers to ensure cookies and auth work correctly
 app.use((req, res, next) => {
@@ -85,6 +114,14 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`serving on port ${port}`, 'express');
+    
+    // Initialize conversation memory system
+    conversationMemory.initialize();
+    
+    // Start optimized service initialization in parallel
+    optimizeStartup().catch((error) => {
+      log(`Startup optimization error: ${error}`, 'express');
+    });
   });
 })();
