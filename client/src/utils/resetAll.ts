@@ -37,25 +37,7 @@ export function clearAllStorage() {
     }
   });
   
-  // For the taskbar store, also try to write a clean state to overcome persistence
-  try {
-    const cleanTaskbarState = {
-      state: {
-        position: { location: 'bottom', alignment: 'center' },
-        enableBlur: true,
-        showLabels: false,
-        autohide: false,
-        visibleWidgets: ['quickSave', 'systemConsole', 'layoutManager', 'versionNumber', 'searchBar'],
-        pinnedAgents: ['panion', 'clara', 'notes', 'browser', 'marketplace'],
-      },
-      version: 0
-    };
-    
-    localStorage.setItem('panion-taskbar-store', JSON.stringify(cleanTaskbarState));
-    console.log("Manually wrote clean taskbar state to localStorage");
-  } catch (err) {
-    console.error("Failed to write clean taskbar state", err);
-  }
+  // We'll handle taskbar reset separately through its store functionality
   
   // Also do a general localStorage.clear() to catch any we missed
   try {
