@@ -38,25 +38,26 @@ You have access to memory systems and can reference past conversations.`;
 
     const finalSystemPrompt = systemPrompt || defaultSystemPrompt;
 
-    // Prepare messages for the API request, ensuring correct role types
-    let fixedMessages = conversationHistory.map(msg => {
-      // Ensure roles are strictly 'user' or 'assistant' as required by Anthropic API
-      const role = msg.role === 'user' ? 'user' : 'assistant';
-      return { role, content: msg.content };
+    // Directly create properly typed messages for the Anthropic API
+    const typedMessages: MessageParam[] = [];
+    
+    // First add past conversation messages
+    for (const msg of conversationHistory) {
+      const role = msg.role === 'user' ? 'user' as const : 'assistant' as const;
+      typedMessages.push({
+        role,
+        content: msg.content
+      });
+    }
+    
+    // Then add the current user message
+    typedMessages.push({
+      role: 'user' as const,
+      content: message
     });
     
-    // Add the user's message
-    fixedMessages.push({ role: 'user', content: message });
-
     // Adding logging for debugging
-    log(`Sending request to Anthropic API with ${fixedMessages.length} messages`, 'panion');
-
-    // Make request to Anthropic API
-    // Explicitly cast the messages to ensure they're valid for the Anthropic API
-    const typedMessages: MessageParam[] = fixedMessages.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'assistant',
-      content: msg.content
-    }));
+    log(`Sending request to Anthropic API with ${typedMessages.length} messages`, 'panion');
     
     const response = await anthropic.messages.create({
       model: "claude-3-7-sonnet-20250219",
