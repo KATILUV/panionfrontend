@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Message, ChatResponse } from '../types/chat';
+import { ChatMessage, ChatResponse } from '../types/chat';
 import { log } from '../state/systemLogStore';
 import { handleError, mapErrorTypeFromStatus } from '../lib/errorHandler'; 
 import { useToast } from './use-toast';
@@ -26,7 +26,7 @@ const shouldSimulateError = (content: string): { simulate: boolean, type: ErrorT
 };
 
 export const useChat = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);

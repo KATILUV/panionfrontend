@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { ChatMessage as Message } from '../types/chat';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useThemeStore } from '../state/themeStore';
 import { windowTextStyles } from './ui/window-components.ts';
+
+// Define the Message interface that ChatCarousel uses
+interface Message {
+  id?: string;
+  content: string;
+  isUser: boolean;
+  timestamp: string;
+  imageUrl?: string;
+}
 
 interface ChatCarouselProps {
   messages: Message[];
