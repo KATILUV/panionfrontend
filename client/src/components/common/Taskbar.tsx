@@ -288,7 +288,36 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
   const [isQuickSaveOpen, setIsQuickSaveOpen] = useState(false);
   const [customLayoutName, setCustomLayoutName] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
+  // State for dynamic transparency
+  const [transparency, setTransparency] = useState(0.2); // Initial transparency
   const inputRef = useRef<HTMLInputElement>(null);
+  const taskbarRef = useRef<HTMLDivElement>(null);
+  
+  // Add scroll listener for dynamic transparency
+  useEffect(() => {
+    const handleScroll = () => {
+      // Calculate transparency based on scroll position
+      // More scroll = more opaque taskbar
+      const scrollPosition = window.scrollY;
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const scrollPercentage = Math.min(scrollPosition / 300, 1); // Max effect at 300px scroll
+      
+      // Scale from 0.2 (transparent) to 0.85 (mostly opaque)
+      const newTransparency = 0.2 + scrollPercentage * 0.65;
+      setTransparency(newTransparency);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
   
   const registry = useAgentStore(state => state.registry);
   const windows = useAgentStore(state => state.windows);
@@ -467,11 +496,15 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
   
   // Determine background style based on theme and settings
   const getTaskbarBgClass = () => {
-    // Modern gradient with subtle transparency
-    const themeClass = 'bg-gradient-to-r from-black/30 via-black/25 to-black/30 border-white/5';
+    // Use dynamic transparency from scroll position
+    const opacity = transparency.toFixed(2);
     
-    // Apply backdrop blur when enableBlur is true - increased blur for better readability
-    const blurClass = enableBlur ? 'backdrop-blur-md' : '';
+    // Modern gradient with dynamic transparency
+    const themeClass = `bg-gradient-to-r border-white/5`;
+    
+    // Apply backdrop blur when enableBlur is true - with dynamic blur amount based on transparency
+    const blurAmount = enableBlur ? `${4 + (transparency * 8)}px` : '0';
+    const blurClass = enableBlur ? `backdrop-blur-[${blurAmount}]` : '';
     
     return `${themeClass} ${blurClass}`;
   };
@@ -488,9 +521,9 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
       display: 'flex' as const,
       zIndex: 200,
       backgroundColor: 'transparent', // Using gradient from class
-      backdropFilter: enableBlur ? 'blur(12px)' : 'none',
+      backdropFilter: enableBlur ? `blur(${4 + (transparency * 8)}px)` : 'none',
       transition: 'all 0.3s ease-in-out',
-      boxShadow: '0 0 15px rgba(0, 0, 0, 0.2)'
+      boxShadow: `0 0 20px rgba(0, 0, 0, ${transparency * 0.5})`
     };
     
     // For mobile or small screens, we always use a special bottom position
@@ -506,8 +539,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
         justifyContent: 'space-around', // Better for touch targets on mobile
         padding: screenSizeValue === 'xs' ? '0.25rem 0.5rem' : '0.5rem 0.5rem',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // More opaque for better visibility on mobile
-        boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06)'
+        backgroundColor: `rgba(0, 0, 0, ${Math.max(0.5, transparency)})`, // Use dynamic transparency with minimum value for mobile
+        boxShadow: `0 -4px 6px -1px rgba(0, 0, 0, ${transparency * 0.2}), 0 -2px 4px -1px rgba(0, 0, 0, ${transparency * 0.15})`
       };
     }
     
