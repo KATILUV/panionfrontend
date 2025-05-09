@@ -255,7 +255,7 @@ Create a comprehensive plan that answers the user's request efficiently.`;
           role: "user", 
           content: `Generate a strategic plan for this goal: "${goal}"
           
-          Required output format:
+          Required output format as JSON:
           {
             "planDescription": "A brief description of the overall plan",
             "steps": ["Step 1 description", "Step 2 description", ...],
@@ -268,7 +268,9 @@ Create a comprehensive plan that answers the user's request efficiently.`;
           
           The capabilities field should be based on these available capabilities: web_scraping, data_analysis, knowledge_retrieval, planning, strategic_thinking, creative_writing, coding, visual_processing, document_processing, research, memory_recall, coordination, self_reflection, clarification, summarization, personalization, classification, content_transformation, search, verification.
           
-          If the request mentions specific capabilities (${capabilities.join(', ')}), include them in the plan.` 
+          If the request mentions specific capabilities (${capabilities.join(', ')}), include them in the plan.
+          
+          Output must be a valid JSON object. Format your response as JSON.` 
         }
       ],
       temperature: 0.5,

@@ -107,6 +107,65 @@ interface EnhancedMetadata {
 const sessionReflections: Record<string, Reflection[]> = {};
 
 /**
+ * Function to check if a message is a simple greeting or basic query
+ * that doesn't require complex processing
+ */
+function isSimpleMessage(message: string): boolean {
+  const simpleGreetings = [
+    'hi', 'hello', 'hey', 'greetings', 'howdy', 
+    'good morning', 'good afternoon', 'good evening',
+    'how are you', 'what\'s up', 'yo', 'hi there'
+  ];
+  
+  const normalizedMessage = message.toLowerCase().trim();
+  
+  // Check if it's a very short message
+  if (normalizedMessage.length < 10) {
+    // Check if it's a simple greeting
+    return simpleGreetings.some(greeting => 
+      normalizedMessage === greeting || 
+      normalizedMessage.startsWith(greeting + ' ') ||
+      normalizedMessage.endsWith(' ' + greeting)
+    );
+  }
+  
+  return false;
+}
+
+/**
+ * Generate a quick response for simple messages without using the heavy pipeline
+ */
+async function generateSimpleResponse(message: string, sessionId: string): Promise<any> {
+  log('Using fast path for simple greeting', 'panion');
+  
+  try {
+    // Try to use the Panion API directly without all the extra processing
+    const response = await axios.post(`${PANION_API_URL}/chat`, {
+      content: message,
+      session_id: sessionId,
+      metadata: {
+        fastPath: true
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    // If Panion API fails, return a simple greeting response
+    return {
+      response: "Hello! I'm your Panion assistant. How can I help you today?",
+      thinking: "Detected greeting. Responding with welcome message.",
+      additional_info: {
+        timestamp: new Date().toISOString(),
+        session_id: sessionId,
+        intent_detected: "greeting",
+        confidence: 0.85,
+        capabilities: []
+      }
+    };
+  }
+}
+
+/**
  * Enhanced chat request handler with memory integration
  */
 export async function handleEnhancedChat(req: Request, res: Response): Promise<void> {
@@ -140,6 +199,26 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
       timestamp: new Date().toISOString()
     };
     await memory.saveToMemory(userMemory);
+    
+    // OPTIMIZATION: Check if this is a simple greeting/message that can use fast path
+    if (isSimpleMessage(messageContent)) {
+      const quickResponse = await generateSimpleResponse(messageContent, sessionId);
+      
+      // Save the response to memory
+      const assistantMemory = {
+        sessionId,
+        content: quickResponse.response,
+        isUser: false,
+        timestamp: new Date().toISOString()
+      };
+      await memory.saveToMemory(assistantMemory);
+      
+      res.json(quickResponse);
+      return;
+    }
+    
+    // For more complex messages, continue with the full processing pipeline
+    log('Using full processing pipeline for complex message', 'panion');
     
     // Add message to knowledge graph for improved intelligence
     try {

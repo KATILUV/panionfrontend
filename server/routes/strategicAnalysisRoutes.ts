@@ -54,7 +54,8 @@ router.post('/api/strategic/analyze', async (req: Request, res: Response) => {
           },
           { role: "user", content: goal }
         ],
-        temperature: 0.7
+        temperature: 0.7,
+        // No response_format here since we want text, not JSON
       });
       
       strategies.push({
@@ -90,7 +91,8 @@ router.post('/api/strategic/analyze', async (req: Request, res: Response) => {
           },
           { role: "user", content: goal }
         ],
-        temperature: 0.7
+        temperature: 0.7,
+        // No response_format here since we want text, not JSON
       });
       
       strategies.push({
@@ -128,7 +130,8 @@ router.post('/api/strategic/analyze', async (req: Request, res: Response) => {
             },
             { role: "user", content: goal }
           ],
-          temperature: 0.7
+          temperature: 0.7,
+          // No response_format here since we want text, not JSON
         });
         
         strategies.push({
@@ -179,7 +182,8 @@ router.post('/api/strategic/analyze', async (req: Request, res: Response) => {
               content: `Original question: ${goal}\n\nHere are different strategic analyses of this question:\n\n${strategiesText}\n\nPlease synthesize these into a comprehensive, cohesive response that addresses the original question.` 
             }
           ],
-          temperature: 0.7
+          temperature: 0.7,
+          // No response_format here since we want text, not JSON
         });
         
         responseMessage = integrationResponse.choices[0].message.content || successfulStrategies[0].content || "";
