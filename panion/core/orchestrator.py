@@ -18,7 +18,7 @@ from core.config import plugin_config, system_config
 from core.events import event_bus, Event, EventType
 from core.error_handling import ErrorHandler, with_error_recovery
 from core.service_locator import ServiceLocator
-from core.plugins.compat import deprecated_core_plugin_manager
+from core.plugin.compat import deprecated_core_plugin_manager
 
 @singleton
 class Orchestrator(BaseComponent):
