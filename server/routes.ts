@@ -25,6 +25,7 @@ import scheduledTaskRoutes from "./routes/scheduledTaskRoutes";
 import strategicPlannerRoutes from "./routes/strategicPlannerRoutes";
 import autonomousAgentRoutes from "./routes/autonomousAgentRoutes";
 import browserRoutes from "./routes/browserRoutes";
+import taskRoutes from "./routes/taskRoutes";
 import panionRoutes, { startPanionAPI, shutdownPanionAPI } from "./panion";
 
 // Configure multer for handling file uploads
@@ -83,6 +84,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use Browser routes
   app.use(browserRoutes);
+  
+  // Use Task routes
+  app.use(taskRoutes);
   
   // Try to start the Panion API
   try {
