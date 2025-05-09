@@ -258,20 +258,28 @@ const Desktop: React.FC = () => {
     // Simple initialization - no complex layouts
     log.action('Using simplified layout system');
     
-    // Ensure taskbar is properly reset
+    // Perform a complete reset of all application state
     try {
-      // Use direct taskbar reset functionality
-      const taskbarStore = useTaskbarStore.getState();
-      
-      // 1. Clear localStorage entry for taskbar 
-      localStorage.removeItem('panion-taskbar-store');
-      
-      // 2. Reset taskbar to defaults
-      taskbarStore.resetTaskbar();
-      
-      log.action('Reset taskbar to latest design');
+      // Import the nuclear reset function (which handles everything)
+      import('../utils/resetAll').then(module => {
+        // Clear all localStorage and reset all stores
+        module.clearAllStorage();
+        
+        // Get fresh instances of the stores
+        const taskbarStore = useTaskbarStore.getState();
+        taskbarStore.resetTaskbar();
+        
+        log.action('Complete application reset performed');
+      }).catch(err => {
+        console.error("Failed to import reset module:", err);
+        
+        // Fallback direct reset
+        const taskbarStore = useTaskbarStore.getState();
+        localStorage.removeItem('panion-taskbar-store');
+        taskbarStore.resetTaskbar();
+      });
     } catch (err) {
-      console.error("Error resetting taskbar:", err);
+      console.error("Error during application reset:", err);
     }
     
     // Only open Panion Chat on startup (no split view)
