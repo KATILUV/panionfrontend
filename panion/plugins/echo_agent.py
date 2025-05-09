@@ -7,28 +7,25 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-from panion.core.plugins.base.plugin_base import BasePlugin, PluginMetadata, PluginResult
-from panion.core.plugins.interfaces.plugin_interfaces import PluginState
+from panion.core.plugin.base import BasePlugin, PluginMetadata, PluginResult
+from panion.core.plugin.interfaces import PluginState
 
 class EchoAgent(BasePlugin):
     """A simple echo agent that returns the input message."""
     
     def __init__(self):
         """Initialize the echo agent."""
-        metadata = PluginMetadata(
-            id="echo_agent",
+        super().__init__(
             name="EchoAgent",
             version="1.0.0",
             description="A simple echo agent that returns the input message",
             author="Panion Team",
-            type="agent",
-            capabilities=["echo", "text_response"]
+            tags=["echo", "text_response", "agent"]
         )
-        super().__init__(metadata)
         self.logger = logging.getLogger("EchoAgent")
         self.is_running = False
         self.context = {}
-        self.state = PluginState.INACTIVE
+        self.state = "inactive"
     
     async def initialize(self) -> PluginResult:
         """Initialize the agent."""

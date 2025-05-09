@@ -17,7 +17,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-from panion.core.plugins.base import BasePlugin, PluginMetadata, PluginResult
+from panion.core.plugin.base import BasePlugin, PluginMetadata, PluginResult
 
 class DaddyDataAgent(BasePlugin):
     """
@@ -56,15 +56,21 @@ class DaddyDataAgent(BasePlugin):
         self.data_dir = os.path.join("data", "daddy_data")
         os.makedirs(self.data_dir, exist_ok=True)
         
-    async def initialize(self) -> bool:
+    async def initialize(self) -> PluginResult:
         """Initialize the plugin."""
         logging.info(f"Initializing {self.metadata.name} plugin")
-        return True
+        return PluginResult(
+            success=True,
+            message=f"{self.metadata.name} plugin initialized successfully"
+        )
         
-    async def cleanup(self) -> bool:
+    async def cleanup(self) -> PluginResult:
         """Clean up resources used by the plugin."""
         logging.info(f"Cleaning up {self.metadata.name} plugin")
-        return True
+        return PluginResult(
+            success=True,
+            message=f"{self.metadata.name} plugin cleaned up successfully"
+        )
         
     async def execute(self, parameters: Dict[str, Any]) -> PluginResult:
         """
