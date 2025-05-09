@@ -1,506 +1,606 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useReducer, useState } from 'react';
 
-// Import types
-interface TaskStage {
+// Task step type
+export interface TaskStep {
   id: string;
-  name: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'skipped';
-  startTime?: Date;
-  endTime?: Date;
-  progress?: number; // 0-100
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  output?: string;
   error?: string;
 }
 
-interface LiveProgressEvent {
-  id: string;
-  timestamp: Date;
-  message: string;
-  type: 'info' | 'warning' | 'success' | 'error' | 'progress';
-  source?: string;
-  details?: string;
-}
-
-// Define the Task interface
+// Task type
 export interface Task {
   id: string;
-  description: string;
+  userId?: string;
   agentType: string;
+  description: string;
   status: 'pending' | 'in_progress' | 'paused' | 'completed' | 'failed';
   progress: number;
-  stages: TaskStage[];
-  events: LiveProgressEvent[];
-  startTime: Date;
-  completionTime?: Date;
+  steps: TaskStep[];
   result?: any;
   error?: string;
+  startTime: string;
+  completionTime?: string;
+  priority?: 'low' | 'medium' | 'high';
+  logs: string[];
 }
 
-// Define the context shape
-interface TaskContextType {
+// WebSocket message types
+interface TaskUpdateMessage {
+  taskId: string;
+  type: 'task_update' | 'step_update';
+  timestamp: number;
+  status?: string;
+  progress?: number;
+  message?: string;
+  stepId?: string;
+  description?: string;
+}
+
+// Task action types
+type TaskAction =
+  | { type: 'SET_TASKS'; payload: Task[] }
+  | { type: 'ADD_TASK'; payload: Task }
+  | { type: 'UPDATE_TASK'; payload: { id: string; updates: Partial<Task> } }
+  | { type: 'UPDATE_STEP'; payload: { taskId: string; stepId: string; updates: Partial<TaskStep> } }
+  | { type: 'REMOVE_TASK'; payload: string };
+
+// Task state type
+interface TaskState {
   tasks: Record<string, Task>;
-  currentTaskId: string | null;
-  setCurrentTaskId: (id: string | null) => void;
-  getTask: (id: string) => Task | undefined;
-  createTask: (description: string, agentType: string) => Promise<string>;
-  cancelTask: (id: string) => Promise<boolean>;
-  pauseTask: (id: string) => Promise<boolean>;
-  resumeTask: (id: string) => Promise<boolean>;
-  retryTask: (id: string) => Promise<string | null>;
-  getAllTasks: () => Promise<Task[]>;
-  isLoading: boolean;
-  error: string | null;
+  activeTasks: string[];
+  completedTasks: string[];
+  failedTasks: string[];
 }
 
-// Create the context
+// Initial task state
+const initialState: TaskState = {
+  tasks: {},
+  activeTasks: [],
+  completedTasks: [],
+  failedTasks: []
+};
+
+// Task reducer function
+function taskReducer(state: TaskState, action: TaskAction): TaskState {
+  switch (action.type) {
+    case 'SET_TASKS': {
+      const tasks = action.payload.reduce((acc, task) => {
+        acc[task.id] = task;
+        return acc;
+      }, {} as Record<string, Task>);
+      
+      const activeTasks = action.payload
+        .filter(task => ['in_progress', 'pending', 'paused'].includes(task.status))
+        .map(task => task.id);
+      
+      const completedTasks = action.payload
+        .filter(task => task.status === 'completed')
+        .map(task => task.id);
+      
+      const failedTasks = action.payload
+        .filter(task => task.status === 'failed')
+        .map(task => task.id);
+      
+      return {
+        tasks,
+        activeTasks,
+        completedTasks,
+        failedTasks
+      };
+    }
+    
+    case 'ADD_TASK': {
+      const task = action.payload;
+      const isActive = ['in_progress', 'pending', 'paused'].includes(task.status);
+      const isCompleted = task.status === 'completed';
+      const isFailed = task.status === 'failed';
+      
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [task.id]: task
+        },
+        activeTasks: isActive ? [...state.activeTasks, task.id] : state.activeTasks,
+        completedTasks: isCompleted ? [...state.completedTasks, task.id] : state.completedTasks,
+        failedTasks: isFailed ? [...state.failedTasks, task.id] : state.failedTasks
+      };
+    }
+    
+    case 'UPDATE_TASK': {
+      const { id, updates } = action.payload;
+      const task = state.tasks[id];
+      
+      if (!task) return state;
+      
+      const updatedTask = { ...task, ...updates };
+      const wasActive = ['in_progress', 'pending', 'paused'].includes(task.status);
+      const isActive = ['in_progress', 'pending', 'paused'].includes(updatedTask.status);
+      const wasCompleted = task.status === 'completed';
+      const isCompleted = updatedTask.status === 'completed';
+      const wasFailed = task.status === 'failed';
+      const isFailed = updatedTask.status === 'failed';
+      
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [id]: updatedTask
+        },
+        activeTasks: isActive !== wasActive
+          ? (isActive
+              ? [...state.activeTasks, id]
+              : state.activeTasks.filter(taskId => taskId !== id))
+          : state.activeTasks,
+        completedTasks: isCompleted !== wasCompleted
+          ? (isCompleted
+              ? [...state.completedTasks, id]
+              : state.completedTasks.filter(taskId => taskId !== id))
+          : state.completedTasks,
+        failedTasks: isFailed !== wasFailed
+          ? (isFailed
+              ? [...state.failedTasks, id]
+              : state.failedTasks.filter(taskId => taskId !== id))
+          : state.failedTasks
+      };
+    }
+    
+    case 'UPDATE_STEP': {
+      const { taskId, stepId, updates } = action.payload;
+      const task = state.tasks[taskId];
+      
+      if (!task) return state;
+      
+      const stepIndex = task.steps.findIndex(step => step.id === stepId);
+      if (stepIndex === -1) return state;
+      
+      const updatedSteps = [...task.steps];
+      updatedSteps[stepIndex] = { ...updatedSteps[stepIndex], ...updates };
+      
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [taskId]: {
+            ...task,
+            steps: updatedSteps
+          }
+        }
+      };
+    }
+    
+    case 'REMOVE_TASK': {
+      const taskId = action.payload;
+      const { [taskId]: removedTask, ...remainingTasks } = state.tasks;
+      
+      if (!removedTask) return state;
+      
+      return {
+        ...state,
+        tasks: remainingTasks,
+        activeTasks: state.activeTasks.filter(id => id !== taskId),
+        completedTasks: state.completedTasks.filter(id => id !== taskId),
+        failedTasks: state.failedTasks.filter(id => id !== taskId)
+      };
+    }
+    
+    default:
+      return state;
+  }
+}
+
+// Task context type
+interface TaskContextType {
+  state: TaskState;
+  createTask: (taskConfig: Omit<Task, 'id' | 'startTime' | 'steps' | 'progress' | 'status'>) => Promise<Task>;
+  getTask: (id: string) => Task | null;
+  getAllTasks: () => Promise<Task[]>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<Task>;
+  pauseTask: (id: string) => Promise<Task>;
+  resumeTask: (id: string) => Promise<Task>;
+  cancelTask: (id: string) => Promise<Task>;
+  retryTask: (id: string) => Promise<Task>;
+  subscribeToTask: (taskId: string) => void;
+  unsubscribeFromTask: (taskId: string) => void;
+  connectionStatus: 'connecting' | 'connected' | 'disconnected';
+}
+
+// Create the task context
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
-// Provider component
-export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [tasks, setTasks] = useState<Record<string, Task>>({});
-  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [socketConnected, setSocketConnected] = useState(false);
-  const socketRef = React.useRef<WebSocket | null>(null);
+// Task provider props
+interface TaskProviderProps {
+  children: React.ReactNode;
+}
 
+// Task provider component
+export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
+  const [state, dispatch] = useReducer(taskReducer, initialState);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  
   // Initialize WebSocket connection
   useEffect(() => {
-    // Establish WebSocket connection
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
-
-    socket.onopen = () => {
-      console.log('TaskContext: WebSocket connected');
-      setSocketConnected(true);
+    const connectWebSocket = () => {
+      // Create WebSocket connection
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
       
-      // Subscribe to updates for all current tasks
-      if (socket.readyState === WebSocket.OPEN) {
-        Object.keys(tasks).forEach(taskId => {
-          socket.send(JSON.stringify({
-            type: 'subscribe',
-            taskId
-          }));
-        });
-      }
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
+      console.log('Connecting to WebSocket at', wsUrl);
+      const ws = new WebSocket(wsUrl);
+      
+      // Set up event handlers
+      ws.onopen = () => {
+        console.log('WebSocket connection established');
+        setConnectionStatus('connected');
+      };
+      
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        setConnectionStatus('disconnected');
         
-        // Handle different types of events
-        if (data.taskId && tasks[data.taskId]) {
-          // Format as a LiveProgressEvent
-          const progressEvent: LiveProgressEvent = {
-            id: data.id || `event-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-            timestamp: new Date(data.timestamp || Date.now()),
-            message: data.message || 'Event received',
-            type: data.type === 'step_update' ? 'progress' : 
-                  data.type === 'task_update' && data.status === 'failed' ? 'error' :
-                  data.type === 'task_update' && data.status === 'completed' ? 'success' : 'info',
-            source: data.source || data.type,
-            details: data.details || (data.stepId ? `Step ID: ${data.stepId}` : undefined)
-          };
-
-          // Update task state
-          setTasks(prev => {
-            const updatedTask = { ...prev[data.taskId] };
-            
-            // Update events
-            updatedTask.events = [...(updatedTask.events || []), progressEvent];
-            
-            // Update task progress if provided
-            if (data.progress !== undefined) {
-              updatedTask.progress = data.progress;
-            }
-            
-            // Update task status if provided
-            if (data.status) {
-              updatedTask.status = data.status;
-            }
-            
-            // Update task stages if it's a step update
-            if (data.type === 'step_update' && data.stepId && data.status) {
-              updatedTask.stages = updatedTask.stages.map(stage => 
-                stage.id === data.stepId 
-                  ? { ...stage, status: data.status } 
-                  : stage
-              );
-            }
-            
-            return { ...prev, [data.taskId]: updatedTask };
-          });
+        // Attempt to reconnect after a delay
+        setTimeout(() => {
+          console.log('Attempting to reconnect WebSocket...');
+          setConnectionStatus('connecting');
+          connectWebSocket();
+        }, 5000);
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const message: TaskUpdateMessage = JSON.parse(event.data);
+          
+          if (message.type === 'task_update') {
+            handleTaskUpdate(message);
+          } else if (message.type === 'step_update') {
+            handleStepUpdate(message);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
         }
-      } catch (error) {
-        console.error('Error processing WebSocket message:', error);
-      }
+      };
+      
+      // Set the socket state
+      setSocket(ws);
+      
+      // Set up heartbeat to keep connection alive
+      const heartbeatInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'heartbeat' }));
+        }
+      }, 30000);
+      
+      // Clean up on unmount
+      return () => {
+        clearInterval(heartbeatInterval);
+        ws.close();
+      };
     };
-
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setSocketConnected(false);
-    };
-
-    socket.onclose = () => {
-      console.log('WebSocket connection closed');
-      setSocketConnected(false);
-    };
-
-    // Heartbeat to keep connection alive
-    const heartbeatInterval = setInterval(() => {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: 'heartbeat' }));
-      }
-    }, 30000);
-
-    return () => {
-      clearInterval(heartbeatInterval);
-      socket.close();
-    };
+    
+    setConnectionStatus('connecting');
+    connectWebSocket();
+    
+    // Fetch initial tasks on mount
+    fetchAllTasks().catch(console.error);
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Subscribe to updates when a new task is added
-  useEffect(() => {
-    if (socketConnected && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      // Subscribe to the current task
-      if (currentTaskId && tasks[currentTaskId]) {
-        socketRef.current.send(JSON.stringify({
-          type: 'subscribe',
-          taskId: currentTaskId
-        }));
-      }
+  
+  // Handle task update messages
+  const handleTaskUpdate = (message: TaskUpdateMessage) => {
+    const { taskId, status, progress } = message;
+    
+    // Update the task in our state
+    if (state.tasks[taskId]) {
+      dispatch({
+        type: 'UPDATE_TASK',
+        payload: {
+          id: taskId,
+          updates: {
+            ...(status && { status: status as any }),
+            ...(progress !== undefined && { progress })
+          }
+        }
+      });
+    } else {
+      // If we don't have this task yet, fetch its details
+      fetchTask(taskId).catch(console.error);
     }
-  }, [currentTaskId, socketConnected, tasks]);
-
-  // Get a specific task
-  const getTask = (id: string) => tasks[id];
-
+  };
+  
+  // Handle step update messages
+  const handleStepUpdate = (message: TaskUpdateMessage) => {
+    const { taskId, stepId, status, description } = message;
+    
+    if (!stepId) return;
+    
+    // Update the step in our state
+    if (state.tasks[taskId]) {
+      dispatch({
+        type: 'UPDATE_STEP',
+        payload: {
+          taskId,
+          stepId,
+          updates: {
+            ...(status && { status: status as any }),
+            ...(description && { description })
+          }
+        }
+      });
+    } else {
+      // If we don't have this task yet, fetch its details
+      fetchTask(taskId).catch(console.error);
+    }
+  };
+  
+  // Subscribe to task updates
+  const subscribeToTask = (taskId: string) => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'subscribe', taskId }));
+    }
+  };
+  
+  // Unsubscribe from task updates
+  const unsubscribeFromTask = (taskId: string) => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'unsubscribe', taskId }));
+    }
+  };
+  
+  // Fetch all tasks
+  const fetchAllTasks = async (): Promise<Task[]> => {
+    try {
+      const response = await fetch('/api/tasks');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+      }
+      
+      const tasks: Task[] = await response.json();
+      
+      // Update our state with the fetched tasks
+      dispatch({ type: 'SET_TASKS', payload: tasks });
+      
+      return tasks;
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      return [];
+    }
+  };
+  
+  // Fetch a single task
+  const fetchTask = async (id: string): Promise<Task | null> => {
+    try {
+      const response = await fetch(`/api/tasks/${id}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch task: ${response.statusText}`);
+      }
+      
+      const task: Task = await response.json();
+      
+      // Update our state with the fetched task
+      dispatch({ type: 'ADD_TASK', payload: task });
+      
+      return task;
+    } catch (error) {
+      console.error(`Error fetching task ${id}:`, error);
+      return null;
+    }
+  };
+  
   // Create a new task
-  const createTask = async (description: string, agentType: string): Promise<string> => {
-    setIsLoading(true);
-    setError(null);
-
+  const createTask = async (
+    taskConfig: Omit<Task, 'id' | 'startTime' | 'steps' | 'progress' | 'status'>
+  ): Promise<Task> => {
     try {
       const response = await fetch('/api/tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description, agentType })
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(taskConfig)
       });
-
+      
       if (!response.ok) {
         throw new Error(`Failed to create task: ${response.statusText}`);
       }
-
-      const taskData = await response.json();
       
-      // Create a new task object with the returned data
-      const newTask: Task = {
-        id: taskData.id,
-        description: taskData.description,
-        agentType: taskData.agentType,
-        status: taskData.status,
-        progress: taskData.progress || 0,
-        stages: taskData.steps?.map((step: any) => ({
-          id: step.id,
-          name: step.description,
-          description: step.description,
-          status: step.status,
-          progress: 0
-        })) || [],
-        events: [],
-        startTime: new Date(taskData.startTime),
-        completionTime: taskData.completionTime ? new Date(taskData.completionTime) : undefined,
-        result: taskData.result,
-        error: taskData.error
-      };
-
-      // Update tasks state
-      setTasks(prev => ({ ...prev, [newTask.id]: newTask }));
+      const task: Task = await response.json();
       
-      // Subscribe to the new task
-      if (socketConnected && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.send(JSON.stringify({
-          type: 'subscribe',
-          taskId: newTask.id
-        }));
-      }
-
-      // Set as current task
-      setCurrentTaskId(newTask.id);
+      // Update our state with the new task
+      dispatch({ type: 'ADD_TASK', payload: task });
       
-      return newTask.id;
+      // Subscribe to updates for this task
+      subscribeToTask(task.id);
+      
+      return task;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create task';
-      setError(errorMessage);
-      console.error(errorMessage);
+      console.error('Error creating task:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  // Cancel a task
-  const cancelTask = async (id: string): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
-
+  
+  // Get a task by ID
+  const getTask = (id: string): Task | null => {
+    return state.tasks[id] || null;
+  };
+  
+  // Get all tasks
+  const getAllTasks = async (): Promise<Task[]> => {
+    return fetchAllTasks();
+  };
+  
+  // Update a task
+  const updateTask = async (id: string, updates: Partial<Task>): Promise<Task> => {
     try {
-      const response = await fetch(`/api/tasks/${id}/cancel`, {
-        method: 'POST'
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updates)
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to cancel task: ${response.statusText}`);
-      }
-
-      const taskData = await response.json();
       
-      // Update the task in state
-      setTasks(prev => ({
-        ...prev,
-        [id]: {
-          ...prev[id],
-          status: 'failed',
-          completionTime: taskData.completionTime ? new Date(taskData.completionTime) : new Date(),
-          error: 'Task cancelled by user'
-        }
-      }));
-
-      return true;
+      if (!response.ok) {
+        throw new Error(`Failed to update task: ${response.statusText}`);
+      }
+      
+      const task: Task = await response.json();
+      
+      // Update our state with the updated task
+      dispatch({
+        type: 'UPDATE_TASK',
+        payload: { id, updates: task }
+      });
+      
+      return task;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to cancel task';
-      setError(errorMessage);
-      console.error(errorMessage);
-      return false;
-    } finally {
-      setIsLoading(false);
+      console.error(`Error updating task ${id}:`, error);
+      throw error;
     }
   };
-
+  
   // Pause a task
-  const pauseTask = async (id: string): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
-
+  const pauseTask = async (id: string): Promise<Task> => {
     try {
       const response = await fetch(`/api/tasks/${id}/pause`, {
         method: 'POST'
       });
-
+      
       if (!response.ok) {
         throw new Error(`Failed to pause task: ${response.statusText}`);
       }
-
-      const taskData = await response.json();
       
-      // Update the task in state
-      setTasks(prev => ({
-        ...prev,
-        [id]: {
-          ...prev[id],
-          status: 'paused'
-        }
-      }));
-
-      return true;
+      const task: Task = await response.json();
+      
+      // Update our state with the paused task
+      dispatch({
+        type: 'UPDATE_TASK',
+        payload: { id, updates: task }
+      });
+      
+      return task;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to pause task';
-      setError(errorMessage);
-      console.error(errorMessage);
-      return false;
-    } finally {
-      setIsLoading(false);
+      console.error(`Error pausing task ${id}:`, error);
+      throw error;
     }
   };
-
+  
   // Resume a task
-  const resumeTask = async (id: string): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
-
+  const resumeTask = async (id: string): Promise<Task> => {
     try {
       const response = await fetch(`/api/tasks/${id}/resume`, {
         method: 'POST'
       });
-
+      
       if (!response.ok) {
         throw new Error(`Failed to resume task: ${response.statusText}`);
       }
-
-      const taskData = await response.json();
       
-      // Update the task in state
-      setTasks(prev => ({
-        ...prev,
-        [id]: {
-          ...prev[id],
-          status: 'in_progress'
-        }
-      }));
-
-      return true;
+      const task: Task = await response.json();
+      
+      // Update our state with the resumed task
+      dispatch({
+        type: 'UPDATE_TASK',
+        payload: { id, updates: task }
+      });
+      
+      return task;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to resume task';
-      setError(errorMessage);
-      console.error(errorMessage);
-      return false;
-    } finally {
-      setIsLoading(false);
+      console.error(`Error resuming task ${id}:`, error);
+      throw error;
     }
   };
-
+  
+  // Cancel a task
+  const cancelTask = async (id: string): Promise<Task> => {
+    try {
+      const response = await fetch(`/api/tasks/${id}/cancel`, {
+        method: 'POST'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to cancel task: ${response.statusText}`);
+      }
+      
+      const task: Task = await response.json();
+      
+      // Update our state with the cancelled task
+      dispatch({
+        type: 'UPDATE_TASK',
+        payload: { id, updates: task }
+      });
+      
+      return task;
+    } catch (error) {
+      console.error(`Error cancelling task ${id}:`, error);
+      throw error;
+    }
+  };
+  
   // Retry a task
-  const retryTask = async (id: string): Promise<string | null> => {
-    setIsLoading(true);
-    setError(null);
-
+  const retryTask = async (id: string): Promise<Task> => {
     try {
       const response = await fetch(`/api/tasks/${id}/retry`, {
         method: 'POST'
       });
-
+      
       if (!response.ok) {
         throw new Error(`Failed to retry task: ${response.statusText}`);
       }
-
-      const taskData = await response.json();
       
-      // Create a new task object with the returned data
-      const newTask: Task = {
-        id: taskData.id,
-        description: taskData.description,
-        agentType: taskData.agentType,
-        status: taskData.status,
-        progress: taskData.progress || 0,
-        stages: taskData.steps?.map((step: any) => ({
-          id: step.id,
-          name: step.description,
-          description: step.description,
-          status: step.status,
-          progress: 0
-        })) || [],
-        events: [],
-        startTime: new Date(taskData.startTime),
-        completionTime: taskData.completionTime ? new Date(taskData.completionTime) : undefined,
-        result: taskData.result,
-        error: taskData.error
-      };
-
-      // Update tasks state
-      setTasks(prev => ({ ...prev, [newTask.id]: newTask }));
+      const task: Task = await response.json();
       
-      // Subscribe to the new task
-      if (socketConnected && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.send(JSON.stringify({
-          type: 'subscribe',
-          taskId: newTask.id
-        }));
-      }
-
-      // Set as current task
-      setCurrentTaskId(newTask.id);
+      // Update our state with the new task
+      dispatch({ type: 'ADD_TASK', payload: task });
       
-      return newTask.id;
+      // Subscribe to updates for this task
+      subscribeToTask(task.id);
+      
+      return task;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to retry task';
-      setError(errorMessage);
-      console.error(errorMessage);
-      return null;
-    } finally {
-      setIsLoading(false);
+      console.error(`Error retrying task ${id}:`, error);
+      throw error;
     }
   };
-
-  // Get all tasks
-  const getAllTasks = async (): Promise<Task[]> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/tasks');
-
-      if (!response.ok) {
-        throw new Error(`Failed to get tasks: ${response.statusText}`);
-      }
-
-      const tasksData = await response.json();
-      
-      // Convert API response to Task objects
-      const fetchedTasks: Record<string, Task> = {};
-      
-      tasksData.forEach((taskData: any) => {
-        fetchedTasks[taskData.id] = {
-          id: taskData.id,
-          description: taskData.description,
-          agentType: taskData.agentType,
-          status: taskData.status,
-          progress: taskData.progress || 0,
-          stages: taskData.steps?.map((step: any) => ({
-            id: step.id,
-            name: step.description,
-            description: step.description,
-            status: step.status,
-            progress: 0
-          })) || [],
-          events: [],
-          startTime: new Date(taskData.startTime),
-          completionTime: taskData.completionTime ? new Date(taskData.completionTime) : undefined,
-          result: taskData.result,
-          error: taskData.error
-        };
-      });
-
-      // Subscribe to all tasks
-      if (socketConnected && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        Object.keys(fetchedTasks).forEach(taskId => {
-          socketRef.current?.send(JSON.stringify({
-            type: 'subscribe',
-            taskId
-          }));
-        });
-      }
-
-      // Update tasks state
-      setTasks(fetchedTasks);
-      
-      return Object.values(fetchedTasks);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get tasks';
-      setError(errorMessage);
-      console.error(errorMessage);
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const value = {
-    tasks,
-    currentTaskId,
-    setCurrentTaskId,
-    getTask,
-    createTask,
-    cancelTask,
-    pauseTask,
-    resumeTask,
-    retryTask,
-    getAllTasks,
-    isLoading,
-    error
-  };
-
-  return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;
+  
+  return (
+    <TaskContext.Provider
+      value={{
+        state,
+        createTask,
+        getTask,
+        getAllTasks,
+        updateTask,
+        pauseTask,
+        resumeTask,
+        cancelTask,
+        retryTask,
+        subscribeToTask,
+        unsubscribeFromTask,
+        connectionStatus
+      }}
+    >
+      {children}
+    </TaskContext.Provider>
+  );
 };
 
-// Custom hook for using the task context
-export const useTask = () => {
+// Custom hook to use the task context
+export const useTaskContext = (): TaskContextType => {
   const context = useContext(TaskContext);
+  
   if (context === undefined) {
-    throw new Error('useTask must be used within a TaskProvider');
+    throw new Error('useTaskContext must be used within a TaskProvider');
   }
+  
   return context;
 };

@@ -1,161 +1,119 @@
 import React from 'react';
-import { Check, Clock, AlertCircle, ArrowRight, CheckCircle } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CheckIcon, XIcon, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-export interface TaskStage {
-  id: string;
-  name: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'skipped';
-  startTime?: Date;
-  endTime?: Date;
-  progress?: number; // 0-100
-  error?: string;
-}
+import { TaskStep } from '@/context/TaskContext';
 
 interface TaskTimelineProps {
-  stages: TaskStage[];
-  currentStage?: string; // ID of the current stage
-  orientation?: 'vertical' | 'horizontal';
-  showDescription?: boolean;
+  steps: TaskStep[];
+  currentStepId?: string;
+  className?: string;
+  showStepNumbers?: boolean;
 }
 
-export const TaskTimeline: React.FC<TaskTimelineProps> = ({
-  stages,
-  currentStage,
-  orientation = 'horizontal',
-  showDescription = false,
+const TaskTimeline: React.FC<TaskTimelineProps> = ({
+  steps,
+  currentStepId,
+  className,
+  showStepNumbers = true
 }) => {
-  if (!stages || stages.length === 0) {
-    return (
-      <div className="p-4 text-center text-muted-foreground">
-        No stages available for this task
-      </div>
-    );
-  }
-
-  const getStageIcon = (status: TaskStage['status']) => {
-    switch (status) {
-      case 'completed':
-        return <Check className="h-5 w-5 text-white" />;
-      case 'in_progress':
-        return <Clock className="h-5 w-5 text-white animate-pulse" />;
-      case 'failed':
-        return <AlertCircle className="h-5 w-5 text-white" />;
-      case 'skipped':
-        return <ArrowRight className="h-5 w-5 text-white" />;
-      default:
-        return <CheckCircle className="h-5 w-5 text-muted-foreground/40" />;
-    }
-  };
-
-  const getStageColor = (status: TaskStage['status']) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-500 border-green-500';
-      case 'in_progress':
-        return 'bg-blue-500 border-blue-500';
-      case 'failed':
-        return 'bg-red-500 border-red-500';
-      case 'skipped':
-        return 'bg-yellow-500 border-yellow-500';
-      default:
-        return 'bg-muted border-muted-foreground/25';
-    }
-  };
-
-  const getStageTextColor = (status: TaskStage['status']) => {
-    switch (status) {
-      case 'completed':
-        return 'text-green-500';
-      case 'in_progress':
-        return 'text-blue-500 font-medium';
-      case 'failed':
-        return 'text-red-500';
-      case 'skipped':
-        return 'text-yellow-500';
-      default:
-        return 'text-muted-foreground';
-    }
-  };
-
-  const getLineColor = (status: TaskStage['status']) => {
-    switch (status) {
-      case 'completed':
-        return 'border-green-500';
-      case 'in_progress':
-        return 'border-blue-500';
-      case 'failed':
-        return 'border-red-500';
-      case 'skipped':
-        return 'border-yellow-500';
-      default:
-        return 'border-muted-foreground/25';
-    }
-  };
-
+  // Find the index of the current step
+  const currentStepIndex = currentStepId
+    ? steps.findIndex(step => step.id === currentStepId)
+    : steps.findIndex(step => step.status === 'in_progress');
+  
   return (
-    <div className={cn(
-      'grid gap-1',
-      orientation === 'vertical' 
-        ? 'grid-cols-1' 
-        : `grid-cols-${stages.length} md:grid-cols-${stages.length}`
-    )}>
-      {stages.map((stage, index) => (
-        <div 
-          key={stage.id} 
-          className={cn(
-            'flex items-center gap-2',
-            orientation === 'vertical' ? 'mb-4' : 'flex-col mb-1'
-          )}
-        >
-          <div className="flex flex-col items-center">
-            <div
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full border-2',
-                getStageColor(stage.status)
-              )}
-            >
-              {getStageIcon(stage.status)}
-            </div>
-            {index < stages.length - 1 && orientation === 'vertical' && (
-              <div className={cn(
-                'h-8 w-0 border-l-2 ml-4 my-1',
-                getLineColor(stages[index + 1].status)
-              )} />
-            )}
-          </div>
-
-          <div className={cn(
-            'flex flex-1',
-            orientation === 'vertical' ? 'flex-col' : 'flex-col items-center'
-          )}>
-            <div className={cn(
-              'text-sm font-medium',
-              getStageTextColor(stage.status)
-            )}>
-              {stage.name}
-            </div>
-            {showDescription && stage.description && (
-              <div className="text-xs text-muted-foreground mt-1">
-                {stage.description}
+    <Card className={cn("overflow-hidden", className)}>
+      <CardHeader className="bg-muted/20 p-4">
+        <CardTitle className="text-md">Task Progress</CardTitle>
+        <CardDescription>
+          {currentStepIndex >= 0 
+            ? `Step ${currentStepIndex + 1} of ${steps.length}`
+            : 'Task not started'
+          }
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent className="p-4">
+        <div className="space-y-6">
+          {steps.map((step, index) => {
+            // Determine the status icon
+            let StatusIcon = Clock;
+            let statusColor = "text-muted-foreground";
+            let bgColor = "bg-muted";
+            let lineColor = "bg-muted";
+            
+            if (step.status === 'completed') {
+              StatusIcon = CheckIcon;
+              statusColor = "text-green-500";
+              bgColor = "bg-green-100";
+              lineColor = "bg-green-500";
+            } else if (step.status === 'failed') {
+              StatusIcon = XIcon;
+              statusColor = "text-red-500";
+              bgColor = "bg-red-100";
+              lineColor = "bg-red-500";
+            } else if (step.status === 'in_progress') {
+              StatusIcon = Clock;
+              statusColor = "text-blue-500";
+              bgColor = "bg-blue-100";
+              lineColor = "bg-blue-300";
+            } else if (index < currentStepIndex) {
+              // Steps that should have been processed but weren't marked as completed or failed
+              StatusIcon = AlertCircle;
+              statusColor = "text-yellow-500";
+              bgColor = "bg-yellow-100";
+              lineColor = "bg-yellow-500";
+            }
+            
+            return (
+              <div key={step.id} className="relative">
+                {/* Connecting line */}
+                {index < steps.length - 1 && (
+                  <div className={cn("absolute left-5 top-8 w-[2px] h-[calc(100%-32px)]", lineColor)} />
+                )}
+                
+                <div className="flex items-start gap-4 relative">
+                  {/* Status icon */}
+                  <div className={cn("flex-shrink-0 rounded-full w-10 h-10 flex items-center justify-center", bgColor)}>
+                    <StatusIcon className={cn("h-5 w-5", statusColor)} />
+                    {showStepNumbers && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 bg-white border border-muted-foreground/30 rounded-full text-xs flex items-center justify-center">
+                        {index + 1}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Step content */}
+                  <div className="flex-1 space-y-1">
+                    <div className="font-medium">{step.description}</div>
+                    {step.output && (
+                      <div className="text-sm text-muted-foreground line-clamp-2">{step.output}</div>
+                    )}
+                    {step.error && (
+                      <div className="text-sm text-red-500">{step.error}</div>
+                    )}
+                    {step.status === 'in_progress' && (
+                      <div className="text-sm text-blue-500 flex items-center gap-1">
+                        <span className="inline-block h-2 w-2 bg-blue-500 rounded-full animate-pulse"></span>
+                        <span>In progress...</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
-            {stage.error && (
-              <div className="text-xs text-red-500 mt-1">
-                {stage.error}
-              </div>
-            )}
-          </div>
-
-          {index < stages.length - 1 && orientation === 'horizontal' && (
-            <div className={cn(
-              'hidden md:block h-0 w-full border-t-2 mt-4',
-              getLineColor(stages[index + 1].status)
-            )} />
+            );
+          })}
+          
+          {steps.length === 0 && (
+            <div className="text-center py-4 text-muted-foreground">
+              No steps defined for this task
+            </div>
           )}
         </div>
-      ))}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
+
+export default TaskTimeline;

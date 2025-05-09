@@ -1,215 +1,145 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { MessagesSquare, AlertCircle, CheckCircle2, Clock } from "lucide-react";
-
-interface LiveProgressEvent {
-  id: string;
-  timestamp: Date;
-  message: string;
-  type: 'info' | 'warning' | 'success' | 'error' | 'progress';
-  source?: string;
-  details?: string;
-}
+import React, { useEffect, useRef, useState } from 'react';
+import { Task, useTaskContext } from '@/context/TaskContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface LiveProgressStreamProps {
   taskId: string;
-  height?: string;
-  maxEvents?: number;
+  height?: number;
   autoScroll?: boolean;
-  showTimestamps?: boolean;
+  showHeader?: boolean;
 }
 
 const LiveProgressStream: React.FC<LiveProgressStreamProps> = ({
   taskId,
-  height = '300px',
-  maxEvents = 50,
+  height = 300,
   autoScroll = true,
-  showTimestamps = true,
+  showHeader = true
 }) => {
-  const [events, setEvents] = useState<LiveProgressEvent[]>([]);
-  const [connected, setConnected] = useState(false);
-  const [isActive, setIsActive] = useState(true);
+  const { getTask, subscribeToTask, unsubscribeFromTask } = useTaskContext();
+  const [task, setTask] = useState<Task | null>(null);
+  const [logs, setLogs] = useState<string[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<WebSocket | null>(null);
-
-  // Set up WebSocket connection
+  
+  // Subscribe to task updates when the component mounts
   useEffect(() => {
-    // Establish WebSocket connection
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    // Get initial task state
+    const initialTask = getTask(taskId);
+    if (initialTask) {
+      setTask(initialTask);
+      setLogs(initialTask.logs || []);
+    }
     
-    const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
-
-    socket.onopen = () => {
-      console.log('WebSocket connected for task progress streaming');
-      setConnected(true);
-      
-      // Subscribe to task updates
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({
-          type: 'subscribe',
-          taskId: taskId
-        }));
-      }
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        // Only process events for this task
-        if (data.taskId === taskId) {
-          const newEvent: LiveProgressEvent = {
-            id: data.id || `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            timestamp: new Date(data.timestamp || Date.now()),
-            message: data.message || 'Event received',
-            type: data.type || 'info',
-            source: data.source,
-            details: data.details
-          };
-          
-          setEvents(prev => {
-            // Add the new event and keep only the most recent ones up to maxEvents
-            const updated = [...prev, newEvent];
-            return updated.slice(Math.max(0, updated.length - maxEvents));
-          });
-        }
-      } catch (error) {
-        console.error('Error processing WebSocket message:', error);
-      }
-    };
-
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setConnected(false);
-    };
-
-    socket.onclose = () => {
-      console.log('WebSocket connection closed');
-      setConnected(false);
-    };
-
-    // Heartbeat to keep connection alive
-    const heartbeatInterval = setInterval(() => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: 'heartbeat' }));
-      }
-    }, 30000);
-
+    // Subscribe to task updates
+    subscribeToTask(taskId);
+    
+    // Clean up when component unmounts
     return () => {
-      clearInterval(heartbeatInterval);
-      socket.close();
+      unsubscribeFromTask(taskId);
     };
-  }, [taskId, maxEvents]);
-
-  // Auto-scroll to bottom when new events arrive
+  }, [taskId, getTask, subscribeToTask, unsubscribeFromTask]);
+  
+  // Update the task state when it changes in context
   useEffect(() => {
-    if (autoScroll && scrollAreaRef.current && events.length > 0) {
-      const scrollArea = scrollAreaRef.current;
-      scrollArea.scrollTop = scrollArea.scrollHeight;
+    const currentTask = getTask(taskId);
+    if (currentTask && JSON.stringify(currentTask) !== JSON.stringify(task)) {
+      setTask(currentTask);
+      setLogs(currentTask.logs || []);
     }
-  }, [events, autoScroll]);
-
-  // Mock events for demonstration when no WebSocket events are coming
+  }, [taskId, getTask, task]);
+  
+  // Auto-scroll to bottom when logs update
   useEffect(() => {
-    // Only add mock events if there are no real ones and we're not connected yet
-    if (!connected && events.length === 0) {
-      // Add initial connecting event
-      setEvents([{
-        id: 'mock-init',
-        timestamp: new Date(),
-        message: 'Connecting to task progress stream...',
-        type: 'info'
-      }]);
+    if (autoScroll && scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
-  }, [connected, events.length]);
-
-  // Format timestamp
-  const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  };
-
-  // Render icon based on event type
-  const getEventIcon = (type: LiveProgressEvent['type']) => {
-    switch (type) {
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-destructive" />;
-      case 'success':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'warning':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'progress':
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'info':
+  }, [logs, autoScroll]);
+  
+  // Render a loading state if no task is available
+  if (!task) {
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-muted/20 p-4">
+          <CardTitle className="text-md">Loading task...</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center h-[200px]">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Helper function to format task status
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline">Pending</Badge>;
+      case 'in_progress':
+        return <Badge variant="secondary" className="bg-blue-500 text-white">In Progress</Badge>;
+      case 'paused':
+        return <Badge variant="outline" className="border-yellow-500 text-yellow-500">Paused</Badge>;
+      case 'completed':
+        return <Badge variant="outline" className="border-green-500 text-green-500">Completed</Badge>;
+      case 'failed':
+        return <Badge variant="destructive">Failed</Badge>;
       default:
-        return <MessagesSquare className="h-4 w-4 text-muted-foreground" />;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
-
+  
+  // Helper function to format timestamp from log line
+  const extractTimestamp = (logLine: string) => {
+    const match = logLine.match(/\[(.*?)\]/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return '';
+  };
+  
+  // Helper function to extract message from log line
+  const extractMessage = (logLine: string) => {
+    const message = logLine.replace(/\[.*?\]/, '').trim();
+    return message;
+  };
+  
   return (
-    <Card className="w-full">
-      <CardHeader className="py-3">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-sm font-medium">Live Progress</CardTitle>
-          <Badge 
-            variant={connected ? "default" : "secondary"}
-            className="ml-2 text-xs"
-          >
-            {connected ? 'Connected' : 'Connecting...'}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="p-3">
-        <ScrollArea 
-          ref={scrollAreaRef} 
-          className="h-[--scrollarea-height] border rounded-md bg-muted/10 p-2"
-          style={{ "--scrollarea-height": height } as React.CSSProperties}
-        >
-          <div className="space-y-3">
-            {events.map((event) => (
-              <div
-                key={event.id}
-                className="flex items-start gap-2 text-sm border-b border-border/30 pb-2 last:border-0"
-              >
-                <div className="mt-0.5">
-                  {getEventIcon(event.type)}
-                </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <p 
-                      className={`font-medium ${
-                        event.type === 'error' ? 'text-destructive' : 
-                        event.type === 'success' ? 'text-green-500' : 
-                        event.type === 'warning' ? 'text-yellow-500' :
-                        'text-primary'
-                      }`}
-                    >
-                      {event.message}
-                    </p>
-                    {showTimestamps && (
-                      <span className="text-xs text-muted-foreground">
-                        {formatTime(event.timestamp)}
-                      </span>
-                    )}
-                  </div>
-                  {event.details && (
-                    <p className="text-xs text-muted-foreground">{event.details}</p>
-                  )}
-                  {event.source && (
-                    <Badge variant="outline" className="text-[10px] h-4">
-                      {event.source}
-                    </Badge>
-                  )}
-                </div>
+    <Card className="overflow-hidden">
+      {showHeader && (
+        <CardHeader className="bg-muted/20 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-md">{task.description}</CardTitle>
+              <CardDescription className="text-xs mt-1">
+                {task.agentType} task • Started {new Date(task.startTime).toLocaleString()}
+              </CardDescription>
+            </div>
+            {getStatusBadge(task.status)}
+          </div>
+          <Progress value={task.progress} className="h-2 mt-2" />
+        </CardHeader>
+      )}
+      
+      <CardContent className="p-0">
+        <ScrollArea ref={scrollAreaRef} className="h-[var(--stream-height)]" style={{ '--stream-height': `${height}px` } as React.CSSProperties}>
+          <div className="py-3 px-4 space-y-2 text-sm font-mono">
+            {logs.map((log, index) => (
+              <div key={index} className="grid grid-cols-[80px_1fr] gap-2">
+                <span className="text-xs text-muted-foreground">{extractTimestamp(log)}</span>
+                <span className={extractMessage(log).includes('Error') ? 'text-destructive' : ''}>{extractMessage(log)}</span>
               </div>
             ))}
             
-            {events.length === 0 && (
-              <div className="flex justify-center items-center h-[200px] text-muted-foreground text-sm">
-                Waiting for task progress events...
+            {task.status === 'in_progress' && (
+              <div className="grid grid-cols-[80px_1fr] gap-2">
+                <span className="text-xs text-muted-foreground">...</span>
+                <span className="animate-pulse">Processing...</span>
               </div>
             )}
           </div>

@@ -295,8 +295,7 @@ async function processTask(taskId: string, checkpoint?: string): Promise<void> {
   task.logs.push(`[${new Date().toISOString()}] Started processing task`);
   
   // Emit task started event via WebSocket
-  broadcastTaskEvent(taskId, {
-    type: 'task_update',
+  broadcastTaskEvent(taskId, 'task_update', {
     status: task.status,
     progress: task.progress,
     message: 'Task processing started',
@@ -424,8 +423,7 @@ async function processTask(taskId: string, checkpoint?: string): Promise<void> {
       task.logs.push(`[${new Date().toISOString()}] Started step: ${step.description}`);
       
       // Emit step status change via WebSocket
-      broadcastTaskEvent(taskId, {
-        type: 'step_update',
+      broadcastTaskEvent(taskId, 'step_update', {
         stepId: step.id,
         status: step.status,
         description: step.description,

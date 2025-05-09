@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { PageTransition } from "@/components/ui/page-transition";
+import { TaskProvider } from "@/context/TaskContext";
 import NotFound from "@/pages/not-found";
 import DesktopPage from "./pages/desktop-page";
 import LandingPage from "./pages/landing-page";
@@ -354,8 +355,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <Toaster />
-          <Router />
+          <TaskProvider>
+            <Toaster />
+            <Router />
+          </TaskProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
