@@ -138,8 +138,37 @@ function isSimpleMessage(message: string): boolean {
 async function generateSimpleResponse(message: string, sessionId: string): Promise<any> {
   log('Using fast path for simple greeting', 'panion');
   
+  // Check for single-word greetings to use ultra-fast path (no API call)
+  const normalizedMessage = message.toLowerCase().trim();
+  if (/^(hi|hello|hey|yo|sup)$/.test(normalizedMessage)) {
+    log('Using ultra-fast path for single-word greeting', 'panion');
+    // Direct response without any API calls for maximum speed
+    const greetings = [
+      "Hello! How can I help you today?",
+      "Hi there! What can I assist you with?",
+      "Hey! What would you like to know?",
+      "Hello! I'm your Panion assistant. How can I help?",
+      "Hi! I'm ready to assist you today."
+    ];
+    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+    
+    return {
+      response: randomGreeting,
+      thinking: "Detected greeting. Using ultra-fast response path.",
+      additional_info: {
+        timestamp: new Date().toISOString(),
+        session_id: sessionId,
+        intent_detected: "greeting",
+        confidence: 0.98,
+        capabilities: [],
+        response_time: "ultra_fast"
+      }
+    };
+  }
+  
   try {
-    // Try to use the Panion API directly without all the extra processing
+    // For other simple messages, try to use the Panion API directly 
+    // without all the extra processing
     const response = await axios.post(`${PANION_API_URL}/chat`, {
       content: message,
       session_id: sessionId,

@@ -290,7 +290,13 @@ function extractCapabilitiesFromKeywords(message: string): string[] {
 function isBasicConversation(message: string): boolean {
   const normalizedMessage = message.toLowerCase().trim();
   
-  // Simple greetings
+  // Super simple single-word greetings (highest priority fast path)
+  if (/^(hi|hello|hey|yo|sup)$/.test(normalizedMessage)) {
+    log('Detected single-word greeting for fastest response path', 'capability-detection');
+    return true;
+  }
+  
+  // Simple greetings with additional words
   if (/^(hi|hello|hey|greetings|howdy|hi there|hey there)(\s.*)?$/.test(normalizedMessage)) {
     return true;
   }
