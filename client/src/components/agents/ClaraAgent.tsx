@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ClaraOrb from '../ClaraOrb';
-import ChatInput from '../ChatInput';
+import { ChatInput } from '@/components/chat/ChatInput';
 import TypingIndicator from '../TypingIndicator';
 import ChatCarousel from '../ChatCarousel';
 import RotatingTagline from '../RotatingTagline';
@@ -127,8 +127,11 @@ const ClaraAgent: React.FC = () => {
           {/* Chat Input - Fixed at bottom, adjusted padding for mobile */}
           <div className="sticky bottom-0 pt-1 md:pt-2 mt-auto px-2 md:px-4 bg-gradient-to-t from-black/10 to-transparent">
             <ChatInput 
-              onSendMessage={handleSendMessage}
+              value={message}
+              onChange={setMessage}
+              onSubmit={() => handleSendMessage(message)}
               isLoading={isLoading}
+              placeholder="Type a message to Clara..."
             />
           </div>
         </div>
