@@ -14,6 +14,7 @@ import MarketplacePage from "./pages/marketplace-page";
 import CollaborationPage from "./pages/CollaborationPage";
 import ScraperTest from "./pages/ScraperTest";
 import AutonomousAgentPage from "./pages/AutonomousAgentPage";
+import BrowserPage from "./pages/BrowserPage";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
@@ -78,6 +79,13 @@ function Router() {
         <Route path="/autonomous-agent">
           <PageTransition type="slideUp" duration={0.3}>
             <AutonomousAgentPage />
+          </PageTransition>
+        </Route>
+        
+        {/* Browser Data Explorer Page */}
+        <Route path="/browser">
+          <PageTransition type="slideUp" duration={0.3}>
+            <BrowserPage />
           </PageTransition>
         </Route>
         
