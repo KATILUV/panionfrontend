@@ -141,6 +141,16 @@ export async function handleEnhancedChat(req: Request, res: Response): Promise<v
     };
     await memory.saveToMemory(userMemory);
     
+    // Add message to knowledge graph for improved intelligence
+    try {
+      // Extract knowledge from the user's message
+      await knowledgeGraph.addKnowledge(messageContent);
+      log(`Added message to knowledge graph: "${messageContent.substring(0, 50)}${messageContent.length > 50 ? '...' : ''}"`, 'enhanced-panion');
+    } catch (error) {
+      log(`Error adding knowledge to graph: ${error}`, 'enhanced-panion');
+      // Continue even if knowledge graph update fails
+    }
+    
     // Pre-request reflection - analyze user intent and plan response
     const preReflection = await performPreRequestReflection(messageContent, sessionId);
     
