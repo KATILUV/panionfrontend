@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAgentStore, AgentId, WindowGroupId } from '../../state/agentStore';
 import { useThemeStore } from '../../state/themeStore';
 import { useSystemLogStore } from '../../state/systemLogStore';
