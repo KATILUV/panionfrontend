@@ -1,115 +1,137 @@
 /**
  * Debate Service
- * 
- * Provides access to the enhanced multi-agent debate system in the backend
- * without changing the UI appearance.
+ * Provides frontend access to the enhanced multi-agent debate system.
  */
 
-import { apiRequest } from "@/lib/queryClient";
-
-// Types for the debate system
-export interface DebatePerspective {
-  agent: {
-    name: string;
-    expertise: string;
-    confidence: number;
-  };
-  response: string;
-}
-
-export interface DebateRound {
-  id: string;
-  round_number: number;
-  perspectives: DebatePerspective[];
-  summary: string;
-}
-
-export interface DebateConclusion {
-  finalAnswer: string;
-  reasoning: string;
-  confidenceScore: number;
-  key_insights: string[];
-  dissenting_viewpoints: string[];
-}
-
+// Interface for debate results
 export interface DebateResult {
-  query: string;
-  rounds: DebateRound[];
-  conclusion: DebateConclusion;
-  agents_used: Array<{
-    name: string;
-    expertise: string;
-    confidence: number;
-  }>;
-  debate_id: string;
-}
-
-export interface QuickDebateResult {
   answer: string;
   confidence: number;
-  insights: string[];
+  thinking?: string;
+  insights?: string[];
+  domain_experts?: {
+    name: string;
+    expertise: string;
+    contribution: string;
+  }[];
+  debate_points?: {
+    topic: string;
+    perspectives: {
+      viewpoint: string;
+      arguments: string[];
+    }[];
+  }[];
 }
 
 /**
- * Get a quick debate result without showing the detailed process to the user
- * Used for providing smarter responses without changing UI appearance
+ * Get a detailed analysis using the multi-agent debate system
+ * @param query User's query to analyze
+ * @param context Additional context to provide to the debate system
+ * @returns The debate result with detailed analysis
  */
-export async function getQuickDebate(
-  query: string,
+export async function getDebate(
+  query: string, 
   context: string = ""
-): Promise<QuickDebateResult> {
-  try {
-    const response = await apiRequest("POST", "/api/debate/quick", {
-      query,
-      context
-    });
-    
-    return await response.json();
-  } catch (error) {
-    console.error("Error in debate service:", error);
-    return {
-      answer: "I couldn't process your request due to a technical error.",
-      confidence: 0.3,
-      insights: ["The debate system encountered an error."]
-    };
-  }
-}
-
-/**
- * Get a full debate result with multiple perspectives and rounds
- * Can be used when we want to show detailed analysis to users who request it
- */
-export async function getFullDebate(
-  query: string,
-  context: string = "",
-  num_rounds: number = 2,
-  agents: string[] = []
 ): Promise<DebateResult> {
-  try {
-    const response = await apiRequest("POST", "/api/debate", {
+  const response = await fetch('/api/debate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
       query,
       context,
-      num_rounds,
-      agents
-    });
-    
-    const data = await response.json();
-    return data.result;
-  } catch (error) {
-    console.error("Error in debate service:", error);
-    throw new Error("Failed to conduct debate");
+      options: {
+        detailed: true,
+        max_experts: 5,
+        use_domain_detection: true,
+        include_insights: true
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Debate request failed: ${response.statusText}`);
   }
+
+  return await response.json();
 }
 
 /**
- * Extract a simplified response from a debate result
- * For use in the standard chat interface
+ * Get a faster, less detailed analysis using the multi-agent debate system
+ * @param query User's query to analyze
+ * @param context Additional context to provide to the debate system
+ * @returns Simplified debate result focused on quick response
  */
-export function extractResponseFromDebate(debateResult: QuickDebateResult): string {
-  // Format insights as bullet points if there are any
-  const insightsBullets = debateResult.insights && debateResult.insights.length > 0
-    ? "\n\nKey insights:\n" + debateResult.insights.map(i => `• ${i}`).join("\n")
-    : "";
+export async function getQuickDebate(
+  query: string, 
+  context: string = ""
+): Promise<DebateResult> {
+  const response = await fetch('/api/debate/quick', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      query,
+      context,
+      options: {
+        detailed: false,
+        max_experts: 3,
+        use_domain_detection: true,
+        include_insights: true
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Quick debate request failed: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+
+/**
+ * Extract a formatted response from a debate result
+ * @param result The debate result to format
+ * @returns Formatted response string
+ */
+export function extractResponseFromDebate(result: DebateResult): string {
+  // If there's a direct answer, use it
+  if (result.answer) {
+    return result.answer;
+  }
+  
+  // Otherwise build a response from debate points
+  let response = "";
+  
+  if (result.debate_points && result.debate_points.length > 0) {
+    response = "Based on the analysis from multiple perspectives:\n\n";
     
-  return debateResult.answer + insightsBullets;
+    result.debate_points.forEach(point => {
+      response += `**${point.topic}**\n`;
+      
+      point.perspectives.forEach(perspective => {
+        response += `- ${perspective.viewpoint}: ${perspective.arguments[0]}\n`;
+      });
+      
+      response += "\n";
+    });
+  } else if (result.domain_experts && result.domain_experts.length > 0) {
+    response = "Based on expert analysis:\n\n";
+    
+    result.domain_experts.forEach(expert => {
+      response += `**${expert.name} (${expert.expertise})**: ${expert.contribution}\n\n`;
+    });
+  }
+  
+  // Add insights if available
+  if (result.insights && result.insights.length > 0) {
+    response += "\nKey insights:\n";
+    result.insights.forEach((insight, index) => {
+      response += `${index + 1}. ${insight}\n`;
+    });
+  }
+  
+  return response.trim();
 }

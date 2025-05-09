@@ -315,23 +315,11 @@ export async function conductDebate(
       selectedAgents = agents.length > 4 ? agents.slice(0, 4) : agents;
     }
     
-    // Add knowledge graph context if requested
+    // Knowledge graph integration is disabled
     let enhancedContext = context;
-    if (options.includeKnowledgeGraph) {
-      try {
-        // This import is done here to avoid circular dependencies
-        const { queryKnowledge } = require('./knowledge-graph');
-        const knowledgeResult = await queryKnowledge(query);
-        
-        if (knowledgeResult && knowledgeResult.relevantInfo) {
-          enhancedContext = `${context ? context + '\n\n' : ''}Knowledge Graph Context:\n${knowledgeResult.relevantInfo}`;
-          log(`Added knowledge graph context to debate`, 'debate');
-        }
-      } catch (error) {
-        log(`Error adding knowledge graph context: ${error}`, 'debate');
-        // Continue without knowledge graph context
-      }
-    }
+    
+    // We just use the provided context directly
+    log(`Using direct context for debate (knowledge graph disabled)`, 'debate');
     
     // Initial round - get first perspectives
     const initialRound = await debateRound(
@@ -765,5 +753,98 @@ export async function quickDebate(
       confidence: 0.1,
       insights: ["The multi-agent debate system encountered an error."]
     };
+  }
+}
+
+/**
+ * Handler for multi-agent debate API requests
+ * Manages the debate process and returns formatted results
+ */
+export async function handleMultiAgentDebate(query: string, context: string = "", options: any = {}): Promise<any> {
+  try {
+    log(`Processing multi-agent debate for query: "${query}"`, 'debate');
+    
+    // Conduct the debate with specified options
+    const debateResult = await conductDebate(
+      query, 
+      context, 
+      options?.num_rounds || 2,
+      options?.agents,
+      {
+        resolveConflicts: options?.resolveConflicts !== false,
+        includeKnowledgeGraph: false, // Knowledge graph integration disabled
+        debateFormat: options?.debateFormat || 'standard'
+      }
+    );
+    
+    // Format the result for API response
+    return {
+      answer: debateResult.conclusion.finalAnswer,
+      confidence: debateResult.conclusion.confidenceScore,
+      thinking: debateResult.conclusion.reasoning,
+      insights: debateResult.conclusion.key_insights,
+      domain_experts: debateResult.agents_used.map(agent => ({
+        name: agent.name,
+        expertise: agent.expertise.join(', '),
+        contribution: agent.role
+      })),
+      debate_points: debateResult.rounds.map(round => ({
+        topic: `Round ${round.round_number}`,
+        perspectives: round.perspectives.map(p => ({
+          viewpoint: p.agent.name,
+          arguments: [p.response]
+        }))
+      }))
+    };
+  } catch (error) {
+    log(`Error in handleMultiAgentDebate: ${error}`, 'debate');
+    throw new Error(`Failed to process debate: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Handler for quick debate API requests
+ * Provides a simplified, faster version of the multi-agent debate
+ */
+export async function handleQuickDebate(query: string, context: string = "", options: any = {}): Promise<any> {
+  try {
+    log(`Processing quick debate for query: "${query}"`, 'debate');
+    
+    // Use a subset of agents for a faster response
+    const quickAgents = standardAgents.slice(0, 2); // Just use 2 agents
+    
+    // Get a simplified debate with just one round
+    const debateResult = await conductDebate(
+      query, 
+      context, 
+      1, 
+      quickAgents,
+      {
+        resolveConflicts: false, 
+        includeKnowledgeGraph: false, 
+        debateFormat: 'standard'
+      }
+    );
+    
+    // Format the result for API response
+    return {
+      answer: debateResult.conclusion.finalAnswer,
+      confidence: debateResult.conclusion.confidenceScore,
+      thinking: debateResult.conclusion.reasoning,
+      insights: debateResult.conclusion.key_insights,
+      domain_experts: debateResult.agents_used.map(agent => ({
+        name: agent.name,
+        expertise: agent.expertise.join(', '),
+        contribution: agent.role
+      })),
+      // Only include key arguments without the full debate structure
+      key_arguments: debateResult.rounds[0]?.perspectives.map(p => ({
+        expert: p.agent.name,
+        point: p.response.split('.')[0] + '.' // Just the first sentence for brevity
+      })) || []
+    };
+  } catch (error) {
+    log(`Error in handleQuickDebate: ${error}`, 'debate');
+    throw new Error(`Failed to process quick debate: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

@@ -1,72 +1,50 @@
-import express, { Request, Response } from 'express';
-import { conductDebate, quickDebate } from '../multi-agent-debate';
-import { log } from '../vite';
+import { Router, Request, Response } from 'express';
+import { handleMultiAgentDebate, handleQuickDebate } from '../multi-agent-debate';
 
-const router = express.Router();
+const router = Router();
 
-// Conduct a quick multi-agent debate (used for smarter responses without UI changes)
-router.post('/api/debate/quick', async (req: Request, res: Response) => {
+// Route for a full, detailed debate analysis
+router.post('/api/debate', async (req: Request, res: Response) => {
   try {
-    const { query, context = "" } = req.body;
+    const { query, context, options } = req.body;
     
-    if (!query || typeof query !== 'string') {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid request',
-        message: 'Query is required and must be a string'
-      });
+    // Validate required parameters
+    if (!query) {
+      return res.status(400).json({ error: 'Query is required' });
     }
     
-    log(`Starting quick debate API call for query: "${query}"`, 'debate-api');
+    // Process the analysis through the multi-agent debate system
+    const result = await handleMultiAgentDebate(query, context || '', options);
     
-    // Conduct the debate
-    const result = await quickDebate(query, context);
-    
-    res.json({
-      success: true,
-      result
-    });
+    return res.status(200).json(result);
   } catch (error) {
-    log(`Error in quick debate API: ${error}`, 'debate-api');
-    res.status(500).json({
-      success: false,
-      error: 'Failed to conduct quick debate',
-      message: error instanceof Error ? error.message : String(error)
+    console.error('Error in debate route:', error);
+    return res.status(500).json({ 
+      error: 'Failed to process debate',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
 
-// Conduct a full multi-agent debate
-router.post('/api/debate', async (req: Request, res: Response) => {
+// Route for a quick, simplified debate analysis
+router.post('/api/debate/quick', async (req: Request, res: Response) => {
   try {
-    const { query, context = "", num_rounds = 2, agents = [] } = req.body;
+    const { query, context, options } = req.body;
     
-    if (!query || typeof query !== 'string') {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid request',
-        message: 'Query is required and must be a string'
-      });
+    // Validate required parameters
+    if (!query) {
+      return res.status(400).json({ error: 'Query is required' });
     }
     
-    // Validate num_rounds
-    const rounds = Math.min(Math.max(1, Number(num_rounds)), 5); // Between 1 and 5
+    // Process a faster version of the analysis with fewer experts
+    const result = await handleQuickDebate(query, context || '', options);
     
-    log(`Starting debate API call for query: "${query}"`, 'debate-api');
-    
-    // Conduct the debate
-    const result = await conductDebate(query, context, rounds, agents);
-    
-    res.json({
-      success: true,
-      result
-    });
+    return res.status(200).json(result);
   } catch (error) {
-    log(`Error in debate API: ${error}`, 'debate-api');
-    res.status(500).json({
-      success: false,
-      error: 'Failed to conduct debate',
-      message: error instanceof Error ? error.message : String(error)
+    console.error('Error in quick debate route:', error);
+    return res.status(500).json({ 
+      error: 'Failed to process quick debate',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });

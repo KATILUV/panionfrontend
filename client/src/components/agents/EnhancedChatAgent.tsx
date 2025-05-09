@@ -45,7 +45,12 @@ const CAPABILITIES = {
 const EnhancedChatAgent: React.FC = () => {
   // AgentStore state
   const isStrategicModeEnabled = useAgentStore(state => state.isStrategicModeEnabled);
-  const toggleStrategicMode = useAgentStore(state => state.toggleStrategicMode);
+  const toggleStrategicModeStore = useAgentStore(state => state.toggleStrategicMode);
+  
+  // Wrapper function for toggleStrategicMode
+  const toggleStrategicMode = (value: boolean) => {
+    toggleStrategicModeStore(value);
+  };
   
   // Local state
   const [messages, setMessages] = useState<ChatMessage[]>([

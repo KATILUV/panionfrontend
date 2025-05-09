@@ -25,6 +25,7 @@ import MarketplaceAgent from "./components/agents/MarketplaceAgent";
 import BrowserAgent from "./components/agents/BrowserAgent";
 import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
 import PanionChatAgent from "./components/agents/PanionChatAgent";
+import EnhancedChatAgent from "./components/agents/EnhancedChatAgent";
 import CollaborationAgent from "./components/agents/CollaborationAgent";
 import TaskSchedulerAgent from "./components/agents/TaskSchedulerAgent";
 import DaddyDataAgent from "./components/agents/DaddyDataAgent";
@@ -263,7 +264,7 @@ function RegisterAgents() {
       id: 'panion',
       title: 'Panion Chat',
       icon: panionIcon,
-      component: () => <PanionChatAgent />,
+      component: () => <EnhancedChatAgent />,
       defaultPosition: { x: 650, y: 200 },
       defaultSize: { width: 500, height: 600 }
     });
