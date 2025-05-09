@@ -8,6 +8,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { taskManager } from './autonomous-agent';
 import { extractCapabilities } from './utils/capability-detection';
 import OpenAI from 'openai';
+import panionBridge from './panion-bridge';
+import * as conversationMemory from './conversation-memory';
 
 // Create router
 const router = Router();
@@ -173,6 +175,12 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
       });
     }
     
+    // Add the message to conversation memory
+    await conversationMemory.addMessage(sessionId, 'user', messageContent);
+    
+    // Start request timing
+    const requestStartTime = Date.now();
+    
     // Detect capabilities if not provided
     let capabilities = requestedCapabilities;
     if (!capabilities || capabilities.length === 0) {
@@ -201,48 +209,123 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
       });
     }
 
-    // Forward the request to the Panion API with additional info
-    const response = await axios.post(`${PANION_API_URL}/chat`, {
-      content: messageContent,
-      session_id: sessionId,  // This is the correct format for the backend
-      metadata: {
-        hasRequiredCapabilities,
-        capabilities: capabilities || [],
-        requestedAt: new Date().toISOString(),
-        client: 'frontend',
-      }
-    });
-  
-    // Add thinking details to the response
-    let thinking = '';
-    
-    // If capabilities were detected, add related thinking
-    if (capabilities && capabilities.length > 0) {
-      thinking = `Analyzing request: "${messageContent}"\n\n`;
-      thinking += `Detected capabilities needed: ${capabilities.join(', ')}\n\n`;
+    // Use our optimized bridge for communication with Python
+    try {
+      // Get relevant conversation context
+      const conversationContext = await conversationMemory.getRelevantContext(
+        sessionId, 
+        messageContent
+      );
       
-      if (hasRequiredCapabilities) {
-        thinking += `Required capabilities are available. Processing request directly.`;
-      } else {
-        thinking += `Some capabilities were missing. New agents have been created to handle this request.`;
+      // Use the bridge to communicate with Panion API
+      const responseData = await panionBridge.request('/chat', {
+        content: messageContent,
+        session_id: sessionId,
+        context: conversationContext,
+        metadata: {
+          hasRequiredCapabilities,
+          capabilities: capabilities || [],
+          requestedAt: new Date().toISOString(),
+          client: 'frontend',
+        }
+      });
+      
+      // Add timing information
+      const requestDuration = Date.now() - requestStartTime;
+      log(`Chat request processed in ${requestDuration}ms via bridge`, 'panion-perf');
+      
+      // Add thinking details to the response
+      let thinking = '';
+      
+      // If capabilities were detected, add related thinking
+      if (capabilities && capabilities.length > 0) {
+        thinking = `Analyzing request: "${messageContent}"\n\n`;
+        thinking += `Detected capabilities needed: ${capabilities.join(', ')}\n\n`;
+        
+        if (hasRequiredCapabilities) {
+          thinking += `Required capabilities are available. Processing request directly.`;
+        } else {
+          thinking += `Some capabilities were missing. New agents have been created to handle this request.`;
+        }
+        
+        // Merge with existing thinking if there is any
+        if (responseData.thinking) {
+          thinking += `\n\n${responseData.thinking}`;
+        }
+        
+        // Update the thinking in the response
+        responseData.thinking = thinking;
       }
       
-      // Merge with existing thinking if there is any
-      if (response.data.thinking) {
-        thinking += `\n\n${response.data.thinking}`;
+      // Standardize the response format - ensure we have the 'response' field for consistency
+      // Some API endpoints return 'message' instead of 'response'
+      if (responseData.message && !responseData.response) {
+        responseData.response = responseData.message;
       }
       
-      // Update the thinking in the response
-      response.data.thinking = thinking;
+      // Add the assistant response to conversation memory
+      if (responseData.response) {
+        await conversationMemory.addMessage(sessionId, 'assistant', responseData.response);
+      }
+      
+      return res.json(responseData);
     }
+    catch (bridgeError) {
+      // Log the error but fall back to standard HTTP
+      log(`Bridge communication failed, falling back to HTTP: ${bridgeError}`, 'panion-error');
+      
+      // Forward the request to the Panion API with additional info
+      const response = await axios.post(`${PANION_API_URL}/chat`, {
+        content: messageContent,
+        session_id: sessionId,  // This is the correct format for the backend
+        metadata: {
+          hasRequiredCapabilities,
+          capabilities: capabilities || [],
+          requestedAt: new Date().toISOString(),
+          client: 'frontend',
+        }
+      });
+      
+      // Add timing information
+      const requestDuration = Date.now() - requestStartTime;
+      log(`Chat request processed in ${requestDuration}ms via HTTP fallback`, 'panion-perf');
     
-    // Standardize the response format - ensure we have the 'response' field for consistency
-    // Some API endpoints return 'message' instead of 'response'
-    if (response.data.message && !response.data.response) {
-      response.data.response = response.data.message;
+      // Add thinking details to the response
+      let thinking = '';
+      
+      // If capabilities were detected, add related thinking
+      if (capabilities && capabilities.length > 0) {
+        thinking = `Analyzing request: "${messageContent}"\n\n`;
+        thinking += `Detected capabilities needed: ${capabilities.join(', ')}\n\n`;
+        
+        if (hasRequiredCapabilities) {
+          thinking += `Required capabilities are available. Processing request directly.`;
+        } else {
+          thinking += `Some capabilities were missing. New agents have been created to handle this request.`;
+        }
+        
+        // Merge with existing thinking if there is any
+        if (response.data.thinking) {
+          thinking += `\n\n${response.data.thinking}`;
+        }
+        
+        // Update the thinking in the response
+        response.data.thinking = thinking;
+      }
+      
+      // Standardize the response format - ensure we have the 'response' field for consistency
+      // Some API endpoints return 'message' instead of 'response'
+      if (response.data.message && !response.data.response) {
+        response.data.response = response.data.message;
+      }
+      
+      // Add the assistant response to conversation memory
+      if (response.data.response) {
+        await conversationMemory.addMessage(sessionId, 'assistant', response.data.response);
+      }
+      
+      return res.json(response.data);
     }
-    
-    return res.json(response.data);
   } catch (error) {
     // This catch block handles any errors in the entire process
     log(`Error in panion chat: ${error}`, 'panion-error');

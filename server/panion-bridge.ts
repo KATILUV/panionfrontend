@@ -185,8 +185,8 @@ class PanionBridge {
       this.requestQueue.push({
         endpoint,
         data,
-        resolve,
-        reject
+        resolve: resolve as (value: any) => void,
+        reject: reject as (error: any) => void
       });
       
       // Schedule batch processing if not already scheduled

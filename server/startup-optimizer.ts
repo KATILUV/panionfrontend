@@ -42,14 +42,14 @@ const STARTUP_CONFIG = {
     'strategic-planner': 3,
     'multi-agent-debate': 2,
     'enhanced-scraper': 1
-  },
+  } as Record<string, number>,
   // How long to wait for a service before proceeding anyway (ms)
   serviceTimeouts: {
     'panion-api': 5000,
     'knowledge-graph': 2000,
     'memory-system': 1000,
     'default': 3000
-  },
+  } as Record<string, number>,
   // If true, start services that depend on a timed-out service
   continueOnTimeout: true,
   // Path to warm cache files for preloaded data
@@ -147,8 +147,8 @@ async function startService(name: string): Promise<void> {
 async function startServicesInParallel(serviceNames: string[]): Promise<void> {
   // Sort by priority
   const sortedServices = [...serviceNames].sort((a, b) => {
-    const priorityA = STARTUP_CONFIG.servicePriorities[a] || 0;
-    const priorityB = STARTUP_CONFIG.servicePriorities[b] || 0;
+    const priorityA = a in STARTUP_CONFIG.servicePriorities ? STARTUP_CONFIG.servicePriorities[a] : 0;
+    const priorityB = b in STARTUP_CONFIG.servicePriorities ? STARTUP_CONFIG.servicePriorities[b] : 0;
     return priorityB - priorityA;
   });
   
@@ -177,8 +177,7 @@ async function waitForService(name: string, timeout?: number): Promise<boolean> 
   }
   
   const actualTimeout = timeout || 
-    STARTUP_CONFIG.serviceTimeouts[name] || 
-    STARTUP_CONFIG.serviceTimeouts.default;
+    (name in STARTUP_CONFIG.serviceTimeouts ? STARTUP_CONFIG.serviceTimeouts[name] : STARTUP_CONFIG.serviceTimeouts.default);
   
   return new Promise<boolean>((resolve) => {
     const startTime = Date.now();
