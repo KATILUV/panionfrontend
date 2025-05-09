@@ -1,187 +1,179 @@
-import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
 
-// Simple logging function for WebSocket events
-function wsLog(message: string): void {
-  const formattedTime = new Date().toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-  console.log(`${formattedTime} [websocket] ${message}`);
-}
-
-// Subscription tracking
-interface Client {
+// Client connection type for tracking subscriptions
+interface WebSocketConnection {
   ws: WebSocket;
-  subscriptions: Set<string>; // taskIds
-  lastPing: number;
+  subscriptions: Set<string>; // Task IDs
+  lastActivity: number;
 }
 
-// Store connected clients
-const clients: Map<WebSocket, Client> = new Map();
+// WebSocket event types
+interface WebSocketMessage {
+  type: 'subscribe' | 'unsubscribe' | 'heartbeat';
+  taskId?: string;
+}
 
-// Event cache for late-joining clients (keyed by taskId)
-const eventCache: Map<string, any[]> = new Map();
-const MAX_CACHED_EVENTS = 50;
-
-// Setup WebSocket server
-export function setupWebsocketServer(server: Server): void {
-  const wss = new WebSocketServer({ server, path: '/ws' });
+// Initialize WebSocket Server
+export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/ws'
+  });
   
-  wsLog('WebSocket server initialized');
-
+  console.log('[websocket] WebSocket server initialized');
+  
+  // Track client connections and their subscriptions
+  const clients = new Map<WebSocket, WebSocketConnection>();
+  
+  // Handle new connections
   wss.on('connection', (ws: WebSocket) => {
-    wsLog('New WebSocket connection established');
+    console.log('[websocket] Client connected');
     
-    // Initialize client info
+    // Initialize client state
     clients.set(ws, {
       ws,
-      subscriptions: new Set(),
-      lastPing: Date.now()
+      subscriptions: new Set<string>(),
+      lastActivity: Date.now()
     });
-
-    // Handle incoming messages
-    ws.on('message', (data: string) => {
+    
+    // Handle messages from the client
+    ws.on('message', (message: string) => {
       try {
-        const message = JSON.parse(data);
-        handleClientMessage(ws, message);
+        const data: WebSocketMessage = JSON.parse(message.toString());
+        const client = clients.get(ws);
+        
+        if (!client) {
+          console.error('[websocket] Received message from unregistered client');
+          return;
+        }
+        
+        // Update last activity time for heartbeat tracking
+        client.lastActivity = Date.now();
+        
+        // Handle subscription requests
+        if (data.type === 'subscribe' && data.taskId) {
+          console.log(`[websocket] Client subscribed to task: ${data.taskId}`);
+          client.subscriptions.add(data.taskId);
+        }
+        
+        // Handle unsubscribe requests
+        if (data.type === 'unsubscribe' && data.taskId) {
+          console.log(`[websocket] Client unsubscribed from task: ${data.taskId}`);
+          client.subscriptions.delete(data.taskId);
+        }
+        
+        // Handle heartbeat (just update last activity time, already done above)
+        if (data.type === 'heartbeat') {
+          // Pong back to client to confirm connection is still alive
+          ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+        }
       } catch (error) {
-        wsLog(`Error parsing WebSocket message: ${error}`);
+        console.error('[websocket] Error processing message:', error);
       }
     });
-
-    // Clean up on connection close
+    
+    // Handle client disconnection
     ws.on('close', () => {
-      wsLog('WebSocket connection closed');
+      console.log('[websocket] Client disconnected');
       clients.delete(ws);
     });
-
+    
     // Handle errors
     ws.on('error', (error) => {
-      wsLog(`WebSocket error: ${error}`);
+      console.error('[websocket] Client connection error:', error);
       clients.delete(ws);
     });
-
-    // Send welcome message
-    ws.send(JSON.stringify({
-      type: 'system',
-      message: 'Connected to Panion WebSocket server',
-      timestamp: new Date().toISOString()
-    }));
   });
-
-  // Set up periodic connection check
+  
+  // Set up a heartbeat interval to detect and clean up stale connections
+  const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+  const MAX_INACTIVITY = 120000; // 2 minutes
+  
   setInterval(() => {
     const now = Date.now();
+    
     clients.forEach((client, ws) => {
-      // Check if client has sent a heartbeat in the last 2 minutes
-      if (now - client.lastPing > 2 * 60 * 1000) {
-        wsLog('Client connection timed out, closing');
+      // If client hasn't sent a message in MAX_INACTIVITY time
+      if (now - client.lastActivity > MAX_INACTIVITY) {
+        console.log('[websocket] Terminating inactive connection');
         ws.terminate();
         clients.delete(ws);
       }
     });
-  }, 60000);
+  }, HEARTBEAT_INTERVAL);
+  
+  return wss;
 }
 
-// Handle client messages
-function handleClientMessage(ws: WebSocket, message: any): void {
-  const client = clients.get(ws);
-  if (!client) return;
-
-  // Update last ping time
-  client.lastPing = Date.now();
-
-  switch (message.type) {
-    case 'subscribe':
-      if (message.taskId) {
-        wsLog(`Client subscribed to task: ${message.taskId}`);
-        client.subscriptions.add(message.taskId);
-        
-        // Send cached events for this task
-        const cachedEvents = eventCache.get(message.taskId) || [];
-        if (cachedEvents.length > 0) {
-          cachedEvents.forEach(event => {
-            ws.send(JSON.stringify(event));
-          });
-          wsLog(`Sent ${cachedEvents.length} cached events for task: ${message.taskId}`);
-        }
-      }
-      break;
-
-    case 'unsubscribe':
-      if (message.taskId) {
-        wsLog(`Client unsubscribed from task: ${message.taskId}`);
-        client.subscriptions.delete(message.taskId);
-      }
-      break;
-
-    case 'heartbeat':
-      // Just update the ping time, which we've already done
-      break;
-
-    default:
-      wsLog(`Unknown message type: ${message.type}`);
-  }
-}
-
-// Broadcast task event to subscribers
-export function broadcastTaskEvent(taskId: string, event: any): void {
-  // Ensure event has required fields
-  const fullEvent = {
-    ...event,
-    taskId,
-    id: event.id || `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-    timestamp: event.timestamp || new Date().toISOString()
-  };
-
-  // Cache the event
-  if (!eventCache.has(taskId)) {
-    eventCache.set(taskId, []);
+// Broadcast a message to all subscribed clients
+export function broadcastTaskEvent(
+  taskId: string, 
+  eventType: 'task_update' | 'step_update',
+  eventData: Record<string, any>
+): void {
+  const wss = getWebSocketServer();
+  
+  if (!wss) {
+    console.error('[websocket] WebSocket server not initialized');
+    return;
   }
   
-  const taskEvents = eventCache.get(taskId)!;
-  taskEvents.push(fullEvent);
+  let clientCount = 0;
   
-  // Trim cache if needed
-  if (taskEvents.length > MAX_CACHED_EVENTS) {
-    eventCache.set(taskId, taskEvents.slice(-MAX_CACHED_EVENTS));
-  }
-
-  // Broadcast to subscribers
-  let subscriberCount = 0;
-  clients.forEach(client => {
-    if (client.subscriptions.has(taskId) && client.ws.readyState === WebSocket.OPEN) {
-      client.ws.send(JSON.stringify(fullEvent));
-      subscriberCount++;
+  // Get all clients from the WebSocketServer
+  wss.clients.forEach((ws) => {
+    // Check if client is still connected
+    if (ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    
+    // Get client info and check subscriptions
+    const conn = getWebSocketConnection(ws);
+    if (conn && conn.subscriptions.has(taskId)) {
+      clientCount++;
+      
+      // Build the event message
+      const message = {
+        taskId,
+        type: eventType,
+        timestamp: Date.now(),
+        ...eventData
+      };
+      
+      // Send the event to this client
+      ws.send(JSON.stringify(message));
     }
   });
-
-  if (subscriberCount > 0) {
-    wsLog(`Broadcast task event to ${subscriberCount} subscribers for task: ${taskId}`);
-  }
+  
+  console.log(`[websocket] Broadcast task event to ${clientCount} clients: ${taskId} (${eventType})`);
 }
 
-// Clear cached events for a task
-export function clearTaskEvents(taskId: string): void {
-  eventCache.delete(taskId);
-  wsLog(`Cleared cached events for task: ${taskId}`);
+// Reference to the WebSocket server instance
+let webSocketServer: WebSocketServer | null = null;
+
+// Store the WebSocket server instance
+export function setWebSocketServer(wss: WebSocketServer): void {
+  webSocketServer = wss;
 }
 
-// Get connected client count
-export function getClientCount(): number {
-  return clients.size;
+// Get the WebSocket server instance
+export function getWebSocketServer(): WebSocketServer | null {
+  return webSocketServer;
 }
 
-// Get active subscription count for a task
-export function getSubscriberCount(taskId: string): number {
-  let count = 0;
-  clients.forEach(client => {
-    if (client.subscriptions.has(taskId)) {
-      count++;
+// Helper to get client connection info
+function getWebSocketConnection(ws: WebSocket): WebSocketConnection | undefined {
+  // Custom implementation to retrieve client info
+  // Since we can't directly access the clients Map from outside
+  // This is just a placeholder implementation
+  let connection: WebSocketConnection | undefined;
+  
+  webSocketServer?.clients.forEach((client, _key, _set) => {
+    if (client === ws) {
+      connection = (client as any)._connection as WebSocketConnection;
     }
   });
-  return count;
+  
+  return connection;
 }

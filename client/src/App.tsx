@@ -15,6 +15,7 @@ import CollaborationPage from "./pages/CollaborationPage";
 import ScraperTest from "./pages/ScraperTest";
 import AutonomousAgentPage from "./pages/AutonomousAgentPage";
 import BrowserPage from "./pages/BrowserPage";
+import TaskMonitorPage from "./pages/TaskMonitorPage";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
@@ -87,6 +88,13 @@ function Router() {
         <Route path="/browser">
           <PageTransition type="slideUp" duration={0.3}>
             <BrowserPage />
+          </PageTransition>
+        </Route>
+        
+        {/* Task Monitor Page */}
+        <Route path="/tasks">
+          <PageTransition type="slideUp" duration={0.3}>
+            <TaskMonitorPage />
           </PageTransition>
         </Route>
         
