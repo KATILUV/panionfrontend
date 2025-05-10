@@ -19,6 +19,7 @@ import AutonomousAgentPage from "./pages/AutonomousAgentPage";
 import BrowserPage from "./pages/BrowserPage";
 import TaskMonitorPage from "./pages/TaskMonitorPage";
 import ManusDashboard from "./pages/manus-dashboard";
+import PanionIntelligenceDashboard from "./pages/panion-intelligence-dashboard";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
@@ -101,11 +102,16 @@ function Router() {
           </PageTransition>
         </Route>
         
-        {/* Manus Intelligence Dashboard */}
-        <Route path="/manus">
+        {/* Panion Intelligence Dashboard */}
+        <Route path="/intelligence">
           <PageTransition type="slideUp" duration={0.3}>
-            <ManusDashboard />
+            <PanionIntelligenceDashboard />
           </PageTransition>
+        </Route>
+        
+        {/* Legacy Manus Dashboard (for backward compatibility) */}
+        <Route path="/manus">
+          <Redirect to="/intelligence" />
         </Route>
         
         {/* Redirect old root path to landing page */}

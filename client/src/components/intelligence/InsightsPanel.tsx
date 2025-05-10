@@ -35,7 +35,9 @@ export function InsightsPanel({ sessionId, onInsightSelected }: InsightsPanelPro
     : insights;
   
   // Get unique categories from insights
-  const categories = [...new Set(insights.map(insight => insight.category))];
+  const categoriesSet = new Set<string>();
+  insights.forEach(insight => categoriesSet.add(insight.category));
+  const categories = Array.from(categoriesSet);
   
   const handleInsightClick = (insight: Insight) => {
     if (onInsightSelected) {

@@ -8,10 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Grid2X2, Lightbulb, SplitSquareVertical, GitBranch, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { InsightsPanel } from './InsightsPanel';
-import { TaskDecomposition } from './TaskDecomposition';
-import { ReasoningPaths } from './ReasoningPaths';
-import { Verification } from './Verification';
+import InsightsPanel from './InsightsPanel';
+import TaskDecomposition from './TaskDecomposition';
+import ReasoningPaths from './ReasoningPaths';
+import Verification from './Verification';
 import { 
   type Insight, 
   type ReasoningPath, 
