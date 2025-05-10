@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { CONVERSATION_MODES, DEFAULT_CONVERSATION_MODE, ConversationMode } from '@/types/conversationModes';
+import { ChatMessage as GlobalChatMessage, AgentStatusType } from '@/types/chat';
 import PanionAgentSettings from './PanionAgentSettings';
 import log from '@/utils/logger';
 import { useTaskContext } from '@/context/TaskContext';
@@ -65,7 +66,7 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
   
   // References
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   // Auto-scroll to bottom of messages
   const scrollToBottom = () => {
@@ -279,18 +280,9 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
     }
   };
   
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputValue(e.target.value);
-  };
+  // Note: handleInputChange is now handled by ChatInterface via setInputValue
   
-  // Handle key press (Enter to send)
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  // Note: handleKeyPress is now handled by ChatInterface
   
   // Handle image upload
   const handleImageUpload = async (file: File) => {
@@ -382,6 +374,25 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
     }
   };
   
+  // Convert internal message format to the global one
+  const convertToGlobalMessages = (messages: ChatMessage[]): GlobalChatMessage[] => {
+    return messages.map(msg => {
+      const globalMsg: GlobalChatMessage = {
+        id: msg.id,
+        content: msg.content,
+        isUser: msg.sender === 'user',
+        timestamp: msg.timestamp.toISOString(),
+        thinking: msg.thinking
+      };
+      
+      if (msg.imageUrl) {
+        globalMsg.imageUrl = msg.imageUrl;
+      }
+      
+      return globalMsg;
+    });
+  };
+  
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
@@ -409,65 +420,12 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
         </button>
       </div>
       
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <AnimatePresence>
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div 
-                className={`max-w-[80%] px-4 py-2 rounded-lg ${
-                  message.sender === 'user' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-card border border-border text-foreground'
-                }`}
-              >
-                {message.isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                  </div>
-                ) : (
-                  <>
-                    {message.thinking && message.sender === 'agent' && (
-                      <div className="text-xs italic text-muted-foreground font-medium mb-1">
-                        {message.thinking}
-                      </div>
-                    )}
-                    <div className="whitespace-pre-wrap">{message.content}</div>
-                    {message.imageUrl && (
-                      <div className="mt-2">
-                        <img 
-                          src={message.imageUrl} 
-                          alt="Uploaded image" 
-                          className="max-w-full rounded-md border border-border"
-                          style={{ maxHeight: '200px' }}
-                        />
-                      </div>
-                    )}
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-        <div ref={messagesEndRef} />
-      </div>
+      {/* Messages are now handled by ChatInterface */}
       
       {/* Input Area with ChatInterface component */}
       <div className="border-t border-border">
         <ChatInterface
-          messages={messages}
+          messages={convertToGlobalMessages(messages)}
           inputValue={inputValue}
           setInputValue={setInputValue}
           isLoading={isTyping}
@@ -475,7 +433,6 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
           sendMessage={handleSendMessage}
           onImageUpload={handleImageUpload}
           messagesEndRef={messagesEndRef}
-          inputRef={inputRef}
           strategicMode={conversationMode === 'strategic'}
           title={`Panion - ${modeConfig.name} Mode`}
         />
