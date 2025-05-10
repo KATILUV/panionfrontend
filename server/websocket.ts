@@ -18,10 +18,29 @@ interface WebSocketMessage {
 export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
   const wss = new WebSocketServer({ 
     server: httpServer,
-    path: '/ws'
+    path: '/ws',
+    // Add proper headers for WebSocket handshake
+    handleProtocols: (protocols, request) => {
+      // Accept the first protocol if one is provided or subprotocol-less connection
+      return protocols[0] || '';
+    }
   });
   
-  console.log('[websocket] WebSocket server initialized');
+  // Verify headers for connection upgrade
+  wss.on('headers', (headers, request) => {
+    // Ensure proper WebSocket headers are present
+    if (!headers.find(header => header.toLowerCase().includes('connection:'))) {
+      headers.push('Connection: Upgrade');
+    }
+    if (!headers.find(header => header.toLowerCase().includes('upgrade:'))) {
+      headers.push('Upgrade: websocket');
+    }
+    // Add CORS headers for browser clients
+    headers.push('Access-Control-Allow-Origin: *');
+    headers.push('Access-Control-Allow-Headers: *');
+  });
+  
+  console.log('[websocket] WebSocket server initialized with enhanced headers');
   
   // Track client connections and their subscriptions
   const clients = new Map<WebSocket, WebSocketConnection>();
