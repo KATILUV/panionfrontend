@@ -18,7 +18,8 @@ const router = Router();
 // Configuration
 const PANION_API_PORT = process.env.PANION_API_PORT || 8000;
 const PANION_API_URL = `http://localhost:${PANION_API_PORT}`;
-const CLARA_ENDPOINT = '/api/clara';
+// Deprecated - use PANION_ENDPOINT instead
+const CLARA_ENDPOINT = '/api/panion';
 const PANION_ENDPOINT = '/api/panion';
 let panionProcess: ChildProcess | null = null;
 let panionApiStarted = false;
@@ -1791,8 +1792,8 @@ router.post('/api/panion/autonomous-task', checkPanionAPIMiddleware, async (req:
   }
 });
 
-// Clara API endpoints
-router.post('/api/clara/chat', async (req: Request, res: Response) => {
+// Panion API endpoints
+router.post('/api/panion/chat', async (req: Request, res: Response) => {
   try {
     const { message, sessionId = 'default', userId = 'anonymous' } = req.body;
     
@@ -1805,9 +1806,9 @@ router.post('/api/clara/chat', async (req: Request, res: Response) => {
     
     // Check if Panion API is running
     if (!panionApiStarted) {
-      log(`Panion API service is not running, using fallback for Clara`, 'panion-error');
+      log(`Panion API service is not running, using fallback for Panion`, 'panion-error');
       
-      // Send default response since we can't access the Clara API
+      // Send default response since we can't access the Panion API
       return res.json({
         response: "I'm Clara, your emotional support companion. I'm currently operating in limited mode and can't access all my capabilities. How can I help you today?",
         thinking: "Clara API service is not running, using fallback response",

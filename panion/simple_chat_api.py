@@ -916,15 +916,15 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     "message": f"Task '{task_name}' has been scheduled successfully"
                 }).encode())
             
-            # Clara chat endpoint
+            # Panion chat endpoint
             elif path == "/panion/chat":
                 content = data.get("content", "")
                 session_id = data.get("session_id", "default")
                 user_id = data.get("user_id", "anonymous")
                 
-                logger.info(f"Clara chat request: {content}")
+                logger.info(f"Panion chat request: {content}")
                 
-                # This would use the Clara emotional support agent
+                # This would use the Panion emotional support agent
                 # For now, just return a simulated response
                 response = f"I understand how you feel about '{content}'. What aspects of this would you like to explore further? I'm here to help you find clarity and expand your perspective."
                 
@@ -938,14 +938,14 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     }
                 }).encode())
             
-            # Clara goal creation endpoint
+            # Panion goal creation endpoint
             elif path == "/panion/goal":
                 content = data.get("content", "")
                 session_id = data.get("session_id", "default")
                 
-                logger.info(f"Clara goal creation request: {content}")
+                logger.info(f"Panion goal creation request: {content}")
                 
-                # This would use the Clara goal creation functionality
+                # This would use the Panion goal creation functionality
                 # For now, just return a simulated response
                 goal_id = f"goal_{hash(content) % 10000}"
                 
@@ -962,11 +962,11 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     "message": "I've created this goal for you. Would you like to add more specific steps or clarify any details?"
                 }).encode())
             
-            # Clara goals list endpoint
+            # Panion goals list endpoint
             elif path == "/panion/goals":
-                logger.info("Clara goals list request")
+                logger.info("Panion goals list request")
                 
-                # This would use the Clara goals system
+                # This would use the Panion goals system
                 # For now, just return simulated goals
                 self._set_headers()
                 self.wfile.write(json.dumps([
