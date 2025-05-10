@@ -25,7 +25,11 @@ export const messages = pgTable("messages", {
   timestamp: text("timestamp").notNull(),
   sessionId: text("session_id").notNull(),
   important: boolean("important").default(false),
-  conversationMode: text("conversation_mode"), // 'casual', 'deep', 'strategic', 'logical'
+  conversationMode: text("conversation_mode"), // 'casual', 'deep', 'strategic', 'logical', etc.
+  imageUrl: text("image_url"), // URL for image attachments
+  imageAnalysis: text("image_analysis"), // AI analysis of the image
+  mediaType: text("media_type"), // 'text', 'image', 'mixed'
+  isUser: boolean("is_user").default(true), // Whether this is a user message or AI response
 });
 
 export const insertMessageSchema = createInsertSchema(messages).pick({
@@ -35,6 +39,10 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   sessionId: true,
   important: true,
   conversationMode: true,
+  imageUrl: true,
+  imageAnalysis: true,
+  mediaType: true,
+  isUser: true,
 });
 
 export type InsertMessage = z.infer<typeof insertMessageSchema>;

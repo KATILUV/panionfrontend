@@ -392,6 +392,12 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
         description: 'The image was successfully processed with OpenAI Vision',
       });
       
+      // Show a toast notifying the user about the gallery
+      toast({
+        title: 'Image saved to gallery',
+        description: 'You can view and reuse this image in the Gallery tab',
+      });
+      
     } catch (error) {
       console.error('Error uploading image:', error);
       
@@ -419,6 +425,34 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
       setIsTyping(false);
       setSelectedImage(null);
     }
+  };
+  
+  // Handler for using images from the gallery in conversation
+  const handleUseImageFromGallery = (imageUrl: string, description: string) => {
+    // Add a user message referencing the image
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      content: `I'd like to talk about this image from the gallery.`,
+      sender: 'user',
+      timestamp: new Date(),
+      imageUrl: imageUrl
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Add an agent response with the image description
+    const agentMessage: ChatMessage = {
+      id: `agent-${Date.now()}`,
+      content: `I see you've selected an image from your gallery. Here's what I know about it:\n\n${description}`,
+      sender: 'agent',
+      timestamp: new Date(),
+      imageUrl: imageUrl
+    };
+    
+    setMessages(prev => [...prev, agentMessage]);
+    
+    // Switch to chat tab
+    setActiveTab('chat');
   };
   
   // Get mode icon
@@ -525,11 +559,7 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
         <TabsContent value="gallery" className="p-4 mt-0 h-full overflow-auto">
           <ImageGallery 
             sessionId={getCookieValue('sessionId') || 'default'} 
-            onSelectImage={(imageUrl, description) => {
-              // Use the selected image in a chat message
-              setInputValue(`About this image (${imageUrl}): ${description.substring(0, 50)}...`);
-              setActiveTab('chat');
-            }}
+            onSelectImage={handleUseImageFromGallery}
             height="calc(100vh - 180px)"
           />
         </TabsContent>
