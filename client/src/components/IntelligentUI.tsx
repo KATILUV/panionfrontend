@@ -3,7 +3,7 @@
  * Integrates all intelligent UI components for a seamless, intuitive experience
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import QuickActionBar from '@/components/quickactions/QuickActionBar';
 import SmartSuggestions from '@/components/suggestions/SmartSuggestions';
@@ -19,14 +19,28 @@ import log from '@/utils/logger';
 const IntelligentUI: React.FC = () => {
   const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const activeAgentId = useAgentStore(state => state.activeAgentId);
-  const agents = useAgentStore(state => state.agents || {});
   const [location] = useLocation();
   
-  // Determine if we should show onboarding based on preferences
-  const showWelcomeScreen = usePreferencesStore(state => state.ui.showWelcomeScreen);
+  // Use selectors with primitive values to avoid unnecessary re-renders
+  // These are memoized to avoid new function creation on each render
+  const selectActiveAgentId = useCallback((state) => state.activeAgentId, []);
+  const activeAgentId = useAgentStore(selectActiveAgentId);
   
-  // Update first visit state based on preferences
+  const selectAgents = useCallback((state) => state.agents || {}, []);
+  const agents = useAgentStore(selectAgents);
+  
+  const selectShowWelcomeScreen = useCallback((state) => state.ui.showWelcomeScreen, []);
+  const showWelcomeScreen = usePreferencesStore(selectShowWelcomeScreen);
+  
+  const selectSetPreference = useCallback((state) => state.setPreference, []);
+  const setPreference = usePreferencesStore(selectSetPreference);
+  
+  // Memoize complex derivations to prevent unnecessary recalculation
+  const currentAgentContext = useMemo(() => 
+    activeAgentId ? agents[activeAgentId]?.name : null,
+  [activeAgentId, agents]);
+  
+  // Update first visit state based on preferences - with stable dependencies
   useEffect(() => {
     if (showWelcomeScreen) {
       setIsFirstVisit(true);
@@ -46,17 +60,13 @@ const IntelligentUI: React.FC = () => {
     }
   }, [location]);
   
-  // Get current agent context
-  const currentAgentContext = activeAgentId ? agents[activeAgentId]?.name : null;
-  
-  const setPreference = usePreferencesStore(state => state.setPreference);
-  
-  const handleOnboardingComplete = () => {
+  // Create stable callback to avoid recreating function
+  const handleOnboardingComplete = useCallback(() => {
     // Disable welcome screen in preferences
     setPreference('ui', 'showWelcomeScreen', false);
     setIsFirstVisit(false);
     log.info("Onboarding completed and disabled in preferences");
-  };
+  }, [setPreference]);
 
   return (
     <>
