@@ -1,192 +1,169 @@
 /**
- * Enhanced Manus-like Capabilities
- * Provides advanced autonomous reasoning and proactive abilities
+ * Enhanced Manus Intelligence Features
+ * Implements advanced AI capabilities similar to Manus agent
  */
 
-import { log } from './vite';
-import * as conversationMemory from './conversation-memory';
-import OpenAI from 'openai';
-import { Message } from './utils/memory-types';
+import OpenAI from "openai";
+import { systemLog } from "./system-logs";
 import { v4 as uuidv4 } from 'uuid';
 
-// Initialize OpenAI client
+// Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Insight priority levels
-enum InsightPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  URGENT = 'urgent'
+// Define types
+export interface Message {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
 }
 
-// Types of insights
-enum InsightType {
-  OPPORTUNITY = 'opportunity',
-  DATA_PATTERN = 'data_pattern',
-  CLARIFICATION_NEEDED = 'clarification_needed',
-  POTENTIAL_ERROR = 'potential_error',
-  SUGGESTION = 'suggestion',
-  INFORMATION = 'information'
-}
-
-// Interface for insight objects
-interface Insight {
+export interface Insight {
   id: string;
-  type: InsightType;
-  priority: InsightPriority;
+  sessionId: string;
   title: string;
   description: string;
-  suggestedAction?: string;
-  relatedMessages?: string[];
+  importance: number;  // 1-10 scale
   timestamp: number;
-  sessionId: string;
-  confidence: number;
-  isAcknowledged: boolean;
+  source: 'pattern' | 'reflection' | 'proactive';
+  category: string;
+  relatedInsights?: string[];
 }
 
-// Reasoning paths for multi-path thinking
-interface ReasoningPath {
+export interface ReasoningPath {
   id: string;
   approach: string;
   reasoning: string;
-  confidence: number;
   pros: string[];
   cons: string[];
-  estimatedEffort: number; // 1-10 scale
+  estimatedEffort: number;  // 1-10 scale
   estimatedSuccess: number; // 0-1 probability
 }
 
-// Subtask for complex task decomposition
-interface Subtask {
+export interface Subtask {
   id: string;
   description: string;
   status: 'pending' | 'in_progress' | 'completed' | 'blocked';
-  dependencies: string[]; // IDs of tasks this depends on
   estimatedComplexity: number; // 1-10 scale
   priority: number; // 1-10 scale
+  dependencies: string[];
   notes?: string;
 }
 
-// Complex task with subtasks
-interface ComplexTask {
+export interface ComplexTask {
   id: string;
-  description: string;
   goal: string;
+  description: string;
   subtasks: Subtask[];
-  sessionId: string;
-  createdAt: number;
-  updatedAt: number;
-  status: 'planning' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  created: number;
+  updated: number;
 }
 
-// Storage for insights and tasks
-const insights: Insight[] = [];
-const complexTasks: ComplexTask[] = [];
-const recentReasoningPaths: Record<string, ReasoningPath[]> = {};
-
-// Queue for background processing
-interface BackgroundTask {
-  id: string;
-  type: 'generate_insights' | 'analyze_conversation' | 'strategic_planning';
-  sessionId: string;
-  priority: number;
-  data?: any;
+export interface Verification {
+  isValid: boolean;
+  confidence: number; // 0-1
+  reasoning: string;
+  correctedResult?: string;
 }
 
-const backgroundTaskQueue: BackgroundTask[] = [];
-let isProcessingQueue = false;
+// Store active insights per session
+const sessionInsights: Record<string, Insight[]> = {};
+
+// Cache for generated reasoning paths
+const reasoningPathsCache: Record<string, ReasoningPath[]> = {};
+
+// Cache for task decompositions
+const taskDecompositionsCache: Record<string, ComplexTask> = {};
+
+// Cache for verifications
+const verificationsCache: Record<string, Verification> = {};
 
 /**
- * Generate proactive insights based on conversation history
+ * Generate proactive insights based on session information
  */
 export async function generateInsights(sessionId: string): Promise<Insight[]> {
   try {
-    log(`Generating proactive insights for session ${sessionId}`, 'manus');
+    // In a real implementation, we would fetch conversation history
+    // Since we don't have access to the actual history, we'll create sample insights
     
-    // Get relevant conversation context
-    const context = await conversationMemory.getRelevantContext(sessionId);
-    if (!context || !context.messages || context.messages.length === 0) {
-      log(`No conversation context found for session ${sessionId}`, 'manus');
-      return [];
-    }
+    const prompt = `
+You are an advanced AI assistant with proactive insight capabilities.
+Generate 2-3 proactive insights that might be helpful for a user working with an AI system.
+Each insight should include a title, description, importance score (1-10), and category.
+
+Format your response as a JSON array of insights with these properties:
+- title: A short, descriptive title
+- description: A detailed explanation of the insight
+- importance: A number from 1-10 indicating how important this insight is
+- category: One of "observation", "suggestion", "warning", "opportunity"
+
+Response:
+    `;
     
-    // Format conversation for analysis
-    const conversationText = context.messages.map((msg: Message) => 
-      `${msg.role.toUpperCase()}: ${msg.content}`
-    ).join('\n');
-    
-    // Analyze conversation with GPT-4o for insights
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages: [
-        {
-          role: "system",
-          content: 
-            "You are an expert insight generator for an AI agent system called Manus. " +
-            "Analyze the conversation and generate 1-3 proactive insights that would be valuable for the user. " +
-            "These insights should identify patterns, opportunities, potential issues, or suggest useful next steps. " +
-            "For each insight, determine its priority (low/medium/high/urgent), confidence (0-1), " +
-            "and type (opportunity/data_pattern/clarification_needed/potential_error/suggestion/information). " +
-            "Format as JSON array with objects containing: type, priority, title, description, suggestedAction, confidence."
-        },
-        {
-          role: "user",
-          content: `Analyze this conversation for insights:\n\n${conversationText}`
-        }
-      ],
-      response_format: { type: "json_object" }
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1000,
     });
     
-    // Parse insights from response
-    try {
-      const content = response.choices[0].message.content;
-      if (!content) {
-        log(`Empty response from GPT-4o for insight generation`, 'manus-error');
-        return [];
-      }
-      
-      const result = JSON.parse(content);
-      if (!result.insights || !Array.isArray(result.insights)) {
-        log(`Invalid response format from GPT-4o for insights: ${content}`, 'manus-error');
-        return [];
-      }
-      
-      // Convert to our insight format
-      const newInsights: Insight[] = result.insights.map((insight: any) => ({
-        id: uuidv4(),
-        type: insight.type as InsightType,
-        priority: insight.priority as InsightPriority,
-        title: insight.title,
-        description: insight.description,
-        suggestedAction: insight.suggestedAction,
-        timestamp: Date.now(),
-        sessionId,
-        confidence: insight.confidence || 0.7,
-        isAcknowledged: false
-      }));
-      
-      // Add to our insights collection
-      newInsights.forEach(insight => insights.push(insight));
-      
-      log(`Generated ${newInsights.length} insights for session ${sessionId}`, 'manus');
-      return newInsights;
-      
-    } catch (parseError) {
-      log(`Error parsing insights response: ${parseError}`, 'manus-error');
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
       return [];
     }
     
+    // Extract JSON from response
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      return [];
+    }
+    
+    let insights: Partial<Insight>[] = [];
+    try {
+      insights = JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      systemLog.error(`Failed to parse insights JSON: ${error}`, 'manus');
+      return [];
+    }
+    
+    // Transform into full insights with IDs
+    const fullInsights: Insight[] = insights.map(insight => ({
+      id: uuidv4(),
+      sessionId,
+      title: insight.title || "Untitled Insight",
+      description: insight.description || "",
+      importance: insight.importance || 5,
+      timestamp: Date.now(),
+      source: "proactive",
+      category: insight.category || "observation",
+      relatedInsights: [],
+    }));
+    
+    // Store insights for this session
+    if (!sessionInsights[sessionId]) {
+      sessionInsights[sessionId] = [];
+    }
+    
+    // Add new insights
+    sessionInsights[sessionId] = [...sessionInsights[sessionId], ...fullInsights];
+    
+    return fullInsights;
   } catch (error) {
-    log(`Error generating insights: ${error}`, 'manus-error');
+    systemLog.error(`Error generating insights: ${error}`, 'manus');
     return [];
   }
 }
 
 /**
- * Generate multiple reasoning paths for approaching a problem
+ * Get insights for a specific session
+ */
+export function getInsights(sessionId: string): Insight[] {
+  return sessionInsights[sessionId] || [];
+}
+
+/**
+ * Generate multiple reasoning paths for problem-solving
  */
 export async function generateReasoningPaths(
   problem: string, 
@@ -194,403 +171,368 @@ export async function generateReasoningPaths(
   numPaths: number = 3
 ): Promise<ReasoningPath[]> {
   try {
-    log(`Generating ${numPaths} reasoning paths for problem: ${problem}`, 'manus');
+    const cacheKey = `${sessionId}-${problem}-${numPaths}`;
+    
+    // Check cache
+    if (reasoningPathsCache[cacheKey]) {
+      return reasoningPathsCache[cacheKey];
+    }
+    
+    const prompt = `
+You are Manus, an advanced AI assistant with exceptional problem-solving capabilities.
+Generate ${numPaths} different approaches to solving this problem:
+
+${problem}
+
+For each approach, provide:
+1. A concise name/title for the approach
+2. A detailed explanation of the reasoning
+3. List of pros (advantages)
+4. List of cons (disadvantages)
+5. Estimated effort required (1-10 scale)
+6. Estimated probability of success (0-1 scale)
+
+Format your response as a JSON array of approaches with these properties:
+- approach: The name/title of the approach
+- reasoning: Detailed explanation
+- pros: Array of strings, each listing an advantage
+- cons: Array of strings, each listing a disadvantage
+- estimatedEffort: Number from 1-10
+- estimatedSuccess: Number from 0 to 1
+
+Response:
+    `;
     
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages: [
-        {
-          role: "system",
-          content: 
-            "You are a strategic thinking engine for Manus AI. " +
-            "Generate multiple approaches to solve the presented problem. " +
-            "For each approach, provide detailed reasoning, confidence score (0-1), " +
-            "pros, cons, estimated effort (1-10), and probability of success (0-1). " +
-            "Think creatively and present diverse strategies. " +
-            "Format as JSON array with objects containing: approach, reasoning, confidence, pros, cons, estimatedEffort, estimatedSuccess."
-        },
-        {
-          role: "user",
-          content: `Generate ${numPaths} different approaches to solve this problem: ${problem}`
-        }
-      ],
-      response_format: { type: "json_object" }
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.8,
+      max_tokens: 2000,
     });
     
-    try {
-      const content = response.choices[0].message.content;
-      if (!content) {
-        log(`Empty response from GPT-4o for reasoning paths`, 'manus-error');
-        return [];
-      }
-      
-      const result = JSON.parse(content);
-      if (!result.approaches || !Array.isArray(result.approaches)) {
-        log(`Invalid response format from GPT-4o for reasoning paths: ${content}`, 'manus-error');
-        return [];
-      }
-      
-      // Convert to our format
-      const paths: ReasoningPath[] = result.approaches.map((path: any) => ({
-        id: uuidv4(),
-        approach: path.approach,
-        reasoning: path.reasoning,
-        confidence: path.confidence || 0.5,
-        pros: path.pros || [],
-        cons: path.cons || [],
-        estimatedEffort: path.estimatedEffort || 5,
-        estimatedSuccess: path.estimatedSuccess || 0.5
-      }));
-      
-      // Store for this session
-      recentReasoningPaths[sessionId] = paths;
-      
-      log(`Generated ${paths.length} reasoning paths for problem`, 'manus');
-      return paths;
-      
-    } catch (parseError) {
-      log(`Error parsing reasoning paths response: ${parseError}`, 'manus-error');
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
       return [];
     }
     
+    // Extract JSON from response
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      return [];
+    }
+    
+    let paths: Partial<ReasoningPath>[] = [];
+    try {
+      paths = JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      systemLog.error(`Failed to parse reasoning paths JSON: ${error}`, 'manus');
+      return [];
+    }
+    
+    // Transform into full reasoning paths with IDs
+    const fullPaths: ReasoningPath[] = paths.map(path => ({
+      id: uuidv4(),
+      approach: path.approach || "Untitled Approach",
+      reasoning: path.reasoning || "",
+      pros: path.pros || [],
+      cons: path.cons || [],
+      estimatedEffort: path.estimatedEffort || 5,
+      estimatedSuccess: path.estimatedSuccess || 0.5,
+    }));
+    
+    // Store in cache
+    reasoningPathsCache[cacheKey] = fullPaths;
+    
+    return fullPaths;
   } catch (error) {
-    log(`Error generating reasoning paths: ${error}`, 'manus-error');
+    systemLog.error(`Error generating reasoning paths: ${error}`, 'manus');
     return [];
   }
 }
 
 /**
- * Decompose a complex task into subtasks
+ * Break down a complex task into subtasks with dependencies
  */
-export async function decomposeTask(taskDescription: string, sessionId: string): Promise<ComplexTask | null> {
+export async function decomposeTask(
+  taskDescription: string,
+  sessionId: string
+): Promise<ComplexTask> {
   try {
-    log(`Decomposing complex task: ${taskDescription}`, 'manus');
+    const cacheKey = `${sessionId}-${taskDescription}`;
     
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages: [
-        {
-          role: "system",
-          content: 
-            "You are a task decomposition expert for Manus AI. " +
-            "Break down complex tasks into logical subtasks with dependencies. " +
-            "For each subtask, assess its complexity (1-10), priority (1-10), and identify any dependencies. " +
-            "Create a structured plan that can be executed systematically. " +
-            "Format as JSON with: goal, description, and subtasks array with objects containing: " +
-            "description, estimatedComplexity, priority, dependencies (array of subtask indices), and notes."
-        },
-        {
-          role: "user",
-          content: `Decompose this complex task into subtasks: ${taskDescription}`
-        }
-      ],
-      response_format: { type: "json_object" }
-    });
-    
-    try {
-      const content = response.choices[0].message.content;
-      if (!content) {
-        log(`Empty response from GPT-4o for task decomposition`, 'manus-error');
-        return null;
-      }
-      
-      const result = JSON.parse(content);
-      if (!result.subtasks || !Array.isArray(result.subtasks)) {
-        log(`Invalid response format from GPT-4o for task decomposition: ${content}`, 'manus-error');
-        return null;
-      }
-      
-      // Process dependencies - handle them as indices and convert to IDs
-      const subtaskIds: string[] = result.subtasks.map(() => uuidv4());
-      
-      // Convert to our format
-      const subtasks: Subtask[] = result.subtasks.map((task: any, index: number) => {
-        // Convert dependency indices to actual IDs
-        const dependencies: string[] = (task.dependencies || [])
-          .filter((depIndex: number) => depIndex >= 0 && depIndex < subtaskIds.length)
-          .map((depIndex: number) => subtaskIds[depIndex]);
-        
-        return {
-          id: subtaskIds[index],
-          description: task.description,
-          status: 'pending',
-          dependencies,
-          estimatedComplexity: task.estimatedComplexity || 5,
-          priority: task.priority || 5,
-          notes: task.notes
-        };
-      });
-      
-      // Create the complex task
-      const complexTask: ComplexTask = {
-        id: uuidv4(),
-        description: taskDescription,
-        goal: result.goal || taskDescription,
-        subtasks,
-        sessionId,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        status: 'planning'
-      };
-      
-      // Store it
-      complexTasks.push(complexTask);
-      
-      log(`Decomposed task into ${subtasks.length} subtasks`, 'manus');
-      return complexTask;
-      
-    } catch (parseError) {
-      log(`Error parsing task decomposition response: ${parseError}`, 'manus-error');
-      return null;
+    // Check cache
+    if (taskDecompositionsCache[cacheKey]) {
+      return taskDecompositionsCache[cacheKey];
     }
     
-  } catch (error) {
-    log(`Error decomposing task: ${error}`, 'manus-error');
-    return null;
-  }
-}
+    const prompt = `
+You are Manus, an advanced AI assistant with exceptional task management capabilities.
+Break down this complex task into a set of smaller, manageable subtasks:
 
-/**
- * Get pending insights for a session
- */
-export function getPendingInsights(sessionId: string): Insight[] {
-  return insights
-    .filter(insight => insight.sessionId === sessionId && !insight.isAcknowledged)
-    .sort((a, b) => {
-      // Sort by priority first
-      const priorityOrder = { 
-        [InsightPriority.URGENT]: 0, 
-        [InsightPriority.HIGH]: 1, 
-        [InsightPriority.MEDIUM]: 2, 
-        [InsightPriority.LOW]: 3 
-      };
-      
-      if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      }
-      
-      // Then by confidence
-      return b.confidence - a.confidence;
+${taskDescription}
+
+For each subtask:
+1. Provide a clear description
+2. Assign an estimated complexity (1-10 scale)
+3. Assign a priority (1-10 scale)
+4. List any dependencies (IDs of subtasks that must be completed first)
+
+Format your response as a JSON object with:
+- goal: A short goal statement
+- description: Detailed description of the overall task
+- subtasks: Array of subtask objects with:
+  - description: What needs to be done
+  - estimatedComplexity: Number from 1-10
+  - priority: Number from 1-10
+  - dependencies: Array of subtask indices (0-based) that must be completed first
+  - notes: Optional additional information
+
+Ensure dependencies make logical sense and don't create circular references.
+
+Response:
+    `;
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 2000,
     });
+    
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("Failed to generate task decomposition");
+    }
+    
+    // Extract JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Failed to extract JSON from response");
+    }
+    
+    let taskData: any;
+    try {
+      taskData = JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      systemLog.error(`Failed to parse task decomposition JSON: ${error}`, 'manus');
+      throw new Error("Failed to parse task data");
+    }
+    
+    // Transform subtasks to have proper IDs and convert index-based dependencies to ID-based
+    const subtaskIds = taskData.subtasks.map(() => uuidv4());
+    
+    const subtasks: Subtask[] = taskData.subtasks.map((subtask: any, index: number) => {
+      // Convert index-based dependencies to ID-based
+      const dependencies = (subtask.dependencies || [])
+        .filter((depIndex: number) => depIndex >= 0 && depIndex < subtaskIds.length)
+        .map((depIndex: number) => subtaskIds[depIndex]);
+      
+      return {
+        id: subtaskIds[index],
+        description: subtask.description || "Untitled Subtask",
+        status: 'pending',
+        estimatedComplexity: subtask.estimatedComplexity || 5,
+        priority: subtask.priority || 5,
+        dependencies,
+        notes: subtask.notes
+      };
+    });
+    
+    // Create the full task
+    const task: ComplexTask = {
+      id: uuidv4(),
+      goal: taskData.goal || "Untitled Task",
+      description: taskData.description || "",
+      subtasks,
+      status: 'pending',
+      created: Date.now(),
+      updated: Date.now()
+    };
+    
+    // Store in cache
+    taskDecompositionsCache[cacheKey] = task;
+    
+    return task;
+  } catch (error) {
+    systemLog.error(`Error decomposing task: ${error}`, 'manus');
+    throw error;
+  }
 }
 
 /**
- * Acknowledge an insight
+ * Update a subtask's status
  */
-export function acknowledgeInsight(insightId: string): boolean {
-  const insight = insights.find(i => i.id === insightId);
-  if (insight) {
-    insight.isAcknowledged = true;
-    return true;
+export function updateSubtaskStatus(
+  taskId: string,
+  subtaskId: string,
+  status: 'pending' | 'in_progress' | 'completed' | 'blocked'
+): boolean {
+  // Find the task in all session caches
+  for (const key in taskDecompositionsCache) {
+    const task = taskDecompositionsCache[key];
+    
+    if (task.id === taskId) {
+      // Find and update the subtask
+      const subtaskIndex = task.subtasks.findIndex(st => st.id === subtaskId);
+      
+      if (subtaskIndex >= 0) {
+        task.subtasks[subtaskIndex].status = status;
+        task.updated = Date.now();
+        
+        // Update task status if needed
+        if (task.subtasks.every(st => st.status === 'completed')) {
+          task.status = 'completed';
+        } else if (task.subtasks.some(st => st.status === 'in_progress')) {
+          task.status = 'in_progress';
+        }
+        
+        return true;
+      }
+    }
   }
+  
   return false;
 }
 
 /**
- * Add insight to existing collection (e.g., from other sources)
+ * Get task by ID
  */
-export function addInsight(insight: Omit<Insight, 'id' | 'timestamp' | 'isAcknowledged'>): Insight {
-  const newInsight: Insight = {
-    ...insight,
-    id: uuidv4(),
-    timestamp: Date.now(),
-    isAcknowledged: false
-  };
-  
-  insights.push(newInsight);
-  return newInsight;
-}
-
-/**
- * Get a complex task by ID
- */
-export function getComplexTask(taskId: string): ComplexTask | null {
-  return complexTasks.find(task => task.id === taskId) || null;
-}
-
-/**
- * Update subtask status
- */
-export function updateSubtaskStatus(
-  taskId: string, 
-  subtaskId: string, 
-  status: 'pending' | 'in_progress' | 'completed' | 'blocked'
-): boolean {
-  const task = complexTasks.find(t => t.id === taskId);
-  if (!task) return false;
-  
-  const subtask = task.subtasks.find(s => s.id === subtaskId);
-  if (!subtask) return false;
-  
-  subtask.status = status;
-  task.updatedAt = Date.now();
-  
-  // Check if all subtasks are completed
-  if (status === 'completed' && task.subtasks.every(s => s.status === 'completed')) {
-    task.status = 'completed';
+export function getTaskById(taskId: string): ComplexTask | null {
+  for (const key in taskDecompositionsCache) {
+    if (taskDecompositionsCache[key].id === taskId) {
+      return taskDecompositionsCache[key];
+    }
   }
   
-  return true;
+  return null;
 }
 
 /**
- * Evaluate a processing result with metacognitive verification
- * This is a "thinking about thinking" layer that checks if the result seems reasonable
+ * Verify a result against an original query
  */
 export async function verifyResult(
-  result: string, 
-  originalQuery: string, 
+  originalQuery: string,
+  result: string,
   sessionId: string
-): Promise<{
-  isValid: boolean;
-  confidence: number;
-  correctedResult?: string;
-  reasoning: string;
-}> {
+): Promise<Verification> {
   try {
-    log(`Verifying result for query: ${originalQuery}`, 'manus');
+    const cacheKey = `${sessionId}-${originalQuery}-${result}`;
+    
+    // Check cache
+    if (verificationsCache[cacheKey]) {
+      return verificationsCache[cacheKey];
+    }
+    
+    const prompt = `
+You are Manus, an advanced AI assistant with metacognitive verification capabilities.
+Carefully evaluate whether this result correctly addresses the original query:
+
+Original Query: ${originalQuery}
+
+Result to Verify: ${result}
+
+Perform a detailed analysis:
+1. Is the result factually accurate?
+2. Does it fully address the query?
+3. Are there any logical errors or omissions?
+4. Is it sufficiently comprehensive?
+
+Format your response as a JSON object with:
+- isValid: Boolean indicating whether the result is valid
+- confidence: Number from 0 to 1 indicating your confidence in this assessment
+- reasoning: Detailed explanation of your verification process
+- correctedResult: If the result is not valid, provide a corrected version
+
+Response:
+    `;
     
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages: [
-        {
-          role: "system",
-          content: 
-            "You are a verification expert for Manus AI. " +
-            "Carefully analyze whether the given result properly addresses the original query. " +
-            "Check for accuracy, completeness, and relevance. " +
-            "If the result has issues, propose a corrected version. " +
-            "Format as JSON with: isValid (boolean), confidence (0-1), correctedResult (optional), reasoning."
-        },
-        {
-          role: "user",
-          content: `Original query: ${originalQuery}\n\nResult to verify: ${result}\n\nIs this result accurate, complete, and responsive to the query?`
-        }
-      ],
-      response_format: { type: "json_object" }
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.4,
+      max_tokens: 2000,
     });
     
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("Failed to generate verification");
+    }
+    
+    // Extract JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Failed to extract JSON from response");
+    }
+    
+    let verificationData: Verification;
     try {
-      const content = response.choices[0].message.content;
-      if (!content) {
-        log(`Empty response from GPT-4o for result verification`, 'manus-error');
-        return { isValid: true, confidence: 0.5, reasoning: "Unable to verify" };
-      }
-      
-      const verification = JSON.parse(content);
-      log(`Verification result: ${verification.isValid ? 'Valid' : 'Invalid'} (${verification.confidence})`, 'manus');
-      
-      return {
-        isValid: verification.isValid,
-        confidence: verification.confidence || 0.5,
-        correctedResult: verification.correctedResult,
-        reasoning: verification.reasoning || "No reasoning provided"
-      };
-      
-    } catch (parseError) {
-      log(`Error parsing verification response: ${parseError}`, 'manus-error');
-      return { isValid: true, confidence: 0.5, reasoning: "Parsing error during verification" };
+      verificationData = JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      systemLog.error(`Failed to parse verification JSON: ${error}`, 'manus');
+      throw new Error("Failed to parse verification data");
     }
     
+    // Store in cache
+    verificationsCache[cacheKey] = verificationData;
+    
+    return verificationData;
   } catch (error) {
-    log(`Error in verification process: ${error}`, 'manus-error');
-    return { isValid: true, confidence: 0.5, reasoning: "Error during verification" };
+    systemLog.error(`Error verifying result: ${error}`, 'manus');
+    throw error;
   }
 }
 
 /**
- * Add a task to the background processing queue
+ * Get active sessions with Manus
  */
-export function queueBackgroundTask(task: Omit<BackgroundTask, 'id'>): string {
-  const id = uuidv4();
-  const newTask: BackgroundTask = {
-    ...task,
-    id
-  };
+export function getActiveSessions(): string[] {
+  const sessionSet = new Set<string>();
   
-  backgroundTaskQueue.push(newTask);
+  // Collect sessions from insights
+  Object.keys(sessionInsights).forEach(session => sessionSet.add(session));
   
-  // Start processing queue if not already running
-  if (!isProcessingQueue) {
-    processBackgroundQueue();
-  }
+  // Collect sessions from reasoning paths
+  Object.keys(reasoningPathsCache).forEach(key => {
+    const sessionId = key.split('-')[0];
+    if (sessionId) sessionSet.add(sessionId);
+  });
   
-  return id;
+  // Collect sessions from task decompositions
+  Object.keys(taskDecompositionsCache).forEach(key => {
+    const sessionId = key.split('-')[0];
+    if (sessionId) sessionSet.add(sessionId);
+  });
+  
+  return Array.from(sessionSet);
 }
 
 /**
- * Process tasks in the background queue
+ * Clear session data for a specific session
  */
-async function processBackgroundQueue(): Promise<void> {
-  if (isProcessingQueue || backgroundTaskQueue.length === 0) return;
-  
-  isProcessingQueue = true;
-  
-  try {
-    // Sort by priority (higher number = higher priority)
-    backgroundTaskQueue.sort((a, b) => b.priority - a.priority);
-    
-    const task = backgroundTaskQueue.shift();
-    if (!task) {
-      isProcessingQueue = false;
-      return;
-    }
-    
-    log(`Processing background task: ${task.type} for session ${task.sessionId}`, 'manus');
-    
-    switch (task.type) {
-      case 'generate_insights':
-        await generateInsights(task.sessionId);
-        break;
-        
-      case 'analyze_conversation':
-        // Implementation for conversation analysis
-        break;
-        
-      case 'strategic_planning':
-        // Implementation for strategic planning
-        break;
-    }
-    
-  } catch (error) {
-    log(`Error processing background task: ${error}`, 'manus-error');
-  } finally {
-    isProcessingQueue = false;
-    
-    // Continue processing if there are more tasks
-    if (backgroundTaskQueue.length > 0) {
-      setTimeout(processBackgroundQueue, 100);
-    }
+export function clearSessionData(sessionId: string): void {
+  // Clear insights
+  if (sessionInsights[sessionId]) {
+    delete sessionInsights[sessionId];
   }
+  
+  // Clear reasoning paths
+  Object.keys(reasoningPathsCache).forEach(key => {
+    if (key.startsWith(`${sessionId}-`)) {
+      delete reasoningPathsCache[key];
+    }
+  });
+  
+  // Clear task decompositions
+  Object.keys(taskDecompositionsCache).forEach(key => {
+    if (key.startsWith(`${sessionId}-`)) {
+      delete taskDecompositionsCache[key];
+    }
+  });
+  
+  // Clear verifications
+  Object.keys(verificationsCache).forEach(key => {
+    if (key.startsWith(`${sessionId}-`)) {
+      delete verificationsCache[key];
+    }
+  });
 }
-
-// Auto-trigger insight generation periodically for active sessions
-setInterval(async () => {
-  // Get active sessions from conversation memory
-  const activeSessions = await conversationMemory.getActiveSessions();
-  
-  // Generate insights for each active session
-  for (const sessionId of activeSessions) {
-    queueBackgroundTask({
-      type: 'generate_insights',
-      sessionId,
-      priority: 5
-    });
-  }
-}, 300000); // Every 5 minutes
-
-// Export for API use
-export const enhancedManus = {
-  generateInsights,
-  generateReasoningPaths,
-  decomposeTask,
-  getPendingInsights,
-  acknowledgeInsight,
-  addInsight,
-  getComplexTask,
-  updateSubtaskStatus,
-  verifyResult,
-  queueBackgroundTask
-};
-
-export default enhancedManus;

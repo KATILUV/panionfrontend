@@ -1,274 +1,324 @@
 /**
- * useManus Hook
- * React hooks for accessing Manus-like capabilities
+ * Manus Intelligence Hooks
+ * Custom React hooks for interacting with Manus-like capabilities
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
-// Interface for insight objects
+// Types
 export interface Insight {
   id: string;
-  type: 'opportunity' | 'data_pattern' | 'clarification_needed' | 'potential_error' | 'suggestion' | 'information';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  sessionId: string;
   title: string;
   description: string;
-  suggestedAction?: string;
-  relatedMessages?: string[];
+  importance: number;  // 1-10 scale
   timestamp: number;
-  sessionId: string;
-  confidence: number;
-  isAcknowledged: boolean;
+  source: 'pattern' | 'reflection' | 'proactive';
+  category: string;
+  relatedInsights?: string[];
 }
 
-// Types for reasoning paths
 export interface ReasoningPath {
   id: string;
   approach: string;
   reasoning: string;
-  confidence: number;
   pros: string[];
   cons: string[];
-  estimatedEffort: number; // 1-10 scale
+  estimatedEffort: number;  // 1-10 scale
   estimatedSuccess: number; // 0-1 probability
 }
 
-// Types for tasks and subtasks
 export interface Subtask {
   id: string;
   description: string;
   status: 'pending' | 'in_progress' | 'completed' | 'blocked';
+  estimatedComplexity: number; // 1-10 scale
+  priority: number; // 1-10 scale
   dependencies: string[];
-  estimatedComplexity: number;
-  priority: number;
   notes?: string;
 }
 
 export interface ComplexTask {
   id: string;
-  description: string;
   goal: string;
+  description: string;
   subtasks: Subtask[];
-  sessionId: string;
-  createdAt: number;
-  updatedAt: number;
-  status: 'planning' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  created: number;
+  updated: number;
 }
 
-// Hook for accessing Manus insights
+export interface Verification {
+  isValid: boolean;
+  confidence: number; // 0-1
+  reasoning: string;
+  correctedResult?: string;
+}
+
+// Hook for insights
 export function useInsights(sessionId: string) {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Get insights
-  const { data, isLoading, error, refetch } = useQuery({
+  // Fetch insights
+  const { data, isLoading, error } = useQuery<{ insights: Insight[] }>({
     queryKey: ['/api/manus/insights', sessionId],
-    queryFn: () => 
-      fetch(`/api/manus/insights/${sessionId}`)
-        .then(res => res.json())
-        .then(data => data.insights || []),
-    // Only refresh every minute to avoid excessive calls
-    refetchInterval: 60000,
+    queryFn: async () => {
+      const res = await apiRequest('GET', `/api/manus/insights/${sessionId}`);
+      return res.json();
+    },
+    refetchInterval: 30000, // Poll every 30 seconds for new insights
   });
   
   // Generate insights
-  const generateMutation = useMutation({
+  const { mutate: generateInsights, isPending: isGenerating } = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('POST', '/api/manus/insights', { sessionId });
+      const res = await apiRequest('POST', `/api/manus/insights/${sessionId}/generate`);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/manus/insights', sessionId] });
-    }
+    onSuccess: (newData) => {
+      // Update cache with new insights
+      queryClient.setQueryData(['/api/manus/insights', sessionId], (oldData: any) => {
+        if (!oldData) return newData;
+        return {
+          ...oldData,
+          insights: [...oldData.insights, ...newData.insights],
+        };
+      });
+      
+      // Show toast if insights were generated
+      if (newData.insights && newData.insights.length > 0) {
+        toast({
+          title: "New insights available",
+          description: `${newData.insights.length} new insights have been generated.`,
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to generate insights",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    },
   });
   
-  // Acknowledge an insight
-  const acknowledgeMutation = useMutation({
-    mutationFn: async (insightId: string) => {
-      const res = await apiRequest('POST', `/api/manus/insights/${insightId}/acknowledge`);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/manus/insights', sessionId] });
+  // Automatically generate insights when hook is first used
+  useEffect(() => {
+    if (!isLoading && !error && (!data || data.insights.length === 0)) {
+      generateInsights();
     }
-  });
+  }, [isLoading, error, data, generateInsights]);
   
   return {
-    insights: data || [],
+    insights: data?.insights || [],
     isLoading,
     error,
-    refetch,
-    generateInsights: generateMutation.mutate,
-    isGenerating: generateMutation.isPending,
-    acknowledgeInsight: acknowledgeMutation.mutate,
-    isAcknowledging: acknowledgeMutation.isPending
+    generateInsights,
+    isGenerating,
   };
 }
 
-// Hook for generating reasoning paths
+// Hook for reasoning paths
 export function useReasoningPaths() {
-  // Generate reasoning paths
-  const reasoningMutation = useMutation({
-    mutationFn: async ({ 
-      problem, 
-      sessionId, 
-      numPaths = 3 
-    }: { 
-      problem: string, 
-      sessionId: string, 
-      numPaths?: number 
-    }) => {
+  const { toast } = useToast();
+  const [reasoningPaths, setReasoningPaths] = useState<ReasoningPath[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const generateReasoningPaths = async ({
+    problem,
+    sessionId,
+    numPaths = 3,
+  }: {
+    problem: string;
+    sessionId: string;
+    numPaths?: number;
+  }) => {
+    if (!problem) {
+      setReasoningPaths([]);
+      return;
+    }
+    
+    setIsGenerating(true);
+    setError(null);
+    
+    try {
       const res = await apiRequest('POST', '/api/manus/reasoning-paths', {
         problem,
         sessionId,
-        numPaths
+        numPaths,
       });
-      return res.json();
+      
+      const data = await res.json();
+      setReasoningPaths(data.paths || []);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to generate reasoning paths'));
+      toast({
+        title: "Failed to generate reasoning paths",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
     }
-  });
+  };
   
   return {
-    generateReasoningPaths: reasoningMutation.mutate,
-    isGenerating: reasoningMutation.isPending,
-    reasoningPaths: reasoningMutation.data?.paths || [],
-    error: reasoningMutation.error
+    reasoningPaths,
+    isGenerating,
+    error,
+    generateReasoningPaths,
   };
 }
 
 // Hook for task decomposition
 export function useTaskDecomposition() {
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [decomposedTask, setDecomposedTask] = useState<ComplexTask | null>(null);
+  const [isDecomposing, setIsDecomposing] = useState(false);
+  const [isUpdatingSubtask, setIsUpdatingSubtask] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   
-  // Decompose a task
-  const decomposeMutation = useMutation({
-    mutationFn: async ({ 
-      taskDescription, 
-      sessionId 
-    }: { 
-      taskDescription: string, 
-      sessionId: string 
-    }) => {
+  const decomposeTask = async ({
+    taskDescription,
+    sessionId,
+  }: {
+    taskDescription: string;
+    sessionId: string;
+  }) => {
+    if (!taskDescription) {
+      setDecomposedTask(null);
+      return;
+    }
+    
+    setIsDecomposing(true);
+    setError(null);
+    
+    try {
       const res = await apiRequest('POST', '/api/manus/decompose-task', {
         taskDescription,
-        sessionId
+        sessionId,
       });
-      return res.json();
+      
+      const data = await res.json();
+      setDecomposedTask(data.task || null);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to decompose task'));
+      toast({
+        title: "Failed to decompose task",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDecomposing(false);
     }
-  });
-  
-  // Get a task by ID
-  const useTask = (taskId: string | null) => {
-    return useQuery({
-      queryKey: ['/api/manus/tasks', taskId],
-      queryFn: async () => {
-        if (!taskId) return null;
-        const res = await fetch(`/api/manus/tasks/${taskId}`);
-        const data = await res.json();
-        return data.task;
-      },
-      enabled: !!taskId,
-    });
   };
   
-  // Update subtask status
-  const updateSubtaskMutation = useMutation({
-    mutationFn: async ({ 
-      taskId, 
-      subtaskId, 
-      status 
-    }: { 
-      taskId: string, 
-      subtaskId: string, 
-      status: 'pending' | 'in_progress' | 'completed' | 'blocked' 
-    }) => {
-      const res = await apiRequest('PATCH', `/api/manus/tasks/${taskId}/subtasks/${subtaskId}`, {
-        status
+  const updateSubtaskStatus = async ({
+    taskId,
+    subtaskId,
+    status,
+  }: {
+    taskId: string;
+    subtaskId: string;
+    status: 'pending' | 'in_progress' | 'completed' | 'blocked';
+  }) => {
+    if (!taskId || !subtaskId) return;
+    
+    setIsUpdatingSubtask(true);
+    
+    try {
+      const res = await apiRequest('POST', '/api/manus/update-subtask', {
+        taskId,
+        subtaskId,
+        status,
       });
-      return res.json();
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/manus/tasks', variables.taskId] });
+      
+      const data = await res.json();
+      if (data.success && data.task) {
+        setDecomposedTask(data.task);
+      }
+    } catch (err) {
+      toast({
+        title: "Failed to update subtask",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingSubtask(false);
     }
-  });
+  };
   
   return {
-    decomposeTask: decomposeMutation.mutate,
-    isDecomposing: decomposeMutation.isPending,
-    decomposedTask: decomposeMutation.data?.task,
-    decompositionError: decomposeMutation.error,
-    useTask,
-    updateSubtaskStatus: updateSubtaskMutation.mutate,
-    isUpdatingSubtask: updateSubtaskMutation.isPending
+    decomposedTask,
+    isDecomposing,
+    isUpdatingSubtask,
+    error,
+    decomposeTask,
+    updateSubtaskStatus,
   };
 }
 
 // Hook for verification
 export function useVerification() {
-  // Verify a result
-  const verifyMutation = useMutation({
-    mutationFn: async ({ 
-      result, 
-      originalQuery, 
-      sessionId 
-    }: { 
-      result: string, 
-      originalQuery: string, 
-      sessionId: string 
-    }) => {
+  const { toast } = useToast();
+  const [verification, setVerification] = useState<Verification | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState<Error | null>(null);
+  
+  const verifyResult = async ({
+    originalQuery,
+    result,
+    sessionId,
+  }: {
+    originalQuery: string;
+    result: string;
+    sessionId: string;
+  }) => {
+    if (!originalQuery || !result) {
+      setVerification(null);
+      return;
+    }
+    
+    setIsVerifying(true);
+    setVerificationError(null);
+    
+    try {
       const res = await apiRequest('POST', '/api/manus/verify', {
-        result,
         originalQuery,
-        sessionId
-      });
-      return res.json();
-    }
-  });
-  
-  return {
-    verifyResult: verifyMutation.mutate,
-    isVerifying: verifyMutation.isPending,
-    verification: verifyMutation.data?.verification,
-    verificationError: verifyMutation.error
-  };
-}
-
-// Hook for queueing background tasks
-export function useBackgroundTasks() {
-  // Queue a task
-  const queueMutation = useMutation({
-    mutationFn: async ({ 
-      type, 
-      sessionId, 
-      priority = 5, 
-      data 
-    }: { 
-      type: 'generate_insights' | 'analyze_conversation' | 'strategic_planning', 
-      sessionId: string, 
-      priority?: number, 
-      data?: any 
-    }) => {
-      const res = await apiRequest('POST', '/api/manus/queue', {
-        type,
+        result,
         sessionId,
-        priority,
-        data
       });
-      return res.json();
+      
+      const data = await res.json();
+      setVerification(data.verification || null);
+    } catch (err) {
+      setVerificationError(err instanceof Error ? err : new Error('Failed to verify result'));
+      toast({
+        title: "Failed to verify result",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
     }
-  });
+  };
   
   return {
-    queueTask: queueMutation.mutate,
-    isQueueing: queueMutation.isPending,
-    queuedTaskId: queueMutation.data?.taskId,
-    queueError: queueMutation.error
+    verification,
+    isVerifying,
+    verificationError,
+    verifyResult,
   };
 }
 
-// Export all hooks
 export default {
   useInsights,
   useReasoningPaths,
   useTaskDecomposition,
   useVerification,
-  useBackgroundTasks
 };
