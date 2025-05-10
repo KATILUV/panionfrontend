@@ -18,7 +18,7 @@ import ScraperTest from "./pages/ScraperTest";
 import AutonomousAgentPage from "./pages/AutonomousAgentPage";
 import BrowserPage from "./pages/BrowserPage";
 import TaskMonitorPage from "./pages/TaskMonitorPage";
-import ManusDashboard from "./pages/manus-dashboard";
+// Manus dashboard removed
 import PanionIntelligenceDashboard from "./pages/panion-intelligence-dashboard";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
