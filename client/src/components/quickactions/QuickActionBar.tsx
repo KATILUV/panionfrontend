@@ -3,26 +3,20 @@
  * Provides intelligent shortcuts based on user behavior and context
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, 
   Search, 
-  ArrowUpRight, 
   Plus, 
   ChevronUp, 
   Maximize2, 
   Minimize2,
   X,
   Settings,
-  ArrowLeft,
-  ArrowRight,
-  PanelLeft,
-  Zap,
-  Copy
+  Zap
 } from 'lucide-react';
 import { useAgentStore } from '@/state/agentStore';
-import { useThemeStore } from '@/state/themeStore';
 import log from '@/utils/logger';
 
 // Quick action interface
@@ -41,80 +35,24 @@ interface ActionContext {
   label: string;
   icon: React.ReactNode;
   actions: QuickAction[];
-  isActive: () => boolean;
+  isActive: boolean;
 }
-
-// User preference (mock for now)
-interface UserPreferences {
-  favoriteAgents: string[];
-  pinnedActions: string[];
-  quickAccessSettings: {
-    position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-    showLabels: boolean;
-    autoSuggest: boolean;
-  };
-}
-
-// Mock preferences
-const defaultPreferences: UserPreferences = {
-  favoriteAgents: ['clara', 'panion'],
-  pinnedActions: ['open-search', 'open-notes', 'toggle-maximize'],
-  quickAccessSettings: {
-    position: 'bottom-right',
-    showLabels: true,
-    autoSuggest: true
-  }
-};
 
 /**
  * QuickActionBar provides contextual shortcuts for common actions
  */
 const QuickActionBar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeContext, setActiveContext] = useState<string | null>(null);
   
-  // Get agent-related actions from agent store
+  // Get agent-related state from store
+  const activeAgentId = useAgentStore(state => state.activeAgentId);
   const openAgent = useAgentStore(state => state.openAgent);
   const minimizeAgent = useAgentStore(state => state.minimizeAgent);
   const closeAgent = useAgentStore(state => state.closeAgent);
-  const agents = useAgentStore(state => state.agents || {});  // Fallback to empty object if not available
-  const activeAgentId = useAgentStore(state => state.activeAgentId);
-  
-  // Get setWindowProperty from store to handle maximizing
-  const setWindowProperty = useAgentStore(state => state.setWindowProperty);
   const windows = useAgentStore(state => state.windows || {});
+  const setWindowProperty = useAgentStore(state => state.setWindowProperty);
   
-  // Define maximize agent function compatible with current store
-  const maximizeAgent = (agentId: string, isMaximized: boolean) => {
-    // Simple fallback that avoids store dependency
-    try {
-      // Use the stored reference to setWindowProperty
-      if (typeof setWindowProperty === 'function') {
-        setWindowProperty(agentId, 'isMaximized', isMaximized);
-      } else {
-        // Fallback to just minimizing/unminimizing
-        if (!isMaximized && minimizeAgent) {
-          minimizeAgent(agentId);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to maximize agent:', error);
-    }
-  };
-  
-  // Define agent maximization check function with error handling
-  const isAgentMaximized = (agentId: string): boolean => {
-    try {
-      // Use the stored reference to windows
-      return !!windows[agentId]?.isMaximized;
-    } catch (error) {
-      console.error('Failed to check agent maximized state:', error);
-      return false;
-    }
-  };
-  
-  // Use static preferences for now to avoid infinite loops
-  const favoriteAgents = ['clara', 'panion'];
+  // Static preferences
   const pinnedActions = ['open-search', 'open-notes', 'toggle-maximize'];
   const quickAccessSettings = {
     position: 'bottom-right' as const,
@@ -122,122 +60,126 @@ const QuickActionBar: React.FC = () => {
     autoSuggest: true
   };
   
-  // Define available contexts
-  const contexts: ActionContext[] = [
+  // Helper function to check if agent is maximized - memoized to avoid recomputing
+  const isAgentMaximized = useCallback((agentId: string): boolean => {
+    return !!windows[agentId]?.isMaximized;
+  }, [windows]);
+  
+  // Helper function to maximize/minimize agent - memoized to avoid recreation
+  const toggleMaximize = useCallback((agentId: string) => {
+    const isMax = isAgentMaximized(agentId);
+    if (typeof setWindowProperty === 'function') {
+      setWindowProperty(agentId, 'isMaximized', !isMax);
+      log.debug(`${isMax ? 'Restoring' : 'Maximizing'} agent`);
+    }
+  }, [isAgentMaximized, setWindowProperty]);
+  
+  // Define context-specific actions - memoized to avoid recreation on every render
+  const globalActions = useMemo(() => [
+    {
+      id: 'open-clara',
+      label: 'Talk to Clara',
+      icon: <MessageSquare size={16} />,
+      action: () => {
+        if (openAgent) openAgent('clara');
+        log.debug('Opening Clara agent');
+      },
+      shortcut: '⌘+C'
+    },
+    {
+      id: 'open-search',
+      label: 'Search',
+      icon: <Search size={16} />,
+      action: () => {
+        if (openAgent) openAgent('search');
+        log.debug('Opening Search agent');
+      },
+      shortcut: '⌘+K'
+    },
+    {
+      id: 'open-notes',
+      label: 'Notes',
+      icon: <Plus size={16} />,
+      action: () => {
+        if (openAgent) openAgent('notes');
+        log.debug('Opening Notes agent');
+      }
+    },
+    {
+      id: 'open-settings',
+      label: 'Settings',
+      icon: <Settings size={16} />,
+      action: () => {
+        if (openAgent) openAgent('settings');
+        log.debug('Opening Settings agent');
+      }
+    }
+  ], [openAgent]);
+  
+  const agentActions = useMemo(() => [
+    {
+      id: 'toggle-maximize',
+      label: 'Toggle Maximize',
+      icon: <Maximize2 size={16} />,
+      action: () => {
+        if (activeAgentId) {
+          toggleMaximize(activeAgentId);
+        }
+      },
+      shortcut: 'M'
+    },
+    {
+      id: 'close-agent',
+      label: 'Close',
+      icon: <X size={16} />,
+      action: () => {
+        if (activeAgentId && closeAgent) {
+          closeAgent(activeAgentId);
+          log.debug(`Closing agent: ${activeAgentId}`);
+        }
+      },
+      className: 'text-red-500'
+    }
+  ], [activeAgentId, closeAgent, toggleMaximize]);
+  
+  // Determine which contexts are active
+  const contexts = useMemo(() => [
     {
       id: 'global',
       label: 'Global Actions',
       icon: <Zap size={16} />,
-      isActive: () => true, // Always active
-      actions: [
-        {
-          id: 'open-clara',
-          label: 'Talk to Clara',
-          icon: <MessageSquare size={16} />,
-          action: () => {
-            openAgent('clara');
-            log.debug('Opening Clara agent');
-          },
-          shortcut: '⌘+C'
-        },
-        {
-          id: 'open-search',
-          label: 'Search',
-          icon: <Search size={16} />,
-          action: () => {
-            openAgent('search');
-            log.debug('Opening Search agent');
-          },
-          shortcut: '⌘+K'
-        },
-        {
-          id: 'open-notes',
-          label: 'Notes',
-          icon: <Plus size={16} />,
-          action: () => {
-            openAgent('notes');
-            log.debug('Opening Notes agent');
-          }
-        },
-        {
-          id: 'open-settings',
-          label: 'Settings',
-          icon: <Settings size={16} />,
-          action: () => {
-            openAgent('settings');
-            log.debug('Opening Settings agent');
-          }
-        }
-      ]
+      isActive: true, // Always active
+      actions: globalActions
     },
     {
       id: 'agent',
       label: 'Agent Actions',
       icon: <MessageSquare size={16} />,
-      isActive: () => !!activeAgentId,
-      actions: [
-        {
-          id: 'toggle-maximize',
-          label: 'Toggle Maximize',
-          // Handled separately in the UI
-          icon: <Maximize2 size={16} />,
-          action: () => {
-            if (activeAgentId) {
-              const isMax = isAgentMaximized(activeAgentId);
-              maximizeAgent(activeAgentId, !isMax);
-              log.debug(`${isMax ? 'Restoring' : 'Maximizing'} agent`);
-            }
-          },
-          shortcut: 'M'
-        },
-        {
-          id: 'close-agent',
-          label: 'Close',
-          icon: <X size={16} />,
-          action: () => {
-            if (activeAgentId && closeAgent) {
-              closeAgent(activeAgentId);
-              log.debug(`Closing agent: ${activeAgentId}`);
-            }
-          },
-          className: 'text-red-500'
-        }
-      ]
+      isActive: !!activeAgentId,
+      actions: agentActions
     }
-  ];
+  ], [activeAgentId, globalActions, agentActions]);
   
-  // Determine which context is active
-  useEffect(() => {
-    // Default to global context
-    let newContext = 'global';
-    
-    // Check if agent context should be active
-    if (activeAgentId) {
-      newContext = 'agent';
-    }
-    
-    setActiveContext(newContext);
-  }, [activeAgentId]);
+  // Get active contexts
+  const activeContexts = useMemo(() => 
+    contexts.filter(context => context.isActive),
+  [contexts]);
   
-  // Get actions for current context
-  const getActionsForContext = (): QuickAction[] => {
-    if (!activeContext) return [];
-    
-    const context = contexts.find(c => c.id === activeContext);
-    return context?.actions || [];
-  };
+  // Get all actions from active contexts
+  const allActions = useMemo(() => 
+    activeContexts.flatMap(context => context.actions),
+  [activeContexts]);
   
   // Get pinned actions
-  const getPinnedActions = (): QuickAction[] => {
-    const allActions = contexts.flatMap(context => context.actions);
-    return allActions.filter(action => pinnedActions.includes(action.id));
-  };
+  const pinnedActionsData = useMemo(() => 
+    allActions.filter(action => pinnedActions.includes(action.id)),
+  [allActions]);
   
   // Toggle expanded state
-  const handleToggleExpand = () => {
-    setIsExpanded(!isExpanded);
+  const handleToggleExpand = useCallback(() => {
+    setIsExpanded(prev => !prev);
     log.debug(`QuickActionBar: ${isExpanded ? 'collapsing' : 'expanding'}`);
-  };
+  }, [isExpanded]);
   
   // Animation variants
   const barVariants = {
@@ -258,16 +200,12 @@ const QuickActionBar: React.FC = () => {
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { 
-        duration: 0.2
-      }
+      transition: { duration: 0.2 }
     },
     exit: { 
       opacity: 0, 
       y: -10,
-      transition: { 
-        duration: 0.1
-      }
+      transition: { duration: 0.1 }
     }
   };
   
@@ -320,10 +258,10 @@ const QuickActionBar: React.FC = () => {
             className="px-2 pb-2 border-t border-border"
           >
             {/* Pinned Actions */}
-            {getPinnedActions().length > 0 && (
+            {pinnedActionsData.length > 0 && (
               <div className="py-2">
                 <div className="flex space-x-1 mb-1">
-                  {getPinnedActions().map(action => (
+                  {pinnedActionsData.map(action => (
                     <button
                       key={action.id}
                       onClick={() => {
@@ -333,7 +271,9 @@ const QuickActionBar: React.FC = () => {
                       className={`p-2 rounded-md hover:bg-accent transition-colors ${action.className || ''}`}
                       title={action.label}
                     >
-                      {action.icon}
+                      {action.id === 'toggle-maximize' && activeAgentId && isAgentMaximized(activeAgentId) 
+                        ? <Minimize2 size={16} /> 
+                        : action.icon}
                     </button>
                   ))}
                 </div>
@@ -343,29 +283,33 @@ const QuickActionBar: React.FC = () => {
             
             {/* Context-specific Actions */}
             <div className="space-y-1 py-1">
-              {getActionsForContext().map(action => (
-                <button
-                  key={action.id}
-                  onClick={() => {
-                    action.action();
-                    setIsExpanded(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-md hover:bg-accent flex items-center justify-between transition-colors ${action.className || ''}`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <div className={`${action.className || 'text-primary'}`}>
-                      {action.id === 'toggle-maximize' && activeAgentId ? 
-                        (isAgentMaximized(activeAgentId) ? <Minimize2 size={16} /> : <Maximize2 size={16} />) 
-                        : action.icon}
-                    </div>
-                    <span className="text-sm">{action.label}</span>
-                  </div>
-                  {action.shortcut && (
-                    <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                      {action.shortcut}
-                    </span>
-                  )}
-                </button>
+              {activeContexts.map(context => (
+                <React.Fragment key={context.id}>
+                  {context.actions.map(action => (
+                    <button
+                      key={action.id}
+                      onClick={() => {
+                        action.action();
+                        setIsExpanded(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-md hover:bg-accent flex items-center justify-between transition-colors ${action.className || ''}`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className={`${action.className || 'text-primary'}`}>
+                          {action.id === 'toggle-maximize' && activeAgentId && isAgentMaximized(activeAgentId) 
+                            ? <Minimize2 size={16} /> 
+                            : action.icon}
+                        </div>
+                        <span className="text-sm">{action.label}</span>
+                      </div>
+                      {action.shortcut && (
+                        <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {action.shortcut}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </React.Fragment>
               ))}
             </div>
           </motion.div>

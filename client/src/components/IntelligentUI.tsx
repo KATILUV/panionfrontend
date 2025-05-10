@@ -60,8 +60,8 @@ const IntelligentUI: React.FC = () => {
 
   return (
     <>
-      {/* QuickAction Bar - Always available at the bottom right */}
-      <QuickActionBar />
+      {/* QuickAction Bar - Temporarily disabled to fix infinite loop issue */}
+      {/* <QuickActionBar /> */}
       
       {/* Smart Suggestions - Disabled for now until we fix the store compatibility */}
       {/* {showSuggestions && (
