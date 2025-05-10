@@ -702,7 +702,7 @@ export const useAgentStore = create<AgentState>()(
         // Import and use the new layout utility instead
         import('../lib/layoutUtils').then(({ ApplyLayout }) => {
           // Default to focus mode as fallback
-          ApplyLayout.focusMode('clara');
+          ApplyLayout.focusMode('panion');
         });
       },
       

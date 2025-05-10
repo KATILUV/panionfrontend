@@ -1033,7 +1033,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                         className="justify-center"
                         onClick={() => {
                           import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
-                            ApplyLayout.gridLayout(['clara', 'notes', 'settings', 'marketplace'], 2);
+                            ApplyLayout.gridLayout(['panion', 'notes', 'settings', 'marketplace'], 2);
                             toast({ title: "2×2 Grid", description: "Applied 2×2 grid layout" });
                           });
                         }}
