@@ -1,0 +1,37 @@
+{
+  "conversations": [
+    {
+      "id": 1,
+      "sessionId": "test-session-1",
+      "title": "Test Conversation 1",
+      "createdAt": "2025-05-10T15:30:18.047Z",
+      "lastUpdatedAt": "2025-05-10T15:30:18.047Z",
+      "messageCount": 2
+    }
+  ],
+  "messages": [
+    {
+      "sessionId": "test-session-1",
+      "messages": [
+        {
+          "id": 1,
+          "content": "Hello, this is a test message",
+          "role": "user",
+          "timestamp": "2025-05-10T15:30:18.047Z",
+          "sessionId": "test-session-1",
+          "important": false,
+          "conversationMode": "casual"
+        },
+        {
+          "id": 2,
+          "content": "This is a response to the test message",
+          "role": "assistant",
+          "timestamp": "2025-05-10T15:30:18.048Z",
+          "sessionId": "test-session-1",
+          "important": false,
+          "conversationMode": "casual"
+        }
+      ]
+    }
+  ]
+}

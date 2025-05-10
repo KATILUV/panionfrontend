@@ -88,6 +88,9 @@ export class MemStorage implements IStorage {
   }
   
   async getAllConversations(): Promise<Conversation[]> {
+    // Always reload from file first to ensure we have the latest data
+    await this.loadFromFile();
+    
     return Array.from(this.conversations.values()).sort((a, b) => {
       // Sort by last updated, most recent first
       const dateA = new Date(a.lastUpdatedAt);
@@ -219,11 +222,21 @@ export class MemStorage implements IStorage {
         return;
       }
       
+      console.log(`Loading conversations from file: ${filePath}`);
+      
       const fileData = await fs.promises.readFile(filePath, 'utf-8');
+      console.log(`Read file data, length: ${fileData.length}`);
+      
       const data = JSON.parse(fileData);
+      console.log(`Parsed data`);
+      
+      // Clear existing data
+      this.conversations.clear();
+      this.messages.clear();
       
       // Load conversations
       if (data.conversations && Array.isArray(data.conversations)) {
+        console.log(`Loading ${data.conversations.length} conversations`);
         data.conversations.forEach((conversation: Conversation) => {
           this.conversations.set(conversation.sessionId, conversation);
           // Update the ID counter to be greater than any existing ID
@@ -233,6 +246,7 @@ export class MemStorage implements IStorage {
       
       // Load messages
       if (data.messages && Array.isArray(data.messages)) {
+        console.log(`Loading ${data.messages.length} message threads`);
         data.messages.forEach((item: { sessionId: string, messages: Message[] }) => {
           this.messages.set(item.sessionId, item.messages);
           
@@ -244,8 +258,10 @@ export class MemStorage implements IStorage {
         });
       }
       
-      log(`Loaded ${this.conversations.size} conversations and ${this.messages.size} message threads`, 'storage');
+      log(`Loaded ${this.conversations.size} conversations and ${this.messages.size} message threads from ${filePath}`, 'storage');
+      console.log(`Loaded ${this.conversations.size} conversations and ${this.messages.size} message threads from ${filePath}`);
     } catch (error: any) {
+      console.error(`Failed to load conversations from file: ${error.message}`);
       systemLog.error(`Failed to load conversations from file: ${error.message}`, 'storage');
     }
   }
