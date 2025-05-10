@@ -20,6 +20,7 @@ import DaddyDataAgent from './agents/DaddyDataAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
 import Dashboard from './system/Dashboard';
+import IntelligentUI from './IntelligentUI';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence } from 'framer-motion';
 import { useScreenSize, useOrientation } from '../hooks/use-mobile';
@@ -336,6 +337,9 @@ const Desktop: React.FC = () => {
       
       {/* Command Palette */}
       <CommandPalette />
+      
+      {/* Intelligent UI components */}
+      <IntelligentUI />
       
       {/* Taskbar - position is handled via the useTaskbarStore */}
       <Taskbar isMobile={isMobile} />

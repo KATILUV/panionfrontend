@@ -79,15 +79,26 @@ const QuickActionBar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeContext, setActiveContext] = useState<string | null>(null);
   
-  // Get agent-related actions
-  const { 
-    openAgent, 
-    minimizeAgent, 
-    maximizeAgent, 
-    agents, 
-    activeAgentId, 
-    isAgentMaximized 
-  } = useAgentStore();
+  // Get agent-related actions from agent store
+  const openAgent = useAgentStore(state => state.openAgent);
+  const minimizeAgent = useAgentStore(state => state.minimizeAgent);
+  const agents = useAgentStore(state => state.agents || {});  // Fallback to empty object if not available
+  const activeAgentId = useAgentStore(state => state.activeAgentId);
+  
+  // Define maximize agent function compatible with current store
+  const maximizeAgent = (agentId: string, isMaximized: boolean) => {
+    // This function will adapt to the store's actual implementation
+    const maximize = useAgentStore.getState().setWindowProperty;
+    if (maximize) {
+      maximize(agentId, 'isMaximized', isMaximized);
+    }
+  };
+  
+  // Define agent maximization check function
+  const isAgentMaximized = (agentId: string): boolean => {
+    const windows = useAgentStore.getState().windows || {};
+    return windows[agentId]?.isMaximized || false;
+  };
   
   // Use mock preferences until we integrate with preferences store
   const { 
