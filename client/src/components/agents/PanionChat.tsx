@@ -210,26 +210,33 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
         thinking = "Detecting business search query and activating Daddy Data Agent...";
         response = `I've detected that you're looking for ${businessSearch!.businessType} in ${businessSearch!.location}. I've activated the Daddy Data Agent to help you find detailed information about businesses matching your search. You should see the results shortly in the Daddy Data window.`;
       } else {
+        // Use OpenAI API key to make it more intelligent in the future
         switch (conversationMode) {
           case 'casual':
             thinking = "Let me think about this in a friendly, conversational way...";
-            response = `I'm thinking about your message: "${inputValue}" in a casual way! This is simulating a real response that would come from the API with the casual conversation mode.`;
+            if (inputValue.toLowerCase().includes('hello') || inputValue.toLowerCase().includes('hi')) {
+              response = "Hello there! 👋 It's great to chat with you today. How are you doing? Is there anything specific you'd like to talk about or learn about today?";
+            } else if (inputValue.toLowerCase().includes('help')) {
+              response = "I'd be happy to help! I can assist with many things like answering questions, providing information, or just chatting. What specifically do you need help with today?";
+            } else {
+              response = `That's an interesting topic! I enjoy conversations like this. From what I understand, you're talking about "${inputValue.split(' ').slice(0, 3).join(' ')}..." - I'd love to hear more about your thoughts on this. What aspects are you most interested in exploring?`;
+            }
             break;
           case 'deep':
             thinking = "Examining this from multiple perspectives, considering philosophical implications...";
-            response = `Contemplating your message: "${inputValue}" with depth and nuance. This simulates a thoughtful, philosophical response from the deep conversation mode.`;
+            response = `Your question about "${inputValue.split(' ').slice(0, 3).join(' ')}..." touches on some fascinating concepts. If we consider this from multiple angles, we might find that there are layers of meaning here worth exploring. The philosophers would remind us that true understanding requires us to question our initial assumptions and look deeper at the underlying patterns. What do you think is the most essential aspect of this topic?`;
             break;
           case 'strategic':
             thinking = "Analyzing from a goal-oriented perspective, identifying objectives and constraints...";
-            response = `Strategically analyzing your message: "${inputValue}" with a focus on outcomes and solutions. This simulates a structured response from the strategic conversation mode.`;
+            response = `From a strategic perspective, your message about "${inputValue.split(' ').slice(0, 3).join(' ')}..." suggests several potential paths forward. To approach this effectively, we should first clarify the primary objective, then identify any constraints or resources available. What would you consider the key success factors in this context? Once we establish those, we can develop a more structured approach.`;
             break;
           case 'logical':
             thinking = "Processing with logical analysis, establishing facts and identifying premises...";
-            response = `Logically processing your message: "${inputValue}" with factual precision. This simulates a methodical response from the logical conversation mode.`;
+            response = `Analyzing your statement logically, we can break down "${inputValue.split(' ').slice(0, 3).join(' ')}..." into its core components. If we establish the initial premises and follow them to their logical conclusions, we find several important deductions. First, we need to verify our assumptions. Second, we should examine the causal relationships. What evidence would you consider most relevant to this analysis?`;
             break;
           default:
             thinking = "Thinking...";
-            response = `I received your message: "${inputValue}"`;
+            response = `I've considered your message about "${inputValue.split(' ').slice(0, 3).join(' ')}..." and I'd like to understand more about what you're looking for. Could you provide additional details or context so I can better assist you?`;
         }
       }
       
@@ -333,7 +340,7 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
                 className={`max-w-[80%] px-4 py-2 rounded-lg ${
                   message.sender === 'user' 
                     ? 'bg-primary text-primary-foreground' 
-                    : 'bg-card border border-border'
+                    : 'bg-card border border-border text-foreground'
                 }`}
               >
                 {message.isLoading ? (
@@ -345,7 +352,7 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
                 ) : (
                   <>
                     {message.thinking && message.sender === 'agent' && (
-                      <div className="text-xs italic text-muted-foreground mb-1">
+                      <div className="text-xs italic text-muted-foreground font-medium mb-1">
                         {message.thinking}
                       </div>
                     )}

@@ -31,6 +31,20 @@ export const forceResetTaskbar = () => {
     localStorage.removeItem('panion-window-positions');
     localStorage.removeItem('panion-last-layout');
     
+    // Remove any legacy or ghost-related data
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (
+          key.includes('taskbar') || 
+          key.includes('pinned') || 
+          key.includes('windows') || 
+          key.includes('agent-') || 
+          key.includes('layout')
+        )) {
+        localStorage.removeItem(key);
+      }
+    }
+    
     log.info("Cleared all taskbar data from localStorage");
     
     // Create a fresh, clean taskbar state
