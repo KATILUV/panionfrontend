@@ -47,7 +47,8 @@ type TaskAction =
   | { type: 'UPDATE_TASK_PARTIAL'; payload: { id: string; updates: Partial<Task> } }
   | { type: 'SUBSCRIBE_TO_TASK'; payload: string }
   | { type: 'UNSUBSCRIBE_FROM_TASK'; payload: string }
-  | { type: 'CLEAR_TASKS' };
+  | { type: 'CLEAR_TASKS' }
+  | { type: 'ACTIVATE_DADDY_DATA'; payload: { businessType: string; location: string; taskId?: string } };
 
 // Define the initial state
 const initialState: TaskState = {
@@ -233,6 +234,11 @@ function taskReducer(state: TaskState, action: TaskAction): TaskState {
     case 'CLEAR_TASKS':
       return initialState;
     
+    case 'ACTIVATE_DADDY_DATA':
+      // This is a special action that doesn't directly modify state
+      // It's handled in the TaskProvider component
+      return state;
+      
     default:
       return state;
   }

@@ -474,40 +474,70 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     
                     has_required = data.get("hasRequiredCapabilities", metadata.get("hasRequiredCapabilities", True))
                     
-                    # Check for smoke shop research specifically 
-                    if "smokeshop_data" in capabilities or "smoke shop" in content.lower() or "smokeshop" in content.lower():
-                        # Extract location with better regex
-                        location_match = re.search(r"in\s+([A-Za-z\s]+)(?:,|\.|$|\s)", content)
-                        location = location_match.group(1) if location_match else None
-                        
-                        if location:
+                    # Check for business data search in a location
+                    # Detect both specific business types like "smoke shop" and general searches like "find businesses in X"
+                    business_search_patterns = [
+                        # General pattern: find X in Y
+                        r"(?:find|search for|show me|get|locate|look up)\s+([a-zA-Z\s]+)\s+in\s+([a-zA-Z\s]+)",
+                        # Specific pattern: X in Y
+                        r"([a-zA-Z\s]+(?:shop|store|restaurant|cafe|business|company|hotel|bar)s?)\s+in\s+([a-zA-Z\s]+)"
+                    ]
+                    
+                    matched_business_type = None
+                    matched_location = None
+                    
+                    # Try the business search patterns
+                    for pattern in business_search_patterns:
+                        match = re.search(pattern, content.lower())
+                        if match:
+                            matched_business_type = match.group(1).strip()
+                            matched_location = match.group(2).strip()
+                            break
+                    
+                    # Specific check for smoke shop (backward compatibility)
+                    is_smoke_shop_search = "smokeshop_data" in capabilities or "smoke shop" in content.lower() or "smokeshop" in content.lower()
+                    
+                    if is_smoke_shop_search or matched_business_type:
+                        # If it's a smoke shop search but we didn't get the location from the patterns
+                        if is_smoke_shop_search and not matched_location:
+                            location_match = re.search(r"in\s+([A-Za-z\s]+)(?:,|\.|$|\s)", content)
+                            matched_location = location_match.group(1) if location_match else None
+                            matched_business_type = "smoke shop"
+                            
+                        if matched_location:
                             # Create a background task for the data gathering
                             import uuid
                             task_id = f"task_{uuid.uuid4().hex[:8]}"
                             
+                            # Determine the business type
+                            business_type = matched_business_type if matched_business_type else "business"
+                            
                             # Create the task
                             task_details = {
-                                "type": "smokeshop_research",
-                                "location": location,
+                                "type": "business_research",
+                                "business_type": business_type,
+                                "location": matched_location,
                                 "limit": 20,
-                                "requested_by": session_id
+                                "requested_by": session_id,
+                                "agent": "daddy_data"  # Explicitly mark this as a Daddy Data task
                             }
                             
                             task_result = task_manager.create_task(task_id, task_details)
                             
-                            # Prepare response
-                            response = f"I'm searching for smoke shop data in {location}. I've delegated this task to the Daddy Data agent, which specializes in business research and contact information. It will compile phone numbers, addresses, email addresses, business hours, and website URLs as requested. Task ID: {task_id}"
+                            # Prepare response with clearer Daddy Data agent reference
+                            response = f"📊 **Daddy Data Agent Activated**\n\nI'm searching for {business_type} data in {matched_location}. I've delegated this task to the Daddy Data agent, which specializes in business research and contact information. It will compile phone numbers, addresses, business hours, and website URLs.\n\nYou can also check the Daddy Data Agent window directly for results. Task ID: {task_id}"
                             
                             # Add detailed thinking
                             thinking = f"Analyzing request: '{content}'\n\n"
                             thinking += f"Detected capabilities: {', '.join(capabilities)}\n\n"
-                            thinking += f"Location detected: {location}\n\n"
+                            thinking += f"Business type detected: {business_type}\n\n"
+                            thinking += f"Location detected: {matched_location}\n\n"
                             thinking += f"Created background task: {task_id}\n\n"
                             thinking += "Delegating to Daddy Data agent which has business_research, data_collection, and contact_finder capabilities.\n\n"
                             thinking += "Task is now running in the background and will continue even if the user disconnects."
                         else:
-                            response = "I'd be happy to help you find smoke shop data. Could you please specify which city or location you're interested in?"
-                            thinking = "Request requires location specification for smoke shop data."
+                            response = "I'd be happy to help you find business data. Could you please specify which city or location you're interested in?"
+                            thinking = "Request requires location specification for business data search."
                     
                     # Check if this is another common intent
                     elif "hello" in content.lower() or "hi" in content.lower():
