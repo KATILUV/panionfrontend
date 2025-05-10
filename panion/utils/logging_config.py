@@ -48,7 +48,7 @@ def setup_logging(
                     'class': 'logging.FileHandler',
                     'level': default_level,
                     'formatter': 'standard',
-                    'filename': str(log_path / 'clara.log'),
+                    'filename': str(log_path / 'panion.log'),
                     'mode': 'a'
                 }
             },

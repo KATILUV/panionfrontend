@@ -587,7 +587,7 @@ class GoalPluginSystem(BasePlugin):
         # This would be enhanced to check multiple sources
         return []
     
-    def ask_clara(self, query: str) -> Dict:
+    def ask_panion(self, query: str) -> Dict:
         """Process natural language queries with multi-command support."""
         try:
             prompt = f"""

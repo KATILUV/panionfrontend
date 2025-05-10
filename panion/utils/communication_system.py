@@ -334,7 +334,7 @@ class CommunicationSystem:
 
 # Create global instance
 communication_system = CommunicationSystem({
-    "agent_id": "clara_agent",
+    "agent_id": "panion_agent",
     "broker_address": "tcp://localhost:5555",
     "secret_key": "your_secret_key_here",
     "max_retries": 3,
