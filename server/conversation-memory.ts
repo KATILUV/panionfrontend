@@ -50,10 +50,13 @@ export async function addMessage(
 ): Promise<void> {
   const timestamp = new Date().toISOString();
   
+  console.log(`Adding message to conversation ${sessionId} with role ${role}`);
+  
   // Check if conversation exists, create if not
   const existingConversation = await storage.getConversation(sessionId);
   
   if (!existingConversation) {
+    console.log(`Creating new conversation for ${sessionId}`);
     // Generate a title based on the first message
     const title = await generateTitle(content);
     
@@ -77,10 +80,18 @@ export async function addMessage(
     conversationMode
   };
   
+  console.log(`Storing message: ${JSON.stringify(message)}`);
   await storage.createMessage(message);
   
   // Log that we added a message
   log(`Added ${role} message to conversation ${sessionId}`, 'memory');
+  
+  // Check if conversation was created properly
+  const conversations = await storage.getAllConversations();
+  console.log(`Current conversations: ${JSON.stringify(conversations)}`);
+  
+  // Manually save to file to ensure persistence
+  await storage.saveToFile();
 }
 
 /**

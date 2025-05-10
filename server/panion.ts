@@ -2170,7 +2170,7 @@ export function shutdownPanionAPI() {
   // Save conversation memory
   try {
     log('Saving conversation memory...', 'memory');
-    conversationMemory.cleanupInactiveConversations(24); // Clean up old conversations
+    conversationMemory.cleanupOldConversations(); // Clean up old conversations
     log('Conversation memory saved successfully', 'memory');
   } catch (error) {
     log(`Error saving conversation memory: ${error}`, 'memory');

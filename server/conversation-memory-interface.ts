@@ -23,12 +23,15 @@ export async function addMessage(
   role: 'user' | 'assistant' | 'system', 
   content: string, 
   options?: any
-): Promise<void> {
+): Promise<string> {
   // Extract conversation mode from options if available
   const conversationMode = options?.conversationMode || 'casual';
   
   // Call the actual addMessage function with all parameters
   await conversationMemory.addMessage(role, content, sessionId, conversationMode);
+  
+  // Return a dummy message ID for compatibility with old code that expects it
+  return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 }
 
 // Get context compatibility function

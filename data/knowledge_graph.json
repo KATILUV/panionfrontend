@@ -79,6 +79,26 @@
       },
       "created": "2025-05-09T04:32:36.001Z",
       "lastUpdated": "2025-05-09T04:32:36.001Z"
+    },
+    "b18d6f13-c485-454a-96ce-24cdc26e7939": {
+      "id": "b18d6f13-c485-454a-96ce-24cdc26e7939",
+      "name": "Panion",
+      "type": "other",
+      "attributes": {
+        "description": "A conversational entity or system being addressed in the message"
+      },
+      "created": "2025-05-10T15:28:42.259Z",
+      "lastUpdated": "2025-05-10T15:28:52.010Z"
+    },
+    "776a6fd1-1a89-4540-aaf1-ce8565ef794b": {
+      "id": "776a6fd1-1a89-4540-aaf1-ce8565ef794b",
+      "name": "test message",
+      "type": "concept",
+      "attributes": {
+        "purpose": "To try out conversation history"
+      },
+      "created": "2025-05-10T15:28:42.259Z",
+      "lastUpdated": "2025-05-10T15:28:52.010Z"
     }
   },
   "relationships": {
@@ -141,10 +161,22 @@
       "attributes": {},
       "created": "2025-05-09T04:32:36.002Z",
       "lastUpdated": "2025-05-09T04:32:36.002Z"
+    },
+    "7eb68e77-806f-4a1f-bd01-01cd4e47758d": {
+      "id": "7eb68e77-806f-4a1f-bd01-01cd4e47758d",
+      "sourceId": "776a6fd1-1a89-4540-aaf1-ce8565ef794b",
+      "targetId": "b18d6f13-c485-454a-96ce-24cdc26e7939",
+      "type": "other",
+      "strength": 0.9,
+      "attributes": {
+        "context": "Testing conversation history"
+      },
+      "created": "2025-05-10T15:28:42.259Z",
+      "lastUpdated": "2025-05-10T15:28:42.259Z"
     }
   },
   "metadata": {
-    "lastUpdated": "2025-05-09T04:32:36.002Z",
+    "lastUpdated": "2025-05-10T15:29:06.907Z",
     "version": "1.0.0"
   }
 }
