@@ -5,16 +5,16 @@ import OpenAI from "openai";
 import { ChatCompletionMessageParam } from "openai/resources";
 
 // Memory file locations
-const MEMORIES_DIR = path.join(process.cwd(), 'clara_memory');
+const MEMORIES_DIR = path.join(process.cwd(), 'panion_memory');
 const MEMORIES_FILE = path.join(MEMORIES_DIR, 'memories.json');
-const CONVERSATIONS_DIR = path.join(process.cwd(), 'clara_conversations');
+const CONVERSATIONS_DIR = path.join(process.cwd(), 'panion_conversations');
 const SESSION_MEMORY_LIMIT = 20; // Maximum messages to keep in session memory
 
 // Memory structures
 interface Memory {
   sessionId: string;  // Session identifier
   content: string;    // Content of the memory
-  isUser: boolean;    // Whether this is a user message or Clara's response
+  isUser: boolean;    // Whether this is a user message or Panion's response
   timestamp: string;  // When the memory was created
   important?: boolean; // Whether this is an important memory
   date?: string;      // Date in YYYY-MM-DD format (for long-term storage)
@@ -278,7 +278,7 @@ export async function smartMemorySearch(query: string, category?: string): Promi
   let memories = await loadLongTermMemories();
   
   if (memories.length === 0) {
-    return "🧠 Clara has no memories yet.";
+    return "🧠 Panion has no memories yet.";
   }
   
   // Filter by category if provided

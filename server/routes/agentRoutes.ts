@@ -23,7 +23,7 @@ const addGoalSchema = z.object({
 const agents = [
   {
     id: 'agent-1',
-    name: 'Clara',
+    name: 'Panion',
     status: 'idle',
     type: 'assistant',
     createdAt: new Date().toISOString(),
