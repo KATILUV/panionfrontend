@@ -229,6 +229,21 @@ When describing an image:
     return imageDescription;
   } catch (error) {
     console.error("Error in analyzeImage:", error);
-    throw new Error("Failed to analyze the image with OpenAI");
+    
+    // Provide more specific error messages based on the type of error
+    if (error instanceof Error) {
+      if (error.message.includes('API key')) {
+        throw new Error("OpenAI API key error. Please check your API key configuration.");
+      } else if (error.message.includes('rate limit')) {
+        throw new Error("OpenAI rate limit exceeded. Please try again later.");
+      } else if (error.message.includes('content policy')) {
+        throw new Error("The image may violate OpenAI's content policy. Please try a different image.");
+      } else if (error.message.includes('permission')) {
+        throw new Error("Permission denied when accessing OpenAI API. Check your API key permissions.");
+      }
+    }
+    
+    // Generic error message as fallback
+    throw new Error(`Failed to analyze the image with OpenAI: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
