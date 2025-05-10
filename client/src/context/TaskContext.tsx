@@ -257,6 +257,7 @@ interface TaskContextValue {
   retryTask: (id: string) => Promise<Task>;
   subscribeToTask: (id: string) => void;
   unsubscribeFromTask: (id: string) => void;
+  activateDaddyData: (businessType: string, location: string, taskId?: string) => void;
   connectionStatus: 'connected' | 'connecting' | 'disconnected';
 }
 
@@ -526,6 +527,35 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
+  // Function to activate Daddy Data Agent
+  const activateDaddyData = useCallback((businessType: string, location: string, taskId?: string) => {
+    console.log(`Activating Daddy Data for ${businessType} in ${location}`, taskId ? `with task ID: ${taskId}` : '');
+    
+    // First dispatch the action to notify any listeners
+    dispatch({
+      type: 'ACTIVATE_DADDY_DATA',
+      payload: { businessType, location, taskId }
+    });
+    
+    // Show a notification or open the Daddy Data Agent window
+    // This could trigger a window opening event in the Desktop component
+    
+    try {
+      // Create a custom event that other components can listen for
+      const event = new CustomEvent('daddyDataActivated', {
+        detail: { businessType, location, taskId }
+      });
+      window.dispatchEvent(event);
+      
+      // If there's a task ID, subscribe to updates
+      if (taskId) {
+        subscribeToTask(taskId);
+      }
+    } catch (error) {
+      console.error('Error dispatching Daddy Data activation event:', error);
+    }
+  }, [dispatch, subscribeToTask]);
+
   const value = {
     state,
     dispatch,
@@ -538,6 +568,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     retryTask,
     subscribeToTask,
     unsubscribeFromTask,
+    activateDaddyData,
     connectionStatus
   };
   

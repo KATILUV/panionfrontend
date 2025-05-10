@@ -63,25 +63,7 @@ export default function DaddyDataAgent() {
   const [analysisPrompt, setAnalysisPrompt] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Load saved searches on mount
-  useEffect(() => {
-    const loadSavedSearches = async () => {
-      try {
-        // In a real app, we'd fetch this from the server
-        const mockSavedSearches = [
-          { id: '1', query: 'coffee shops in Seattle', results: 15 },
-          { id: '2', query: 'restaurants in Chicago', results: 24 },
-          { id: '3', query: 'bookstores in Portland', results: 8 }
-        ];
-        setSavedSearches(mockSavedSearches);
-      } catch (err) {
-        console.error('Error loading saved searches', err);
-      }
-    };
-    
-    loadSavedSearches();
-  }, []);
-
+  // Declare the scraper function before using it in useEffect
   const runScraper = async () => {
     setIsLoading(true);
     setError(null);
