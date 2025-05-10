@@ -145,25 +145,45 @@ export default function DaddyDataAgent() {
     setIsAnalyzing(true);
     
     try {
-      // Mock analysis for now - in a real implementation, we'd send this to the backend
-      // where Daddy Data agent would process it through an LLM
-      const mockResponse = `Analysis of ${selectedData.length} businesses in ${location}:
+      // Send the data to the backend for analysis
+      const response = await axios.post('/api/panion/analyze', {
+        data: selectedData,
+        analysis_type: 'business_insights',
+        location,
+        business_type: businessType,
+        prompt: analysisPrompt || undefined
+      });
       
+      if (response.data && response.data.analysis) {
+        setAnalysisResult(response.data.analysis);
+      } else if (response.data && response.data.message) {
+        // If we get a message but no analysis, use that as the result
+        setAnalysisResult(response.data.message);
+      } else {
+        // Fallback analysis if the API doesn't provide a proper response
+        const fallbackAnalysis = `Analysis of ${selectedData.length} businesses in ${location}:
+        
 - Average rating: ${(selectedData.reduce((acc, curr) => acc + (parseFloat(curr.rating as string) || 0), 0) / selectedData.length).toFixed(1)}
-- Most common categories: Cafe, Restaurant, Coffee Shop
-- Geographic concentration: Primarily in downtown and midtown areas
-- ${selectedData.length > 5 ? 'Competitive market with many options' : 'Limited options in this category'}
-- Most businesses ${selectedData.filter(b => b.website).length > selectedData.length/2 ? 'have' : 'do not have'} websites
-      
-${analysisPrompt ? `Regarding your specific question ("${analysisPrompt}"):
-The data suggests that the most successful businesses in this category focus on unique offerings and strong online presence.` : ''}`;
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setAnalysisResult(mockResponse);
+- Found ${selectedData.filter(b => b.website).length} businesses with websites
+- ${selectedData.length > 5 ? 'Relatively competitive market' : 'Limited options in this category'}
+${analysisPrompt ? `\nRegarding your specific question ("${analysisPrompt}"):\nAnalysis requires additional information.` : ''}`;
+        
+        setAnalysisResult(fallbackAnalysis);
+      }
     } catch (err: any) {
-      setError(err.message || 'Analysis failed');
+      console.error('Analysis error:', err);
+      setError(err.response?.data?.message || err.message || 'Analysis failed');
+      
+      // If analysis fails but we have data, create a basic analysis from the data
+      const basicAnalysis = `Basic analysis of ${selectedData.length} businesses in ${location}:
+      
+- Found ${selectedData.length} businesses matching "${businessType}"
+- ${selectedData.filter(b => b.phone).length} of them have phone numbers listed
+- ${selectedData.filter(b => b.website).length} have websites
+      
+Note: Full analysis is currently unavailable. This is a summary of the raw data.`;
+      
+      setAnalysisResult(basicAnalysis);
     } finally {
       setIsAnalyzing(false);
     }
