@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChatInterface } from '@/components/chat/ChatInterface';
-import { usePanionChat } from '@/hooks/usePanionChat';
+import usePanionChat from '@/hooks/usePanionChat';
 
 const EnhancedChatAgent: React.FC = () => {
   // Initialize our custom chat hook

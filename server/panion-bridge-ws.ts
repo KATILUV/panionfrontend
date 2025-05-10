@@ -1,7 +1,7 @@
 /**
  * Panion WebSocket Bridge 
  * Optimized bidirectional communication between Node.js and Python
- * with Manus-like autonomous capabilities.
+ * with Panion Intelligence autonomous capabilities.
  */
 
 import { WebSocket } from 'ws';
@@ -97,7 +97,7 @@ class PanionBridgeWS extends EventEmitter {
               pendingRequest.resolve(message.data);
             }
           } else {
-            // Proactive message from server (Manus-like initiative)
+            // Proactive message from server (Panion Intelligence initiative)
             this.handleProactiveMessage(message);
           }
         } catch (error) {

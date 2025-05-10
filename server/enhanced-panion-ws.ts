@@ -1,6 +1,6 @@
 /**
  * Enhanced Panion Chat Handler with Websocket Bridge
- * Provides Manus-like capabilities with improved performance through WebSockets
+ * Provides Panion Intelligence capabilities with improved performance through WebSockets
  */
 
 import { Request, Response } from 'express';
@@ -31,7 +31,7 @@ let systemLog = systemLogFallback;
 let getSystemLog = getSystemLogFallback;
 
 /**
- * Enhanced chat request handler with WebSocket Bridge and Manus-like capabilities
+ * Enhanced chat request handler with WebSocket Bridge and Panion Intelligence capabilities
  */
 export async function handleEnhancedChatWithWS(req: Request, res: Response): Promise<void> {
   try {
@@ -60,7 +60,7 @@ export async function handleEnhancedChatWithWS(req: Request, res: Response): Pro
     const isSimpleMessage = capabilities.length === 0 || 
       (capabilities.length === 1 && capabilities[0] === 'basic_chat');
     
-    // For Manus-like autonomous behavior, get enhanced analysis
+    // For Panion Intelligence autonomous behavior, get enhanced analysis
     let enhancedAnalysis = null;
     if (requestMode === 'autonomous' || !isSimpleMessage) {
       log(`[${requestId}] Getting enhanced analysis`, 'panion');
@@ -82,11 +82,11 @@ export async function handleEnhancedChatWithWS(req: Request, res: Response): Pro
     const responseTime = Date.now() - startTime;
     log(`[${requestId}] Chat response received in ${responseTime}ms`, 'panion');
     
-    // Return the response with enhanced metadata for Manus-like capabilities
+    // Return the response with enhanced metadata for Panion Intelligence capabilities
     const fullResponse = {
       response: chatResponse.response,
       thinking: chatResponse.thinking || null,
-      manus_capabilities: {
+      panion_capabilities: {
         proactivity_score: enhancedAnalysis?.proactivity_score || 0,
         initiative_actions: enhancedAnalysis?.initiative_actions || [],
         decomposed_subtasks: enhancedAnalysis?.subtasks || []
