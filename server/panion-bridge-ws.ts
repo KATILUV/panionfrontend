@@ -124,14 +124,29 @@ class PanionBridgeWS extends EventEmitter {
   private startHeartbeat() {
     setInterval(() => {
       if (this.isConnected && this.ws?.readyState === WebSocket.OPEN) {
-        this.sendMessage({
-          type: 'heartbeat',
-          timestamp: Date.now()
-        }).catch(err => {
+        // Send heartbeat message (direct HTTP GET for more reliability)
+        this.sendHeartbeat().catch(err => {
           log(`Heartbeat failed: ${err}`, 'panion-bridge');
         });
       }
     }, 30000); // 30 second heartbeat
+  }
+  
+  /**
+   * Send a heartbeat to check if the server is alive
+   */
+  private async sendHeartbeat(): Promise<any> {
+    try {
+      // Always use HTTP GET for heartbeat
+      const response = await axios.get(`${PANION_API_URL}/health`, {
+        timeout: 5000 // Shorter timeout for heartbeats
+      });
+      
+      return response.data;
+    } catch (error) {
+      this.metrics.failedRequests++;
+      throw error;
+    }
   }
   
   private reconnect() {
@@ -178,6 +193,14 @@ class PanionBridgeWS extends EventEmitter {
       // System detected something important
       log(`Received alert: ${JSON.stringify(message.data)}`, 'panion-bridge');
       this.emit('alert', message.data);
+    } else if (message.type === 'welcome') {
+      // System welcome message when connection established
+      log(`Connected to Panion WebSocket server: ${JSON.stringify(message.data || {})}`, 'panion-bridge');
+      this.emit('welcome', message.data || {});
+    } else if (message.type === 'heartbeat') {
+      // Heartbeat response - can be used to check latency
+      // No need to log these to avoid cluttering logs
+      this.emit('heartbeat', { timestamp: message.timestamp || Date.now() });
     } else {
       log(`Received unknown proactive message type: ${message.type}`, 'panion-bridge');
     }

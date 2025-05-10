@@ -12,9 +12,9 @@ import axios from 'axios';
 const PANION_API_PORT = process.env.PANION_API_PORT || 8000;
 const PANION_API_URL = `http://localhost:${PANION_API_PORT}`;
 
-// Set to false to disable WebSocket connection attempts after repeated failures
-// Will be useful until Python side implements WebSockets
-const ENABLE_WEBSOCKET = false;
+// Set to true to enable WebSocket connection (now that Python side implements WebSockets)
+// This enables more efficient bidirectional communication
+const ENABLE_WEBSOCKET = true;
 
 // Request tracking
 interface PendingRequest {
