@@ -196,10 +196,10 @@ const Dashboard: React.FC<DashboardProps> = ({ isMobile = false, simple = false 
   // Define quickActions - Standard list of actions used in both simple and full dashboards
   const quickActions = [
     {
-      title: "Chat with Clara",
-      description: "Start a conversation with Clara, your AI assistant",
+      title: "Chat with Panion",
+      description: "Start a conversation with Panion, your AI assistant",
       icon: <MessageSquare className="h-5 w-5" />,
-      onClick: () => openAgent('clara'),
+      onClick: () => openAgent('panion'),
       colorIndex: 0,
       shortcut: "Shift+C",
       category: "communication",

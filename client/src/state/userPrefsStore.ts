@@ -24,14 +24,14 @@ export const useUserPrefsStore = create<UserPreferences>()(
     (set) => ({
       // Default values
       name: 'User',
-      autoStartClaraOnBoot: true,
+      autoStartPanionOnBoot: true,
       showWelcomeScreen: true,
 
       // Actions
       setName: (name: string) => set({ name }),
       setEmail: (email: string) => set({ email }),
       setAvatar: (avatar: string) => set({ avatar }),
-      setAutoStartClaraOnBoot: (autoStartClaraOnBoot: boolean) => set({ autoStartClaraOnBoot }),
+      setAutoStartPanionOnBoot: (autoStartPanionOnBoot: boolean) => set({ autoStartPanionOnBoot }),
       setShowWelcomeScreen: (showWelcomeScreen: boolean) => set({ showWelcomeScreen }),
     }),
     {

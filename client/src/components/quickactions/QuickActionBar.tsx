@@ -77,12 +77,12 @@ const QuickActionBar: React.FC = () => {
   // Define context-specific actions - memoized to avoid recreation on every render
   const globalActions = useMemo(() => [
     {
-      id: 'open-clara',
-      label: 'Talk to Clara',
+      id: 'open-panion',
+      label: 'Talk to Panion',
       icon: <MessageSquare size={16} />,
       action: () => {
-        if (openAgent) openAgent('clara');
-        log.debug('Opening Clara agent');
+        if (openAgent) openAgent('panion');
+        log.debug('Opening Panion agent');
       },
       shortcut: '⌘+C'
     },
