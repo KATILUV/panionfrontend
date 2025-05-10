@@ -291,60 +291,129 @@ async def handle_heartbeat(websocket, message_data):
 # Main WebSocket connection handler
 # Updated to match the expected API signature (only one parameter)
 async def connection_handler(websocket):
+    # Store connection details for logging
+    client_info = {
+        "remote_address": getattr(websocket, "remote_address", "unknown"),
+        "id": id(websocket),  # Use object ID as unique identifier
+        "protocol": getattr(websocket, "subprotocol", "none")
+    }
+    
+    logger.info(f"New WebSocket connection from {client_info['remote_address']}")
+    
+    # Wrap the entire handler in try/except for robust error handling
     try:
         # Add to active connections
         active_connections.add(websocket)
-        logger.info(f"New WebSocket connection established")
         
-        # Handle messages in a loop
-        async for message in websocket:
-            try:
-                # Parse the message
-                data = json.loads(message)
-                message_id = data.get("id", "unknown")
-                message_type = data.get("type")
-                
-                logger.info(f"Received message {message_id} of type {message_type}")
-                
-                # Find the appropriate handler
-                handler = message_handlers.get(message_type)
-                if handler:
-                    # Process the message with the handler
-                    response = await handler(websocket, data)
+        # Send initial connection acknowledgment
+        try:
+            await websocket.send(json.dumps({
+                "type": "connection_established",
+                "timestamp": time.time(),
+                "message": "Connected to Panion WebSocket server"
+            }))
+        except Exception as e:
+            logger.error(f"Failed to send welcome message: {str(e)}")
+            # Continue even if welcome message fails
+        
+        # Ping periodically to keep connection alive
+        ping_task = None
+        try:
+            # Create ping task that runs in background
+            async def ping_client():
+                try:
+                    while True:
+                        await asyncio.sleep(30)  # Send ping every 30 seconds
+                        try:
+                            # For newer websockets versions
+                            pong_waiter = await websocket.ping()
+                            await asyncio.wait_for(pong_waiter, timeout=10)
+                        except Exception as e:
+                            logger.warning(f"Ping failed for client {client_info['id']}: {str(e)}")
+                            # If ping fails 2 times in a row, close the connection
+                            return
+                except asyncio.CancelledError:
+                    # Task was cancelled, can safely exit
+                    return
+                except Exception as e:
+                    logger.error(f"Error in ping task: {str(e)}")
+                    return
                     
-                    # Send response with the same ID
-                    await websocket.send(json.dumps({
-                        "id": message_id,
-                        "type": f"{message_type}_response",
-                        "data": response
-                    }))
-                else:
-                    logger.warning(f"No handler for message type: {message_type}")
-                    await websocket.send(json.dumps({
-                        "id": message_id,
-                        "type": "error",
-                        "error": f"Unsupported message type: {message_type}"
-                    }))
-            except json.JSONDecodeError:
-                logger.error("Invalid JSON received")
-                await websocket.send(json.dumps({
-                    "type": "error", 
-                    "error": "Invalid JSON"
-                }))
-            except Exception as e:
-                logger.error(f"Error processing message: {str(e)}")
-                # Just use "unknown" as a safe fallback for error responses
-                await websocket.send(json.dumps({
-                    "id": "unknown",
-                    "type": "error",
-                    "error": str(e)
-                }))
-    except websockets.exceptions.ConnectionClosed:
-        logger.info("WebSocket connection closed")
+            # Start the ping task
+            ping_task = asyncio.create_task(ping_client())
+            
+            # Handle messages in a loop
+            async for message in websocket:
+                try:
+                    # Parse the message
+                    data = json.loads(message)
+                    message_id = data.get("id", "unknown")
+                    message_type = data.get("type")
+                    
+                    logger.info(f"Received message {message_id} of type {message_type}")
+                    
+                    # Find the appropriate handler
+                    handler = message_handlers.get(message_type)
+                    if handler:
+                        # Process the message with the handler
+                        response = await handler(websocket, data)
+                        
+                        # Send response with the same ID
+                        await websocket.send(json.dumps({
+                            "id": message_id,
+                            "type": f"{message_type}_response",
+                            "data": response
+                        }))
+                    else:
+                        logger.warning(f"No handler for message type: {message_type}")
+                        await websocket.send(json.dumps({
+                            "id": message_id,
+                            "type": "error",
+                            "error": f"Unsupported message type: {message_type}"
+                        }))
+                except json.JSONDecodeError:
+                    logger.error("Invalid JSON received")
+                    try:
+                        await websocket.send(json.dumps({
+                            "type": "error", 
+                            "error": "Invalid JSON"
+                        }))
+                    except Exception as send_err:
+                        logger.error(f"Failed to send error response: {str(send_err)}")
+                except Exception as e:
+                    logger.error(f"Error processing message: {str(e)}")
+                    # Try to send an error response, but don't crash if it fails
+                    try:
+                        await websocket.send(json.dumps({
+                            "id": data.get("id", "unknown") if 'data' in locals() else "unknown",
+                            "type": "error",
+                            "error": str(e)
+                        }))
+                    except Exception as send_err:
+                        logger.error(f"Failed to send error response: {str(send_err)}")
+        
+        except websockets.exceptions.ConnectionClosed as e:
+            close_code = getattr(e, "code", 1000)
+            close_reason = getattr(e, "reason", "Normal closure")
+            logger.info(f"WebSocket connection closed: code={close_code}, reason={close_reason}")
+        except Exception as e:
+            logger.error(f"Unexpected error in message handler: {str(e)}")
+        finally:
+            # Clean up ping task if it exists
+            if ping_task and not ping_task.done():
+                ping_task.cancel()
+                try:
+                    await ping_task
+                except (asyncio.CancelledError, Exception):
+                    pass
+    
+    except Exception as e:
+        logger.error(f"Fatal error in connection handler: {str(e)}")
     finally:
         # Remove from active connections if it's still there
         if websocket in active_connections:
             active_connections.remove(websocket)
+        logger.info(f"Connection from {client_info['remote_address']} closed")
 
 # Push insights to connected clients proactively (Manus-like initiative)
 async def push_insights():

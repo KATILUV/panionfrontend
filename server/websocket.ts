@@ -22,7 +22,7 @@ export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
     // Add proper headers for WebSocket handshake
     handleProtocols: (protocols, request) => {
       // Accept the first protocol if one is provided or subprotocol-less connection
-      return protocols[0] || '';
+      return protocols && protocols.length > 0 ? protocols[0] : '';
     }
   });
   

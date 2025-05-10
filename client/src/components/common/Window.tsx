@@ -1338,13 +1338,17 @@ const Window: React.FC<WindowProps> = ({
           </div>
         </div>
         <motion.div 
-          className={`window-body flex-1 overflow-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent
+          className={`window-body flex-1 overflow-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent overscroll-contain
             ${isActive ? 'window-body-focused' : 'window-body-blurred'}`}
           style={{ 
             height: contentHeight,
             willChange: 'transform, opacity',
             transform: 'translateZ(0)',
             padding: useThemeStore.getState().getSpacingForDensity(isMobile ? 16 : 12) + 'px',
+            WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            msOverflowStyle: 'auto', // Improves scrolling on Windows
           }}
           variants={contentVariants}
           initial="closed"
