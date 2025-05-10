@@ -16,7 +16,7 @@ export const isSimpleMessage = (message: string): boolean => {
   
   // Short simple greetings and common phrases
   const simplePatterns = [
-    /^(hi|hey|hello|sup)( there)?( panion| clara)?[!.?]?$/i,
+    /^(hi|hey|hello|sup)( there)?( panion)?[!.?]?$/i,
     /^(good|great) (morning|afternoon|evening|day)[!.?]?$/i,
     /^how are you( today| doing)?[?]?$/i,
     /^what'?s up[?]?$/i,
@@ -29,7 +29,7 @@ export const isSimpleMessage = (message: string): boolean => {
     /^hello( there)?[!.?]?$/i,
     /^(morning|afternoon|evening)[!.?]?$/i,
     /^(hi|hey|hello).*panion.*$/i,
-    /^(hi|hey|hello).*clara.*$/i
+    // Clara reference removed
   ];
   
   const isPattern = simplePatterns.some(pattern => pattern.test(lowerMessage));

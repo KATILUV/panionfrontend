@@ -87,7 +87,7 @@ const defaultCategories: MarketplaceAgentCategory[] = [
 // Sample agents data
 const defaultAgents: MarketplaceAgent[] = [
   {
-    id: 'clara-chat',
+    id: 'panion-chat',
     title: 'Panion Chat',
     description: 'The primary chat interface for Panion',
     icon: 'MessageCircle',

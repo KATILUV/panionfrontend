@@ -11,7 +11,7 @@ import { useTaskbarStore, TaskbarWidgetType } from '../state/taskbarStore';
 import { log } from '../state/systemLogStore';
 
 export const DEFAULT_WIDGETS: TaskbarWidgetType[] = ['notifications', 'aiStatus', 'clock'];
-export const DEFAULT_PINNED_AGENTS = ['panion', 'clara', 'notes'];
+export const DEFAULT_PINNED_AGENTS = ['panion', 'notes'];
 
 /**
  * Completely resets the taskbar state by directly manipulating localStorage
