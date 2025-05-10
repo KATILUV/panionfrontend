@@ -15,6 +15,13 @@ import {
   MEMORY_CATEGORIES 
 } from "./memory";
 import {
+  listConversations,
+  getConversationHistory,
+  clearConversation,
+  renameConversation,
+  getMemoryStats as getConversationMemoryStats
+} from "./conversation-memory";
+import {
   getFileStats,
   deleteFile,
   cleanupOldFiles,
