@@ -18,6 +18,7 @@ import ScraperTest from "./pages/ScraperTest";
 import AutonomousAgentPage from "./pages/AutonomousAgentPage";
 import BrowserPage from "./pages/BrowserPage";
 import TaskMonitorPage from "./pages/TaskMonitorPage";
+import ManusDashboard from "./pages/manus-dashboard";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
@@ -97,6 +98,13 @@ function Router() {
         <Route path="/tasks">
           <PageTransition type="slideUp" duration={0.3}>
             <TaskMonitorPage />
+          </PageTransition>
+        </Route>
+        
+        {/* Manus Intelligence Dashboard */}
+        <Route path="/manus">
+          <PageTransition type="slideUp" duration={0.3}>
+            <ManusDashboard />
           </PageTransition>
         </Route>
         
