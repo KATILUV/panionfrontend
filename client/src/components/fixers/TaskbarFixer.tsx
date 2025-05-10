@@ -40,6 +40,34 @@ const TaskbarFixer: React.FC = () => {
       }
     });
     
+    // Check if stored pinned agents includes any non-existent agents
+    const taskbarStore = useTaskbarStore.getState();
+    let invalidPinnedAgentsDetected = false;
+    
+    if (taskbarStore.pinnedAgents) {
+      // Check each pinned agent against registered agents
+      taskbarStore.pinnedAgents.forEach(pinnedId => {
+        if (!registeredIds.includes(pinnedId)) {
+          log.warn(`TaskbarFixer: Invalid pinned agent detected with ID ${pinnedId}`);
+          invalidPinnedAgentsDetected = true;
+        }
+      });
+      
+      // Clean up invalid pinned agents if found
+      if (invalidPinnedAgentsDetected) {
+        log.warn("TaskbarFixer: Cleaning up invalid pinned agents");
+        const validPinnedAgents = taskbarStore.pinnedAgents.filter(id => registeredIds.includes(id));
+        
+        // Reset pinned agents to only include valid ones
+        if (validPinnedAgents.length > 0) {
+          useTaskbarStore.setState({ pinnedAgents: validPinnedAgents });
+        } else {
+          // If no valid pinned agents, reset to defaults
+          useTaskbarStore.setState({ pinnedAgents: ['panion', 'notes'] });
+        }
+      }
+    }
+    
     // Now check if the taskbar is using the old store format
     try {
       const storedTaskbar = localStorage.getItem('panion-taskbar-store');
@@ -53,28 +81,37 @@ const TaskbarFixer: React.FC = () => {
           !parsedTaskbar.state.pinnedAgents ||
           parsedTaskbar.state.pinnedAgents.length === 0;
         
-        if (hasIssues || ghostWindowsDetected) {
+        if (hasIssues || ghostWindowsDetected || invalidPinnedAgentsDetected) {
           log.warn("TaskbarFixer: Taskbar format issues detected, performing force reset");
           forceResetTaskbar();
         } else {
           log.info("TaskbarFixer: Taskbar format appears valid, ensuring pinned agents");
           
-          // Make sure at least the essential agents are pinned
-          const taskbarStore = useTaskbarStore.getState();
-          const currentPinned = taskbarStore.pinnedAgents;
+          // Make sure at least the essential agents are pinned and no duplicate entries
+          const currentPinned = [...new Set(taskbarStore.pinnedAgents)]; // Remove duplicates
           
+          // Reset the pinnedAgents with the deduplicated list
+          if (currentPinned.length !== taskbarStore.pinnedAgents.length) {
+            log.warn("TaskbarFixer: Duplicate pinned agents detected, fixing");
+            useTaskbarStore.setState({ pinnedAgents: currentPinned });
+          }
+          
+          // Make sure essential agents are pinned
+          let updated = false;
           if (!currentPinned.includes('panion')) {
             taskbarStore.pinAgent('panion');
+            updated = true;
           }
           
           if (!currentPinned.includes('notes')) {
             taskbarStore.pinAgent('notes');
+            updated = true;
           }
           
-          // Clara renamed to panion - this check is now redundant
-          // if (!currentPinned.includes('panion')) {
-          //   taskbarStore.pinAgent('panion');
-          // }
+          // If we had to update the pinned agents, log a success message
+          if (updated) {
+            log.success("TaskbarFixer: Updated pinned agents to include required items");
+          }
         }
       } else {
         // No taskbar data found, initialize with defaults
