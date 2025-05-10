@@ -12,7 +12,8 @@ import {
   BookOpen,
   Target,
   CircuitBoard,
-  Database
+  Database,
+  Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -20,6 +21,8 @@ import { CONVERSATION_MODES, DEFAULT_CONVERSATION_MODE, ConversationMode } from 
 import PanionAgentSettings from './PanionAgentSettings';
 import log from '@/utils/logger';
 import { useTaskContext } from '@/context/TaskContext';
+import { useToast } from '@/hooks/use-toast';
+import { ChatInterface } from '@/components/chat/ChatInterface';
 
 // Message type definition
 interface ChatMessage {
@@ -29,6 +32,7 @@ interface ChatMessage {
   timestamp: Date;
   thinking?: string;
   isLoading?: boolean;
+  imageUrl?: string;
 }
 
 interface PanionChatProps {
@@ -49,6 +53,7 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
   
   // Get task context for activating Daddy Data Agent
   const { activateDaddyData } = useTaskContext();
+  const { toast } = useToast();
   
   // Get current conversation mode from preferences
   const conversationMode = usePreferencesStore(
@@ -287,6 +292,85 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
     }
   };
   
+  // Handle image upload
+  const handleImageUpload = async (file: File) => {
+    try {
+      setIsTyping(true);
+      
+      // Add user message with image info
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        content: 'Image uploaded: ' + file.name,
+        sender: 'user',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, userMessage]);
+      
+      // Create FormData to send the image
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // Add temporary agent response
+      const tempAgentMessage: ChatMessage = {
+        id: `agent-${Date.now()}`,
+        content: '',
+        sender: 'agent',
+        timestamp: new Date(),
+        isLoading: true
+      };
+      
+      setMessages(prev => [...prev, tempAgentMessage]);
+      
+      // Send the image to the backend for analysis
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      const data = await response.json();
+      
+      // Update the agent message with the analysis
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempAgentMessage.id 
+            ? { 
+                ...msg, 
+                content: data.analysis || 'Here is what I see in your image: ' + data.description, 
+                thinking: 'Analyzing the visual content of the image...',
+                imageUrl: data.imageUrl || undefined,
+                isLoading: false 
+              } 
+            : msg
+        )
+      );
+      
+      // Show success toast
+      toast({
+        title: 'Image analyzed',
+        description: 'The image was successfully processed',
+      });
+      
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      
+      // Show error toast
+      toast({
+        title: 'Error',
+        description: 'Failed to process the image',
+        variant: 'destructive'
+      });
+      
+    } finally {
+      setIsTyping(false);
+      setSelectedImage(null);
+    }
+  };
+  
   // Get mode icon
   const getModeIcon = () => {
     switch (conversationMode) {
@@ -358,6 +442,16 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
                       </div>
                     )}
                     <div className="whitespace-pre-wrap">{message.content}</div>
+                    {message.imageUrl && (
+                      <div className="mt-2">
+                        <img 
+                          src={message.imageUrl} 
+                          alt="Uploaded image" 
+                          className="max-w-full rounded-md border border-border"
+                          style={{ maxHeight: '200px' }}
+                        />
+                      </div>
+                    )}
                     <div className="text-xs text-muted-foreground mt-1">
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
@@ -370,31 +464,21 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Input Area */}
-      <div className="p-4 border-t border-border bg-card">
-        <div className="flex items-end gap-2">
-          <textarea
-            ref={inputRef}
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
-            placeholder="Type your message..."
-            className="flex-1 resize-none bg-background rounded-md border border-border p-3 min-h-[44px] max-h-[120px] focus:outline-none focus:ring-1 focus:ring-primary"
-            rows={1}
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isTyping}
-            className={`p-3 rounded-md ${
-              !inputValue.trim() || isTyping
-                ? 'bg-accent text-muted-foreground cursor-not-allowed'
-                : 'bg-primary text-primary-foreground'
-            }`}
-            aria-label="Send message"
-          >
-            <Send size={18} />
-          </button>
-        </div>
+      {/* Input Area with ChatInterface component */}
+      <div className="border-t border-border">
+        <ChatInterface
+          messages={messages}
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          isLoading={isTyping}
+          agentStatus={isTyping ? 'thinking' : 'idle'}
+          sendMessage={handleSendMessage}
+          onImageUpload={handleImageUpload}
+          messagesEndRef={messagesEndRef}
+          inputRef={inputRef}
+          strategicMode={conversationMode === 'strategic'}
+          title={`Panion - ${modeConfig.name} Mode`}
+        />
       </div>
       
       {/* Settings Panel */}

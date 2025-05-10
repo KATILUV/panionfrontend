@@ -615,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send back the image URL and description
       res.status(200).json({
         imageUrl,
-        response: description
+        analysis: description
       });
     } catch (error) {
       console.error('Error processing image upload:', error);
