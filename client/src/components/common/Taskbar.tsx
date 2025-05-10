@@ -5,7 +5,7 @@ import { useSystemLogStore } from '../../state/systemLogStore';
 import { useTaskbarStore } from '../../state/taskbarStore';
 import { useSettingsTabStore } from '../../state/settingsTabStore';
 //No longer using LayoutManager component
-import ClaraSystemLog from '../system/ClaraSystemLog';
+import PanionSystemLog from '../system/PanionSystemLog';
 import { Button } from '@/components/ui/button';
 import { LucideIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -1116,7 +1116,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
         </div>
         
         {/* System Log Component */}
-        <ClaraSystemLog />
+        <PanionSystemLog />
       </div>
     </>
   );

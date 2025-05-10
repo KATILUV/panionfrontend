@@ -8,14 +8,14 @@ interface UserPreferences {
   avatar?: string;
   
   // Preferences
-  autoStartClaraOnBoot: boolean;
+  autoStartPanionOnBoot: boolean;
   showWelcomeScreen: boolean;
   
   // Actions
   setName: (name: string) => void;
   setEmail: (email: string) => void;
   setAvatar: (avatar: string) => void;
-  setAutoStartClaraOnBoot: (autoStart: boolean) => void;
+  setAutoStartPanionOnBoot: (autoStart: boolean) => void;
   setShowWelcomeScreen: (show: boolean) => void;
 }
 
