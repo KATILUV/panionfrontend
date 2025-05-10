@@ -46,9 +46,9 @@ class EnhancedReasoning:
         self.active_explorations = {}
         self.insights_queue = asyncio.Queue()
         
-        # Start background tasks
-        asyncio.create_task(self.background_insight_generator())
-        asyncio.create_task(self.pattern_detector())
+        # Initialize background tasks (but don't start them yet)
+        # They will be started in the event loop from start_server
+        self.background_tasks = []
     
     async def analyze_request(self, message: str, session_id: str) -> Dict[str, Any]:
         """Analyze a request to determine optimal processing approach"""
@@ -332,9 +332,9 @@ async def connection_handler(websocket, path):
                 }))
             except Exception as e:
                 logger.error(f"Error processing message: {str(e)}")
-                current_id = message_id if 'message_id' in locals() else "unknown"
+                # Just use "unknown" as a safe fallback for error responses
                 await websocket.send(json.dumps({
-                    "id": current_id,
+                    "id": "unknown",
                     "type": "error",
                     "error": str(e)
                 }))
@@ -390,6 +390,15 @@ def start_server():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     
+    # Start the background tasks for enhanced reasoning
+    enhanced_reasoning.background_tasks.append(
+        loop.create_task(enhanced_reasoning.background_insight_generator())
+    )
+    enhanced_reasoning.background_tasks.append(
+        loop.create_task(enhanced_reasoning.pattern_detector())
+    )
+    
+    # Start the websocket server
     ws_server = loop.run_until_complete(start_websocket_server())
     
     try:
@@ -398,6 +407,11 @@ def start_server():
     except KeyboardInterrupt:
         logger.info("Shutting down server...")
     finally:
+        # Cancel all background tasks
+        for task in enhanced_reasoning.background_tasks:
+            task.cancel()
+            
+        # Close the server
         ws_server.close()
         loop.run_until_complete(ws_server.wait_closed())
         loop.close()

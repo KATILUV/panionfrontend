@@ -1,81 +1,146 @@
 /**
- * System Logs Utility
- * Centralized logging for system-wide events with timestamp and categories
+ * System Logs Module
+ * Provides centralized logging for system-wide events
  */
 
-interface SystemLogEntry {
+import { log } from './vite';
+
+// Maximum number of logs to keep in memory
+const MAX_LOGS = 500;
+
+// In-memory log storage for system events
+const systemLogs: Array<{
   timestamp: number;
   message: string;
   category: string;
-  level: 'info' | 'warning' | 'error' | 'success';
-}
-
-// In-memory buffer for system logs
-const systemLogs: SystemLogEntry[] = [];
-const MAX_LOGS = 1000; // Keep at most 1000 logs in memory
+  level: 'info' | 'error' | 'warning' | 'debug';
+}> = [];
 
 /**
- * Add a log entry to the system logs
+ * Log an informational message to the system logs
  */
-export function addSystemLog(
-  message: string, 
-  category: string = 'system',
-  level: 'info' | 'warning' | 'error' | 'success' = 'info'
-): void {
-  // Add log to the front of the array
-  systemLogs.unshift({
+export function info(message: string, category: string = 'system') {
+  const logEntry = {
     timestamp: Date.now(),
     message,
     category,
-    level
-  });
+    level: 'info' as const
+  };
   
-  // Trim logs if we exceed the maximum
+  systemLogs.push(logEntry);
+  
+  // Trim logs if they exceed the maximum
   if (systemLogs.length > MAX_LOGS) {
-    systemLogs.length = MAX_LOGS;
+    systemLogs.shift();
   }
+  
+  // Also send to console
+  log(`[${category}] INFO: ${message}`, 'system');
+}
+
+/**
+ * Log an error message to the system logs
+ */
+export function error(message: string, category: string = 'system') {
+  const logEntry = {
+    timestamp: Date.now(),
+    message,
+    category,
+    level: 'error' as const
+  };
+  
+  systemLogs.push(logEntry);
+  
+  // Trim logs if they exceed the maximum
+  if (systemLogs.length > MAX_LOGS) {
+    systemLogs.shift();
+  }
+  
+  // Also send to console
+  log(`[${category}] ERROR: ${message}`, 'system-error');
+}
+
+/**
+ * Log a warning message to the system logs
+ */
+export function warning(message: string, category: string = 'system') {
+  const logEntry = {
+    timestamp: Date.now(),
+    message,
+    category,
+    level: 'warning' as const
+  };
+  
+  systemLogs.push(logEntry);
+  
+  // Trim logs if they exceed the maximum
+  if (systemLogs.length > MAX_LOGS) {
+    systemLogs.shift();
+  }
+  
+  // Also send to console
+  log(`[${category}] WARNING: ${message}`, 'system-warning');
+}
+
+/**
+ * Log a debug message to the system logs
+ */
+export function debug(message: string, category: string = 'system') {
+  const logEntry = {
+    timestamp: Date.now(),
+    message,
+    category,
+    level: 'debug' as const
+  };
+  
+  systemLogs.push(logEntry);
+  
+  // Trim logs if they exceed the maximum
+  if (systemLogs.length > MAX_LOGS) {
+    systemLogs.shift();
+  }
+  
+  // Also send to console
+  log(`[${category}] DEBUG: ${message}`, 'system-debug');
 }
 
 /**
  * Get recent system logs
- * @param count Number of recent logs to retrieve
- * @param category Optional category filter
- * @param level Optional level filter
+ * @param count Number of logs to retrieve (default: all)
+ * @param filter Optional filter for log category
+ * @param level Optional filter for log level
  */
-export function getSystemLog(
-  count: number = 10, 
-  category?: string,
-  level?: 'info' | 'warning' | 'error' | 'success'
-): SystemLogEntry[] {
-  let filteredLogs = systemLogs;
+export function getSystemLog(count: number = 0, filter?: string, level?: 'info' | 'error' | 'warning' | 'debug') {
+  let filteredLogs = [...systemLogs];
   
-  // Apply filters if provided
-  if (category) {
-    filteredLogs = filteredLogs.filter(log => log.category === category);
+  // Apply category filter if provided
+  if (filter) {
+    filteredLogs = filteredLogs.filter(log => log.category === filter);
   }
   
+  // Apply level filter if provided
   if (level) {
     filteredLogs = filteredLogs.filter(log => log.level === level);
   }
   
-  // Return the requested number of logs
-  return filteredLogs.slice(0, count);
+  // Sort by timestamp (newest first)
+  filteredLogs.sort((a, b) => b.timestamp - a.timestamp);
+  
+  // Return requested number of logs or all if count is 0
+  return count > 0 ? filteredLogs.slice(0, count) : filteredLogs;
 }
 
-// Convenience methods for different log levels
 export const systemLog = {
-  info: (message: string, category: string = 'system') => 
-    addSystemLog(message, category, 'info'),
-    
-  warning: (message: string, category: string = 'system') => 
-    addSystemLog(message, category, 'warning'),
-    
-  error: (message: string, category: string = 'system') => 
-    addSystemLog(message, category, 'error'),
-    
-  success: (message: string, category: string = 'system') => 
-    addSystemLog(message, category, 'success')
+  info,
+  error,
+  warning,
+  debug
 };
 
-// Initialize with a startup log
-systemLog.info('System logging initialized', 'startup');
+export default {
+  info,
+  error,
+  warning,
+  debug,
+  getSystemLog
+};
