@@ -29,8 +29,9 @@ import CollaborationAgent from "./components/agents/CollaborationAgent";
 import TaskSchedulerAgent from "./components/agents/TaskSchedulerAgent";
 import DaddyDataAgent from "./components/agents/DaddyDataAgent";
 import WebChatAgent from "./components/agents/WebChatAgent";
-// New Panion component with conversation modes
+// New Panion component with conversation modes and WebSocket support
 import PanionChat from "./components/agents/PanionChat";
+import EnhancedPanionChat from "./components/agents/EnhancedPanionChat";
 import { useAgentStore } from "./state/agentStore";
 import { useTaskbarStore } from "./state/taskbarStore";
 import UnifiedThemeProvider from "./components/common/UnifiedThemeProvider";
@@ -269,10 +270,10 @@ function RegisterAgents() {
       id: 'panion',
       title: 'Panion',
       icon: panionIcon,
-      component: () => <PanionChat />,
+      component: () => <EnhancedPanionChat />,
       defaultPosition: { x: 650, y: 200 },
       defaultSize: { width: 500, height: 600 },
-      capabilities: ['chat', 'reasoning', 'analysis', 'conversation']
+      capabilities: ['chat', 'reasoning', 'analysis', 'conversation', 'realtime']
     });
     
     // Browser Agent
@@ -353,24 +354,7 @@ function RegisterAgents() {
       defaultSize: { width: 900, height: 680 }
     });
     
-    // WebSocket Chat Agent
-    const webChatIcon = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M9 10H9.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 10H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M15 10H15.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `;
-    
-    agentStore.registerAgent({
-      id: 'webchat',
-      title: 'WebSocket Chat',
-      icon: webChatIcon,
-      component: () => <WebChatAgent />,
-      defaultPosition: { x: 650, y: 150 },
-      defaultSize: { width: 450, height: 600 }
-    });
+    // WebSocket functionality has been integrated into Panion
   }, []);
   
   return (
