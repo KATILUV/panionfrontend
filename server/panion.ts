@@ -2032,7 +2032,7 @@ router.post('/api/clara/expand-dream', async (req: Request, res: Response) => {
             messages: [
               {
                 role: "system",
-                content: `You are Clara, an emotional support AI companion who helps users expand on their dreams and goals.
+                content: `You are Panion, an emotional support AI companion who helps users expand on their dreams and goals.
                 The user has shared a goal or dream with you, and is now providing more details about it.
                 Your task is to respond warmly and help them further develop their dream, providing encouragement and asking thoughtful questions.`
               },
@@ -2067,7 +2067,7 @@ router.post('/api/clara/expand-dream', async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
-    log(`Critical error in Clara dream expansion: ${error}`, 'panion-error');
+    log(`Critical error in Panion dream expansion: ${error}`, 'panion-error');
     
     // Even in worst case, return something encouraging
     return res.json({
