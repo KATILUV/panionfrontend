@@ -107,7 +107,7 @@ const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
       });
       
       newSuggestions.push({
-        id: 'clara-summarize',
+        id: 'panion-summarize',
         text: 'Summarize our recent conversations',
         action: () => {
           log.debug('Sending summarize request to Panion');
@@ -122,7 +122,7 @@ const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
       id: 'smart-suggestion',
       text: 'Analyze my communication patterns',
       action: () => {
-        openAgent('clara');
+        openAgent('panion');
         log.debug('Opening communication analysis');
       },
       source: 'intelligence',
