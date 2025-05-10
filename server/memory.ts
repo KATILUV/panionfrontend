@@ -11,7 +11,7 @@ const CONVERSATIONS_DIR = path.join(process.cwd(), 'panion_conversations');
 const SESSION_MEMORY_LIMIT = 20; // Maximum messages to keep in session memory
 
 // Memory structures
-interface Memory {
+export interface Memory {
   sessionId: string;  // Session identifier
   content: string;    // Content of the memory
   isUser: boolean;    // Whether this is a user message or Panion's response

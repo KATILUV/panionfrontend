@@ -15,6 +15,9 @@ import {
   saveToMemory,
   MEMORY_CATEGORIES 
 } from "./memory";
+
+// Import Memory interface type from memory.ts
+import type { Memory } from "./memory";
 import {
   listConversations,
   getConversationHistory,
