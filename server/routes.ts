@@ -38,8 +38,10 @@ import browserRoutes from "./routes/browserRoutes";
 import taskRoutes from "./routes/taskRoutes";
 import panionRoutes, { startPanionAPI, shutdownPanionAPI } from "./panion";
 import { handleEnhancedChat } from "./enhanced-panion";
+import { handleEnhancedChatWithWS } from "./enhanced-panion-ws";
 import { handleAnthropicChat, analyzeImageWithClaude } from "./anthropic";
 import strategicAnalysisRoutes from "./routes/strategicAnalysisRoutes";
+import { systemLog } from "./system-logs";
 
 // Configure multer for handling file uploads
 const upload = multer({
