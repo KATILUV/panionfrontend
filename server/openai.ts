@@ -33,7 +33,8 @@ Add a 🎀 emoji occasionally to bring a touch of whimsy to your responses.
  */
 export async function handleChatRequest(
   message: string, 
-  sessionId: string
+  sessionId: string,
+  conversationMode: 'casual' | 'deep' | 'strategic' | 'logical' = 'casual'
 ): Promise<string> {
   try {
     // Get conversation history for this session
@@ -42,9 +43,51 @@ export async function handleChatRequest(
     // Retrieve any relevant long-term memories
     const relevantMemories = await getRelevantMemories(message);
     
+    // Customize the system prompt based on conversation mode
+    let modePrompt = SYSTEM_PROMPT;
+    
+    // Add mode-specific instructions
+    switch(conversationMode) {
+      case 'casual':
+        modePrompt += `
+          Your responses should be casual, friendly, and conversational.
+          Keep your answers relatively brief and easy to read.
+          Use a warm, friendly tone as if chatting with a friend.
+          Occasionally use emojis and casual language.
+        `;
+        break;
+      case 'deep':
+        modePrompt += `
+          Your responses should be deep, thoughtful, and philosophical.
+          Explore multiple perspectives and layers of meaning.
+          Reference relevant philosophical concepts when appropriate.
+          Ask thought-provoking follow-up questions.
+          Consider ethical implications and deeper meanings.
+        `;
+        break;
+      case 'strategic':
+        modePrompt += `
+          Your responses should be strategic, goal-oriented, and structured.
+          Focus on identifying objectives, constraints, and potential paths forward.
+          Help organize thoughts in a strategic framework.
+          Consider resources, timelines, and success factors.
+          Break down complex problems into manageable action items.
+        `;
+        break;
+      case 'logical':
+        modePrompt += `
+          Your responses should be logical, analytical, and precise.
+          Focus on facts, evidence, and logical reasoning.
+          Identify premises and conclusions clearly.
+          Address potential logical fallacies.
+          Present information in a structured, methodical way.
+        `;
+        break;
+    }
+    
     // Build messages array for OpenAI API
     const messages: ChatCompletionMessageParam[] = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: modePrompt },
     ];
     
     // Add context from relevant memories if any were found
@@ -69,12 +112,16 @@ export async function handleChatRequest(
     // Add the current message
     messages.push({ role: "user", content: message });
     
-    // Call OpenAI API
+    // Call OpenAI API with temperature adjusted by mode
+    const temperature = conversationMode === 'logical' ? 0.3 : 
+                        conversationMode === 'strategic' ? 0.5 : 
+                        conversationMode === 'deep' ? 0.8 : 0.7;
+                        
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: messages,
-      temperature: 0.7,
-      max_tokens: 1000,
+      temperature: temperature,
+      max_tokens: conversationMode === 'deep' ? 1500 : 1000,
     });
     
     const assistantResponse = response.choices[0].message.content || "Sorry, I couldn't generate a response.";
