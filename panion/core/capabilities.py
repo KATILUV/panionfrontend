@@ -12,14 +12,47 @@ from pathlib import Path
 import uuid
 from enum import Enum
 import threading
+import asyncio
 import time
 
+# Import error classes or define them locally if they're missing
 from .panion_errors import PluginError, ErrorSeverity
-from .panion_config import config_manager
+
+# Try importing config_manager, handle it gracefully if it fails
+try:
+    from .panion_config import config_manager
+except ImportError:
+    # Create a minimal config_manager substitute
+    class DummyConfigManager:
+        def get_config(self, *args, **kwargs):
+            return {}
+    config_manager = DummyConfigManager()
+
 from .base import BaseComponent, ComponentMetadata, ComponentState
 from .manager import BaseManager, ManagerMetadata
-from .plugin.base import Plugin
+
+# Try importing Plugin, handle it gracefully if it fails
+try:
+    from .plugin.base import Plugin
+except ImportError:
+    # Create a minimal Plugin substitute
+    class Plugin:
+        pass
+
 from .utils import with_connection_pool, cache_result
+
+# Define missing enums and error classes
+class CircuitState(Enum):
+    """Circuit breaker states for capability operations."""
+    CLOSED = "closed"      # Normal operation
+    OPEN = "open"          # Failing, do not attempt
+    HALF_OPEN = "half_open"  # Testing if recovered
+
+class CapabilityError(Exception):
+    """Exception raised for capability-related errors."""
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 class CapabilityCategory(Enum):
     """Categories for system capabilities."""
@@ -46,6 +79,28 @@ class Capability:
     examples: List[str] = field(default_factory=list)
     limitations: List[str] = field(default_factory=list)
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    
+    # Alias for created_at to match API expectations
+    @property
+    def created_at(self) -> datetime:
+        return self.added_date
+        
+    def dict(self) -> Dict[str, Any]:
+        """Convert capability to dictionary for serialization."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "category": self.category.value,
+            "description": self.description,
+            "version": self.version,
+            "dependencies": self.dependencies,
+            "required_skills": self.required_skills,
+            "status": self.status,
+            "added_date": self.added_date.isoformat(),
+            "last_updated": self.last_updated.isoformat(),
+            "examples": self.examples,
+            "limitations": self.limitations
+        }
 
 @dataclass
 class CapabilityGap:
@@ -104,7 +159,8 @@ class CapabilityManager(BaseManager[Capability]):
         # Write buffer system
         self._write_buffer: Dict[str, Dict[str, Any]] = {}
         self._buffer_lock = threading.Lock()
-        self._operation_lock = threading.Lock()
+        # Using asyncio.Lock() for async operations instead of threading.Lock()
+        self._operation_lock = asyncio.Lock()
         self._is_dirty = False
         self._last_save = datetime.now()
         self._save_interval = timedelta(seconds=30)  # 30 seconds
