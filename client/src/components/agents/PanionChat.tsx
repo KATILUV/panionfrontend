@@ -27,6 +27,8 @@ import log from '@/utils/logger';
 import { useTaskContext } from '@/context/TaskContext';
 import { useToast } from '@/hooks/use-toast';
 import { ChatInterface } from '@/components/chat/ChatInterface';
+import { ImageGallery } from '@/components/gallery';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Message type definition
 interface ChatMessage {
@@ -54,6 +56,7 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [dataSearchRequested, setDataSearchRequested] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState('chat');
   
   // Get task context for activating Daddy Data Agent
   const { activateDaddyData } = useTaskContext();
@@ -85,6 +88,12 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+  
+  // Helper function to get cookie by name
+  const getCookieValue = (name: string): string | null => {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : null;
+  };
   
   // Add welcome message based on conversation mode
   useEffect(() => {
@@ -463,32 +472,68 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
             </div>
           )}
         </div>
-        <button 
-          onClick={() => setShowSettings(true)}
-          className="p-1.5 hover:bg-accent rounded-md transition-colors"
-          aria-label="Settings"
-        >
-          <Settings size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <TabsList className="h-8">
+            <TabsTrigger 
+              value="chat" 
+              onClick={() => setActiveTab('chat')}
+              className={activeTab === 'chat' ? 'data-[state=active]:bg-primary data-[state=active]:text-primary-foreground' : ''}
+            >
+              <MessageSquare size={16} className="mr-1" />
+              Chat
+            </TabsTrigger>
+            <TabsTrigger 
+              value="gallery" 
+              onClick={() => setActiveTab('gallery')}
+              className={activeTab === 'gallery' ? 'data-[state=active]:bg-primary data-[state=active]:text-primary-foreground' : ''}
+            >
+              <ImageIcon size={16} className="mr-1" />
+              Gallery
+            </TabsTrigger>
+          </TabsList>
+          
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="p-1.5 hover:bg-accent rounded-md transition-colors"
+            aria-label="Settings"
+          >
+            <Settings size={18} />
+          </button>
+        </div>
       </div>
       
-      {/* Messages are now handled by ChatInterface */}
-      
-      {/* Input Area with ChatInterface component */}
-      <div className="border-t border-border">
-        <ChatInterface
-          messages={convertToGlobalMessages(messages)}
-          inputValue={inputValue}
-          setInputValue={setInputValue}
-          isLoading={isTyping}
-          agentStatus={isTyping ? 'thinking' : 'idle'}
-          sendMessage={handleSendMessage}
-          onImageUpload={handleImageUpload}
-          messagesEndRef={messagesEndRef}
-          strategicMode={conversationMode === 'strategic'}
-          title={`Panion - ${modeConfig.name} Mode`}
-        />
-      </div>
+      <Tabs value={activeTab} className="flex-1 overflow-hidden">
+        <TabsContent value="chat" className="flex-1 flex flex-col h-full mt-0 overflow-hidden">
+          {/* Input Area with ChatInterface component */}
+          <div className="flex-1 overflow-hidden">
+            <ChatInterface
+              messages={convertToGlobalMessages(messages)}
+              inputValue={inputValue}
+              setInputValue={setInputValue}
+              isLoading={isTyping}
+              agentStatus={isTyping ? 'thinking' : 'idle'}
+              sendMessage={handleSendMessage}
+              onImageUpload={handleImageUpload}
+              messagesEndRef={messagesEndRef}
+              strategicMode={conversationMode === 'strategic'}
+              title={`Panion - ${modeConfig.name} Mode`}
+              showSettings={false}
+            />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="gallery" className="p-4 mt-0 h-full overflow-auto">
+          <ImageGallery 
+            sessionId={getCookieValue('sessionId') || 'default'} 
+            onSelectImage={(imageUrl, description) => {
+              // Use the selected image in a chat message
+              setInputValue(`About this image (${imageUrl}): ${description.substring(0, 50)}...`);
+              setActiveTab('chat');
+            }}
+            height="calc(100vh - 180px)"
+          />
+        </TabsContent>
+      </Tabs>
       
       {/* Settings Panel */}
       <AnimatePresence>
