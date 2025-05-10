@@ -65,7 +65,8 @@ export function TaskDecomposition({
     // Helper function to check if a subtask has unresolved dependencies
     const hasUnresolvedDependencies = (s: Subtask, resolved: Set<string>) => {
       const deps = dependencyMap.get(s.id) || new Set();
-      for (const dep of deps) {
+      const depsArray = Array.from(deps);
+      for (const dep of depsArray) {
         if (!resolved.has(dep)) {
           return true;
         }
