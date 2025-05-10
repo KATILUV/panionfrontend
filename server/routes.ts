@@ -277,6 +277,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Use Knowledge Graph routes
   app.use(knowledgeRoutes);
   
+  // Conversation history management routes
+  app.get('/api/conversations', async (req, res) => {
+    try {
+      const conversations = await listConversations();
+      res.json({ 
+        success: true,
+        count: conversations.length,
+        conversations
+      });
+    } catch (error) {
+      console.error('Error listing conversations:', error);
+      res.status(500).json({
+        error: 'Failed to list conversations',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.get('/api/conversations/:sessionId', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      if (!sessionId) {
+        return res.status(400).json({
+          error: 'Invalid request',
+          message: 'Session ID is required'
+        });
+      }
+      
+      const messages = await getConversationHistory(sessionId);
+      
+      if (!messages || messages.length === 0) {
+        return res.status(404).json({
+          error: 'Conversation not found',
+          message: `No conversation found with session ID: ${sessionId}`
+        });
+      }
+      
+      res.json({
+        success: true,
+        sessionId,
+        messageCount: messages.length,
+        messages
+      });
+    } catch (error) {
+      console.error('Error retrieving conversation:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve conversation',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.post('/api/conversations/:sessionId/clear', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      if (!sessionId) {
+        return res.status(400).json({
+          error: 'Invalid request',
+          message: 'Session ID is required'
+        });
+      }
+      
+      await clearConversation(sessionId);
+      
+      res.json({
+        success: true,
+        message: `Conversation ${sessionId} cleared successfully`
+      });
+    } catch (error) {
+      console.error('Error clearing conversation:', error);
+      res.status(500).json({
+        error: 'Failed to clear conversation',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.post('/api/conversations/:sessionId/rename', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { title } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({
+          error: 'Invalid request',
+          message: 'Session ID is required'
+        });
+      }
+      
+      if (!title || typeof title !== 'string') {
+        return res.status(400).json({
+          error: 'Invalid request',
+          message: 'Title is required and must be a string'
+        });
+      }
+      
+      const conversation = await renameConversation(sessionId, title);
+      
+      if (!conversation) {
+        return res.status(404).json({
+          error: 'Conversation not found',
+          message: `No conversation found with session ID: ${sessionId}`
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: `Conversation renamed successfully`,
+        conversation
+      });
+    } catch (error) {
+      console.error('Error renaming conversation:', error);
+      res.status(500).json({
+        error: 'Failed to rename conversation',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.get('/api/conversation-stats', async (req, res) => {
+    try {
+      const stats = await getConversationMemoryStats();
+      res.json({
+        success: true,
+        stats
+      });
+    } catch (error) {
+      console.error('Error retrieving conversation stats:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve conversation statistics',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Use Multi-agent Debate routes
   app.use(debateRoutes);
   

@@ -9,7 +9,7 @@ import { taskManager } from './autonomous-agent';
 import { extractCapabilities } from './utils/capability-detection';
 import OpenAI from 'openai';
 import panionBridge from './panion-bridge';
-import * as conversationMemory from './conversation-memory';
+import * as conversationMemory from './conversation-memory-interface';
 import * as startupOptimizer from './startup-optimizer';
 
 // Create router
@@ -1298,7 +1298,7 @@ router.post('/api/panion/detect-capabilities', async (req: Request, res: Respons
       // Remove the temporary message if this is just for detection
       if (tempMessageId && req.body.detectOnly === true) {
         // Only remove if this is just for detection, not a real message
-        await conversationMemory.cleanupInactiveConversations(0.01); // 36 seconds (immediate cleanup)
+        await conversationMemory.cleanupOldConversations(); // Immediate cleanup
       }
     } catch (memoryError) {
       log(`Non-critical error accessing conversation memory: ${memoryError}`, 'memory');
