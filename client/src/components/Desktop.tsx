@@ -16,7 +16,7 @@ import SettingsAgent from './agents/SettingsAgent';
 import MarketplaceAgent from './agents/MarketplaceAgent';
 import PanionChat from './agents/PanionChat';
 import DaddyDataAgent from './agents/DaddyDataAgent';
-import ClaraContextPanel from './system/ClaraContextPanel';
+import PanionContextPanel from './system/PanionContextPanel';
 import CommandPalette from './system/CommandPalette';
 import Dashboard from './system/Dashboard';
 import IntelligentUI from './IntelligentUI';
@@ -130,7 +130,7 @@ const renderAgentContent = (agentId: string) => {
     case 'marketplace':
       return <MarketplaceAgent />;
     case 'panion':
-      return <SimplifiedEnhancedChatAgent />;
+      return <PanionChat />;
     case 'daddy-data':
       return <DaddyDataAgent />;
     default:
@@ -328,9 +328,9 @@ const Desktop: React.FC = () => {
         ))}
       </div>
       
-      {/* Clara's Context Panel - only visible when Clara agent is actually open */}
-      <ClaraContextPanel 
-        active={Object.values(windows).some(w => w.id === 'clara' && w.isOpen && !w.isMinimized)} 
+      {/* Panion's Context Panel - only visible when Panion agent is actually open */}
+      <PanionContextPanel 
+        active={Object.values(windows).some(w => w.id === 'panion' && w.isOpen && !w.isMinimized)} 
       />
       
       {/* Command Palette */}
