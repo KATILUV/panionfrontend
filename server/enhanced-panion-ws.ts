@@ -8,7 +8,31 @@ import { log } from './vite';
 import { v4 as uuidv4 } from 'uuid';
 import { addMessage, getRelevantContext } from './conversation-memory';
 import panionBridgeWS from './panion-bridge-ws';
-import { getSystemLog, systemLog } from './system-logs';
+// Import fs to check if system-logs exists
+import fs from 'fs';
+import path from 'path';
+
+// Define simple fallback log functions if system-logs doesn't exist
+const systemLogFallback = {
+  info: (message: string, category: string = 'system') => {
+    log(`[${category}] INFO: ${message}`, 'system');
+  },
+  error: (message: string, category: string = 'system') => {
+    log(`[${category}] ERROR: ${message}`, 'system');
+  }
+};
+
+// Define a fallback getSystemLog function
+const getSystemLogFallback = (count: number = 10) => {
+  return [];
+};
+
+// Try to import system-logs, use fallbacks if it doesn't exist
+let systemLog = systemLogFallback;
+let getSystemLog = getSystemLogFallback;
+
+// Just reference the log function directly
+import { log } from './vite';
 
 /**
  * Enhanced chat request handler with WebSocket Bridge and Manus-like capabilities

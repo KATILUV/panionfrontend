@@ -55,18 +55,44 @@ const AVAILABLE_AGENTS = {
 };
 
 // Start the Panion API process
+// WebSocket server process
+let wsServerProcess: ChildProcess | null = null;
+
 export function startPanionAPI(): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       log('Starting Panion API service...', 'panion');
       
-      // Kill any existing process
+      // Kill any existing processes
       if (panionProcess) {
         panionProcess.kill();
         panionProcess = null;
       }
       
-      // Spawn the Python process
+      if (wsServerProcess) {
+        wsServerProcess.kill();
+        wsServerProcess = null;
+      }
+      
+      // Start the WebSocket server in background
+      const wsScriptPath = path.resolve('./panion/start_websocket_server.py');
+      log(`Starting WebSocket server: python3 ${wsScriptPath}`, 'panion');
+      
+      wsServerProcess = spawn('python3', [wsScriptPath], {
+        detached: true, // Run in background
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+      
+      // Handle WebSocket server output
+      wsServerProcess.stdout?.on('data', (data) => {
+        log(`WS Server: ${data.toString().trim()}`, 'panion-ws');
+      });
+      
+      wsServerProcess.stderr?.on('data', (data) => {
+        log(`WS Server Error: ${data.toString().trim()}`, 'panion-ws');
+      });
+      
+      // Spawn the Panion API process
       const pythonPath = 'python3';
       const scriptPath = path.resolve('./panion/simple_chat_api.py');
       
