@@ -42,6 +42,7 @@ import { handleEnhancedChatWithWS } from "./enhanced-panion-ws";
 import { handleAnthropicChat, analyzeImageWithClaude } from "./anthropic";
 import strategicAnalysisRoutes from "./routes/strategicAnalysisRoutes";
 import panionIntelligenceRouter from "./panion-intelligence-routes";
+import manuRouter from "./manus-routes";
 import { systemLog } from "./system-logs";
 
 // Configure multer for handling file uploads
@@ -276,6 +277,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use Panion Intelligence capabilities routes
   app.use(panionIntelligenceRouter);
+  
+  // Use Manus-like capabilities routes
+  app.use(manuRouter);
   
   // Try to start the Panion API
   try {
