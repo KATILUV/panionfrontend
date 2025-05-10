@@ -202,10 +202,11 @@ class CapabilityManager(BaseManager[Capability]):
         # Additional validation logic could be added here
         return True
 
-    def _mark_dirty(self, capability_id: str, capability_data: Dict[str, Any]) -> None:
+    def _mark_dirty(self, capability_id: str, capability_data: Dict[str, Any] = None) -> None:
         """Mark capability data as dirty and add to write buffer."""
         with self._buffer_lock:
-            self._write_buffer[capability_id] = capability_data
+            if capability_data is not None:
+                self._write_buffer[capability_id] = capability_data
             self._is_dirty = True
             
             # Invalidate caches
@@ -221,21 +222,29 @@ class CapabilityManager(BaseManager[Capability]):
         if not self._is_dirty:
             return
             
+        # Use the asyncio lock properly
         async with self._operation_lock:
             try:
+                # Use a regular lock for synchronous code
+                local_buffer_copy = {}
                 with self._buffer_lock:
-                    # Save buffered changes
-                    for capability_id, capability_data in self._write_buffer.items():
-                        file_path = self.data_dir / f"{capability_id}.json"
-                        with open(file_path, 'w') as f:
-                            json.dump(capability_data, f)
-                    
+                    # Create a local copy of the buffer
+                    local_buffer_copy = self._write_buffer.copy()
+                    # Clear write buffer immediately to reduce lock contention
                     self._write_buffer.clear()
                     self._is_dirty = False
-                    self._last_save = datetime.now()
+                
+                # Save buffered changes outside the lock
+                for capability_id, capability_data in local_buffer_copy.items():
+                    file_path = self.data_dir / f"{capability_id}.json"
+                    with open(file_path, 'w') as f:
+                        json.dump(capability_data, f)
+                
+                # Update last save time
+                self._last_save = datetime.now()
             except Exception as e:
                 self.logger.error(f"Error saving capability data: {e}")
-                # Keep buffer if save fails
+                # Restore dirty flag if save fails
                 self._is_dirty = True
 
     @with_connection_pool("capability_db")
@@ -410,7 +419,7 @@ class CapabilityManager(BaseManager[Capability]):
         for capability_id, capability in list(self._items.items()):
             if capability.created_at < cutoff:
                 del self._items[capability_id]
-                self._mark_dirty(capability_id, None)  # Mark for deletion
+                self._mark_dirty(capability_id)  # Mark for deletion (with None default parameter)
                 
                 # Clean up related files
                 file_path = self.data_dir / f"{capability_id}.json"
