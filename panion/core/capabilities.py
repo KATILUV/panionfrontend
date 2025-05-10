@@ -18,26 +18,19 @@ import time
 # Import error classes or define them locally if they're missing
 from .panion_errors import PluginError, ErrorSeverity
 
-# Try importing config_manager, handle it gracefully if it fails
-try:
-    from .panion_config import config_manager
-except ImportError:
-    # Create a minimal config_manager substitute
-    class DummyConfigManager:
-        def get_config(self, *args, **kwargs):
-            return {}
-    config_manager = DummyConfigManager()
+# Create a minimal config_manager substitute
+class DummyConfigManager:
+    def get_config(self, *args, **kwargs):
+        return {}
+config_manager = DummyConfigManager()
 
 from .base import BaseComponent, ComponentMetadata, ComponentState
 from .manager import BaseManager, ManagerMetadata
 
-# Try importing Plugin, handle it gracefully if it fails
-try:
-    from .plugin.base import Plugin
-except ImportError:
-    # Create a minimal Plugin substitute
-    class Plugin:
-        pass
+# Create a minimal Plugin substitute
+class Plugin:
+    """Minimal Plugin substitute for when the actual Plugin class is not available."""
+    pass
 
 from .utils import with_connection_pool, cache_result
 
@@ -202,7 +195,7 @@ class CapabilityManager(BaseManager[Capability]):
         # Additional validation logic could be added here
         return True
 
-    def _mark_dirty(self, capability_id: str, capability_data: Dict[str, Any] = None) -> None:
+    def _mark_dirty(self, capability_id: str, capability_data: Optional[Dict[str, Any]] = None) -> None:
         """Mark capability data as dirty and add to write buffer."""
         with self._buffer_lock:
             if capability_data is not None:
