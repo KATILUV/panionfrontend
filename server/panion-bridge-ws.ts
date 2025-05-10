@@ -320,7 +320,7 @@ class PanionBridgeWS extends EventEmitter {
   }
   
   /**
-   * Get enhanced Manus-like analysis for a message
+   * Get enhanced Panion Intelligence analysis for a message
    */
   public async getEnhancedAnalysis(content: string, sessionId: string): Promise<any> {
     return this.sendMessage({

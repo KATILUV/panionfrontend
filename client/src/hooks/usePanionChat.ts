@@ -7,15 +7,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
-// Types
-export interface ChatMessage {
-  id: string;
-  content: string;
-  isUser: boolean;
-  timestamp: string;
-  thinking?: string;
-  imageUrl?: string;
-}
+// Import existing types
+import { ChatMessage, AgentStatusType } from '@/types/chat';
 
 export interface PanionCapabilities {
   proactivity_score: number;
@@ -54,14 +47,14 @@ export default function usePanionChat(options: PanionChatOptions = {}) {
   // Enhanced Panion Intelligence features
   const [lastResponse, setLastResponse] = useState<PanionChatResponse | null>(null);
   const [insights, setInsights] = useState<any[]>([]);
-  const [agentStatus, setAgentStatus] = useState<string>('idle');
+  const [agentStatus, setAgentStatus] = useState<AgentStatusType>('idle');
   const [processingStage, setProcessingStage] = useState<string | null>(null);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [strategicMode, setStrategicMode] = useState<boolean>(false);
   
   // Refs for scrolling and input focus
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   const { toast } = useToast();
 
@@ -107,7 +100,7 @@ export default function usePanionChat(options: PanionChatOptions = {}) {
         
         setIsLoading(true);
         setError(null);
-        setAgentStatus('processing');
+        setAgentStatus('thinking');
         setProcessingStage('Analyzing request');
         setProcessingProgress(10);
 
