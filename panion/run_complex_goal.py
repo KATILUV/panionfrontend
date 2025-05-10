@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 import json
 from core.orchestrator import orchestrator
-from config.logging_config import setup_logging
+from core.logging_config import setup_logging
 
 # Set up logging
 setup_logging()
