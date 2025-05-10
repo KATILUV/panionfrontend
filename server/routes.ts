@@ -822,6 +822,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Get image gallery from memory
+  app.get('/api/image-gallery', async (req, res) => {
+    try {
+      // Extract sessionId from query or cookie
+      const sessionId = req.query.sessionId || req.cookies?.sessionId;
+      
+      if (!sessionId) {
+        return res.status(400).json({ 
+          message: 'Session ID is required' 
+        });
+      }
+      
+      // Get conversation history for the session
+      const history = await getConversationHistory(sessionId as string);
+      
+      // Filter for memories with images
+      const imageMemories = history.filter(
+        memory => memory.imageUrl && (memory.mediaType === 'image' || memory.mediaType === 'mixed')
+      );
+      
+      // Get image-specific memories from long-term memory
+      const categoryResults = await getMemoriesByCategory('image');
+      const sessionImageMemories = categoryResults.filter(
+        memory => memory.sessionId === sessionId
+      );
+      
+      // Combine and deduplicate based on imageUrl
+      const allImageMemories = [...imageMemories];
+      
+      // Add memories from long-term storage that aren't already included
+      sessionImageMemories.forEach(memory => {
+        if (!allImageMemories.some(m => m.imageUrl === memory.imageUrl)) {
+          allImageMemories.push(memory);
+        }
+      });
+      
+      // Sort by timestamp (newest first)
+      allImageMemories.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      
+      // Return gallery items
+      res.json({
+        success: true,
+        images: allImageMemories.map(memory => ({
+          id: memory.timestamp,
+          imageUrl: memory.imageUrl,
+          description: memory.imageAnalysis || 'No description available',
+          timestamp: memory.timestamp,
+          isUserUploaded: memory.isUser
+        }))
+      });
+    } catch (error) {
+      console.error('Error fetching image gallery:', error);
+      res.status(500).json({ 
+        message: 'Error retrieving image gallery' 
+      });
+    }
+  });
 
   // Get uploaded files list
   app.get('/api/files', (req, res) => {
