@@ -45,6 +45,7 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [dataSearchRequested, setDataSearchRequested] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   
   // Get task context for activating Daddy Data Agent
   const { activateDaddyData } = useTaskContext();

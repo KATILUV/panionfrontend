@@ -24,6 +24,7 @@ interface ChatInterfaceProps {
   strategicMode?: boolean;
   toggleStrategicMode?: (value?: boolean) => void;
   sendMessage: (message: string) => void;
+  onImageUpload?: (file: File) => Promise<void>;
   messagesEndRef?: React.RefObject<HTMLDivElement>;
   inputRef?: React.RefObject<HTMLInputElement>;
   title?: string;
@@ -42,6 +43,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   strategicMode = false,
   toggleStrategicMode,
   sendMessage,
+  onImageUpload,
   messagesEndRef,
   inputRef,
   title = "Panion",
@@ -155,6 +157,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             strategicMode={strategicMode}
             toggleStrategicMode={toggleStrategicMode ? () => toggleStrategicMode() : undefined}
             inputRef={inputRef}
+            onImageUpload={onImageUpload}
           />
         </form>
       </div>
