@@ -289,6 +289,17 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
     try {
       setIsTyping(true);
       
+      // Validate file size before uploading
+      const MAX_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > MAX_SIZE) {
+        toast({
+          title: "File too large",
+          description: "Please upload images smaller than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       // Add user message with image info
       const userMessage: ChatMessage = {
         id: `user-${Date.now()}`,
@@ -314,6 +325,12 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
       
       setMessages(prev => [...prev, tempAgentMessage]);
       
+      // Show loading toast
+      toast({
+        title: 'Analyzing image...',
+        description: 'Your image is being processed with OpenAI Vision',
+      });
+      
       // Send the image to the backend for analysis
       const response = await fetch('/api/upload-image', {
         method: 'POST',
@@ -321,10 +338,16 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to upload image');
       }
       
       const data = await response.json();
+      
+      // Validate the response data
+      if (!data.imageUrl || !data.analysis) {
+        throw new Error('Invalid response from server');
+      }
       
       // Update the agent message with the analysis
       setMessages(prev => 
@@ -332,9 +355,9 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
           msg.id === tempAgentMessage.id 
             ? { 
                 ...msg, 
-                content: data.analysis || 'Here is what I see in your image: ' + data.description, 
+                content: data.analysis, 
                 thinking: 'Analyzing the visual content of the image...',
-                imageUrl: data.imageUrl || undefined,
+                imageUrl: data.imageUrl,
                 isLoading: false 
               } 
             : msg
@@ -343,17 +366,30 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
       
       // Show success toast
       toast({
-        title: 'Image analyzed',
-        description: 'The image was successfully processed',
+        title: 'Image analysis complete',
+        description: 'The image was successfully processed with OpenAI Vision',
       });
       
     } catch (error) {
       console.error('Error uploading image:', error);
       
+      // Update any loading message to show the error
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.isLoading 
+            ? { 
+                ...msg, 
+                content: 'Sorry, I encountered an error processing your image. Please try again.', 
+                isLoading: false 
+              } 
+            : msg
+        )
+      );
+      
       // Show error toast
       toast({
         title: 'Error',
-        description: 'Failed to process the image',
+        description: error instanceof Error ? error.message : 'Failed to process the image',
         variant: 'destructive'
       });
       

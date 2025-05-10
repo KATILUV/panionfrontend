@@ -619,9 +619,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Error processing image upload:', error);
-      res.status(500).json({
-        message: 'Error processing your image'
-      });
+      
+      // Handle specific error types
+      if (error instanceof Error && error.message.includes('API')) {
+        res.status(503).json({
+          message: 'OpenAI API error occurred. Please try again later.',
+          error: 'API_ERROR'
+        });
+      } else if (error instanceof Error && error.message.includes('file')) {
+        res.status(400).json({
+          message: 'There was a problem with the image file. Please try a different image.',
+          error: 'FILE_ERROR'
+        });
+      } else {
+        res.status(500).json({
+          message: 'Error processing your image. Please try again.',
+          error: 'GENERAL_ERROR'
+        });
+      }
     }
   });
   
