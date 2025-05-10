@@ -1,72 +1,90 @@
 {
-  "conversations": [
-    {
-      "id": 1,
-      "sessionId": "test-session-1",
-      "title": "Test Conversation 1",
-      "createdAt": "2025-05-10T15:30:18.047Z",
-      "lastUpdatedAt": "2025-05-10T15:30:18.047Z",
-      "messageCount": 2
-    },
-    {
-      "sessionId": {
-        "role": "user",
-        "content": "This is a test message from the direct API",
-        "sessionId": "test-direct-api",
-        "conversationMode": "casual"
+   "conversations" : [
+      {
+         "createdAt" : "2025-05-10T15:30:18.047Z",
+         "id" : 1,
+         "lastUpdatedAt" : "2025-05-10T15:30:18.047Z",
+         "messageCount" : 2,
+         "sessionId" : "test-session-1",
+         "title" : "Test Conversation 1"
       },
-      "title": "Conversation 5/10/2025",
-      "createdAt": "2025-05-10T15:33:15.516Z",
-      "lastUpdatedAt": "2025-05-10T15:33:15.516Z",
-      "messageCount": 1,
-      "id": 2
-    }
-  ],
-  "messages": [
-    {
-      "sessionId": "test-session-1",
-      "messages": [
-        {
-          "id": 1,
-          "content": "Hello, this is a test message",
-          "role": "user",
-          "timestamp": "2025-05-10T15:30:18.047Z",
-          "sessionId": "test-session-1",
-          "important": false,
-          "conversationMode": "casual"
-        },
-        {
-          "id": 2,
-          "content": "This is a response to the test message",
-          "role": "assistant",
-          "timestamp": "2025-05-10T15:30:18.048Z",
-          "sessionId": "test-session-1",
-          "important": false,
-          "conversationMode": "casual"
-        }
-      ]
-    },
-    {
-      "sessionId": {
-        "role": "user",
-        "content": "This is a test message from the direct API",
-        "sessionId": "test-direct-api",
-        "conversationMode": "casual"
+      {
+         "createdAt" : "2025-05-10T15:33:15.516Z",
+         "id" : 2,
+         "lastUpdatedAt" : "2025-05-10T15:33:15.516Z",
+         "messageCount" : 1,
+         "sessionId" : "test-direct-api",
+         "title" : "Test Message API"
       },
-      "messages": [
-        {
-          "timestamp": "2025-05-10T15:33:15.516Z",
-          "sessionId": {
-            "role": "user",
-            "content": "This is a test message from the direct API",
-            "sessionId": "test-direct-api",
-            "conversationMode": "casual"
-          },
-          "important": false,
-          "conversationMode": "casual",
-          "id": 3
-        }
-      ]
-    }
-  ]
+      {
+         "createdAt" : "2025-05-10T15:34:43.209Z",
+         "id" : 3,
+         "lastUpdatedAt" : "2025-05-10T15:34:51.794Z",
+         "messageCount" : 2,
+         "sessionId" : "test-persistence",
+         "title" : "This is a testing me..."
+      }
+   ],
+   "messages" : [
+      {
+         "messages" : [
+            {
+               "content" : "Hello, this is a test message",
+               "conversationMode" : "casual",
+               "id" : 1,
+               "important" : false,
+               "role" : "user",
+               "sessionId" : "test-session-1",
+               "timestamp" : "2025-05-10T15:30:18.047Z"
+            },
+            {
+               "content" : "This is a response to the test message",
+               "conversationMode" : "casual",
+               "id" : 2,
+               "important" : false,
+               "role" : "assistant",
+               "sessionId" : "test-session-1",
+               "timestamp" : "2025-05-10T15:30:18.048Z"
+            }
+         ],
+         "sessionId" : "test-session-1"
+      },
+      {
+         "messages" : [
+            {
+               "content": "This is a test message from the direct API",
+               "conversationMode" : "casual",
+               "id" : 3,
+               "important" : false,
+               "role": "user",
+               "sessionId" : "test-direct-api",
+               "timestamp" : "2025-05-10T15:33:15.516Z"
+            }
+         ],
+         "sessionId" : "test-direct-api"
+      },
+      {
+         "messages" : [
+            {
+               "content" : "This is a testing message to check conversation persistence",
+               "conversationMode" : "casual",
+               "id" : 4,
+               "important" : false,
+               "role" : "user",
+               "sessionId" : "test-persistence",
+               "timestamp" : "2025-05-10T15:34:43.209Z"
+            },
+            {
+               "content" : "This is a follow-up message in the same conversation",
+               "conversationMode" : "casual",
+               "id" : 5,
+               "important" : false,
+               "role" : "assistant",
+               "sessionId" : "test-persistence",
+               "timestamp" : "2025-05-10T15:34:51.794Z"
+            }
+         ],
+         "sessionId" : "test-persistence"
+      }
+   ]
 }
