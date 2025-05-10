@@ -71,9 +71,10 @@ const TaskbarFixer: React.FC = () => {
             taskbarStore.pinAgent('notes');
           }
           
-          if (!currentPinned.includes('clara')) {
-            taskbarStore.pinAgent('clara');
-          }
+          // Clara renamed to panion - this check is now redundant
+          // if (!currentPinned.includes('panion')) {
+          //   taskbarStore.pinAgent('panion');
+          // }
         }
       } else {
         // No taskbar data found, initialize with defaults

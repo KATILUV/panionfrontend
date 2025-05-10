@@ -204,7 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isMobile = false, simple = false 
       shortcut: "Shift+C",
       category: "communication",
       shortcutAction: (e: KeyboardEvent) => {
-        if (e.shiftKey && e.key === 'C') openAgent('clara');
+        if (e.shiftKey && e.key === 'C') openAgent('panion');
       }
     },
     {

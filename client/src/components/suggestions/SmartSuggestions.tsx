@@ -31,7 +31,7 @@ const mockRecentConversations = [
   { 
     id: 'conv1', 
     excerpt: "How can I optimize my workflow with AI?",
-    agentId: 'clara'
+    agentId: 'panion'
   },
   { 
     id: 'conv2', 
@@ -41,7 +41,7 @@ const mockRecentConversations = [
   { 
     id: 'conv3', 
     excerpt: "Can you help me draft an email to my team?",
-    agentId: 'clara'
+    agentId: 'panion'
   }
 ];
 
@@ -95,9 +95,9 @@ const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
     });
     
     // Add context-based suggestions
-    if (activeAgentId === 'clara') {
+    if (activeAgentId === 'panion') {
       newSuggestions.push({
-        id: 'clara-workflow',
+        id: 'panion-workflow',
         text: 'How can AI improve my daily workflow?',
         action: () => {
           log.debug('Sending suggestion to Panion');
