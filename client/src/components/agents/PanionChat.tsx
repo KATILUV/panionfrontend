@@ -11,13 +11,15 @@ import {
   Coffee,
   BookOpen,
   Target,
-  CircuitBoard
+  CircuitBoard,
+  Database
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { CONVERSATION_MODES, DEFAULT_CONVERSATION_MODE, ConversationMode } from '@/types/conversationModes';
 import PanionAgentSettings from './PanionAgentSettings';
 import log from '@/utils/logger';
+import { useTaskContext } from '@/context/TaskContext';
 
 // Message type definition
 interface ChatMessage {
@@ -42,6 +44,10 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [dataSearchRequested, setDataSearchRequested] = useState(false);
+  
+  // Get task context for activating Daddy Data Agent
+  const { activateDaddyData } = useTaskContext();
   
   // Get current conversation mode from preferences
   const conversationMode = usePreferencesStore(
@@ -102,6 +108,46 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
     }
   }, [conversationMode, messages.length]);
   
+  // Function to detect business search queries
+  const detectBusinessSearch = (query: string): { businessType: string, location: string } | null => {
+    // Regex patterns for different types of business search queries
+    const patterns = [
+      // "Find X in Y" pattern
+      {
+        regex: /(?:find|search for|look for|get|show me|locate)\s+(?:some|the|a|all|any)?\s*(.+?)(?:\s+(?:business(?:es)?|shop(?:s)?|stor(?:e|es)|place(?:s)?))?\s+(?:in|near|around|close to)\s+(.+?)(?:\s|$)/i,
+        businessTypeIndex: 1,
+        locationIndex: 2
+      },
+      // "Where can I find X in Y" pattern
+      {
+        regex: /(?:where\s+can\s+(?:I|we|one|someone|you))\s+(?:find|get|buy|purchase|acquire)\s+(?:some|the|a|all|any)?\s*(.+?)(?:\s+(?:business(?:es)?|shop(?:s)?|stor(?:e|es)|place(?:s)?))?\s+(?:in|near|around|close to)\s+(.+?)(?:\s|$)/i,
+        businessTypeIndex: 1,
+        locationIndex: 2
+      },
+      // "X in Y" direct pattern
+      {
+        regex: /(?:^|\s)(.+?)\s+(?:business(?:es)?|shop(?:s)?|stor(?:e|es)|place(?:s)?)\s+(?:in|near|around|close to)\s+(.+?)(?:\s|$)/i,
+        businessTypeIndex: 1,
+        locationIndex: 2
+      }
+    ];
+    
+    for (const pattern of patterns) {
+      const match = query.match(pattern.regex);
+      if (match) {
+        const businessType = match[pattern.businessTypeIndex].trim();
+        const location = match[pattern.locationIndex].trim();
+        
+        // Only return valid matches with both business type and location
+        if (businessType && location) {
+          return { businessType, location };
+        }
+      }
+    }
+    
+    return null;
+  };
+
   // Handle sending a message
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -117,6 +163,24 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsTyping(true);
+    
+    // Detect if this is a business search query
+    const businessSearch = detectBusinessSearch(userMessage.content);
+    let businessSearchActivated = false;
+    
+    if (businessSearch && !dataSearchRequested) {
+      log.info(`Detected business search query: ${businessSearch.businessType} in ${businessSearch.location}`);
+      
+      // Activate Daddy Data Agent
+      activateDaddyData(businessSearch.businessType, businessSearch.location);
+      businessSearchActivated = true;
+      setDataSearchRequested(true);
+      
+      // After a delay, reset the data search requested flag
+      setTimeout(() => {
+        setDataSearchRequested(false);
+      }, 10000); // Reset after 10 seconds
+    }
     
     // Add temporary agent response
     const tempAgentMessage: ChatMessage = {
@@ -141,26 +205,32 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
       let response = '';
       let thinking = '';
       
-      switch (conversationMode) {
-        case 'casual':
-          thinking = "Let me think about this in a friendly, conversational way...";
-          response = `I'm thinking about your message: "${inputValue}" in a casual way! This is simulating a real response that would come from the API with the casual conversation mode.`;
-          break;
-        case 'deep':
-          thinking = "Examining this from multiple perspectives, considering philosophical implications...";
-          response = `Contemplating your message: "${inputValue}" with depth and nuance. This simulates a thoughtful, philosophical response from the deep conversation mode.`;
-          break;
-        case 'strategic':
-          thinking = "Analyzing from a goal-oriented perspective, identifying objectives and constraints...";
-          response = `Strategically analyzing your message: "${inputValue}" with a focus on outcomes and solutions. This simulates a structured response from the strategic conversation mode.`;
-          break;
-        case 'logical':
-          thinking = "Processing with logical analysis, establishing facts and identifying premises...";
-          response = `Logically processing your message: "${inputValue}" with factual precision. This simulates a methodical response from the logical conversation mode.`;
-          break;
-        default:
-          thinking = "Thinking...";
-          response = `I received your message: "${inputValue}"`;
+      // Customize response based on whether this was a business search
+      if (businessSearchActivated) {
+        thinking = "Detecting business search query and activating Daddy Data Agent...";
+        response = `I've detected that you're looking for ${businessSearch!.businessType} in ${businessSearch!.location}. I've activated the Daddy Data Agent to help you find detailed information about businesses matching your search. You should see the results shortly in the Daddy Data window.`;
+      } else {
+        switch (conversationMode) {
+          case 'casual':
+            thinking = "Let me think about this in a friendly, conversational way...";
+            response = `I'm thinking about your message: "${inputValue}" in a casual way! This is simulating a real response that would come from the API with the casual conversation mode.`;
+            break;
+          case 'deep':
+            thinking = "Examining this from multiple perspectives, considering philosophical implications...";
+            response = `Contemplating your message: "${inputValue}" with depth and nuance. This simulates a thoughtful, philosophical response from the deep conversation mode.`;
+            break;
+          case 'strategic':
+            thinking = "Analyzing from a goal-oriented perspective, identifying objectives and constraints...";
+            response = `Strategically analyzing your message: "${inputValue}" with a focus on outcomes and solutions. This simulates a structured response from the strategic conversation mode.`;
+            break;
+          case 'logical':
+            thinking = "Processing with logical analysis, establishing facts and identifying premises...";
+            response = `Logically processing your message: "${inputValue}" with factual precision. This simulates a methodical response from the logical conversation mode.`;
+            break;
+          default:
+            thinking = "Thinking...";
+            response = `I received your message: "${inputValue}"`;
+        }
       }
       
       // Update the agent message with the response
@@ -229,6 +299,14 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
             {getModeIcon()}
           </div>
           <h2 className="font-medium">Panion - {modeConfig.name} Mode</h2>
+          
+          {/* Data Search Indicator */}
+          {dataSearchRequested && (
+            <div className="flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs animate-pulse">
+              <Database size={12} />
+              <span>Data search active</span>
+            </div>
+          )}
         </div>
         <button 
           onClick={() => setShowSettings(true)}

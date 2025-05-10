@@ -63,7 +63,7 @@ export default function DaddyDataAgent() {
   const [analysisPrompt, setAnalysisPrompt] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Declare the scraper function before using it in useEffect
+  // Scraper function that will be called both manually and through events
   const runScraper = async () => {
     setIsLoading(true);
     setError(null);
@@ -182,6 +182,58 @@ Note: Full analysis is currently unavailable. This is a summary of the raw data.
     
     setSavedSearches([newSavedSearch, ...savedSearches]);
   };
+  
+  // Load saved searches and listen for activation events
+  useEffect(() => {
+    const loadSavedSearches = async () => {
+      try {
+        // In a real app, we'd fetch this from the server
+        const mockSavedSearches = [
+          { id: '1', query: 'coffee shops in Seattle', results: 15 },
+          { id: '2', query: 'restaurants in Chicago', results: 24 },
+          { id: '3', query: 'bookstores in Portland', results: 8 }
+        ];
+        setSavedSearches(mockSavedSearches);
+      } catch (err) {
+        console.error('Error loading saved searches', err);
+      }
+    };
+    
+    loadSavedSearches();
+  }, []);
+  
+  // Listen for activation events from Panion Chat
+  useEffect(() => {
+    // Handler for Daddy Data activation events from other components
+    const handleDaddyDataActivated = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        businessType: string;
+        location: string;
+        taskId?: string;
+      }>;
+      
+      const { businessType, location, taskId } = customEvent.detail;
+      console.log('DaddyDataAgent received activation:', businessType, location, taskId);
+      
+      // Update form values
+      setBusinessType(businessType);
+      setLocation(location);
+      
+      // Automatically run the scraper if we have both values
+      if (businessType && location) {
+        setActiveTab('scrape');
+        runScraper();
+      }
+    };
+    
+    // Listen for activation events
+    window.addEventListener('daddyDataActivated', handleDaddyDataActivated);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('daddyDataActivated', handleDaddyDataActivated);
+    };
+  }, [setBusinessType, setLocation, setActiveTab, runScraper]);
 
   return (
     <div className="flex flex-col h-full">
