@@ -195,7 +195,7 @@ class SecurityManager:
             totp = pyotp.TOTP(secret)
             provisioning_uri = totp.provisioning_uri(
                 user_id,
-                issuer_name="Clara"
+                issuer_name="Panion"
             )
             
             # Generate QR code

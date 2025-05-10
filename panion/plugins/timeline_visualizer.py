@@ -27,7 +27,7 @@ class TimelineEvent:
     color: str = '#1f77b4'  # default blue
 
 class TimelineVisualizer(BasePlugin):
-    """Handles visualization of Clara's timeline of activities."""
+    """Handles visualization of Panion's timeline of activities."""
     
     STATUS_COLORS = {
         'completed': '#2ecc71',  # green
@@ -42,7 +42,7 @@ class TimelineVisualizer(BasePlugin):
         super().__init__(
             name="TimelineVisualizer",
             version="1.0.0",
-            description="Provides visualization capabilities for Clara's timeline",
+            description="Provides visualization capabilities for Panion's timeline",
             author="Panion Team"
         )
         self.logger = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ class TimelineVisualizer(BasePlugin):
 
         # Update layout
         fig.update_layout(
-            title="Clara Activity Timeline",
+            title="Panion Activity Timeline",
             xaxis_title="Time",
             yaxis_title="Event Type",
             showlegend=True,

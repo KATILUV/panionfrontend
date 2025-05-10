@@ -18,8 +18,7 @@ const router = Router();
 // Configuration
 const PANION_API_PORT = process.env.PANION_API_PORT || 8000;
 const PANION_API_URL = `http://localhost:${PANION_API_PORT}`;
-// Deprecated - use PANION_ENDPOINT instead
-const CLARA_ENDPOINT = '/api/panion';
+// Define API endpoint
 const PANION_ENDPOINT = '/api/panion';
 let panionProcess: ChildProcess | null = null;
 let panionApiStarted = false;

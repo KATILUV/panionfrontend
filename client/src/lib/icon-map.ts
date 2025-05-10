@@ -60,7 +60,7 @@ export const UI_ICONS = {
 // Features and functionality
 export const FEATURE_ICONS = {
   // Agents and tools
-  CLARA: 'MessageCircle',
+  PANION: 'MessageCircle',
   MARKETPLACE: 'Store',
   SETTINGS: 'Settings',
   NOTES: 'FileText',
