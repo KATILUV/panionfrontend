@@ -28,6 +28,7 @@ import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
 import CollaborationAgent from "./components/agents/CollaborationAgent";
 import TaskSchedulerAgent from "./components/agents/TaskSchedulerAgent";
 import DaddyDataAgent from "./components/agents/DaddyDataAgent";
+import WebChatAgent from "./components/agents/WebChatAgent";
 // New Panion component with conversation modes
 import PanionChat from "./components/agents/PanionChat";
 import { useAgentStore } from "./state/agentStore";
