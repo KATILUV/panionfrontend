@@ -18,7 +18,7 @@ import ScraperTest from "./pages/ScraperTest";
 import AutonomousAgentPage from "./pages/AutonomousAgentPage";
 import BrowserPage from "./pages/BrowserPage";
 import TaskMonitorPage from "./pages/TaskMonitorPage";
-// Manus dashboard removed
+// Using Panion Intelligence dashboard
 import PanionIntelligenceDashboard from "./pages/panion-intelligence-dashboard";
 import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
@@ -109,7 +109,7 @@ function Router() {
           </PageTransition>
         </Route>
         
-        {/* Legacy Manus Dashboard (for backward compatibility) */}
+        {/* Legacy Route (for backward compatibility) */}
         <Route path="/manus">
           <Redirect to="/intelligence" />
         </Route>

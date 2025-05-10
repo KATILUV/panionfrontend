@@ -1,22 +1,24 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import usePanionChat from '@/hooks/usePanionChat';
+import { AgentStatusType } from '@/types/chat';
 
 const EnhancedChatAgent: React.FC = () => {
+  // Create input ref that matches ChatInterface's expectations
+  const inputRef = useRef<HTMLInputElement>(null);
+  
   // Initialize our custom chat hook
   const {
     messages,
     inputValue,
     setInputValue,
     isLoading,
-    agentStatus,
-    processingStage,
-    processingProgress,
-    messagesEndRef,
-    inputRef,
     sendMessage,
     strategicMode,
     toggleStrategicMode,
+    messagesEndRef,
+    processingStage,
+    processingProgress,
   } = usePanionChat({
     useEnhancedMode: true,
     autoDetectStrategicMode: true
@@ -28,6 +30,9 @@ const EnhancedChatAgent: React.FC = () => {
       sendMessage(inputValue);
     }
   };
+  
+  // Define agent status - convert from string to AgentStatusType
+  const agentStatus: AgentStatusType = isLoading ? 'thinking' : 'idle';
   
   return (
     <ChatInterface
