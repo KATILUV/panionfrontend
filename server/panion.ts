@@ -1872,18 +1872,18 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
       
       // If all else fails, use a generic supportive message
       return res.json({
-        response: "Hi, I'm Clara. I'm experiencing some technical difficulties at the moment, but I'm still here for you. How are you feeling today?",
+        response: "Hi, I'm Panion. I'm experiencing some technical difficulties at the moment, but I'm still here for you. How are you feeling today?",
         thinking: "Multiple fallbacks failed. Using generic supportive response.",
         success: true,
         fallback: true
       });
     }
   } catch (error) {
-    log(`Critical error in Clara chat: ${error}`, 'panion-error');
+    log(`Critical error in Panion chat: ${error}`, 'panion-error');
     
     // Even in the worst case, still return something helpful rather than an error
     return res.json({ 
-      response: "I'm Clara, your emotional support companion. I seem to be having some technical difficulties, but I'd still like to help if I can. How are you feeling today?",
+      response: "I'm Panion, your emotional support companion. I seem to be having some technical difficulties, but I'd still like to help if I can. How are you feeling today?",
       thinking: `Error details: ${error}`,
       success: false,
       error: 'Temporary system issue'
@@ -1904,7 +1904,7 @@ router.post('/api/panion/goal', async (req: Request, res: Response) => {
     
     // Check if Panion API is running
     if (!panionApiStarted) {
-      log(`Panion API service is not running, using fallback for Clara goal creation`, 'panion-error');
+      log(`Panion API service is not running, using fallback for Panion goal creation`, 'panion-error');
       
       return res.json({
         success: false,
@@ -1998,7 +1998,7 @@ router.post('/api/clara/expand-dream', async (req: Request, res: Response) => {
     
     // Check if Panion API is running
     if (!panionApiStarted) {
-      log(`Panion API service is not running, using fallback for Clara dream expansion`, 'panion-error');
+      log(`Panion API service is not running, using fallback for Panion dream expansion`, 'panion-error');
       
       // Return fallback response
       return res.json({
@@ -2009,20 +2009,20 @@ router.post('/api/clara/expand-dream', async (req: Request, res: Response) => {
     }
     
     try {
-      // Forward the request to the Panion API - Clara dream expansion
-      const response = await axios.post(`${PANION_API_URL}/clara/expand-dream`, {
+      // Forward the request to the Panion API - Dream expansion
+      const response = await axios.post(`${PANION_API_URL}/panion/expand-dream`, {
         goal_id: goalId,
         content: message
       });
       
       return res.json(response.data);
     } catch (dreamApiError) {
-      log(`Error in Clara dream expansion API: ${dreamApiError}`, 'panion-error');
+      log(`Error in Panion dream expansion API: ${dreamApiError}`, 'panion-error');
       
       // Try to provide a helpful generic expansion using OpenAI if available
       try {
         if (process.env.OPENAI_API_KEY) {
-          log(`Using OpenAI fallback for Clara dream expansion`, 'panion-debug');
+          log(`Using OpenAI fallback for Panion dream expansion`, 'panion-debug');
           const openaiClient = new OpenAI({ 
             apiKey: process.env.OPENAI_API_KEY || ""
           });
