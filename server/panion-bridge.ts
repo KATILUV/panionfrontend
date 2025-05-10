@@ -80,8 +80,9 @@ class PanionBridge {
     
     try {
       // Create new WebSocket connection
-      // Note: Python service needs to support WebSockets on a separate port
-      this.ws = new WebSocket(`ws://localhost:${PANION_API_PORT}/ws`);
+      // Connect directly to the WebSocket port, no path needed
+      const PANION_API_WS_PORT = process.env.PANION_API_WS_PORT || 8001;
+      this.ws = new WebSocket(`ws://localhost:${PANION_API_WS_PORT}`);
       
       // Set up event handlers
       this.ws.on('open', () => {
@@ -175,14 +176,27 @@ class PanionBridge {
   }
   
   /**
-   * Schedule reconnection attempt
+   * Schedule reconnection attempt with exponential backoff
    */
   private scheduleReconnect(): void {
     if (!this.reconnectTimeout) {
+      // Use exponential backoff for reconnection
+      const minBackoff = 1000; // 1 second
+      const maxBackoff = 30000; // 30 seconds
+      const retryAttempt = Math.min(10, this.stats.wsReconnects || 0);
+      
+      // Calculate delay with some randomness to prevent all clients reconnecting at once
+      const delay = Math.min(
+        minBackoff * Math.pow(1.5, retryAttempt) + Math.random() * 1000,
+        maxBackoff
+      );
+      
+      log(`Scheduling WebSocket reconnection in ${Math.round(delay)}ms (attempt ${this.stats.wsReconnects + 1})`, 'panion-bridge');
+      
       this.reconnectTimeout = setTimeout(() => {
         this.reconnectTimeout = null;
         this.initWebSocket();
-      }, 5000); // Try to reconnect after 5 seconds
+      }, delay);
     }
   }
   

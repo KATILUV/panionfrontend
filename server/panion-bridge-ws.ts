@@ -25,6 +25,7 @@ class PanionBridgeWS extends EventEmitter {
   private isConnected = false;
   private reconnectAttempts = 0;
   private reconnectTimer: NodeJS.Timeout | null = null;
+  private currentHeartbeatId: number | null = null;
   private pendingRequests = new Map<string, {
     resolve: (value: any) => void;
     reject: (reason: any) => void;
@@ -122,11 +123,31 @@ class PanionBridgeWS extends EventEmitter {
   }
   
   private startHeartbeat() {
-    setInterval(() => {
+    // Use an increasing interval ID to avoid multiple heartbeat processes
+    // when reconnecting
+    const heartbeatId = Date.now();
+    this.currentHeartbeatId = heartbeatId;
+    
+    const heartbeatInterval = setInterval(() => {
+      // Only run this heartbeat process if it's still the current one
+      if (this.currentHeartbeatId !== heartbeatId) {
+        clearInterval(heartbeatInterval);
+        return;
+      }
+      
       if (this.isConnected && this.ws?.readyState === WebSocket.OPEN) {
         // Send heartbeat message (direct HTTP GET for more reliability)
         this.sendHeartbeat().catch(err => {
           log(`Heartbeat failed: ${err}`, 'panion-bridge');
+          
+          // If we can't reach the health endpoint, the server might be down completely
+          // Check WebSocket connection too
+          if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            log('WebSocket connection appears to be lost', 'panion-bridge');
+            this.isConnected = false;
+            // Force connection refresh
+            this.connect();
+          }
         });
       }
     }, 30000); // 30 second heartbeat
