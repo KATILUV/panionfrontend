@@ -64,7 +64,7 @@ export function useInsights(sessionId: string) {
   const queryClient = useQueryClient();
   
   // Fetch insights
-  const { data, isLoading, error } = useQuery<{ insights: Insight[] }>({
+  const { data, isLoading, error, refetch } = useQuery<{ insights: Insight[] }>({
     queryKey: ['/api/manus/insights', sessionId],
     queryFn: async () => {
       const res = await apiRequest('GET', `/api/manus/insights/${sessionId}`);
@@ -106,6 +106,11 @@ export function useInsights(sessionId: string) {
     },
   });
   
+  // Function to manually fetch insights
+  const fetchInsights = () => {
+    refetch();
+  };
+  
   // Automatically generate insights when hook is first used
   useEffect(() => {
     if (!isLoading && !error && (!data || data.insights.length === 0)) {
@@ -119,6 +124,7 @@ export function useInsights(sessionId: string) {
     error,
     generateInsights,
     isGenerating,
+    fetchInsights,
   };
 }
 

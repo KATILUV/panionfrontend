@@ -1,222 +1,208 @@
 /**
  * Verification Component
- * Metacognitive verification of results with self-correction capabilities
+ * Verifies if a given result correctly addresses an original query
  */
 
 import React, { useState } from 'react';
-import { useVerification } from '@/hooks/useManus';
+import { useVerification, type Verification as VerificationType } from '@/hooks/useManus';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { 
-  CheckCircle2, 
+  ShieldCheck, 
   AlertTriangle, 
+  CheckCircle2, 
+  XCircle, 
   RefreshCw, 
-  ShieldCheck,
-  AlertCircle,
-  Lightbulb,
-  Copy
+  ArrowRightLeft,
+  Book 
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface VerificationProps {
   sessionId: string;
-  onCorrection?: (correctedResult: string) => void;
-  defaultQuery?: string;
-  defaultResult?: string;
+  maxHeight?: string;
 }
 
 export function Verification({
   sessionId,
-  onCorrection,
-  defaultQuery = '',
-  defaultResult = ''
+  maxHeight = '700px'
 }: VerificationProps) {
-  const { toast } = useToast();
-  const [originalQuery, setOriginalQuery] = useState(defaultQuery);
-  const [result, setResult] = useState(defaultResult);
+  const [originalQuery, setOriginalQuery] = useState<string>('');
+  const [result, setResult] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<string>('original');
   
-  const { 
-    verifyResult, 
-    isVerifying, 
-    verification, 
-    verificationError 
+  const {
+    verification,
+    isVerifying,
+    verificationError,
+    verifyResult
   } = useVerification();
-
-  // Handle form submit
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!originalQuery.trim() || !result.trim()) {
-      toast({
-        title: "Missing information",
-        description: "Please provide both the original query and the result to verify.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    verifyResult({ originalQuery, result, sessionId });
-  };
-
-  // Handle using the corrected result
-  const handleUseCorrectedResult = () => {
-    if (verification?.correctedResult) {
-      setResult(verification.correctedResult);
-      
-      if (onCorrection) {
-        onCorrection(verification.correctedResult);
-      }
-      
-      toast({
-        title: "Correction applied",
-        description: "The result has been updated with the correction."
-      });
-    }
-  };
-
-  // Handle copying the result
-  const handleCopyResult = (textToCopy: string) => {
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      toast({
-        title: "Copied to clipboard",
-        description: "The text has been copied to your clipboard."
-      });
-    }).catch(() => {
-      toast({
-        title: "Copy failed",
-        description: "Failed to copy text to clipboard.",
-        variant: "destructive"
-      });
+  
+  const handleVerify = () => {
+    if (!originalQuery.trim() || !result.trim()) return;
+    
+    verifyResult({
+      originalQuery,
+      result,
+      sessionId
     });
+  };
+  
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return 'text-green-500';
+    if (confidence >= 0.5) return 'text-amber-500';
+    return 'text-red-500';
   };
   
   return (
     <Card className="w-full h-full overflow-hidden">
-      <CardHeader className="pb-3">
+      <CardHeader>
         <CardTitle className="flex items-center">
-          <ShieldCheck className="h-5 w-5 mr-2 text-blue-500" />
-          <span>Metacognitive Verification</span>
+          <ShieldCheck className="h-5 w-5 mr-2 text-green-500" />
+          <span>Verification</span>
         </CardTitle>
         <CardDescription>
-          Verify and improve results through "thinking about thinking"
+          Verify if a result correctly addresses the original query
         </CardDescription>
       </CardHeader>
       
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="originalQuery" className="text-sm font-medium">
-              Original Query
-            </label>
+      <CardContent className="px-4 pb-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full mb-4">
+            <TabsTrigger value="original" className="flex-1">Original Query</TabsTrigger>
+            <TabsTrigger value="result" className="flex-1">Result to Verify</TabsTrigger>
+            {verification && (
+              <TabsTrigger value="verification" className="flex-1">Verification</TabsTrigger>
+            )}
+          </TabsList>
+          
+          <TabsContent value="original" className="mt-0">
             <Textarea
-              id="originalQuery"
-              placeholder="Enter the original query or problem..."
+              placeholder="Enter the original query or question..."
               value={originalQuery}
-              onChange={e => setOriginalQuery(e.target.value)}
-              className="resize-none"
-              rows={2}
+              onChange={(e) => setOriginalQuery(e.target.value)}
+              className="resize-none min-h-[200px]"
+              disabled={isVerifying}
             />
-          </div>
+          </TabsContent>
           
-          <div className="space-y-2">
-            <label htmlFor="result" className="text-sm font-medium">
-              Result to Verify
-            </label>
+          <TabsContent value="result" className="mt-0">
             <Textarea
-              id="result"
-              placeholder="Enter the result that needs verification..."
+              placeholder="Enter the result to verify..."
               value={result}
-              onChange={e => setResult(e.target.value)}
-              className="resize-none"
-              rows={4}
+              onChange={(e) => setResult(e.target.value)}
+              className="resize-none min-h-[200px]"
+              disabled={isVerifying}
             />
-          </div>
+          </TabsContent>
           
-          <Button type="submit" disabled={isVerifying || !originalQuery.trim() || !result.trim()}>
-            {isVerifying ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              <>
-                <ShieldCheck className="h-4 w-4 mr-2" />
-                Verify Result
-              </>
-            )}
-          </Button>
-        </form>
-        
-        {verification && (
-          <div className="mt-6 space-y-4">
-            <Alert variant={verification.isValid ? "default" : "destructive"}>
-              <div className="flex items-start">
-                {verification.isValid ? (
-                  <CheckCircle2 className="h-5 w-5 mr-2 text-green-500 mt-0.5" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 mr-2 text-red-500 mt-0.5" />
-                )}
-                <div>
-                  <AlertTitle>
-                    {verification.isValid 
-                      ? "Verification passed" 
-                      : "Verification failed"
-                    }
-                    <span className="ml-2 text-sm font-normal">
-                      (Confidence: {Math.round(verification.confidence * 100)}%)
-                    </span>
-                  </AlertTitle>
-                  <AlertDescription className="mt-1">
-                    {verification.reasoning}
-                  </AlertDescription>
-                </div>
-              </div>
-            </Alert>
-            
-            {!verification.isValid && verification.correctedResult && (
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <Lightbulb className="h-4 w-4 mr-2 text-amber-500" />
-                  <span className="font-medium">Suggested correction:</span>
-                </div>
-                <Card className="bg-muted">
-                  <CardContent className="p-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="whitespace-pre-wrap text-sm">{verification.correctedResult}</p>
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        onClick={() => handleCopyResult(verification.correctedResult || '')}
-                        className="ml-2"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
+          {verification && (
+            <TabsContent value="verification" className="mt-0">
+              <ScrollArea style={{ maxHeight: `calc(${maxHeight} - 200px)` }}>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {verification.isValid ? (
+                        <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 mr-2 text-red-500" />
+                      )}
+                      <span className="font-medium">
+                        {verification.isValid ? 'Valid Result' : 'Invalid Result'}
+                      </span>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={handleUseCorrectedResult}
-                      className="mt-2"
+                    <Badge 
+                      variant={verification.isValid ? 'success' : 'destructive'}
+                      className="ml-2"
                     >
-                      Apply Correction
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {verificationError && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertCircle className="h-4 w-4 mr-2" />
-            <AlertTitle>Error during verification</AlertTitle>
-            <AlertDescription>
-              {verificationError.message}
-            </AlertDescription>
-          </Alert>
-        )}
+                      {verification.isValid ? 'Valid' : 'Invalid'}
+                    </Badge>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium">Confidence</span>
+                      <span className={`text-sm font-medium ${getConfidenceColor(verification.confidence)}`}>
+                        {Math.round(verification.confidence * 100)}%
+                      </span>
+                    </div>
+                    <div className={`h-2 rounded-full w-full overflow-hidden ${
+                        verification.confidence >= 0.8 ? 'bg-green-100' : 
+                        verification.confidence >= 0.5 ? 'bg-amber-100' : 'bg-red-100'
+                      }`}>
+                      <div 
+                        className={`h-full ${
+                          verification.confidence >= 0.8 ? 'bg-green-500' : 
+                          verification.confidence >= 0.5 ? 'bg-amber-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${verification.confidence * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Reasoning</h4>
+                    <div className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
+                      {verification.reasoning}
+                    </div>
+                  </div>
+                  
+                  {verification.correctedResult && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-1 flex items-center">
+                        <Book className="h-4 w-4 mr-1 text-blue-500" />
+                        Corrected Result
+                      </h4>
+                      <div className="text-sm p-3 bg-blue-50 text-blue-800 rounded-md">
+                        {verification.correctedResult}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          )}
+        </Tabs>
       </CardContent>
+      
+      <CardContent className="px-4 pt-0 pb-4">
+        <Button
+          className="w-full mt-4"
+          onClick={handleVerify}
+          disabled={!originalQuery.trim() || !result.trim() || isVerifying}
+        >
+          {isVerifying ? (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              Verifying...
+            </>
+          ) : (
+            <>
+              <ArrowRightLeft className="h-4 w-4 mr-2" />
+              Verify Result
+            </>
+          )}
+        </Button>
+      </CardContent>
+      
+      {verificationError && (
+        <CardFooter className="pt-0 pb-4 px-4">
+          <div className="w-full p-2 bg-red-50 text-red-800 rounded-md flex items-center">
+            <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />
+            <span className="text-sm">
+              {verificationError instanceof Error 
+                ? verificationError.message 
+                : 'Error verifying result'
+              }
+            </span>
+          </div>
+        </CardFooter>
+      )}
     </Card>
   );
 }

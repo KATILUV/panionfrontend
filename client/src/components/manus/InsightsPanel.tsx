@@ -6,18 +6,20 @@
 import React, { useState, useEffect } from 'react';
 import { useInsights, type Insight } from '@/hooks/useManus';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Lightbulb, 
-  RefreshCw, 
   AlertTriangle, 
-  Info, 
-  TrendingUp, 
-  Bell,
-  Star
+  CheckCircle2,
+  Eye, 
+  EyeOff, 
+  RefreshCw, 
+  Filter,
+  ArrowUpDown,
+  ClipboardList
 } from 'lucide-react';
 
 interface InsightsPanelProps {
@@ -28,52 +30,115 @@ interface InsightsPanelProps {
 
 export function InsightsPanel({
   sessionId,
-  maxHeight = '500px',
+  maxHeight = '600px',
   onInsightSelected
 }: InsightsPanelProps) {
-  const { 
-    insights, 
-    isLoading, 
-    error, 
-    generateInsights, 
-    isGenerating 
-  } = useInsights(sessionId);
-  
-  const [hasNewInsights, setHasNewInsights] = useState(false);
-  const [sortedInsights, setSortedInsights] = useState<Insight[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string>('all');
   const [viewedInsights, setViewedInsights] = useState<Record<string, boolean>>({});
   
-  // Sort insights by importance and highlight unviewed ones
-  useEffect(() => {
-    if (insights && insights.length > 0) {
-      // Check for new insights
-      const hasNew = insights.some((insight: Insight) => !viewedInsights[insight.id]);
-      setHasNewInsights(hasNew);
-      
-      // Sort by importance (descending) and then by timestamp (descending)
-      const sorted = [...insights].sort((a: Insight, b: Insight) => {
-        if (a.importance !== b.importance) {
-          return b.importance - a.importance;
-        }
-        return b.timestamp - a.timestamp;
-      });
-      
-      setSortedInsights(sorted);
-    } else {
-      setSortedInsights([]);
-      setHasNewInsights(false);
-    }
-  }, [insights, viewedInsights]);
+  const {
+    insights,
+    isLoading,
+    error,
+    generateInsights,
+    fetchInsights
+  } = useInsights(sessionId);
   
-  // Mark an insight as viewed
-  const markAsViewed = (insightId: string) => {
-    setViewedInsights(prev => ({
-      ...prev,
-      [insightId]: true
-    }));
+  useEffect(() => {
+    if (sessionId) {
+      fetchInsights();
+    }
+  }, [sessionId, fetchInsights]);
+  
+  const markAsViewed = (id: string) => {
+    setViewedInsights(prev => ({ ...prev, [id]: true }));
   };
   
-  // Handle insight click
+  const hasNewInsights = () => {
+    if (!insights || insights.length === 0) return false;
+    const hasNew = insights.some((insight: Insight) => !viewedInsights[insight.id]);
+    return hasNew;
+  };
+  
+  const getFilteredInsights = () => {
+    if (!insights) return [];
+    
+    if (activeFilter === 'all') return insights;
+    
+    if (activeFilter === 'unread') {
+      return insights.filter((insight: Insight) => !viewedInsights[insight.id]);
+    }
+    
+    // Filter by category
+    return insights.filter((insight: Insight) => insight.category === activeFilter);
+  };
+  
+  const getCategoryBadge = (category: string) => {
+    switch (category) {
+      case 'warning':
+        return (
+          <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-100">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            Warning
+          </Badge>
+        );
+      case 'suggestion':
+        return (
+          <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
+            <Lightbulb className="h-3 w-3 mr-1" />
+            Suggestion
+          </Badge>
+        );
+      case 'opportunity':
+        return (
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+            <ArrowUpDown className="h-3 w-3 mr-1" />
+            Opportunity
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline">
+            {category.charAt(0).toUpperCase() + category.slice(1)}
+          </Badge>
+        );
+    }
+  };
+  
+  const getImportanceBadge = (importance: number) => {
+    if (importance >= 8) {
+      return (
+        <Badge variant="secondary" className="bg-red-100 text-red-800">
+          High
+        </Badge>
+      );
+    } else if (importance >= 5) {
+      return (
+        <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+          Medium
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+          Low
+        </Badge>
+      );
+    }
+  };
+  
+  const sortedInsights = getFilteredInsights().sort((a: Insight, b: Insight) => {
+    // First by viewed status (unviewed first)
+    const aViewed = !!viewedInsights[a.id];
+    const bViewed = !!viewedInsights[b.id];
+    
+    if (!aViewed && bViewed) return -1;
+    if (aViewed && !bViewed) return 1;
+    
+    // Then by importance (high to low)
+    return b.importance - a.importance;
+  });
+  
   const handleInsightClick = (insight: Insight) => {
     markAsViewed(insight.id);
     if (onInsightSelected) {
@@ -81,124 +146,130 @@ export function InsightsPanel({
     }
   };
   
-  // Get icon based on category
-  const getCategoryIcon = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'observation':
-        return <Info className="h-4 w-4 text-blue-500" />;
-      case 'suggestion':
-        return <Lightbulb className="h-4 w-4 text-amber-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'opportunity':
-        return <TrendingUp className="h-4 w-4 text-green-500" />;
-      default:
-        return <Info className="h-4 w-4 text-blue-500" />;
-    }
-  };
-  
-  // Get importance stars
-  const getImportanceStars = (importance: number) => {
-    const normalizedImportance = Math.min(5, Math.ceil(importance / 2));
-    return (
-      <div className="flex items-center">
-        {Array.from({ length: normalizedImportance }).map((_, i) => (
-          <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
-        ))}
-        {Array.from({ length: 5 - normalizedImportance }).map((_, i) => (
-          <Star key={i} className="h-3 w-3 text-muted-foreground/30" />
-        ))}
-      </div>
-    );
-  };
-  
   return (
     <Card className="w-full h-full overflow-hidden">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center">
-          <Lightbulb className="h-5 w-5 mr-2 text-amber-500" />
-          <span>Proactive Insights</span>
-          {hasNewInsights && (
-            <Badge variant="destructive" className="ml-2 h-5 min-w-5 px-1">
-              <Bell className="h-3 w-3" />
-            </Badge>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Lightbulb className="h-5 w-5 mr-2 text-amber-500" />
+            <span>Insights</span>
+          </div>
+          {hasNewInsights() && (
+            <Badge className="bg-red-500">New</Badge>
           )}
         </CardTitle>
-        <CardDescription>
-          AI-generated insights based on context and patterns
+        <CardDescription className="flex justify-between">
+          <span>Proactive insights about your tasks and data</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => generateInsights()}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </Button>
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="px-3">
+      <CardContent className="px-4 pb-4">
+        <Tabs defaultValue="all" className="w-full" onValueChange={setActiveFilter}>
+          <TabsList className="w-full grid grid-cols-4 mb-4">
+            <TabsTrigger value="all" className="text-xs">
+              All
+            </TabsTrigger>
+            <TabsTrigger value="unread" className="text-xs">
+              Unread {hasNewInsights() && <span className="ml-1 text-red-500">•</span>}
+            </TabsTrigger>
+            <TabsTrigger value="suggestion" className="text-xs">
+              Suggestions
+            </TabsTrigger>
+            <TabsTrigger value="warning" className="text-xs">
+              Warnings
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        
         {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
+          <div className="py-8 flex items-center justify-center text-muted-foreground">
+            <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+            <span>Loading insights...</span>
           </div>
         ) : error ? (
-          <div className="p-4 text-center text-red-500">
+          <div className="py-8 text-center text-red-500">
             <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
             <p>Failed to load insights</p>
             <Button 
               variant="outline"
               className="mt-2"
-              onClick={() => generateInsights()}
+              onClick={() => fetchInsights()}
             >
               Try Again
             </Button>
           </div>
         ) : sortedInsights.length === 0 ? (
-          <div className="p-4 text-center text-muted-foreground">
-            <Lightbulb className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-            <p>No insights available yet</p>
+          <div className="py-8 text-center text-muted-foreground">
+            <ClipboardList className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+            <p>No insights available</p>
+            {activeFilter !== 'all' && (
+              <p className="text-sm mt-1">Try changing the filter or generating new insights</p>
+            )}
             <Button 
               variant="outline"
-              className="mt-2"
+              className="mt-4"
               onClick={() => generateInsights()}
-              disabled={isGenerating}
             >
-              {isGenerating ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                  Generate Insights
-                </>
-              )}
+              Generate Insights
             </Button>
           </div>
         ) : (
           <ScrollArea style={{ maxHeight }}>
-            <div className="space-y-3 pr-3">
+            <div className="space-y-3">
               {sortedInsights.map((insight: Insight) => (
                 <Card 
                   key={insight.id} 
-                  className={`overflow-hidden transition-all hover:shadow-md cursor-pointer ${!viewedInsights[insight.id] ? 'ring-1 ring-amber-400' : ''}`}
+                  className={`cursor-pointer hover:shadow-md transition-shadow ${
+                    !viewedInsights[insight.id] ? 'border-blue-300 bg-blue-50/30' : ''
+                  }`}
                   onClick={() => handleInsightClick(insight)}
                 >
                   <CardContent className="p-3">
-                    <div className="flex items-start gap-2">
-                      <div className="mt-1">
-                        {getCategoryIcon(insight.category)}
-                      </div>
+                    <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-medium">{insight.title}</h4>
-                          <Badge variant="outline" className="ml-2 text-xs capitalize">
-                            {insight.category}
-                          </Badge>
+                        <div className="flex items-center">
+                          <h3 className="font-medium">
+                            {insight.title}
+                          </h3>
+                          {!viewedInsights[insight.id] ? (
+                            <Badge className="ml-2 bg-blue-500">New</Badge>
+                          ) : null}
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           {insight.description}
                         </p>
-                        <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-                          <span>Importance: {insight.importance}/10</span>
-                          {getImportanceStars(insight.importance)}
-                        </div>
+                      </div>
+                      <div className="ml-2 flex-shrink-0">
+                        {!viewedInsights[insight.id] ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between mt-3">
+                      <div className="flex gap-2">
+                        {getCategoryBadge(insight.category)}
+                        <Badge variant="outline" className="text-xs">
+                          {insight.source}
+                        </Badge>
+                      </div>
+                      <div>
+                        {getImportanceBadge(insight.importance)}
                       </div>
                     </div>
                   </CardContent>
@@ -208,30 +279,6 @@ export function InsightsPanel({
           </ScrollArea>
         )}
       </CardContent>
-      
-      <CardFooter className="pt-0">
-        {sortedInsights.length > 0 && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="w-full" 
-            onClick={() => generateInsights()}
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Generate New Insights
-              </>
-            )}
-          </Button>
-        )}
-      </CardFooter>
     </Card>
   );
 }
