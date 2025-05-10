@@ -672,11 +672,11 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
             // For mobile or small screens, only show a limited set of agents to avoid clutter
             if (isSmallScreen) {
               // Extremely small screens (xs) - show only essential agents
-              if (screenSizeValue === 'xs' && !['clara', 'chat', 'settings'].includes(agent.id)) {
+              if (screenSizeValue === 'xs' && !['panion', 'chat', 'settings'].includes(agent.id)) {
                 return null;
               }
               // Small screens (sm) - show a slightly expanded set of agents
-              else if (screenSizeValue === 'sm' && !['clara', 'chat', 'notes', 'settings', 'system'].includes(agent.id)) {
+              else if (screenSizeValue === 'sm' && !['panion', 'chat', 'notes', 'settings', 'system'].includes(agent.id)) {
                 return null;
               }
             }
@@ -987,7 +987,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                     className="justify-start"
                     onClick={() => {
                       import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
-                        ApplyLayout.splitView('clara', 'notes');
+                        ApplyLayout.splitView('panion', 'notes');
                         toast({ title: "Split View", description: "Applied Split View layout" });
                       });
                     }}
@@ -1001,7 +1001,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                     className="justify-start"
                     onClick={() => {
                       import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
-                        ApplyLayout.focusMode('clara');
+                        ApplyLayout.focusMode('panion');
                         toast({ title: "Focus Mode", description: "Applied Focus Mode layout" });
                       });
                     }}
@@ -1015,7 +1015,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '', isMobile = false }) =
                     className="justify-start"
                     onClick={() => {
                       import('../../lib/layoutUtils').then(({ ApplyLayout }) => {
-                        ApplyLayout.tripleLayout('clara', 'notes', 'settings');
+                        ApplyLayout.tripleLayout('panion', 'notes', 'settings');
                         toast({ title: "Triple Layout", description: "Applied Triple Layout" });
                       });
                     }}

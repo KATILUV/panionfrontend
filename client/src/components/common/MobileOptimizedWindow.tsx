@@ -69,7 +69,7 @@ const MobileOptimizedWindow: React.FC<MobileOptimizedWindowProps> = ({
         if (id === 'marketplace' || id === 'agent-manager') {
           maximizedWidth = windowWidth * 0.95;
           maximizedHeight = windowHeight * 0.65;
-        } else if (id === 'clara') { 
+        } else if (id === 'panion') { 
           maximizedWidth = windowWidth * 0.98;
           maximizedHeight = windowHeight * 0.78;
         } else if (id === 'settings') {

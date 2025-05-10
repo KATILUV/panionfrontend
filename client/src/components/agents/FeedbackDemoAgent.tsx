@@ -148,7 +148,7 @@ export default function FeedbackDemoAgent() {
               </div>
               
               <div className="flex flex-col items-center gap-3 p-6 bg-muted/20 rounded-md">
-                <AIThinkingIndicator isThinking={true} type="full" message="Clara is analyzing your request..." />
+                <AIThinkingIndicator isThinking={true} type="full" message="Panion is analyzing your request..." />
                 <span className="text-xs mt-4">Full Mode</span>
               </div>
             </div>

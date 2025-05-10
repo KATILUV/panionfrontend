@@ -88,8 +88,8 @@ const defaultCategories: MarketplaceAgentCategory[] = [
 const defaultAgents: MarketplaceAgent[] = [
   {
     id: 'clara-chat',
-    title: 'Clara Chat',
-    description: 'The primary chat interface for Clara',
+    title: 'Panion Chat',
+    description: 'The primary chat interface for Panion',
     icon: 'MessageCircle',
     author: 'Panion',
     version: '1.0.0',

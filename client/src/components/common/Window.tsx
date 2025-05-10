@@ -891,8 +891,8 @@ const Window: React.FC<WindowProps> = ({
           // Make marketplace agent windows smaller on small screens
           maximizedWidth = windowWidth * 0.95;
           maximizedHeight = windowHeight * 0.65; // Shorter for easier browsing
-        } else if (id === 'clara') { 
-          // Clara agent needs more vertical space for chat history
+        } else if (id === 'panion') { 
+          // Panion agent needs more vertical space for chat history
           maximizedWidth = windowWidth * 0.98;
           maximizedHeight = windowHeight * 0.78;
         } else if (id === 'settings') {

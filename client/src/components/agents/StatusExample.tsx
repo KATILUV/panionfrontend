@@ -142,7 +142,7 @@ export const StatusExample: React.FC = () => {
               <div className="absolute top-2 right-2">
                 <AgentStatus status="active" showLabel={false} size="sm" pulsingAnimation={false} />
               </div>
-              <h4 className="text-sm md:text-base font-medium">Clara Agent</h4>
+              <h4 className="text-sm md:text-base font-medium">Panion Agent</h4>
               <p className="text-content text-xs md:text-sm">Main conversational agent with access to short and long-term memory.</p>
               <div className="flex items-center mt-2">
                 <span className="text-small mr-2 text-xs">Last activity:</span>

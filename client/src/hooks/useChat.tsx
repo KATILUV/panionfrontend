@@ -6,7 +6,7 @@ import { useToast } from './use-toast';
 import { ErrorType } from '@/components/ui/error-message';
 
 /**
- * Custom hook for managing chat functionality with Clara
+ * Custom hook for managing chat functionality with Panion
  */
 // For simulating errors during development/testing
 const shouldSimulateError = (content: string): { simulate: boolean, type: ErrorType } => {
@@ -33,7 +33,7 @@ export const useChat = () => {
   const { toast } = useToast();
 
   /**
-   * Send a message to Clara and handle the response
+   * Send a message to Panion and handle the response
    * Includes automatic retry for certain types of errors
    */
   const sendMessage = async (content: string, imageFile?: File | null, retryCount = 0) => {
@@ -130,7 +130,7 @@ export const useChat = () => {
         imageUrl: data.imageUrl // Include image URL if provided by the API
       };
       
-      log.action(`Clara responded with: "${data.response.substring(0, 50)}${data.response.length > 50 ? '...' : ''}"`);
+      log.action(`Panion responded with: "${data.response.substring(0, 50)}${data.response.length > 50 ? '...' : ''}"`);
       
       setMessages(prev => [...prev, aiMessage]);
     } catch (err) {
