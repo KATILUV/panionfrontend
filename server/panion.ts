@@ -840,7 +840,49 @@ router.post('/api/panion/scrape/enhanced', checkPanionAPIMiddleware, async (req:
       use_selenium: useSelenium
     });
     
-    res.json(response.data);
+    // Get the filepath from the response to load the actual data
+    const { filepath, result_count, status, message, last_successful_strategy, cache_used } = response.data;
+    
+    // Initialize the results array
+    let results = [];
+
+    // If there's a filepath and it contains actual data, load that data
+    if (filepath && status === 'success') {
+      try {
+        // The filepath is relative to the panion directory
+        const fullPath = path.resolve('./data/scraped', path.basename(filepath));
+        
+        // Check if the file exists
+        if (fs.existsSync(fullPath)) {
+          // Read and parse the JSON file
+          const fileData = fs.readFileSync(fullPath, 'utf8');
+          results = JSON.parse(fileData);
+          
+          log(`Loaded ${results.length} results from ${filepath}`, 'panion');
+        } else {
+          log(`Warning: Results file not found at ${fullPath}`, 'panion');
+        }
+      } catch (fileError) {
+        log(`Error loading results file: ${fileError}`, 'panion');
+      }
+    }
+
+    // Format the response to match the frontend's expected data structure
+    res.json({
+      status: status || 'success',
+      result_count: result_count || results.length,
+      results: results,
+      last_successful_strategy,
+      message,
+      filepath,
+      cache_used,
+      cache_timestamp: cache_used ? new Date().toISOString() : undefined,
+      query_info: {
+        business_type: businessType,
+        location,
+        source
+      }
+    });
   } catch (error) {
     log(`Error in enhanced scraping: ${error}`, 'panion');
     res.status(500).json({ 
