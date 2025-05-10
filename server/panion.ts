@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, ChildProcess, execSync } from 'child_process';
 import axios from 'axios';
 import { log } from './vite';
 import path from 'path';

@@ -6,9 +6,8 @@ Starts the WebSocket server on port 8001
 
 import sys
 import os
-import time
 import logging
-from simple_websocket_server import start_server
+import asyncio
 
 # Configure logging
 logging.basicConfig(
@@ -18,11 +17,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    logger.info("Starting Simple Panion WebSocket Server on port 8001")
-    print("[websocket] Simple WebSocket server initialized")
+    logger.info("Starting Basic Panion WebSocket Server on port 8001")
+    print("[websocket] Basic WebSocket server initialized")
     
+    # Import and run the basic websocket server directly
     try:
-        start_server()
+        # Import the module
+        import basic_websocket_server
+        
+        # Execute the module directly (which will run the server)
+        exec(open("basic_websocket_server.py").read())
     except KeyboardInterrupt:
         logger.info("Server shut down by user")
         sys.exit(0)
