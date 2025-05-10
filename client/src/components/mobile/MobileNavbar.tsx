@@ -60,10 +60,10 @@ const MobileNavbar: React.FC = () => {
       }
     },
     { 
-      id: 'clara', 
-      label: 'Clara Assistant', 
+      id: 'panion', 
+      label: 'Panion Assistant', 
       icon: <MessageSquare size={20} />, 
-      action: () => handleOpenAgent('clara')
+      action: () => handleOpenAgent('panion')
     },
     { 
       id: 'marketplace', 

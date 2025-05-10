@@ -100,7 +100,7 @@ const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
         id: 'clara-workflow',
         text: 'How can AI improve my daily workflow?',
         action: () => {
-          log.debug('Sending suggestion to Clara');
+          log.debug('Sending suggestion to Panion');
         },
         source: 'context',
         icon: <MessageSquare size={16} />
@@ -110,7 +110,7 @@ const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
         id: 'clara-summarize',
         text: 'Summarize our recent conversations',
         action: () => {
-          log.debug('Sending summarize request to Clara');
+          log.debug('Sending summarize request to Panion');
         },
         source: 'context',
         icon: <MessageSquare size={16} />

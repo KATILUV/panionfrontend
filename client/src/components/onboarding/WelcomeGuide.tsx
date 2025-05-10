@@ -63,9 +63,9 @@ const WelcomeGuide: React.FC<WelcomeGuideProps> = ({
       title: 'Meet Your AI Agents',
       description: 'Panion provides specialized AI agents to help with different tasks. Click on any agent icon in the taskbar to start a conversation.',
       icon: <MessageSquare size={24} />,
-      actionLabel: 'Try Clara',
+      actionLabel: 'Try Panion',
       action: () => {
-        openAgent('clara');
+        openAgent('panion');
         setCurrentStep(2);
       }
     },

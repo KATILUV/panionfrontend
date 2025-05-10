@@ -73,7 +73,7 @@ const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-black/30 backdrop-blur-sm rounded-2xl p-8 max-w-md shadow-lg border border-purple-500/20"
         >
-          <h2 className={`text-xl font-semibold mb-3 ${windowTextStyles.bright}`}>Welcome to Clara!</h2>
+          <h2 className={`text-xl font-semibold mb-3 ${windowTextStyles.bright}`}>Welcome to Panion!</h2>
           <p className={windowTextStyles.default}>How can I assist you today?</p>
           <p className={`mt-2 ${windowTextStyles.caption}`}>Ask me anything or share an image with me.</p>
         </motion.div>
@@ -116,7 +116,7 @@ const ChatCarousel: React.FC<ChatCarouselProps> = ({ messages, isLoading }) => {
                 
                 {/* Message header - show who is speaking */}
                 <div className={`text-sm font-medium mb-2 ${currentMessage.isUser ? 'text-purple-200' : 'text-blue-200'}`}>
-                  {currentMessage.isUser ? 'You' : 'Clara'}
+                  {currentMessage.isUser ? 'You' : 'Panion'}
                 </div>
                 
                 {/* Message content with better overflow handling */}
