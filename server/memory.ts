@@ -286,7 +286,7 @@ export async function smartMemorySearch(query: string, category?: string): Promi
     memories = memories.filter(memory => memory.category === category);
     
     if (memories.length === 0) {
-      return `🧠 Clara has no memories in the "${category}" category yet.`;
+      return `🧠 Panion has no memories in the "${category}" category yet.`;
     }
   }
   
@@ -302,8 +302,8 @@ export async function smartMemorySearch(query: string, category?: string): Promi
     const messages: ChatCompletionMessageParam[] = [
       {
         role: "system",
-        content: `You are Clara's intelligent memory search agent.
-        Here are all her past memories${category && category !== "all" ? ` in the "${category}" category` : ''}:
+        content: `You are Panion's intelligent memory search agent.
+        Here are all its past memories${category && category !== "all" ? ` in the "${category}" category` : ''}:
         
         ${memoriesText}
         

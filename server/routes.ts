@@ -436,7 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Search Clara's memories
+  // Search Panion's memories
   app.post('/api/search-memory', async (req, res) => {
     try {
       const { query } = req.body;
