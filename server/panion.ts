@@ -1810,29 +1810,29 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
       
       // Send default response since we can't access the Panion API
       return res.json({
-        response: "I'm Clara, your emotional support companion. I'm currently operating in limited mode and can't access all my capabilities. How can I help you today?",
-        thinking: "Clara API service is not running, using fallback response",
+        response: "I'm Panion, your intelligent companion. I'm currently operating in limited mode and can't access all my capabilities. How can I help you today?",
+        thinking: "Panion API service is not running, using fallback response",
         success: true,
         fallback: true
       });
     }
     
     try {
-      // Forward the request to the Panion API - Clara endpoint
-      const response = await axios.post(`${PANION_API_URL}/clara/chat`, {
+      // Forward the request to the Panion API endpoint
+      const response = await axios.post(`${PANION_API_URL}/panion/chat`, {
         content: message,
         session_id: sessionId,
         user_id: userId
       });
       
       return res.json(response.data);
-    } catch (claraApiError) {
-      log(`Error in Clara chat API: ${claraApiError}`, 'panion-error');
+    } catch (panionApiError) {
+      log(`Error in Panion chat API: ${panionApiError}`, 'panion-error');
       
       // Use OpenAI as fallback if we have the key
       try {
         if (process.env.OPENAI_API_KEY) {
-          log(`Using OpenAI fallback for Clara chat`, 'panion-debug');
+          log(`Using OpenAI fallback for Panion chat`, 'panion-debug');
           const openaiClient = new OpenAI({ 
             apiKey: process.env.OPENAI_API_KEY || ""
           });
@@ -1891,7 +1891,7 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/clara/goal', async (req: Request, res: Response) => {
+router.post('/api/panion/goal', async (req: Request, res: Response) => {
   try {
     const { message, sessionId = 'default' } = req.body;
     
@@ -1945,11 +1945,11 @@ router.post('/api/clara/goal', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/clara/goals', async (req: Request, res: Response) => {
+router.get('/api/panion/goals', async (req: Request, res: Response) => {
   try {
     // Check if Panion API is running
     if (!panionApiStarted) {
-      log(`Panion API service is not running, using fallback for Clara goals listing`, 'panion-error');
+      log(`Panion API service is not running, using fallback for Panion goals listing`, 'panion-error');
       
       // Return empty goals list with explanatory message
       return res.json({
@@ -1960,11 +1960,11 @@ router.get('/api/clara/goals', async (req: Request, res: Response) => {
     }
     
     try {
-      // Forward the request to the Panion API - Clara goals
-      const response = await axios.get(`${PANION_API_URL}/clara/goals`);
+      // Forward the request to the Panion API goals
+      const response = await axios.get(`${PANION_API_URL}/panion/goals`);
       return res.json(response.data);
     } catch (goalsApiError) {
-      log(`Error getting Clara goals: ${goalsApiError}`, 'panion-error');
+      log(`Error getting Panion goals: ${goalsApiError}`, 'panion-error');
       
       // Return empty goals with a helpful message
       return res.json({
@@ -1974,7 +1974,7 @@ router.get('/api/clara/goals', async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
-    log(`Critical error getting Clara goals: ${error}`, 'panion-error');
+    log(`Critical error getting Panion goals: ${error}`, 'panion-error');
     
     // Even in worst case, return something useful to the user
     return res.json({
