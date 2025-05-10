@@ -100,6 +100,33 @@ class CapabilityManager(BaseManager[Capability]):
         # Capability storage
         self.capability_gaps: Dict[str, CapabilityGap] = {}
         self.capability_proposals: Dict[str, CapabilityProposal] = {}
+        
+        # Write buffer system
+        self._write_buffer: Dict[str, Dict[str, Any]] = {}
+        self._buffer_lock = threading.Lock()
+        self._operation_lock = threading.Lock()
+        self._is_dirty = False
+        self._last_save = datetime.now()
+        self._save_interval = timedelta(seconds=30)  # 30 seconds
+        self._save_task = None
+        self._running = True
+        
+        # Performance tracking
+        self._capability_operations: Dict[str, List[Dict[str, Any]]] = {}
+        self._execution_times: Dict[str, List[float]] = {}
+        self._last_operation: Dict[str, datetime] = {}
+        
+        # Circuit breaker settings
+        self._failure_threshold = 5
+        self._reset_timeout = timedelta(minutes=5)
+        self._circuit_states = {}  # Removed type hint that referenced CircuitState
+        
+        # Caching
+        self._capability_cache = {}  # Dict[str, Tuple[Capability, datetime]]
+        self._gap_cache = {}  # Dict[str, Tuple[CapabilityGap, datetime]]
+        self._proposal_cache = {}  # Dict[str, Tuple[CapabilityProposal, datetime]]
+        self._cache_ttl = timedelta(minutes=5)
+        self._cache_size = 1000
     
     async def _validate_item(self, item: Capability) -> bool:
         """Validate a capability before adding it to the manager.
@@ -118,32 +145,6 @@ class CapabilityManager(BaseManager[Capability]):
         
         # Additional validation logic could be added here
         return True
-        
-        # Write buffer system
-        self._write_buffer: Dict[str, Dict[str, Any]] = {}
-        self._buffer_lock = threading.Lock()
-        self._is_dirty = False
-        self._last_save = datetime.now()
-        self._save_interval = timedelta(seconds=30)  # 30 seconds
-        self._save_task = None
-        self._running = True
-        
-        # Performance tracking
-        self._capability_operations: Dict[str, List[Dict[str, Any]]] = {}
-        self._execution_times: Dict[str, List[float]] = {}
-        self._last_operation: Dict[str, datetime] = {}
-        
-        # Circuit breaker settings
-        self._failure_threshold = 5
-        self._reset_timeout = timedelta(minutes=5)
-        self._circuit_states: Dict[str, CircuitState] = {}
-        
-        # Caching
-        self._capability_cache: Dict[str, Tuple[Capability, datetime]] = {}
-        self._gap_cache: Dict[str, Tuple[CapabilityGap, datetime]] = {}
-        self._proposal_cache: Dict[str, Tuple[CapabilityProposal, datetime]] = {}
-        self._cache_ttl = timedelta(minutes=5)
-        self._cache_size = 1000
 
     def _mark_dirty(self, capability_id: str, capability_data: Dict[str, Any]) -> None:
         """Mark capability data as dirty and add to write buffer."""
