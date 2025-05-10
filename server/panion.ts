@@ -1842,7 +1842,7 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
             messages: [
               {
                 role: "system",
-                content: `You are Clara, an emotional support AI companion. You are warm, compassionate, and empathetic.
+                content: `You are Panion, an emotional support AI companion. You are warm, compassionate, and empathetic.
                 You focus on providing emotional support and personal guidance.
                 Since you're operating in fallback mode, note that some advanced capabilities may not be available,
                 but you'll do your best to provide supportive and helpful guidance to the user.`
@@ -1861,13 +1861,13 @@ router.post('/api/panion/chat', async (req: Request, res: Response) => {
             
           return res.json({
             response: responseText,
-            thinking: "The Clara API was unavailable, so I've provided a direct response using OpenAI as a backup.",
+            thinking: "The Panion API was unavailable, so I've provided a direct response using OpenAI as a backup.",
             success: true,
             fallback: true
           });
         }
       } catch (fallbackError) {
-        log(`Fallback to OpenAI also failed for Clara: ${fallbackError}`, 'panion-error');
+        log(`Fallback to OpenAI also failed for Panion: ${fallbackError}`, 'panion-error');
       }
       
       // If all else fails, use a generic supportive message
@@ -1915,15 +1915,15 @@ router.post('/api/panion/goal', async (req: Request, res: Response) => {
     }
     
     try {
-      // Forward the request to the Panion API - Clara goal creation
-      const response = await axios.post(`${PANION_API_URL}/clara/goal`, {
+      // Forward the request to the Panion API - Goal creation
+      const response = await axios.post(`${PANION_API_URL}/panion/goal`, {
         content: message,
         session_id: sessionId
       });
       
       return res.json(response.data);
     } catch (goalsApiError) {
-      log(`Error in Clara goal creation API: ${goalsApiError}`, 'panion-error');
+      log(`Error in Panion goal creation API: ${goalsApiError}`, 'panion-error');
       
       // Return a helpful response even when the API fails
       return res.json({
@@ -1934,7 +1934,7 @@ router.post('/api/panion/goal', async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
-    log(`Critical error in Clara goal creation: ${error}`, 'panion-error');
+    log(`Critical error in Panion goal creation: ${error}`, 'panion-error');
     
     // Even in the worst case, provide a helpful response
     return res.json({
