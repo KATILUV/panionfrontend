@@ -1,9 +1,10 @@
-import React, { KeyboardEvent, useState, useRef } from 'react';
+import React, { KeyboardEvent, useState, useRef, ChangeEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, BrainCircuit } from 'lucide-react';
+import { Send, BrainCircuit, Image as ImageIcon } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChatInputProps {
   value: string;

@@ -17,7 +17,7 @@ export const ChatMessageComponent: React.FC<ChatMessageProps> = ({
   showThinking,
   toggleThinking
 }) => {
-  const { content, isUser, timestamp, thinking, component } = message;
+  const { content, isUser, timestamp, thinking, component, imageUrl } = message;
   
   return (
     <div className={cn(
@@ -36,6 +36,18 @@ export const ChatMessageComponent: React.FC<ChatMessageProps> = ({
           </div>
           
           <div className="whitespace-pre-wrap">{content}</div>
+          
+          {/* Display image if present */}
+          {imageUrl && (
+            <div className="mt-2">
+              <img 
+                src={imageUrl} 
+                alt="Shared in conversation" 
+                className="max-w-full rounded-md shadow-sm"
+                style={{ maxHeight: '300px' }}
+              />
+            </div>
+          )}
           
           {/* Render any embedded component */}
           {component && (
