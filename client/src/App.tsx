@@ -20,17 +20,16 @@ import BrowserPage from "./pages/BrowserPage";
 import TaskMonitorPage from "./pages/TaskMonitorPage";
 // Using Panion Intelligence dashboard
 import PanionIntelligenceDashboard from "./pages/panion-intelligence-dashboard";
-import ClaraAgent from "./components/agents/ClaraAgent";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
 import MarketplaceAgent from "./components/agents/MarketplaceAgent";
 import BrowserAgent from "./components/agents/BrowserAgent";
 import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
-// PanionChatAgent replaced by SimplifiedEnhancedChatAgent
-import SimplifiedEnhancedChatAgent from "./components/agents/SimplifiedEnhancedChatAgent";
 import CollaborationAgent from "./components/agents/CollaborationAgent";
 import TaskSchedulerAgent from "./components/agents/TaskSchedulerAgent";
 import DaddyDataAgent from "./components/agents/DaddyDataAgent";
+// New Panion component with conversation modes
+import PanionChat from "./components/agents/PanionChat";
 import { useAgentStore } from "./state/agentStore";
 import { useTaskbarStore } from "./state/taskbarStore";
 import UnifiedThemeProvider from "./components/common/UnifiedThemeProvider";
@@ -179,22 +178,7 @@ function RegisterAgents() {
       }
     }, 1000);
     
-    // Clara Agent
-    const claraIcon = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-        <circle cx="12" cy="12" r="4" fill="currentColor" />
-      </svg>
-    `;
-    
-    agentStore.registerAgent({
-      id: 'clara',
-      title: 'Clara AI',
-      icon: claraIcon,
-      component: () => <ClaraAgent />,
-      defaultPosition: { x: 100, y: 100 },
-      defaultSize: { width: 540, height: 500 }
-    });
+    // Note: Clara agent has been consolidated into Panion with conversation modes
     
     // Notes Agent
     const notesIcon = `
@@ -271,7 +255,7 @@ function RegisterAgents() {
       defaultSize: { width: 650, height: 600 }
     });
     
-    // Panion Chat Agent
+    // Panion Chat Agent - Enhanced with conversation modes
     const panionIcon = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
@@ -282,11 +266,12 @@ function RegisterAgents() {
     
     agentStore.registerAgent({
       id: 'panion',
-      title: 'Panion Chat',
+      title: 'Panion',
       icon: panionIcon,
-      component: () => <SimplifiedEnhancedChatAgent />,
+      component: () => <PanionChat />,
       defaultPosition: { x: 650, y: 200 },
-      defaultSize: { width: 500, height: 600 }
+      defaultSize: { width: 500, height: 600 },
+      capabilities: ['chat', 'reasoning', 'analysis', 'conversation']
     });
     
     // Browser Agent

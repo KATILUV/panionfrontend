@@ -147,10 +147,10 @@ const defaultPreferences: Omit<PreferencesState,
   lastLogin: new Date().toISOString(),
   
   workflow: {
-    favoriteAgents: ['clara', 'panion'],
+    favoriteAgents: ['panion', 'notes', 'settings'],
     pinnedActions: ['open-search', 'open-notes', 'toggle-maximize'],
     recentSearches: [],
-    defaultAgent: 'clara',
+    defaultAgent: 'panion',
     startupAgent: 'panion',
     autoSave: true
   },
