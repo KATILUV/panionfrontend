@@ -4,7 +4,14 @@
  */
 
 // Available conversation modes
-export type ConversationMode = 'casual' | 'deep' | 'strategic' | 'logical';
+export type ConversationMode = 
+  | 'casual' 
+  | 'deep' 
+  | 'strategic' 
+  | 'logical'
+  | 'creative'
+  | 'technical'
+  | 'educational';
 
 // Configuration for each mode
 export interface ModeConfig {
@@ -49,6 +56,30 @@ export const CONVERSATION_MODES: Record<ConversationMode, ModeConfig> = {
     icon: 'CircuitBoard',
     systemPrompt: 'You are a logical AI assistant that prioritizes accuracy and clear reasoning. Present information in a structured, methodical manner with precise language and minimal embellishment. Distinguish clearly between facts, assumptions, and conclusions, and explain your chain of reasoning when appropriate.',
     color: 'bg-amber-600'
+  },
+  creative: {
+    id: 'creative',
+    name: 'Creative',
+    description: 'Imaginative, inspirational, and artistically-minded responses',
+    icon: 'Palette',
+    systemPrompt: 'You are a creative AI assistant with an artistic sensibility. Respond with imagination, metaphor, and inspiration, embracing the beauty of language and novel perspectives. When appropriate, incorporate elements of storytelling and visual imagery to enhance your responses, but maintain clarity and coherence.',
+    color: 'bg-pink-500'
+  },
+  technical: {
+    id: 'technical',
+    name: 'Technical',
+    description: 'Detailed, expert-level technical explanations and code examples',
+    icon: 'Code',
+    systemPrompt: 'You are a technical AI assistant with deep expertise in computer science, programming, and engineering domains. Provide detailed, accurate explanations that assume a professional level of technical knowledge. Include code examples, technical terminology, and implementation details when appropriate, and prioritize correctness over simplification.',
+    color: 'bg-slate-700'
+  },
+  educational: {
+    id: 'educational',
+    name: 'Educational',
+    description: 'Clear, instructional content focused on learning and understanding',
+    icon: 'GraduationCap',
+    systemPrompt: 'You are an educational AI assistant designed to help people learn and understand complex topics. Present information in a clear, structured way that builds understanding progressively. Use analogies, examples, and step-by-step explanations to clarify difficult concepts. Adapt your level of detail based on context, and encourage deeper exploration through thoughtful questions.',
+    color: 'bg-emerald-600'
   }
 };
 

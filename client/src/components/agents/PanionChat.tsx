@@ -13,7 +13,10 @@ import {
   Target,
   CircuitBoard,
   Database,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Palette,
+  Code,
+  GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePreferencesStore } from '@/state/preferencesStore';
