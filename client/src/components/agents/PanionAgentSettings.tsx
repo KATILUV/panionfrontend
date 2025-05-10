@@ -12,7 +12,10 @@ import {
   Check, 
   MessageCircle, 
   Save,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Palette,
+  Code,
+  GraduationCap
 } from 'lucide-react';
 import { 
   ConversationMode, 
@@ -53,6 +56,9 @@ const PanionAgentSettings: React.FC<PanionAgentSettingsProps> = ({ onClose }) =>
       case 'BookOpen': return <BookOpen size={18} />;
       case 'Target': return <Target size={18} />;
       case 'CircuitBoard': return <CircuitBoard size={18} />;
+      case 'Palette': return <Palette size={18} />;
+      case 'Code': return <Code size={18} />;
+      case 'GraduationCap': return <GraduationCap size={18} />;
       default: return <MessageCircle size={18} />;
     }
   };

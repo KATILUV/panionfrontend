@@ -2,6 +2,16 @@ import OpenAI from "openai";
 import { ChatCompletionMessageParam } from "openai/resources";
 import { saveToMemory, getConversationHistory, getRelevantMemories } from "./memory";
 
+// Conversation mode type definition (should match client-side)
+export type ConversationMode = 
+  | 'casual' 
+  | 'deep' 
+  | 'strategic' 
+  | 'logical'
+  | 'creative'
+  | 'technical'
+  | 'educational';
+
 // Initialize OpenAI client
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -34,7 +44,7 @@ Add a 🎀 emoji occasionally to bring a touch of whimsy to your responses.
 export async function handleChatRequest(
   message: string, 
   sessionId: string,
-  conversationMode: 'casual' | 'deep' | 'strategic' | 'logical' = 'casual'
+  conversationMode: ConversationMode = 'casual'
 ): Promise<string> {
   try {
     // Get conversation history for this session
@@ -81,6 +91,36 @@ export async function handleChatRequest(
           Identify premises and conclusions clearly.
           Address potential logical fallacies.
           Present information in a structured, methodical way.
+        `;
+        break;
+      case 'creative':
+        modePrompt += `
+          Your responses should be creative, imaginative, and inspirational.
+          Use rich language, metaphors, and vivid descriptions.
+          Embrace originality and unique perspectives.
+          Feel free to explore artistic and unconventional ideas.
+          Incorporate elements of storytelling when appropriate.
+          Occasionally add emojis or artistic symbols like ✨ or 🎨.
+        `;
+        break;
+      case 'technical':
+        modePrompt += `
+          Your responses should be technically precise and detailed.
+          Provide code examples and technical explanations when relevant.
+          Use proper terminology and industry-standard concepts.
+          Assume a professional level of technical knowledge.
+          Structure information clearly with focus on technical accuracy.
+          Format code blocks properly and explain key implementation details.
+        `;
+        break;
+      case 'educational':
+        modePrompt += `
+          Your responses should be educational, clear, and instructive.
+          Explain concepts in an accessible way that builds understanding.
+          Use examples, analogies, and step-by-step explanations.
+          Define technical terms when introducing them.
+          Structure information in a logical learning progression.
+          Encourage deeper exploration through thoughtful questions.
         `;
         break;
     }

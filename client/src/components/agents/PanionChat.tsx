@@ -103,6 +103,15 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
       case 'logical':
         welcomeMessage = "Hello. I'm Panion. I'll provide precise, logical assistance. What information do you require?";
         break;
+      case 'creative':
+        welcomeMessage = "Hello there! I'm Panion, your creative companion. What would you like to imagine, create, or explore today? ✨";
+        break;
+      case 'technical':
+        welcomeMessage = "Hello. I'm Panion, your technical assistant. I'm ready to help with programming, engineering, or other technical topics. What are you working on?";
+        break;
+      case 'educational':
+        welcomeMessage = "Welcome! I'm Panion, your educational assistant. I'm here to help you learn and understand new concepts. What would you like to discover today?";
+        break;
       default:
         welcomeMessage = "Hello! I'm Panion. How can I assist you today?";
     }
@@ -409,6 +418,9 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
       case 'deep': return <BookOpen size={18} />;
       case 'strategic': return <Target size={18} />;
       case 'logical': return <CircuitBoard size={18} />;
+      case 'creative': return <Palette size={18} />;
+      case 'technical': return <Code size={18} />;
+      case 'educational': return <GraduationCap size={18} />;
       default: return <MessageSquare size={18} />;
     }
   };
