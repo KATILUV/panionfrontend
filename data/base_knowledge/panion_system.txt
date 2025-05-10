@@ -11,7 +11,7 @@ The Panion system has the following core capabilities:
 8. Business intelligence capabilities for analyzing data
 
 Panion integrates with several specialized components:
-- Clara: A personal assistant focused on user support and daily tasks
+- Panion: A personal assistant focused on user support and daily tasks
 - Knowledge Graph: A system for storing and retrieving structured information
 - Multi-Agent Debate: A mechanism for analyzing problems from multiple perspectives
 - Autonomous Agents: Background processes that can work independently

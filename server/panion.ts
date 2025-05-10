@@ -1984,7 +1984,7 @@ router.get('/api/panion/goals', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/clara/expand-dream', async (req: Request, res: Response) => {
+router.post('/api/panion/expand-dream', async (req: Request, res: Response) => {
   try {
     const { goalId, message } = req.body;
     
