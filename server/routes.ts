@@ -684,5 +684,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket servers
+  const taskWss = initializeWebSocketServer(httpServer);
+  setWebSocketServer(taskWss);
+  
+  // Initialize chat WebSocket server
+  initializeChatWebSocketServer(httpServer);
+  
+  console.log('[server] WebSocket servers initialized successfully');
+  
   return httpServer;
 }
