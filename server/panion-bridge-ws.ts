@@ -165,7 +165,7 @@ class PanionBridgeWS extends EventEmitter {
   }
   
   private handleProactiveMessage(message: any) {
-    // Manus-like proactive messaging
+    // Panion Intelligence proactive messaging
     if (message.type === 'insight') {
       // System has generated an insight without being asked
       log(`Received proactive insight: ${JSON.stringify(message.data)}`, 'panion-bridge');
