@@ -100,6 +100,24 @@ class CapabilityManager(BaseManager[Capability]):
         # Capability storage
         self.capability_gaps: Dict[str, CapabilityGap] = {}
         self.capability_proposals: Dict[str, CapabilityProposal] = {}
+    
+    async def _validate_item(self, item: Capability) -> bool:
+        """Validate a capability before adding it to the manager.
+        
+        Implements the required abstract method from BaseManager.
+        
+        Args:
+            item: The capability to validate
+            
+        Returns:
+            bool: True if the capability is valid, False otherwise
+        """
+        # Basic validation - ensure capability has required fields
+        if not item.name or not item.description or not item.version:
+            return False
+        
+        # Additional validation logic could be added here
+        return True
         
         # Write buffer system
         self._write_buffer: Dict[str, Dict[str, Any]] = {}
