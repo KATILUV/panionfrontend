@@ -19,6 +19,9 @@ interface Memory {
   important?: boolean; // Whether this is an important memory
   date?: string;      // Date in YYYY-MM-DD format (for long-term storage)
   category?: string;  // Category of the memory (personal, preference, fact, etc.)
+  imageUrl?: string;  // URL of an image attached to this memory
+  imageAnalysis?: string; // Analysis or description of the attached image
+  mediaType?: 'text' | 'image' | 'mixed'; // Type of content
 }
 
 // Valid memory categories
@@ -30,6 +33,9 @@ export const MEMORY_CATEGORIES: string[] = [
   "goal",         // User goals and aspirations
   "experience",   // User experiences and stories
   "contact",      // Contact information or people mentioned
+  "image",        // Image content shared in the conversation
+  "visual_data",  // Information derived from image analysis
+  "media",        // General media content
   "other"         // Default category for miscellaneous memories
 ];
 
@@ -191,6 +197,25 @@ export async function saveToMemory(memory: Memory): Promise<void> {
     sessionMemories[memory.sessionId] = [];
   }
   
+  // Set media type if not provided
+  if (!memory.mediaType) {
+    if (memory.imageUrl) {
+      memory.mediaType = memory.content ? 'mixed' : 'image';
+    } else {
+      memory.mediaType = 'text';
+    }
+  }
+  
+  // If this is an image memory, auto-categorize it as image
+  if (memory.imageUrl && !memory.category) {
+    memory.category = 'image';
+    
+    // If there's image analysis, mark it as important
+    if (memory.imageAnalysis) {
+      memory.important = true;
+    }
+  }
+  
   // Add to session memory
   sessionMemories[memory.sessionId].push(memory);
   
@@ -199,9 +224,24 @@ export async function saveToMemory(memory: Memory): Promise<void> {
     sessionMemories[memory.sessionId].shift();
   }
   
-  // Determine if memory should be saved long-term (only for user messages or important AI responses)
-  if (memory.isUser || (memory.content.includes("I'll remember") || memory.content.includes("I've noted"))) {
-    memory.important = await isMemoryImportant(memory);
+  // Determine if memory should be saved long-term
+  const shouldEvaluateForLongTerm = 
+    // Always evaluate user messages
+    memory.isUser || 
+    // Evaluate AI responses that contain memory indicators
+    (memory.content.includes("I'll remember") || memory.content.includes("I've noted")) ||
+    // Always evaluate image memories
+    memory.mediaType === 'image' || memory.mediaType === 'mixed';
+  
+  if (shouldEvaluateForLongTerm) {
+    // For image memories that haven't been marked as important yet
+    if (memory.imageUrl && memory.imageAnalysis && !memory.important) {
+      memory.important = true;
+      memory.category = memory.category || 'visual_data';
+    } else {
+      // For text memories, evaluate importance
+      memory.important = await isMemoryImportant(memory);
+    }
     
     // Save important memories to long-term storage
     if (memory.important) {
@@ -223,9 +263,32 @@ export async function searchMemories(query: string): Promise<Memory[]> {
     return [];
   }
   
-  // Simple keyword search
+  // Check if this is an image search
+  const isImageSearch = query.toLowerCase().includes('image') || 
+                        query.toLowerCase().includes('picture') || 
+                        query.toLowerCase().includes('photo');
+  
+  if (isImageSearch) {
+    // Return image memories first, then search in image analysis text
+    return [
+      // First return all memories with images
+      ...memories.filter(memory => memory.mediaType === 'image' || memory.mediaType === 'mixed'),
+      // Then return memories where analysis contains the search term (excluding ones already returned)
+      ...memories.filter(memory => 
+        memory.imageAnalysis && 
+        memory.imageAnalysis.toLowerCase().includes(query.toLowerCase()) &&
+        memory.mediaType !== 'image' && 
+        memory.mediaType !== 'mixed'
+      )
+    ];
+  }
+  
+  // Standard keyword search in content
   return memories.filter(memory => 
-    memory.content.toLowerCase().includes(query.toLowerCase())
+    // Search in primary content
+    memory.content.toLowerCase().includes(query.toLowerCase()) ||
+    // Also search in image analysis if present
+    (memory.imageAnalysis && memory.imageAnalysis.toLowerCase().includes(query.toLowerCase()))
   );
 }
 

@@ -312,21 +312,7 @@ ${getImageAnalysisPromptForMode(conversationMode)}
     
     const imageDescription = response.choices[0].message.content || "Sorry, I couldn't analyze the image.";
     
-    // Save the image description to memory
-    await saveToMemory({
-      content: "Shared an image",
-      isUser: true,
-      timestamp: new Date().toISOString(),
-      sessionId
-    });
-    
-    await saveToMemory({
-      content: imageDescription,
-      isUser: false,
-      timestamp: new Date().toISOString(),
-      sessionId
-    });
-    
+    // Return the image analysis
     return imageDescription;
   } catch (error) {
     console.error("Error in analyzeImage:", error);

@@ -12,6 +12,7 @@ import {
   saveConversation, 
   getMemoriesByCategory, 
   getMemoryStats,
+  saveToMemory,
   MEMORY_CATEGORIES 
 } from "./memory";
 import {
@@ -614,6 +615,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the relative path for the frontend
       const imageUrl = `/uploads/${filename}`;
+      
+      // Save image to memory with its analysis
+      await saveToMemory({
+        sessionId,
+        content: 'Image uploaded',
+        isUser: true,
+        timestamp: new Date().toISOString(),
+        imageUrl,
+        imageAnalysis: description,
+        mediaType: 'image',
+        category: 'image',
+        important: true
+      });
       
       // Send back the image URL and description
       res.status(200).json({
