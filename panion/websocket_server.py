@@ -332,16 +332,18 @@ async def connection_handler(websocket, path):
                 }))
             except Exception as e:
                 logger.error(f"Error processing message: {str(e)}")
+                current_id = message_id if 'message_id' in locals() else "unknown"
                 await websocket.send(json.dumps({
-                    "id": message_id if 'message_id' in locals() else "unknown",
+                    "id": current_id,
                     "type": "error",
                     "error": str(e)
                 }))
     except websockets.exceptions.ConnectionClosed:
         logger.info("WebSocket connection closed")
     finally:
-        # Remove from active connections
-        active_connections.remove(websocket)
+        # Remove from active connections if it's still there
+        if websocket in active_connections:
+            active_connections.remove(websocket)
 
 # Push insights to connected clients proactively (Manus-like initiative)
 async def push_insights():

@@ -276,8 +276,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Try to start the Panion API
   try {
     await startPanionAPI();
+    
+    // Now that Panion API is started, add a new WebSocket-enhanced route
+    app.post('/api/panion/ws-chat', async (req, res) => {
+      try {
+        await handleEnhancedChatWithWS(req, res);
+        systemLog.info('WebSocket-enhanced chat request handled successfully', 'panion-ws');
+      } catch (error) {
+        systemLog.error(`Error in WebSocket-enhanced chat: ${error instanceof Error ? error.message : String(error)}`, 'panion-ws');
+        res.status(500).json({
+          error: 'WebSocket-Enhanced Panion API error',
+          message: 'Error processing enhanced chat request',
+          details: error instanceof Error ? error.message : String(error)
+        });
+      }
+    });
+    
   } catch (error) {
     console.error('Failed to start Panion API:', error);
+    systemLog.error(`Failed to start Panion API: ${error instanceof Error ? error.message : String(error)}`, 'startup');
   }
   
   // API routes are defined below

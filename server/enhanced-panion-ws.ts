@@ -8,7 +8,7 @@ import { log } from './vite';
 import { v4 as uuidv4 } from 'uuid';
 import { addMessage, getRelevantContext } from './conversation-memory';
 import panionBridgeWS from './panion-bridge-ws';
-import { getSystemLog } from './system-logs';
+import { getSystemLog, systemLog } from './system-logs';
 
 /**
  * Enhanced chat request handler with WebSocket Bridge and Manus-like capabilities
@@ -79,11 +79,13 @@ export async function handleEnhancedChatWithWS(req: Request, res: Response): Pro
     };
     
     res.json(fullResponse);
-  } catch (error) {
-    log(`Error in enhanced chat handler: ${error}`, 'panion');
+  } catch (error: any) {
+    const errorMessage = error?.message || String(error);
+    log(`Error in enhanced chat handler: ${errorMessage}`, 'panion');
+    systemLog.error(`WebSocket chat processing error: ${errorMessage}`, 'panion-ws');
     res.status(500).json({ 
       error: 'Error processing chat request', 
-      details: error.message 
+      details: errorMessage 
     });
   }
 }

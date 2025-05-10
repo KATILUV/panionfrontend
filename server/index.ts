@@ -4,7 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
 import { initializeWebSocketServer, setWebSocketServer } from "./websocket";
 import { optimizeStartup, isSystemReady } from "./startup-optimizer";
-import * as conversationMemory from "./conversation-memory";
+import { systemLog } from "./system-logs";
 
 const app = express();
 app.use(express.json());
@@ -116,8 +116,8 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`, 'express');
     
-    // Initialize conversation memory system
-    conversationMemory.initialize();
+    // Log system startup in the system logs
+    systemLog.info('Server started successfully', 'startup');
     
     // Start optimized service initialization in parallel
     optimizeStartup().catch((error) => {
