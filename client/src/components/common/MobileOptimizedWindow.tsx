@@ -244,10 +244,9 @@ const MobileOptimizedWindow: React.FC<MobileOptimizedWindowProps> = ({
         zIndex,
         touchAction: 'none' // Prevent browser handling of touch events
       }}
-      animate={controls}
       initial="hidden"
       variants={variants}
-      animate="visible"
+      animate={controls}
       exit="hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

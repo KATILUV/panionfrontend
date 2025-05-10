@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ThinkingBubbleProps {
   /**
@@ -18,18 +18,44 @@ interface ThinkingBubbleProps {
   className?: string;
 }
 
+/**
+ * Animated thinking bubble component for chat interfaces
+ */
 export const ThinkingBubble: React.FC<ThinkingBubbleProps> = ({
   message = 'Thinking...',
   className = ''
 }) => {
+  // Animation variants for the dots
+  const dotVariants = {
+    initial: { y: 0 },
+    animate: (i: number) => ({
+      y: [0, -5, 0],
+      transition: {
+        delay: i * 0.15,
+        duration: 0.6,
+        repeat: Infinity,
+        repeatType: 'loop' as const
+      }
+    })
+  };
+  
   return (
-    <div 
-      className={`thinking-bubble bg-card text-card-foreground 
-                 rounded-r-lg rounded-tl-lg p-3 relative inline-flex 
-                 items-center gap-2 max-w-[80%] ${className}`}
-    >
-      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-      <span className="text-sm">{message}</span>
+    <div className={`thinking-bubble flex items-center ${className}`}>
+      <div className="thinking-bubble-content bg-muted/70 text-muted-foreground rounded-lg py-2 px-3 text-sm flex items-center">
+        <span className="mr-2">{message}</span>
+        <div className="dots-container flex space-x-1">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              custom={i}
+              variants={dotVariants}
+              initial="initial"
+              animate="animate"
+              className="w-1.5 h-1.5 bg-current rounded-full"
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

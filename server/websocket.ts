@@ -16,15 +16,14 @@ interface WebSocketMessage {
 
 // Initialize WebSocket Server
 export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
-  const wss = new WebSocketServer({ 
+  // Define the WebSocket server options
+  const options = {
     server: httpServer,
     path: '/ws',
-    // Add proper headers for WebSocket handshake
-    handleProtocols: (protocols, request) => {
-      // Accept the first protocol if one is provided or subprotocol-less connection
-      return protocols && protocols.length > 0 ? protocols[0] : '';
-    }
-  });
+  };
+  
+  // Create WebSocket server
+  const wss = new WebSocketServer(options);
   
   // Verify headers for connection upgrade
   wss.on('headers', (headers, request) => {
