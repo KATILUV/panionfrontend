@@ -243,10 +243,19 @@ class PanionBridgeWS extends EventEmitter {
       // Map WebSocket message types to HTTP endpoints
       const endpoint = this.getEndpointForMessageType(message.type);
       
-      // Send the HTTP request
-      const response = await axios.post(`${PANION_API_URL}${endpoint}`, message, {
-        timeout: 30000
-      });
+      // Determine if we should use GET or POST based on message type
+      let response;
+      if (message.type === 'heartbeat') {
+        // Use GET for heartbeat messages
+        response = await axios.get(`${PANION_API_URL}${endpoint}`, {
+          timeout: 30000
+        });
+      } else {
+        // Use POST for other message types
+        response = await axios.post(`${PANION_API_URL}${endpoint}`, message, {
+          timeout: 30000
+        });
+      }
       
       return response.data;
     } catch (error) {
