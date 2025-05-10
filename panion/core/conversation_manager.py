@@ -20,7 +20,7 @@ from enum import Enum, auto
 
 from .queue_system import QueueFactory, QueueConfig, QueueInterface
 from .state_manager import StateManager
-from .clara_os import clara_os
+from .panion_os import panion_os
 from core.panion_plugins import plugin_manager
 from core.ai_service import ai_service
 from core.capabilities import capability_manager, CapabilityCategory, Capability
@@ -160,7 +160,7 @@ class MemoryPattern:
 @dataclass
 class ConversationConfig:
     """Configuration for conversation management."""
-    name: str = "clara_conversations"
+    name: str = "panion_conversations"
     max_concurrent_conversations: int = 10
     state_persistence: bool = True
     state_sync_interval: int = 10
@@ -563,7 +563,7 @@ class ConversationManager:
                 "type": "system",
                 "timestamp": datetime.now().isoformat(),
                 "conversation_id": message.get("conversation_id"),
-                "sender": "clara"
+                "sender": "panion"
             }
             
             # Add response to conversation history

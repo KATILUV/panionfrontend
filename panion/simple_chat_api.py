@@ -917,7 +917,7 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                 }).encode())
             
             # Clara chat endpoint
-            elif path == "/clara/chat":
+            elif path == "/panion/chat":
                 content = data.get("content", "")
                 session_id = data.get("session_id", "default")
                 user_id = data.get("user_id", "anonymous")
@@ -939,7 +939,7 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                 }).encode())
             
             # Clara goal creation endpoint
-            elif path == "/clara/goal":
+            elif path == "/panion/goal":
                 content = data.get("content", "")
                 session_id = data.get("session_id", "default")
                 
@@ -963,7 +963,7 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                 }).encode())
             
             # Clara goals list endpoint
-            elif path == "/clara/goals":
+            elif path == "/panion/goals":
                 logger.info("Clara goals list request")
                 
                 # This would use the Clara goals system
@@ -1063,7 +1063,7 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                     }).encode())
             
             # Clara dream expansion endpoint
-            elif path == "/clara/expand-dream":
+            elif path == "/panion/expand-dream":
                 goal_id = data.get("goal_id", "")
                 content = data.get("content", "")
                 
