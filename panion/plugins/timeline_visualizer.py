@@ -1,6 +1,6 @@
 """
 Timeline Visualization Plugin
-Provides visualization capabilities for Clara's timeline of activities.
+Provides visualization capabilities for Panion's timeline of activities.
 """
 
 import logging

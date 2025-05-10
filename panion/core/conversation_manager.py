@@ -1,6 +1,6 @@
 """
 Conversation Manager
-Manages conversations and their flow in Clara v2.
+Manages conversations and their flow in Panion v2.
 """
 
 import asyncio
@@ -60,7 +60,7 @@ class MemoryValidationStatus(Enum):
     OUTDATED = "outdated"
 
 class SystemCapabilityCategory(Enum):
-    """Categories for Clara's system capabilities."""
+    """Categories for Panion's system capabilities."""
     CORE = "core"              # Core functionalities
     PLUGIN = "plugin"          # Plugin capabilities
     MEMORY = "memory"          # Memory-related features

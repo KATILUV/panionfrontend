@@ -1062,14 +1062,14 @@ class PanionAPIHandler(BaseHTTPRequestHandler):
                         "message": f"Error getting operation results: {str(e)}"
                     }).encode())
             
-            # Clara dream expansion endpoint
+            # Panion dream expansion endpoint
             elif path == "/panion/expand-dream":
                 goal_id = data.get("goal_id", "")
                 content = data.get("content", "")
                 
-                logger.info(f"Clara dream expansion request for goal {goal_id}: {content}")
+                logger.info(f"Panion dream expansion request for goal {goal_id}: {content}")
                 
-                # This would use the Clara dream expansion functionality
+                # This would use the Panion dream expansion functionality
                 # For now, just return a simulated response
                 self._set_headers()
                 self.wfile.write(json.dumps({
