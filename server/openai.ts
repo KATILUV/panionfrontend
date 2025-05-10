@@ -189,11 +189,70 @@ export async function handleChatRequest(
 }
 
 /**
+ * Get mode-specific image analysis prompts
+ */
+function getImageAnalysisPromptForMode(mode: ConversationMode): string {
+  switch(mode) {
+    case 'casual':
+      return `For casual mode:
+- Keep your description light and conversational
+- Focus on what's interesting or fun about the image
+- Use an upbeat, friendly tone`;
+      
+    case 'deep':
+      return `For deep mode:
+- Look beyond the surface elements to potential meaning and symbolism
+- Consider cultural, historical, or philosophical aspects of the image
+- Offer a thoughtful, nuanced analysis
+- Explore visual metaphors and potential interpretations`;
+      
+    case 'strategic':
+      return `For strategic mode:
+- Identify key elements in a structured way
+- Analyze the purpose and effectiveness of the visual
+- Consider the context and potential goals of the image
+- Organize your observations in a clear, strategic framework`;
+      
+    case 'logical':
+      return `For logical mode:
+- Describe the image with precise, factual observations
+- Focus on objective details rather than interpretations
+- Use clear, methodical language
+- Organize information in a structured manner`;
+
+    case 'creative':
+      return `For creative mode:
+- Use vivid, imaginative language in your description
+- Draw connections to art, storytelling, and creative expression
+- Consider the aesthetic qualities and emotional impact
+- Feel free to be poetic or expressive in your response`;
+      
+    case 'technical':
+      return `For technical mode:
+- Provide detailed technical analysis of elements in the image
+- If relevant, identify technical aspects like photography techniques, design principles, or technical specifications
+- Use precise terminology appropriate to any technical domains shown
+- Focus on accuracy and technical detail`;
+      
+    case 'educational':
+      return `For educational mode:
+- Explain elements in the image in an instructive, informative way
+- Provide relevant background knowledge that helps understand the context
+- Identify learning opportunities or educational aspects in the visual
+- Structure your analysis in a way that builds understanding progressively`;
+      
+    default:
+      return '';
+  }
+}
+
+/**
  * Analyze an image and provide a description
  */
 export async function analyzeImage(
   base64Image: string,
-  sessionId: string
+  sessionId: string,
+  conversationMode: ConversationMode = 'casual' 
 ): Promise<string> {
   try {
     // Get conversation history for context
@@ -211,6 +270,8 @@ When describing an image:
 - If there's text in the image, include it when relevant
 - Respond as if you're chatting with a friend who shared a photo
 - Keep your description friendly, warm, and engaging
+
+${getImageAnalysisPromptForMode(conversationMode)}
 `
       },
     ];

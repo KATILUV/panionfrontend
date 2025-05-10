@@ -606,8 +606,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert buffer to base64
       const imageBase64 = req.file.buffer.toString('base64');
       
+      // Get conversation mode from request or default to casual
+      const conversationMode = req.body.conversationMode || 'casual';
+      
       // Analyze image with OpenAI
-      const description = await analyzeImage(imageBase64, sessionId);
+      const description = await analyzeImage(imageBase64, sessionId, conversationMode);
       
       // Get the relative path for the frontend
       const imageUrl = `/uploads/${filename}`;

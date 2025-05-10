@@ -325,6 +325,7 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
       // Create FormData to send the image
       const formData = new FormData();
       formData.append('image', file);
+      formData.append('conversationMode', conversationMode);
       
       // Add temporary agent response
       const tempAgentMessage: ChatMessage = {
