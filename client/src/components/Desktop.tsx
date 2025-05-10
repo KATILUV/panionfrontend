@@ -11,11 +11,10 @@ import { useTaskbarStore } from '../state/taskbarStore';
 import { initializeAgentRegistry } from '../state/agentStore';
 import { MessageSquare, FileText, Settings, PlusCircle, Layout, Layers, X } from 'lucide-react';
 import { ApplyLayout } from '../lib/layoutUtils';
-import ClaraAgent from './agents/ClaraAgent';
 import NotesAgent from './agents/NotesAgent';
 import SettingsAgent from './agents/SettingsAgent';
 import MarketplaceAgent from './agents/MarketplaceAgent';
-import SimplifiedEnhancedChatAgent from './agents/SimplifiedEnhancedChatAgent';
+import PanionChat from './agents/PanionChat';
 import DaddyDataAgent from './agents/DaddyDataAgent';
 import ClaraContextPanel from './system/ClaraContextPanel';
 import CommandPalette from './system/CommandPalette';
@@ -123,8 +122,7 @@ const ThemeAwareButton: FC<ThemeAwareButtonProps> = ({
 const renderAgentContent = (agentId: string) => {
   // First check for standard agents
   switch (agentId) {
-    case 'clara':
-      return <ClaraAgent />;
+    // Clara has been consolidated into Panion with conversation modes
     case 'notes':
       return <NotesAgent />;
     case 'settings':
