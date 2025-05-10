@@ -216,6 +216,92 @@ export default function usePanionChat(options: PanionChatOptions = {}) {
     setMessages([]);
   }, []);
 
+  // Upload and analyze an image
+  const uploadImage = useCallback(
+    async (file: File) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        setAgentStatus('thinking');
+        setProcessingStage('Processing image');
+        setProcessingProgress(10);
+
+        // Create a FormData object to send the file
+        const formData = new FormData();
+        formData.append('image', file);
+
+        // Add user message showing the upload
+        const userMessage: ChatMessage = {
+          id: Date.now().toString(),
+          content: "Uploaded an image for analysis",
+          isUser: true,
+          timestamp: new Date().toISOString()
+        };
+        
+        setMessages(prev => [...prev, userMessage]);
+        
+        // After a short delay to show processing stages
+        setTimeout(() => {
+          setProcessingStage('Analyzing image');
+          setProcessingProgress(30);
+        }, 500);
+        
+        setTimeout(() => {
+          setProcessingStage('Generating description');
+          setProcessingProgress(60);
+        }, 1000);
+        
+        // Send the image for analysis
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Image upload failed: ${response.status} ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        // Update processing state
+        setProcessingStage('Finalizing analysis');
+        setProcessingProgress(90);
+        
+        // Add assistant response with the image and its description
+        const assistantMessage: ChatMessage = {
+          id: Date.now().toString(),
+          content: result.response,
+          isUser: false,
+          timestamp: new Date().toISOString(),
+          imageUrl: result.imageUrl // The URL to the uploaded image
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        return result;
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+        toast({
+          title: 'Error processing image',
+          description: err instanceof Error ? err.message : String(err),
+          variant: 'destructive',
+        });
+        throw err; // Re-throw to handle in the UI component
+      } finally {
+        setIsLoading(false);
+        setAgentStatus('idle');
+        setProcessingStage(null);
+        setProcessingProgress(100);
+        
+        // Focus on input after response
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }
+    },
+    [toast]
+  );
+
   return {
     // Chat interface
     messages,
@@ -225,6 +311,9 @@ export default function usePanionChat(options: PanionChatOptions = {}) {
     error,
     sendMessage,
     clearMessages,
+    
+    // Image handling
+    uploadImage,
     
     // Enhanced features
     agentStatus,
