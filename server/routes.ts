@@ -426,19 +426,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Import the addMessage function from conversation-memory-interface
-      const { addMessage } = await import('./conversation-memory-interface');
+      // Import the addMessage function
+      const conversationMemory = await import('./conversation-memory');
+      const { storage } = await import('./storage');
       
       // Add the message to conversation memory
-      const result = await addMessage({
-        role: role as 'user' | 'assistant' | 'system',
-        content: message, 
+      await conversationMemory.addMessage(
+        role as 'user' | 'assistant' | 'system',
+        message,
         sessionId,
         conversationMode
-      });
+      );
       
       // Force save to file
-      const { storage } = await import('./storage');
       await storage.saveToFile();
       
       console.log(`Message added to conversation ${sessionId}, forcing save to file`);
@@ -446,8 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({
         success: true,
         message: 'Message added successfully',
-        sessionId,
-        messageId: result.id
+        sessionId
       });
     } catch (error) {
       console.error('Error adding message:', error);

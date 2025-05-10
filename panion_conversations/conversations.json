@@ -7,6 +7,19 @@
       "createdAt": "2025-05-10T15:30:18.047Z",
       "lastUpdatedAt": "2025-05-10T15:30:18.047Z",
       "messageCount": 2
+    },
+    {
+      "sessionId": {
+        "role": "user",
+        "content": "This is a test message from the direct API",
+        "sessionId": "test-direct-api",
+        "conversationMode": "casual"
+      },
+      "title": "Conversation 5/10/2025",
+      "createdAt": "2025-05-10T15:33:15.516Z",
+      "lastUpdatedAt": "2025-05-10T15:33:15.516Z",
+      "messageCount": 1,
+      "id": 2
     }
   ],
   "messages": [
@@ -30,6 +43,28 @@
           "sessionId": "test-session-1",
           "important": false,
           "conversationMode": "casual"
+        }
+      ]
+    },
+    {
+      "sessionId": {
+        "role": "user",
+        "content": "This is a test message from the direct API",
+        "sessionId": "test-direct-api",
+        "conversationMode": "casual"
+      },
+      "messages": [
+        {
+          "timestamp": "2025-05-10T15:33:15.516Z",
+          "sessionId": {
+            "role": "user",
+            "content": "This is a test message from the direct API",
+            "sessionId": "test-direct-api",
+            "conversationMode": "casual"
+          },
+          "important": false,
+          "conversationMode": "casual",
+          "id": 3
         }
       ]
     }

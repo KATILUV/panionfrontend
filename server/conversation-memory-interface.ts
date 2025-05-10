@@ -19,19 +19,22 @@ export interface ConversationContextResult {
 
 // Add message compatibility function that handles both old and new formats
 export async function addMessage(
-  sessionId: string, 
-  role: 'user' | 'assistant' | 'system', 
-  content: string, 
-  options?: any
-): Promise<string> {
-  // Extract conversation mode from options if available
-  const conversationMode = options?.conversationMode || 'casual';
+  messageData: { 
+    role: 'user' | 'assistant' | 'system'; 
+    content: string;
+    sessionId: string;
+    conversationMode?: string;
+  }
+): Promise<{ id: string }> {
+  // Extract parameters
+  const { role, content, sessionId, conversationMode = 'casual' } = messageData;
   
   // Call the actual addMessage function with all parameters
   await conversationMemory.addMessage(role, content, sessionId, conversationMode);
   
   // Return a dummy message ID for compatibility with old code that expects it
-  return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  const id = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  return { id };
 }
 
 // Get context compatibility function
