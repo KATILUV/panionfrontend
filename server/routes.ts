@@ -414,6 +414,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Direct message creation API
+  app.post('/api/messages', async (req, res) => {
+    try {
+      const { sessionId = 'default', message, role = 'user', conversationMode = 'casual' } = req.body;
+      
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({
+          error: 'Invalid request',
+          message: 'Message content is required and must be a string'
+        });
+      }
+      
+      // Import the addMessage function from conversation-memory-interface
+      const { addMessage } = await import('./conversation-memory-interface');
+      
+      // Add the message to conversation memory
+      const result = await addMessage({
+        role: role as 'user' | 'assistant' | 'system',
+        content: message, 
+        sessionId,
+        conversationMode
+      });
+      
+      // Force save to file
+      const { storage } = await import('./storage');
+      await storage.saveToFile();
+      
+      console.log(`Message added to conversation ${sessionId}, forcing save to file`);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Message added successfully',
+        sessionId,
+        messageId: result.id
+      });
+    } catch (error) {
+      console.error('Error adding message:', error);
+      res.status(500).json({
+        error: 'Failed to add message',
+        message: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Use Multi-agent Debate routes
   app.use(debateRoutes);
   
