@@ -259,36 +259,11 @@ const Desktop: React.FC = () => {
     // Simple initialization - no complex layouts
     log.action('Using simplified layout system');
     
-    // Clean up any ghost windows by ensuring windows match agent registry
-    const registry = useAgentStore.getState().registry;
-    const windows = useAgentStore.getState().windows;
-    const registeredIds = registry.map(agent => agent.id);
+    // Note: Ghost window cleanup is now handled by the TaskbarFixer component
+    // to avoid duplicate logic and ensure it happens at the earliest possible moment
     
-    // Check for windows that don't have a corresponding agent
-    Object.keys(windows).forEach(windowId => {
-      if (!registeredIds.includes(windowId)) {
-        log.warn(`Found ghost window with ID ${windowId}. Removing...`);
-        // Remove the ghost window
-        useAgentStore.setState(state => {
-          const updatedWindows = {...state.windows};
-          delete updatedWindows[windowId];
-          return { windows: updatedWindows };
-        });
-      }
-    });
-    
-    // Clean, simplified approach to taskbar reset - no multi-phase redundancy
-    try {
-      log.info('Setting up taskbar with latest design');
-      
-      // Just use the store's reset function which now handles everything internally
-      const taskbarStore = useTaskbarStore.getState();
-      taskbarStore.resetTaskbar();
-      
-      log.action('Taskbar configured with latest design');
-    } catch (err) {
-      console.error("Error configuring taskbar:", err);
-    }
+    // Note: Taskbar reset is now primarily handled by the TaskbarFixer component in App.tsx
+    // This is kept as a fallback only
     
     // Don't automatically open any windows on startup to prevent mobile pop-ups
     // The App.tsx RegisterAgents function will handle opening Panion if needed

@@ -1,6 +1,10 @@
 /**
  * Utility to forcefully reset the taskbar state
  * This helps fix issues with ghost windows and outdated taskbar state
+ * 
+ * IMPORTANT: This is the authoritative reset function for the taskbar
+ * All code needing to reset the taskbar should call this function
+ * rather than implementing its own reset logic
  */
 
 import { useTaskbarStore, TaskbarWidgetType } from '../state/taskbarStore';

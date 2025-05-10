@@ -7,6 +7,13 @@ import { log } from '../../state/systemLogStore';
 /**
  * This component runs on mount to fix taskbar issues
  * It cleans up ghost windows and resets the taskbar if needed
+ * 
+ * NOTE: This is the authoritative component for taskbar fixing logic.
+ * It centralizes ghost window detection, taskbar reset, and state cleanup
+ * to avoid scattered duplicate logic throughout the application.
+ * 
+ * If you need to clean up the taskbar or fix ghost windows, modify this component
+ * instead of adding cleanup code elsewhere.
  */
 const TaskbarFixer: React.FC = () => {
   useEffect(() => {
