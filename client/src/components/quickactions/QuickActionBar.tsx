@@ -6,19 +6,23 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Command, 
-  MessageCircle, 
+  MessageSquare, 
+  Search, 
+  ArrowUpRight, 
   Plus, 
-  Star, 
-  StarOff, 
-  Zap, 
-  ChevronDown, 
-  ChevronUp,
-  Minimize,
+  ChevronUp, 
   Maximize2, 
-  X 
+  Minimize2,
+  X,
+  Settings,
+  ArrowLeft,
+  ArrowRight,
+  PanelLeft,
+  Zap,
+  Copy
 } from 'lucide-react';
 import { useAgentStore } from '@/state/agentStore';
+import { useThemeStore } from '@/state/themeStore';
 import log from '@/utils/logger';
 
 // Quick action interface
@@ -31,45 +35,35 @@ interface QuickAction {
   className?: string;
 }
 
-// Mock preferences functions until we integrate with the preferences store
-const useMockPreferences = () => {
-  const [favoriteAgents, setFavoriteAgents] = useState<string[]>([]);
-  
-  const toggleFavoriteAgent = (agentId: string) => {
-    setFavoriteAgents(prev => 
-      prev.includes(agentId) 
-        ? prev.filter(id => id !== agentId) 
-        : [...prev, agentId]
-    );
-  };
-  
-  const getTopAgents = (limit: number) => {
-    // Return mock data for now
-    return [
-      { agentId: 'clara', timestamp: Date.now(), count: 10 },
-      { agentId: 'marketplace', timestamp: Date.now(), count: 5 },
-    ].slice(0, limit);
-  };
-  
-  const logCommandUsage = (commandId: string) => {
-    log.debug(`Command used: ${commandId}`);
-  };
-  
-  return {
-    favoriteAgents,
-    toggleFavoriteAgent,
-    getTopAgents,
-    logCommandUsage
-  };
-};
+// Action context interface
+interface ActionContext {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  actions: QuickAction[];
+  isActive: () => boolean;
+}
 
-// Mock command palette hook
-const useMockCommandPalette = () => {
-  const open = () => {
-    log.debug('Command palette opened');
+// User preference (mock for now)
+interface UserPreferences {
+  favoriteAgents: string[];
+  pinnedActions: string[];
+  quickAccessSettings: {
+    position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+    showLabels: boolean;
+    autoSuggest: boolean;
   };
-  
-  return { open };
+}
+
+// Mock preferences
+const defaultPreferences: UserPreferences = {
+  favoriteAgents: ['clara', 'panion'],
+  pinnedActions: ['open-search', 'open-notes', 'toggle-maximize'],
+  quickAccessSettings: {
+    position: 'bottom-right',
+    showLabels: true,
+    autoSuggest: true
+  }
 };
 
 /**
@@ -100,221 +94,265 @@ const QuickActionBar: React.FC = () => {
     return windows[agentId]?.isMaximized || false;
   };
   
-  // Use mock preferences until we integrate with preferences store
-  const { 
-    favoriteAgents, 
-    toggleFavoriteAgent, 
-    getTopAgents, 
-    logCommandUsage 
-  } = useMockPreferences();
+  // Use static preferences for now to avoid infinite loops
+  const favoriteAgents = ['clara', 'panion'];
+  const pinnedActions = ['open-search', 'open-notes', 'toggle-maximize'];
+  const quickAccessSettings = {
+    position: 'bottom-right' as const,
+    showLabels: true,
+    autoSuggest: true
+  };
   
-  // Use mock command palette until we integrate with command palette
-  const { open: openCommandPalette } = useMockCommandPalette();
-  
-  // Get frequently used agents
-  const topAgents = getTopAgents(3);
-  
-  // Check if current agent is favorited
-  const isCurrentAgentFavorite = activeAgentId 
-    ? favoriteAgents.includes(activeAgentId)
-    : false;
-  
-  // Get agent name for active agent
-  const activeAgentName = activeAgentId && agents[activeAgentId]
-    ? agents[activeAgentId].name
-    : '';
-
-  // Dynamic contextual actions based on current state
-  const contextualActions: QuickAction[] = [
+  // Define available contexts
+  const contexts: ActionContext[] = [
     {
-      id: 'command-palette',
-      label: 'Command Palette',
-      icon: <Command size={16} />,
-      action: () => {
-        openCommandPalette();
-        logCommandUsage('command-palette');
-      },
-      shortcut: '⌘K',
-      className: 'bg-accent text-accent-foreground'
+      id: 'global',
+      label: 'Global Actions',
+      icon: <Zap size={16} />,
+      isActive: () => true, // Always active
+      actions: [
+        {
+          id: 'open-clara',
+          label: 'Talk to Clara',
+          icon: <MessageSquare size={16} />,
+          action: () => {
+            openAgent('clara');
+            log.debug('Opening Clara agent');
+          },
+          shortcut: '⌘+C'
+        },
+        {
+          id: 'open-search',
+          label: 'Search',
+          icon: <Search size={16} />,
+          action: () => {
+            openAgent('search');
+            log.debug('Opening Search agent');
+          },
+          shortcut: '⌘+K'
+        },
+        {
+          id: 'open-notes',
+          label: 'Notes',
+          icon: <Plus size={16} />,
+          action: () => {
+            openAgent('notes');
+            log.debug('Opening Notes agent');
+          }
+        },
+        {
+          id: 'open-settings',
+          label: 'Settings',
+          icon: <Settings size={16} />,
+          action: () => {
+            openAgent('settings');
+            log.debug('Opening Settings agent');
+          }
+        }
+      ]
+    },
+    {
+      id: 'agent',
+      label: 'Agent Actions',
+      icon: <MessageSquare size={16} />,
+      isActive: () => !!activeAgentId,
+      actions: [
+        {
+          id: 'toggle-maximize',
+          label: 'Toggle Maximize',
+          icon: isAgentMaximized(activeAgentId || '') ? <Minimize2 size={16} /> : <Maximize2 size={16} />,
+          action: () => {
+            if (activeAgentId) {
+              const isMax = isAgentMaximized(activeAgentId);
+              maximizeAgent(activeAgentId, !isMax);
+              log.debug(`${isMax ? 'Restoring' : 'Maximizing'} agent`);
+            }
+          },
+          shortcut: 'M'
+        },
+        {
+          id: 'close-agent',
+          label: 'Close',
+          icon: <X size={16} />,
+          action: () => {
+            if (activeAgentId) {
+              const agentStore = useAgentStore.getState();
+              if (agentStore.closeAgent) {
+                agentStore.closeAgent(activeAgentId);
+                log.debug(`Closing agent: ${activeAgentId}`);
+              }
+            }
+          },
+          className: 'text-red-500'
+        }
+      ]
     }
   ];
   
-  // Add actions for active agent
-  if (activeAgentId) {
-    // Toggle favorite action
-    contextualActions.push({
-      id: 'toggle-favorite',
-      label: isCurrentAgentFavorite ? 'Remove from Favorites' : 'Add to Favorites',
-      icon: isCurrentAgentFavorite ? <StarOff size={16} /> : <Star size={16} />,
-      action: () => {
-        toggleFavoriteAgent(activeAgentId);
-        logCommandUsage('toggle-favorite');
-      },
-      className: isCurrentAgentFavorite ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : ''
-    });
-
-    // Window controls
-    if (isAgentMaximized(activeAgentId)) {
-      contextualActions.push({
-        id: 'restore-window',
-        label: 'Restore Window',
-        icon: <Minimize size={16} />,
-        action: () => {
-          maximizeAgent(activeAgentId, false);
-          logCommandUsage('restore-window');
-        }
-      });
-    } else {
-      contextualActions.push({
-        id: 'maximize-window',
-        label: 'Maximize Window',
-        icon: <Maximize2 size={16} />,
-        action: () => {
-          maximizeAgent(activeAgentId, true);
-          logCommandUsage('maximize-window');
-        }
-      });
+  // Determine which context is active
+  useEffect(() => {
+    // Default to global context
+    let newContext = 'global';
+    
+    // Check if agent context should be active
+    if (activeAgentId) {
+      newContext = 'agent';
     }
     
-    contextualActions.push({
-      id: 'close-window',
-      label: 'Close Window',
-      icon: <X size={16} />,
-      action: () => {
-        minimizeAgent(activeAgentId);
-        logCommandUsage('close-window');
-      }
-    });
-  }
+    setActiveContext(newContext);
+  }, [activeAgentId]);
   
-  // Add quick launch for top agents
-  topAgents.forEach(agent => {
-    if (agents[agent.agentId] && (!activeAgentId || agent.agentId !== activeAgentId)) {
-      contextualActions.push({
-        id: `open-${agent.agentId}`,
-        label: `Open ${agents[agent.agentId].name}`,
-        icon: <MessageCircle size={16} />,
-        action: () => {
-          openAgent(agent.agentId as any);
-          logCommandUsage(`open-${agent.agentId}`);
-        }
-      });
-    }
-  });
+  // Get actions for current context
+  const getActionsForContext = (): QuickAction[] => {
+    if (!activeContext) return [];
+    
+    const context = contexts.find(c => c.id === activeContext);
+    return context?.actions || [];
+  };
   
-  // Add new chat action
-  contextualActions.push({
-    id: 'new-chat',
-    label: 'New Chat',
-    icon: <Plus size={16} />,
-    action: () => {
-      openAgent('clara');
-      logCommandUsage('new-chat');
-    }
-  });
+  // Get pinned actions
+  const getPinnedActions = (): QuickAction[] => {
+    const allActions = contexts.flatMap(context => context.actions);
+    return allActions.filter(action => pinnedActions.includes(action.id));
+  };
+  
+  // Toggle expanded state
+  const handleToggleExpand = () => {
+    setIsExpanded(!isExpanded);
+    log.debug(`QuickActionBar: ${isExpanded ? 'collapsing' : 'expanding'}`);
+  };
   
   // Animation variants
   const barVariants = {
     collapsed: { 
-      height: '48px'
+      height: '2.5rem', 
+      width: 'auto',
+      opacity: 0.85
     },
     expanded: { 
-      height: 'auto'
+      height: 'auto', 
+      width: 'auto',
+      opacity: 1
     }
-  };
-
-  // Toggle expanded state
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
-    log.debug(`Quick action bar ${!isExpanded ? 'expanded' : 'collapsed'}`);
   };
   
-  // Clear hover state when collapsing
-  useEffect(() => {
-    if (!isExpanded) {
-      setActiveContext(null);
+  const actionVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.2
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      y: -10,
+      transition: { 
+        duration: 0.1
+      }
     }
-  }, [isExpanded]);
-
+  };
+  
+  // Determine bar position from user preferences
+  const positionClasses = {
+    'bottom-right': 'bottom-4 right-4',
+    'bottom-left': 'bottom-4 left-4',
+    'top-right': 'top-4 right-4',
+    'top-left': 'top-4 left-4'
+  }[quickAccessSettings.position];
+  
   return (
-    <div className="fixed right-4 bottom-16 z-30">
-      <motion.div 
-        className="quick-action-bar rounded-lg bg-card/95 backdrop-blur-sm border border-border shadow-lg overflow-hidden"
-        variants={barVariants}
-        initial="collapsed"
-        animate={isExpanded ? "expanded" : "collapsed"}
-        transition={{ duration: 0.2 }}
+    <motion.div
+      className={`fixed z-50 ${positionClasses} flex flex-col bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg overflow-hidden`}
+      variants={barVariants}
+      initial="collapsed"
+      animate={isExpanded ? "expanded" : "collapsed"}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Header Bar (always visible) */}
+      <div 
+        className="px-3 py-2 flex items-center justify-between cursor-pointer"
+        onClick={handleToggleExpand}
       >
-        {/* Expand/collapse toggle */}
-        <button 
-          onClick={toggleExpanded}
-          className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"
-          aria-label={isExpanded ? "Collapse actions" : "Expand actions"}
-        >
-          {isExpanded ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-        </button>
-        
-        {/* Bar title with context */}
-        <div className="flex items-center p-3">
-          <Zap size={16} className="text-primary mr-2" />
-          <h3 className="text-sm font-medium">
-            {activeContext || (activeAgentId 
-              ? `${activeAgentName} Actions` 
-              : 'Quick Actions')}
-          </h3>
-        </div>
-        
-        {/* Actions grid */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div 
-              className="p-2 grid grid-cols-2 sm:grid-cols-3 gap-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {contextualActions.map((action) => (
-                <motion.button
-                  key={action.id}
-                  className={`p-2 rounded-md flex flex-col items-center justify-center text-center hover:bg-accent/80 ${action.className || ''}`}
-                  onClick={action.action}
-                  onMouseEnter={() => setActiveContext(action.label)}
-                  onMouseLeave={() => setActiveContext(null)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="h-6 flex items-center justify-center">
-                    {action.icon}
-                  </div>
-                  <span className="text-xs mt-1 line-clamp-1">{action.label}</span>
-                  {action.shortcut && (
-                    <span className="text-xs opacity-60 mt-0.5">{action.shortcut}</span>
-                  )}
-                </motion.button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {/* Main action button - always visible */}
-        {!isExpanded && (
-          <div className="p-2 flex justify-center">
-            <motion.button
-              className="p-2 rounded-md bg-primary/10 hover:bg-primary/20 text-primary flex items-center"
-              onClick={() => {
-                openCommandPalette();
-                logCommandUsage('command-palette-quick');
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Command size={16} className="mr-2" />
-              <span className="text-sm font-medium">Commands</span>
-            </motion.button>
+        <div className="flex items-center space-x-2">
+          <div className="text-primary">
+            <Zap size={18} />
           </div>
+          {(isExpanded || quickAccessSettings.showLabels) && (
+            <span className="text-sm font-medium">Quick Actions</span>
+          )}
+        </div>
+        <motion.div
+          animate={{ rotate: isExpanded ? 180 : 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <ChevronUp size={16} className="text-muted-foreground" />
+        </motion.div>
+      </div>
+      
+      {/* Actions Panel (only visible when expanded) */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            key="content"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={actionVariants}
+            className="px-2 pb-2 border-t border-border"
+          >
+            {/* Pinned Actions */}
+            {getPinnedActions().length > 0 && (
+              <div className="py-2">
+                <div className="flex space-x-1 mb-1">
+                  {getPinnedActions().map(action => (
+                    <button
+                      key={action.id}
+                      onClick={() => {
+                        action.action();
+                        setIsExpanded(false);
+                      }}
+                      className={`p-2 rounded-md hover:bg-accent transition-colors ${action.className || ''}`}
+                      title={action.label}
+                    >
+                      {action.icon}
+                    </button>
+                  ))}
+                </div>
+                <div className="border-b border-border my-1" />
+              </div>
+            )}
+            
+            {/* Context-specific Actions */}
+            <div className="space-y-1 py-1">
+              {getActionsForContext().map(action => (
+                <button
+                  key={action.id}
+                  onClick={() => {
+                    action.action();
+                    setIsExpanded(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-md hover:bg-accent flex items-center justify-between transition-colors ${action.className || ''}`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <div className={`${action.className || 'text-primary'}`}>
+                      {action.icon}
+                    </div>
+                    <span className="text-sm">{action.label}</span>
+                  </div>
+                  {action.shortcut && (
+                    <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                      {action.shortcut}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </motion.div>
         )}
-      </motion.div>
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

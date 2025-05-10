@@ -9,6 +9,7 @@ import QuickActionBar from '@/components/quickactions/QuickActionBar';
 import SmartSuggestions from '@/components/suggestions/SmartSuggestions';
 import { useAgentStore } from '@/state/agentStore';
 import { useThemeStore } from '@/state/themeStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import log from '@/utils/logger';
 
 /**
@@ -21,17 +22,18 @@ const IntelligentUI: React.FC = () => {
   const agents = useAgentStore(state => state.agents || {});
   const [location] = useLocation();
   
-  // Determine if we should show onboarding
+  // Determine if we should show onboarding based on preferences
+  const showWelcomeScreen = usePreferencesStore(state => state.ui.showWelcomeScreen);
+  
+  // Update first visit state based on preferences
   useEffect(() => {
-    // Check if this is first visit (would normally use preferences store)
-    const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
-    
-    if (!hasVisitedBefore) {
+    if (showWelcomeScreen) {
       setIsFirstVisit(true);
-      localStorage.setItem('hasVisitedBefore', 'true');
-      log.info("First visit detected, showing onboarding");
+      log.info("Welcome screen enabled, showing onboarding");
+    } else {
+      setIsFirstVisit(false);
     }
-  }, []);
+  }, [showWelcomeScreen]);
   
   // Only show suggestions in certain contexts
   useEffect(() => {
@@ -46,8 +48,13 @@ const IntelligentUI: React.FC = () => {
   // Get current agent context
   const currentAgentContext = activeAgentId ? agents[activeAgentId]?.name : null;
   
+  const setPreference = usePreferencesStore(state => state.setPreference);
+  
   const handleOnboardingComplete = () => {
-    log.info("Onboarding completed");
+    // Disable welcome screen in preferences
+    setPreference('ui', 'showWelcomeScreen', false);
+    setIsFirstVisit(false);
+    log.info("Onboarding completed and disabled in preferences");
   };
 
   return (
@@ -55,12 +62,12 @@ const IntelligentUI: React.FC = () => {
       {/* QuickAction Bar - Always available at the bottom right */}
       <QuickActionBar />
       
-      {/* Smart Suggestions - Contextual at the top of content areas */}
-      {showSuggestions && (
+      {/* Smart Suggestions - Disabled for now until we fix the store compatibility */}
+      {/* {showSuggestions && (
         <div className="fixed left-1/2 transform -translate-x-1/2 top-4 z-40 w-full max-w-lg">
           <SmartSuggestions />
         </div>
-      )}
+      )} */}
       
       {/* Will add Onboarding component when ready */}
       {isFirstVisit && (

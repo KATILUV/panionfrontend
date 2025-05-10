@@ -1,252 +1,349 @@
 /**
  * User Preferences Store
- * Manages and persists user preferences and settings
+ * Manages user customization preferences throughout the application
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import log from '@/utils/logger';
 
-// Recent activity interface
-export interface RecentActivity {
-  agentId: string;
-  timestamp: number;
-  count: number;
-}
-
-// User preferences state interface
-interface PreferencesState {
-  // Accessibility
-  reducedMotion: boolean;
-  highContrast: boolean;
-  fontSize: 'small' | 'medium' | 'large';
-  
-  // Behavior
-  autoSaveConversations: boolean;
-  notificationsEnabled: boolean;
-  conversationHistoryDays: number;
-  
-  // Personalization
-  recentActivities: RecentActivity[];
+// Define preference categories
+export type WorkflowPreferences = {
   favoriteAgents: string[];
-  savedPrompts: { id: string; name: string; text: string }[];
+  pinnedActions: string[];
+  recentSearches: string[];
+  defaultAgent: string;
+  startupAgent: string | null;
+  autoSave: boolean;
+};
+
+export type UIPreferences = {
+  showWelcomeScreen: boolean;
+  showTips: boolean;
+  compactMode: boolean;
+  showTaskbar: boolean;
+  actionBarPosition: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  showActionLabels: boolean;
+  enableAnimations: boolean;
+  fontSize: 'small' | 'medium' | 'large';
+  enableSmartSuggestions: boolean;
+  darkModeSchedule: 'system' | 'always' | 'never' | 'timed';
+  darkModeStartTime?: string; // Format: "HH:MM" 
+  darkModeEndTime?: string; // Format: "HH:MM"
+};
+
+export type AccessibilityPreferences = {
+  highContrast: boolean;
+  reduceMotion: boolean;
+  screenReader: boolean;
+  keyboardNavigationMode: 'standard' | 'enhanced';
+  colorBlindMode: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
+  textToSpeech: boolean;
+  speechToText: boolean;
+};
+
+export type NotificationPreferences = {
+  enableNotifications: boolean;
+  notificationSounds: boolean;
+  desktopNotifications: boolean;
+  inAppNotifications: boolean;
+  reminderNotifications: boolean;
+  updateNotifications: boolean;
+  doNotDisturbMode: boolean;
+  doNotDisturbStartTime?: string; // Format: "HH:MM"
+  doNotDisturbEndTime?: string; // Format: "HH:MM"
+};
+
+export type PrivacyPreferences = {
+  saveHistory: boolean;
+  shareAnalytics: boolean;
+  clearHistoryOnExit: boolean;
+  personalizedSuggestions: boolean;
+  autoDeleteHistoryAfterDays: number;
+  rememberSessions: boolean;
+};
+
+// Main preferences state type
+export interface PreferencesState {
+  // User profile
+  name: string;
+  email: string;
+  avatar: string | null;
+  joined: string; // ISO date string
+  lastLogin: string; // ISO date string
   
-  // Quick access to frequent commands
-  frequentCommands: { id: string; count: number }[];
+  // Categories
+  workflow: WorkflowPreferences;
+  ui: UIPreferences;
+  accessibility: AccessibilityPreferences;
+  notifications: NotificationPreferences;
+  privacy: PrivacyPreferences;
   
-  // Interaction history tracking
-  hasCompletedOnboarding: boolean;
-  lastActiveDate: string;
+  // Basic actions
+  setName: (name: string) => void;
+  setEmail: (email: string) => void;
+  setAvatar: (avatar: string | null) => void;
   
-  // Methods
-  logAgentActivity: (agentId: string) => void;
-  toggleFavoriteAgent: (agentId: string) => void;
-  logCommandUsage: (commandId: string) => void;
-  getTopAgents: (limit?: number) => RecentActivity[];
-  savePrompt: (name: string, text: string) => void;
-  deletePrompt: (id: string) => void;
-  resetOnboarding: () => void;
-  setAccessibilityPreference: <K extends keyof Pick<PreferencesState, 'reducedMotion' | 'highContrast' | 'fontSize'>>(
-    key: K,
-    value: PreferencesState[K]
+  // Workflow preferences
+  addFavoriteAgent: (agentId: string) => void;
+  removeFavoriteAgent: (agentId: string) => void;
+  addPinnedAction: (actionId: string) => void;
+  removePinnedAction: (actionId: string) => void;
+  setDefaultAgent: (agentId: string) => void;
+  setStartupAgent: (agentId: string | null) => void;
+  
+  // UI preferences
+  setActionBarPosition: (position: UIPreferences['actionBarPosition']) => void;
+  toggleActionLabels: () => void;
+  toggleSmartSuggestions: () => void;
+  toggleCompactMode: () => void;
+  
+  // Generic setter for any preference
+  setPreference: <T extends keyof PreferencesState>(
+    category: T, 
+    key: keyof PreferencesState[T], 
+    value: any
   ) => void;
-  setBehaviorPreference: <K extends keyof Pick<PreferencesState, 'autoSaveConversations' | 'notificationsEnabled' | 'conversationHistoryDays'>>(
-    key: K,
-    value: PreferencesState[K]
-  ) => void;
+  
+  // Reset preferences
+  resetToDefault: () => void;
 }
 
-/**
- * User preferences store with persistence
- */
+// Default preferences
+const defaultPreferences: Omit<PreferencesState, 
+  'setName' | 'setEmail' | 'setAvatar' | 
+  'addFavoriteAgent' | 'removeFavoriteAgent' | 
+  'addPinnedAction' | 'removePinnedAction' | 
+  'setDefaultAgent' | 'setStartupAgent' | 
+  'setActionBarPosition' | 'toggleActionLabels' | 
+  'toggleSmartSuggestions' | 'toggleCompactMode' | 
+  'setPreference' | 'resetToDefault'
+> = {
+  name: 'Guest User',
+  email: '',
+  avatar: null,
+  joined: new Date().toISOString(),
+  lastLogin: new Date().toISOString(),
+  
+  workflow: {
+    favoriteAgents: ['clara', 'panion'],
+    pinnedActions: ['open-search', 'open-notes', 'toggle-maximize'],
+    recentSearches: [],
+    defaultAgent: 'clara',
+    startupAgent: 'panion',
+    autoSave: true
+  },
+  
+  ui: {
+    showWelcomeScreen: true,
+    showTips: true,
+    compactMode: false,
+    showTaskbar: true,
+    actionBarPosition: 'bottom-right',
+    showActionLabels: true,
+    enableAnimations: true,
+    fontSize: 'medium',
+    enableSmartSuggestions: true,
+    darkModeSchedule: 'system'
+  },
+  
+  accessibility: {
+    highContrast: false,
+    reduceMotion: false,
+    screenReader: false,
+    keyboardNavigationMode: 'standard',
+    colorBlindMode: 'none',
+    textToSpeech: false,
+    speechToText: false
+  },
+  
+  notifications: {
+    enableNotifications: true,
+    notificationSounds: true,
+    desktopNotifications: true,
+    inAppNotifications: true,
+    reminderNotifications: true,
+    updateNotifications: true,
+    doNotDisturbMode: false
+  },
+  
+  privacy: {
+    saveHistory: true,
+    shareAnalytics: false,
+    clearHistoryOnExit: false,
+    personalizedSuggestions: true,
+    autoDeleteHistoryAfterDays: 90,
+    rememberSessions: true
+  }
+};
+
+// Create the preferences store
 export const usePreferencesStore = create<PreferencesState>()(
   persist(
-    (set, get) => ({
-      // Default accessibility settings
-      reducedMotion: false,
-      highContrast: false,
-      fontSize: 'medium',
+    (set) => ({
+      ...defaultPreferences,
       
-      // Default behavior settings
-      autoSaveConversations: true,
-      notificationsEnabled: true,
-      conversationHistoryDays: 30,
+      // Basic profile setters
+      setName: (name) => {
+        set({ name });
+        log.debug(`Preferences: Name set to "${name}"`);
+      },
       
-      // Personalization data
-      recentActivities: [],
-      favoriteAgents: [],
-      savedPrompts: [],
+      setEmail: (email) => {
+        set({ email });
+        log.debug(`Preferences: Email set to "${email}"`);
+      },
       
-      // Command usage frequency
-      frequentCommands: [],
+      setAvatar: (avatar) => {
+        set({ avatar });
+        log.debug(`Preferences: Avatar updated`);
+      },
       
-      // Interaction history
-      hasCompletedOnboarding: false,
-      lastActiveDate: new Date().toISOString(),
-      
-      /**
-       * Log agent usage to track activity patterns
-       */
-      logAgentActivity: (agentId: string) => {
-        set(state => {
-          const now = Date.now();
-          const activities = [...state.recentActivities];
-          const existingIndex = activities.findIndex(a => a.agentId === agentId);
-          
-          if (existingIndex >= 0) {
-            // Update existing activity
-            activities[existingIndex] = {
-              ...activities[existingIndex],
-              timestamp: now,
-              count: activities[existingIndex].count + 1
-            };
-          } else {
-            // Add new activity
-            activities.push({
-              agentId,
-              timestamp: now,
-              count: 1
-            });
+      // Workflow preferences
+      addFavoriteAgent: (agentId) => {
+        set((state) => {
+          if (state.workflow.favoriteAgents.includes(agentId)) {
+            return state; // Already in favorites
           }
           
-          // Keep only the 20 most recent activities
-          const sortedActivities = activities
-            .sort((a, b) => b.timestamp - a.timestamp)
-            .slice(0, 20);
+          const newFavorites = [...state.workflow.favoriteAgents, agentId];
+          log.debug(`Preferences: Added ${agentId} to favorites`);
           
           return {
-            recentActivities: sortedActivities,
-            lastActiveDate: new Date().toISOString()
+            workflow: {
+              ...state.workflow,
+              favoriteAgents: newFavorites
+            }
           };
         });
-        
-        log.debug(`Logged activity for agent: ${agentId}`);
       },
       
-      /**
-       * Toggle an agent as favorite
-       */
-      toggleFavoriteAgent: (agentId: string) => {
-        set(state => {
-          const isFavorite = state.favoriteAgents.includes(agentId);
+      removeFavoriteAgent: (agentId) => {
+        set((state) => {
+          const newFavorites = state.workflow.favoriteAgents.filter(id => id !== agentId);
+          log.debug(`Preferences: Removed ${agentId} from favorites`);
           
           return {
-            favoriteAgents: isFavorite
-              ? state.favoriteAgents.filter(id => id !== agentId)
-              : [...state.favoriteAgents, agentId]
+            workflow: {
+              ...state.workflow,
+              favoriteAgents: newFavorites
+            }
           };
         });
-        
-        const isFavorite = get().favoriteAgents.includes(agentId);
-        log.debug(`${isFavorite ? 'Added' : 'Removed'} favorite agent: ${agentId}`);
       },
       
-      /**
-       * Log command usage to track frequently used actions
-       */
-      logCommandUsage: (commandId: string) => {
-        set(state => {
-          const commands = [...state.frequentCommands];
-          const existingIndex = commands.findIndex(c => c.id === commandId);
-          
-          if (existingIndex >= 0) {
-            // Update existing command
-            commands[existingIndex] = {
-              ...commands[existingIndex],
-              count: commands[existingIndex].count + 1
-            };
-          } else {
-            // Add new command
-            commands.push({
-              id: commandId,
-              count: 1
-            });
+      addPinnedAction: (actionId) => {
+        set((state) => {
+          if (state.workflow.pinnedActions.includes(actionId)) {
+            return state; // Already pinned
           }
           
-          // Sort by count
-          const sortedCommands = commands.sort((a, b) => b.count - a.count);
+          const newPinnedActions = [...state.workflow.pinnedActions, actionId];
+          log.debug(`Preferences: Pinned action ${actionId}`);
           
-          return { frequentCommands: sortedCommands };
-        });
-      },
-      
-      /**
-       * Get top agents by usage
-       */
-      getTopAgents: (limit = 5) => {
-        const { recentActivities } = get();
-        
-        return [...recentActivities]
-          .sort((a, b) => b.count - a.count)
-          .slice(0, limit);
-      },
-      
-      /**
-       * Save a prompt for reuse
-       */
-      savePrompt: (name: string, text: string) => {
-        set(state => {
-          const id = `prompt-${Date.now()}`;
           return {
-            savedPrompts: [...state.savedPrompts, { id, name, text }]
+            workflow: {
+              ...state.workflow,
+              pinnedActions: newPinnedActions
+            }
           };
         });
-        
-        log.debug(`Saved prompt: ${name}`);
       },
       
-      /**
-       * Delete a saved prompt
-       */
-      deletePrompt: (id: string) => {
-        set(state => ({
-          savedPrompts: state.savedPrompts.filter(prompt => prompt.id !== id)
+      removePinnedAction: (actionId) => {
+        set((state) => {
+          const newPinnedActions = state.workflow.pinnedActions.filter(id => id !== actionId);
+          log.debug(`Preferences: Unpinned action ${actionId}`);
+          
+          return {
+            workflow: {
+              ...state.workflow,
+              pinnedActions: newPinnedActions
+            }
+          };
+        });
+      },
+      
+      setDefaultAgent: (agentId) => {
+        set((state) => ({
+          workflow: {
+            ...state.workflow,
+            defaultAgent: agentId
+          }
         }));
-        
-        log.debug(`Deleted prompt: ${id}`);
+        log.debug(`Preferences: Default agent set to ${agentId}`);
       },
       
-      /**
-       * Reset the onboarding flag to show onboarding again
-       */
-      resetOnboarding: () => {
-        set({ hasCompletedOnboarding: false });
-        log.info('Onboarding reset');
+      setStartupAgent: (agentId) => {
+        set((state) => ({
+          workflow: {
+            ...state.workflow,
+            startupAgent: agentId
+          }
+        }));
+        log.debug(`Preferences: Startup agent ${agentId ? `set to ${agentId}` : 'disabled'}`);
       },
       
-      /**
-       * Set accessibility preference
-       */
-      setAccessibilityPreference: (key, value) => {
-        set({ [key]: value });
-        log.debug(`Updated accessibility preference: ${key}=${String(value)}`);
+      // UI preferences
+      setActionBarPosition: (position) => {
+        set((state) => ({
+          ui: {
+            ...state.ui,
+            actionBarPosition: position
+          }
+        }));
+        log.debug(`Preferences: Action bar position set to ${position}`);
       },
       
-      /**
-       * Set behavior preference
-       */
-      setBehaviorPreference: (key, value) => {
-        set({ [key]: value });
-        log.debug(`Updated behavior preference: ${key}=${String(value)}`);
+      toggleActionLabels: () => {
+        set((state) => ({
+          ui: {
+            ...state.ui,
+            showActionLabels: !state.ui.showActionLabels
+          }
+        }));
+        log.debug(`Preferences: Action labels ${state => state.ui.showActionLabels ? 'hidden' : 'shown'}`);
+      },
+      
+      toggleSmartSuggestions: () => {
+        set((state) => ({
+          ui: {
+            ...state.ui,
+            enableSmartSuggestions: !state.ui.enableSmartSuggestions
+          }
+        }));
+        log.debug(`Preferences: Smart suggestions ${state => state.ui.enableSmartSuggestions ? 'disabled' : 'enabled'}`);
+      },
+      
+      toggleCompactMode: () => {
+        set((state) => ({
+          ui: {
+            ...state.ui,
+            compactMode: !state.ui.compactMode
+          }
+        }));
+        log.debug(`Preferences: Compact mode ${state => state.ui.compactMode ? 'disabled' : 'enabled'}`);
+      },
+      
+      // Generic setter for any preference
+      setPreference: (category, key, value) => {
+        set((state) => ({
+          [category]: {
+            ...state[category],
+            [key]: value
+          }
+        }));
+        log.debug(`Preferences: Set ${String(category)}.${String(key)} to:`, value);
+      },
+      
+      // Reset to default preferences
+      resetToDefault: () => {
+        set(defaultPreferences);
+        log.debug('Preferences: Reset to defaults');
       }
     }),
     {
-      name: 'panion-user-preferences',
-      // Only store specific fields
-      partialize: (state) => ({
-        reducedMotion: state.reducedMotion,
-        highContrast: state.highContrast,
-        fontSize: state.fontSize,
-        autoSaveConversations: state.autoSaveConversations,
-        notificationsEnabled: state.notificationsEnabled,
-        conversationHistoryDays: state.conversationHistoryDays,
-        recentActivities: state.recentActivities,
-        favoriteAgents: state.favoriteAgents,
-        savedPrompts: state.savedPrompts,
-        frequentCommands: state.frequentCommands,
-        hasCompletedOnboarding: state.hasCompletedOnboarding,
-        lastActiveDate: state.lastActiveDate
-      })
+      name: 'panion-preferences-storage'
     }
   )
 );
