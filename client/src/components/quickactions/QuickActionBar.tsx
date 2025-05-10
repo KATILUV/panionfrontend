@@ -81,17 +81,34 @@ const QuickActionBar: React.FC = () => {
   
   // Define maximize agent function compatible with current store
   const maximizeAgent = (agentId: string, isMaximized: boolean) => {
-    // This function will adapt to the store's actual implementation
-    const maximize = useAgentStore.getState().setWindowProperty;
-    if (maximize) {
-      maximize(agentId, 'isMaximized', isMaximized);
+    // Simple fallback that avoids store dependency
+    try {
+      // Try to access the window property setter
+      const store = useAgentStore.getState();
+      if (typeof store.setWindowProperty === 'function') {
+        store.setWindowProperty(agentId, 'isMaximized', isMaximized);
+      } else {
+        // Fallback to just minimizing/unminimizing
+        if (!isMaximized && minimizeAgent) {
+          minimizeAgent(agentId);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to maximize agent:', error);
     }
   };
   
-  // Define agent maximization check function
+  // Define agent maximization check function with error handling
   const isAgentMaximized = (agentId: string): boolean => {
-    const windows = useAgentStore.getState().windows || {};
-    return windows[agentId]?.isMaximized || false;
+    try {
+      const store = useAgentStore.getState();
+      const windows = store.windows || {};
+      // Check if the window exists and has an isMaximized property
+      return !!windows[agentId]?.isMaximized;
+    } catch (error) {
+      console.error('Failed to check agent maximized state:', error);
+      return false;
+    }
   };
   
   // Use static preferences for now to avoid infinite loops

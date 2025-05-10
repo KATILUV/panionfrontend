@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import QuickActionBar from '@/components/quickactions/QuickActionBar';
 import SmartSuggestions from '@/components/suggestions/SmartSuggestions';
+import WelcomeGuide from '@/components/onboarding/WelcomeGuide';
 import { useAgentStore } from '@/state/agentStore';
 import { useThemeStore } from '@/state/themeStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -69,20 +70,9 @@ const IntelligentUI: React.FC = () => {
         </div>
       )} */}
       
-      {/* Will add Onboarding component when ready */}
+      {/* Welcome Guide Onboarding */}
       {isFirstVisit && (
-        <div className="fixed bottom-4 left-4 p-4 bg-card rounded-lg shadow-lg border border-border z-50">
-          <div className="text-sm">
-            <strong>Welcome to Panion AI!</strong>
-            <p className="mt-1">Your intelligent desktop companion. Click around to explore or check the menu for help.</p>
-            <button 
-              className="mt-2 px-3 py-1 bg-primary text-primary-foreground rounded-md text-xs"
-              onClick={handleOnboardingComplete}
-            >
-              Got it
-            </button>
-          </div>
-        </div>
+        <WelcomeGuide onComplete={handleOnboardingComplete} />
       )}
     </>
   );
