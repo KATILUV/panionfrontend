@@ -8,7 +8,7 @@ import sys
 import os
 import time
 import logging
-from websocket_server import start_server
+from websocket_server_adapter import start_server
 
 # Configure logging
 logging.basicConfig(
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     logger.info("Starting Panion WebSocket Server on port 8001")
-    print("Panion WebSocket Server starting on port 8001...")
+    print("[websocket] WebSocket server initialized")
     
     try:
         start_server()

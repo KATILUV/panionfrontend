@@ -289,11 +289,12 @@ async def handle_heartbeat(websocket, message_data):
     return {"status": "alive", "timestamp": time.time()}
 
 # Main WebSocket connection handler
-async def connection_handler(websocket, path):
+# Updated to match the expected API signature (only one parameter)
+async def connection_handler(websocket):
     try:
         # Add to active connections
         active_connections.add(websocket)
-        logger.info(f"New WebSocket connection established: {path}")
+        logger.info(f"New WebSocket connection established")
         
         # Handle messages in a loop
         async for message in websocket:
@@ -377,7 +378,13 @@ async def push_insights():
 
 # Start the WebSocket server
 async def start_websocket_server(host='0.0.0.0', port=8001):
-    server = await websockets.serve(connection_handler, host, port)
+    # Define an adapter function to match the expected interface
+    async def connection_adapter(connection):
+        # The path is automatically handled in the newer websockets version
+        # Just pass the connection to our handler
+        await connection_handler(connection)
+    
+    server = await websockets.serve(connection_adapter, host, port)
     logger.info(f"WebSocket server started on {host}:{port}")
     
     # Start the insight pusher

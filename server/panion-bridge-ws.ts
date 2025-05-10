@@ -189,6 +189,11 @@ class PanionBridgeWS extends EventEmitter {
   public async sendMessage(message: any, timeout = 30000): Promise<any> {
     this.metrics.totalRequests++;
     
+    // Always use HTTP fallback until WebSocket server is stable
+    // WebSocket compatibility issues with the server - temporary solution
+    return this.fallbackToHttp(message);
+    
+    /* Temporarily commented out WebSocket code
     if (!this.isConnected || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
       // Fall back to HTTP if WebSocket is not connected
       return this.fallbackToHttp(message);
@@ -225,6 +230,7 @@ class PanionBridgeWS extends EventEmitter {
         reject(error);
       }
     });
+    */
   }
   
   /**

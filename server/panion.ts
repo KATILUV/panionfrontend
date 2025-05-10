@@ -74,12 +74,22 @@ export function startPanionAPI(): Promise<void> {
         wsServerProcess = null;
       }
       
-      // Start the WebSocket server in background
+      // Kill any existing WebSocket processes
+      log('Checking for existing WebSocket processes...', 'panion');
+      try {
+        execSync('pkill -f "python.*start_websocket_server.py"');
+        log('Killed existing WebSocket processes', 'panion');
+      } catch (err) {
+        // No existing processes found, that's fine
+        log('No existing WebSocket processes found', 'panion');
+      }
+      
+      // Start the WebSocket server with our newer adapter
       const wsScriptPath = path.resolve('./panion/start_websocket_server.py');
       log(`Starting WebSocket server: python3 ${wsScriptPath}`, 'panion');
       
       wsServerProcess = spawn('python3', [wsScriptPath], {
-        detached: true, // Run in background
+        detached: false, // Don't run in background so we can control lifecycle
         stdio: ['pipe', 'pipe', 'pipe']
       });
       
@@ -90,6 +100,11 @@ export function startPanionAPI(): Promise<void> {
       
       wsServerProcess.stderr?.on('data', (data) => {
         log(`WS Server Error: ${data.toString().trim()}`, 'panion-ws');
+      });
+      
+      // Handle process exit
+      wsServerProcess.on('exit', (code, signal) => {
+        log(`WebSocket server process exited with code ${code} and signal ${signal}`, 'panion-ws');
       });
       
       // Spawn the Panion API process
