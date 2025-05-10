@@ -385,13 +385,7 @@ async def connection_handler(websocket):
                     # Try to send an error response, but don't crash if it fails
                     try:
                         message_id = "unknown"
-                        # Safe way to access data if it exists
-                        try:
-                            if 'data' in locals() and data is not None and hasattr(data, 'get'):
-                                message_id = data.get("id", "unknown")
-                        except (NameError, AttributeError):
-                            # data variable doesn't exist or isn't a dict-like object
-                            pass
+                        # Directly use a default value without referencing 'data'
                             
                         await websocket.send(json.dumps({
                             "id": message_id,
