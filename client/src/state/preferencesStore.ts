@@ -63,6 +63,15 @@ export type PrivacyPreferences = {
   rememberSessions: boolean;
 };
 
+// Define agent-specific preferences
+export type AgentPreferences = {
+  conversationMode?: string;
+  customPrompt?: string;
+  useHistory?: boolean;
+  showThinking?: boolean;
+  [key: string]: any; // Allow for dynamic/future preferences
+};
+
 // Main preferences state type
 export interface PreferencesState {
   // User profile
@@ -78,6 +87,9 @@ export interface PreferencesState {
   accessibility: AccessibilityPreferences;
   notifications: NotificationPreferences;
   privacy: PrivacyPreferences;
+  
+  // Agent-specific preferences
+  agents?: Record<string, AgentPreferences>;
   
   // Basic actions
   setName: (name: string) => void;
@@ -98,6 +110,9 @@ export interface PreferencesState {
   toggleSmartSuggestions: () => void;
   toggleCompactMode: () => void;
   
+  // Agent preferences
+  setAgentPreference: (agentId: string, key: string, value: any) => void;
+  
   // Generic setter for any preference
   setPreference: <T extends keyof PreferencesState>(
     category: T, 
@@ -117,8 +132,14 @@ const defaultPreferences: Omit<PreferencesState,
   'setDefaultAgent' | 'setStartupAgent' | 
   'setActionBarPosition' | 'toggleActionLabels' | 
   'toggleSmartSuggestions' | 'toggleCompactMode' | 
-  'setPreference' | 'resetToDefault'
+  'setPreference' | 'resetToDefault' | 'setAgentPreference'
 > = {
+  // Initialize agent preferences with default conversation modes
+  agents: {
+    panion: {
+      conversationMode: 'casual'
+    }
+  },
   name: 'Guest User',
   email: '',
   avatar: null,
@@ -334,6 +355,25 @@ export const usePreferencesStore = create<PreferencesState>()(
           }
         }));
         log.debug(`Preferences: Set ${String(category)}.${String(key)} to:`, value);
+      },
+      
+      // Set agent-specific preferences
+      setAgentPreference: (agentId, key, value) => {
+        set((state) => {
+          const currentAgents = state.agents || {};
+          const agentSettings = currentAgents[agentId] || {};
+          
+          return {
+            agents: {
+              ...currentAgents,
+              [agentId]: {
+                ...agentSettings,
+                [key]: value
+              }
+            }
+          };
+        });
+        log.debug(`Preferences: Set agent.${agentId}.${key} to:`, value);
       },
       
       // Reset to default preferences
