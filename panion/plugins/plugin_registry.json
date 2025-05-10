@@ -174,20 +174,7 @@
       ],
       "dependencies": []
     },
-    "team_formation_manager": {
-      "name": "team_formation_manager",
-      "summary": "Manages team formation and collaboration",
-      "file": "team_formation_manager.py",
-      "category": "core",
-      "status": "available",
-      "capabilities": [
-        "team_management",
-        "collaboration"
-      ],
-      "dependencies": [
-        "world_model_manager"
-      ]
-    },
+
     "echo_agent": {
       "name": "echo_agent",
       "summary": "Echo agent for testing and debugging",
@@ -201,6 +188,6 @@
       "dependencies": []
     }
   },
-  "last_updated": "2025-04-30T22:27:24.133831",
-  "total_plugins": 18
+  "last_updated": "2025-05-10T13:48:24.133831",
+  "total_plugins": 17
 }

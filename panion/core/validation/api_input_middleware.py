@@ -125,17 +125,6 @@ from core.validation.api_input_middleware import validate_request_body, register
 app = Flask(__name__)
 register_error_handlers(app)
 
-@app.route('/api/plugin', methods=['POST'])
-@validate_request_body('plugin_input')
-def handle_plugin_request():
-    data = request.get_json()
-    # Process validated plugin request
-    return jsonify({'status': 'success'})
-
-@app.route('/api/goal', methods=['POST'])
-@validate_request_body('goal_submission')
-def handle_goal_submission():
-    data = request.get_json()
-    # Process validated goal submission
-    return jsonify({'status': 'success'})
-""" 
+# Empty API endpoints removed - these were non-functional stubs
+# If you need to implement these endpoints in the future, add real functionality
+# and connect them to the appropriate handlers.
