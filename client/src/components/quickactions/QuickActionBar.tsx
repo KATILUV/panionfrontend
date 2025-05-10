@@ -76,17 +76,21 @@ const QuickActionBar: React.FC = () => {
   // Get agent-related actions from agent store
   const openAgent = useAgentStore(state => state.openAgent);
   const minimizeAgent = useAgentStore(state => state.minimizeAgent);
+  const closeAgent = useAgentStore(state => state.closeAgent);
   const agents = useAgentStore(state => state.agents || {});  // Fallback to empty object if not available
   const activeAgentId = useAgentStore(state => state.activeAgentId);
+  
+  // Get setWindowProperty from store to handle maximizing
+  const setWindowProperty = useAgentStore(state => state.setWindowProperty);
+  const windows = useAgentStore(state => state.windows || {});
   
   // Define maximize agent function compatible with current store
   const maximizeAgent = (agentId: string, isMaximized: boolean) => {
     // Simple fallback that avoids store dependency
     try {
-      // Try to access the window property setter
-      const store = useAgentStore.getState();
-      if (typeof store.setWindowProperty === 'function') {
-        store.setWindowProperty(agentId, 'isMaximized', isMaximized);
+      // Use the stored reference to setWindowProperty
+      if (typeof setWindowProperty === 'function') {
+        setWindowProperty(agentId, 'isMaximized', isMaximized);
       } else {
         // Fallback to just minimizing/unminimizing
         if (!isMaximized && minimizeAgent) {
@@ -101,9 +105,7 @@ const QuickActionBar: React.FC = () => {
   // Define agent maximization check function with error handling
   const isAgentMaximized = (agentId: string): boolean => {
     try {
-      const store = useAgentStore.getState();
-      const windows = store.windows || {};
-      // Check if the window exists and has an isMaximized property
+      // Use the stored reference to windows
       return !!windows[agentId]?.isMaximized;
     } catch (error) {
       console.error('Failed to check agent maximized state:', error);
@@ -177,7 +179,8 @@ const QuickActionBar: React.FC = () => {
         {
           id: 'toggle-maximize',
           label: 'Toggle Maximize',
-          icon: isAgentMaximized(activeAgentId || '') ? <Minimize2 size={16} /> : <Maximize2 size={16} />,
+          // Handled separately in the UI
+          icon: <Maximize2 size={16} />,
           action: () => {
             if (activeAgentId) {
               const isMax = isAgentMaximized(activeAgentId);
@@ -192,12 +195,9 @@ const QuickActionBar: React.FC = () => {
           label: 'Close',
           icon: <X size={16} />,
           action: () => {
-            if (activeAgentId) {
-              const agentStore = useAgentStore.getState();
-              if (agentStore.closeAgent) {
-                agentStore.closeAgent(activeAgentId);
-                log.debug(`Closing agent: ${activeAgentId}`);
-              }
+            if (activeAgentId && closeAgent) {
+              closeAgent(activeAgentId);
+              log.debug(`Closing agent: ${activeAgentId}`);
             }
           },
           className: 'text-red-500'
@@ -354,7 +354,9 @@ const QuickActionBar: React.FC = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <div className={`${action.className || 'text-primary'}`}>
-                      {action.icon}
+                      {action.id === 'toggle-maximize' && activeAgentId ? 
+                        (isAgentMaximized(activeAgentId) ? <Minimize2 size={16} /> : <Maximize2 size={16} />) 
+                        : action.icon}
                     </div>
                     <span className="text-sm">{action.label}</span>
                   </div>
