@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -7,15 +7,69 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  // New fields for user customization
+  displayName: text("display_name"),
+  avatarUrl: text("avatar_url"),
+  bio: text("bio"),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  displayName: true,
+  avatarUrl: true,
+  bio: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// User preferences for personalization
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  // Preferred conversation mode
+  preferredMode: text("preferred_mode").default("casual"),
+  // UI preferences
+  theme: text("theme").default("system"),
+  fontSize: text("font_size").default("medium"),
+  // AI personality settings
+  personalityTraits: jsonb("personality_traits").$type<string[]>(),
+  // Notification preferences
+  enableNotifications: boolean("enable_notifications").default(true),
+  // System preferences
+  showThinkingProcess: boolean("show_thinking_process").default(true),
+  agentReactiveness: text("agent_reactiveness").default("balanced"),
+  // Response preferences
+  responseLength: text("response_length").default("balanced"),
+  detailLevel: text("detail_level").default("balanced"),
+  // Feature toggles
+  multiAgentAnalysisEnabled: boolean("multi_agent_analysis_enabled").default(true),
+  memoryUtilizationLevel: text("memory_utilization_level").default("medium"),
+  // Customization data
+  lastUpdated: text("last_updated").notNull().default(new Date().toISOString()),
+  customSettings: jsonb("custom_settings").$type<Record<string, any>>(),
+});
+
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).pick({
+  userId: true,
+  preferredMode: true,
+  theme: true,
+  fontSize: true,
+  personalityTraits: true,
+  enableNotifications: true,
+  showThinkingProcess: true,
+  agentReactiveness: true,
+  responseLength: true,
+  detailLevel: true,
+  multiAgentAnalysisEnabled: true,
+  memoryUtilizationLevel: true,
+  customSettings: true,
+});
+
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type UserPreferences = typeof userPreferences.$inferSelect;
 
 // Chat message schema
 export const messages = pgTable("messages", {

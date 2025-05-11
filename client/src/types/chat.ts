@@ -9,7 +9,32 @@ export interface ChatMessage {
   thinking?: string;
   imageUrl?: string;
   component?: React.ReactNode;
+  thinkingState?: ThinkingState;
+  sentiment?: MessageSentiment;
+  isTyping?: boolean;
+  personalityTraits?: string[];
 }
+
+// Thinking state to show Manus's thought process in real-time
+export type ThinkingState = 
+  | 'listening'     // Actively listening to user input
+  | 'processing'    // Processing the user's message
+  | 'recalling'     // Retrieving memory information
+  | 'analyzing'     // Analyzing content or data
+  | 'deliberating'  // Weighing different options
+  | 'connecting'    // Making connections between ideas
+  | 'generating'    // Generating a response
+  | 'complete';     // Finished processing
+
+// Message sentiment for adding emotional tone
+export type MessageSentiment = 
+  | 'neutral'   // Default neutral tone
+  | 'thoughtful' // Reflective, considerate
+  | 'excited'   // Enthusiastic, energetic
+  | 'curious'   // Inquisitive, interested
+  | 'concerned' // Worried, cautious
+  | 'confident' // Sure, assertive
+  | 'empathetic'; // Understanding, compassionate
 
 // API response interface
 export interface ChatResponse {
