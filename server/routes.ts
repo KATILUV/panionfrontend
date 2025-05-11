@@ -6,6 +6,7 @@ import multer from "multer";
 import { handleChatRequest, analyzeImage } from "./openai";
 import { initializeChatWebSocketServer } from "./chat-websocket";
 import { initializeWebSocketServer, setWebSocketServer } from "./websocket";
+import { analyzeImageCollaboratively, saveCollaborationResult } from "./visual-collaboration";
 import { 
   searchMemories, 
   smartMemorySearch, 
