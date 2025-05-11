@@ -38,16 +38,17 @@ server_stats = {
 # Handle connections (v15.0.1 compatible - no path parameter)
 async def handler(websocket):
     """Handle websocket connection"""
+    # Initialize variables outside of try block to ensure they exist in all code paths
+    client_id = f"client_{int(time.time() * 1000)}"
+    client_info = {
+        "id": client_id,
+        "connected_at": time.time(),
+        "last_activity": time.time(),
+        "messages_received": 0,
+        "messages_sent": 1  # Including welcome message
+    }
+    
     try:
-        client_id = f"client_{int(time.time() * 1000)}"
-        client_info = {
-            "id": client_id,
-            "connected_at": time.time(),
-            "last_activity": time.time(),
-            "messages_received": 0,
-            "messages_sent": 1  # Including welcome message
-        }
-        
         logger.info(f"New connection established: {client_id}")
         active_connections.add(websocket)
         connection_metadata[websocket] = client_info
@@ -116,19 +117,20 @@ async def handler(websocket):
                 server_stats["messages_sent"] += 1
                 
     except Exception as e:
-        client_id_str = client_info.get("id", "unknown client") if "client_info" in locals() else "unknown client"
-        logger.error(f"Connection error with {client_id_str}: {e}")
+        logger.error(f"Connection error with {client_id}: {e}")
         server_stats["errors"] += 1
         server_stats["last_error"] = str(e)
     finally:
         if websocket in active_connections:
             active_connections.remove(websocket)
-            if websocket in connection_metadata:
-                client_id = connection_metadata[websocket]["id"]
-                del connection_metadata[websocket]
-                logger.info(f"Connection closed: {client_id}")
-            else:
-                logger.info("Connection closed (unknown client)")
+            
+        if websocket in connection_metadata:
+            # Use already defined client_id instead of redefining
+            closed_client_id = connection_metadata[websocket]["id"]
+            del connection_metadata[websocket]
+            logger.info(f"Connection closed: {closed_client_id}")
+        else:
+            logger.info(f"Connection closed: {client_id} (metadata missing)")
 
 # Heartbeat function
 async def heartbeat():
