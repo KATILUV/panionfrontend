@@ -6,7 +6,7 @@ import multer from "multer";
 import { handleChatRequest, analyzeImage } from "./openai";
 import { initializeChatWebSocketServer } from "./chat-websocket";
 import { initializeWebSocketServer, setWebSocketServer } from "./websocket";
-import { handleMultiAgentImageAnalysis, upload as visualColabUpload } from "./visual-collaboration";
+// Visual collaboration implemented in routes/visualCollaborationRoutes.ts
 import { 
   searchMemories, 
   smartMemorySearch, 
@@ -469,6 +469,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Use Strategic Analysis routes
   app.use(strategicAnalysisRoutes);
   
+  // Use Visual Collaboration routes for multi-agent image analysis
+  app.use('/api', visualCollaborationRoutes);
+  
   // Use Panion Intelligence capabilities routes
   app.use(panionIntelligenceRouter);
   
@@ -662,19 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Multi-agent collaborative image analysis
-  app.post('/api/visual-collaboration', visualColabUpload.single('image'), async (req: Request & { file?: Express.Multer.File }, res) => {
-    try {
-      // Pass the request to the handler function
-      await handleMultiAgentImageAnalysis(req, res);
-    } catch (error: any) {
-      console.error('Error in multi-agent image analysis route:', error);
-      res.status(500).json({ 
-        error: 'Failed to analyze image with multi-agent system',
-        message: error.message || 'Unknown error occurred'
-      });
-    }
-  });
+  // Multi-agent collaborative image analysis is handled by visualCollaborationRoutes
   
   app.post('/api/panion/enhanced-chat', async (req, res) => {
     try {
