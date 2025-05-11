@@ -5,11 +5,15 @@ import cookieParser from "cookie-parser";
 import { initializeWebSocketServer, setWebSocketServer } from "./websocket";
 import { optimizeStartup, isSystemReady } from "./startup-optimizer";
 import { systemLog } from "./system-logs";
+import userPreferencesRoutes from "./routes/userPreferencesRoutes";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// Register user preferences routes
+app.use('/api', userPreferencesRoutes);
 
 // System readiness middleware
 app.use((req, res, next) => {
