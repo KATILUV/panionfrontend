@@ -22,8 +22,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Global active connections with metadata
-active_connections: Set[websockets.WebSocketServerProtocol] = set()
-connection_metadata: Dict[websockets.WebSocketServerProtocol, Dict[str, Any]] = {}
+active_connections: Set[Any] = set()
+connection_metadata: Dict[Any, Dict[str, Any]] = {}
 
 # Server stats
 server_stats = {
@@ -116,7 +116,8 @@ async def handler(websocket):
                 server_stats["messages_sent"] += 1
                 
     except Exception as e:
-        logger.error(f"Connection error with {client_id if 'client_id' in locals() else 'unknown client'}: {e}")
+        client_id_str = client_info.get("id", "unknown client") if "client_info" in locals() else "unknown client"
+        logger.error(f"Connection error with {client_id_str}: {e}")
         server_stats["errors"] += 1
         server_stats["last_error"] = str(e)
     finally:
@@ -272,8 +273,11 @@ if __name__ == "__main__":
         soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
         resource.setrlimit(resource.RLIMIT_NOFILE, (hard, hard))
         logger.info(f"File descriptor limit: {soft} → {hard}")
-    except (ImportError, ValueError, resource.error):
+    except (ImportError, ValueError):
         pass  # Skip if not available
+    except Exception as e:
+        logger.warning(f"Could not set file descriptor limit: {e}")
+        pass
     
     try:
         # Run the server
