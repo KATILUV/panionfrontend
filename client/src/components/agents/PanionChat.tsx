@@ -57,6 +57,7 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
   const [dataSearchRequested, setDataSearchRequested] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState('chat');
+  const [useMultiAgentAnalysis, setUseMultiAgentAnalysis] = useState<boolean>(false);
   
   // Get task context for activating Daddy Data Agent
   const { activateDaddyData } = useTaskContext();
@@ -353,8 +354,19 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
         description: 'Your image is being processed with OpenAI Vision',
       });
       
+      // Determine which endpoint to use based on the analysis type
+      const endpoint = useMultiAgentAnalysis ? '/api/visual-collaboration' : '/api/upload-image';
+      
+      // Show appropriate loading toast
+      toast({
+        title: useMultiAgentAnalysis ? 'Multi-agent analysis in progress...' : 'Analyzing image...',
+        description: useMultiAgentAnalysis 
+          ? 'Your image is being analyzed by multiple specialized AI agents' 
+          : 'Your image is being processed with OpenAI Vision',
+      });
+      
       // Send the image to the backend for analysis
-      const response = await fetch('/api/upload-image', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData
       });
@@ -366,31 +378,84 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
       
       const data = await response.json();
       
-      // Validate the response data
-      if (!data.imageUrl || !data.analysis) {
-        throw new Error('Invalid response from server');
+      // Process the response based on the analysis type
+      if (useMultiAgentAnalysis) {
+        // For multi-agent analysis
+        if (!data.result || !data.imageUrl) {
+          throw new Error('Invalid response from multi-agent analysis');
+        }
+        
+        const result = data.result;
+        
+        // Create a formatted message from the collaborative analysis
+        const formattedAnalysis = `
+# Multi-Agent Visual Analysis
+
+${result.summary.mainFindings}
+
+## Key Insights
+${result.summary.keyInsights.map((insight: string) => `- ${insight}`).join('\n')}
+
+## Analysis Details
+${result.agentAnalyses.map((analysis: any) => 
+  `### ${analysis.agentId.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}\n${analysis.analysis.substring(0, 150)}...`
+).join('\n\n')}
+
+${result.summary.uncertainties.length > 0 ? 
+  `## Uncertainties\n${result.summary.uncertainties.map((item: string) => `- ${item}`).join('\n')}` : ''}
+
+${result.summary.suggestedFollowups.length > 0 ? 
+  `## Suggested Follow-ups\n${result.summary.suggestedFollowups.map((item: string) => `- ${item}`).join('\n')}` : ''}
+`;
+        
+        // Update the agent message with the multi-agent analysis
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === tempAgentMessage.id 
+              ? { 
+                  ...msg, 
+                  content: formattedAnalysis, 
+                  thinking: 'Synthesizing analysis from multiple agent perspectives...',
+                  imageUrl: data.imageUrl,
+                  isLoading: false,
+                  collaborativeAnalysis: result // Store the full analysis data
+                } 
+              : msg
+          )
+        );
+        
+        // Show success toast for multi-agent analysis
+        toast({
+          title: 'Collaborative analysis complete',
+          description: `${result.agentAnalyses.length} specialized agents analyzed your image`,
+        });
+      } else {
+        // For standard single-agent analysis
+        if (!data.imageUrl || !data.analysis) {
+          throw new Error('Invalid response from server');
+        }
+        
+        // Update the agent message with the standard analysis
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === tempAgentMessage.id 
+              ? { 
+                  ...msg, 
+                  content: data.analysis, 
+                  thinking: 'Analyzing the visual content of the image...',
+                  imageUrl: data.imageUrl,
+                  isLoading: false 
+                } 
+              : msg
+          )
+        );
+        
+        // Show success toast for standard analysis
+        toast({
+          title: 'Image analysis complete',
+          description: 'The image was successfully processed with OpenAI Vision',
+        });
       }
-      
-      // Update the agent message with the analysis
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === tempAgentMessage.id 
-            ? { 
-                ...msg, 
-                content: data.analysis, 
-                thinking: 'Analyzing the visual content of the image...',
-                imageUrl: data.imageUrl,
-                isLoading: false 
-              } 
-            : msg
-        )
-      );
-      
-      // Show success toast
-      toast({
-        title: 'Image analysis complete',
-        description: 'The image was successfully processed with OpenAI Vision',
-      });
       
       // Show a toast notifying the user about the gallery
       toast({
