@@ -4,8 +4,7 @@ import path from "path";
 import fs from "fs";
 import multer from "multer";
 import { handleChatRequest, analyzeImage } from "./openai";
-import { initializeChatWebSocketServer } from "./chat-websocket";
-import { initializeWebSocketServer, setWebSocketServer } from "./websocket";
+import { initializeWebSocketServer } from "./unified-websocket";
 // Visual collaboration implemented in routes/visualCollaborationRoutes.ts
 import { 
   searchMemories, 
@@ -977,14 +976,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-  // Initialize WebSocket servers
-  const taskWss = initializeWebSocketServer(httpServer);
-  setWebSocketServer(taskWss);
+  // Initialize unified WebSocket server - handles both task and chat connections
+  const wss = initializeWebSocketServer(httpServer);
   
-  // Initialize chat WebSocket server
-  initializeChatWebSocketServer(httpServer);
-  
-  console.log('[server] WebSocket servers initialized successfully');
+  console.log('[server] Unified WebSocket server initialized successfully');
   
   return httpServer;
 }
