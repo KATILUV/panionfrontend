@@ -39,6 +39,7 @@ interface ChatMessage {
   thinking?: string;
   isLoading?: boolean;
   imageUrl?: string;
+  collaborativeAnalysis?: any; // For storing multi-agent analysis results
 }
 
 interface PanionChatProps {

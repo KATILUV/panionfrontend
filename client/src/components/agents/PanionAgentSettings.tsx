@@ -15,7 +15,9 @@ import {
   Settings as SettingsIcon,
   Palette,
   Code,
-  GraduationCap
+  GraduationCap,
+  Image as ImageIcon,
+  Users
 } from 'lucide-react';
 import { 
   ConversationMode, 
@@ -23,16 +25,24 @@ import {
   DEFAULT_CONVERSATION_MODE
 } from '@/types/conversationModes';
 import { usePreferencesStore } from '@/state/preferencesStore';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import log from '@/utils/logger';
 
 interface PanionAgentSettingsProps {
   onClose?: () => void;
+  useMultiAgentAnalysis?: boolean;
+  onToggleMultiAgentAnalysis?: (value: boolean) => void;
 }
 
 /**
  * PanionAgentSettings component for configuring Panion behavior
  */
-const PanionAgentSettings: React.FC<PanionAgentSettingsProps> = ({ onClose }) => {
+const PanionAgentSettings: React.FC<PanionAgentSettingsProps> = ({ 
+  onClose,
+  useMultiAgentAnalysis = false,
+  onToggleMultiAgentAnalysis
+}) => {
   // Get the current conversation mode from preferences
   const conversationMode = usePreferencesStore(
     state => (state.agents?.panion?.conversationMode as ConversationMode) || DEFAULT_CONVERSATION_MODE
@@ -41,6 +51,14 @@ const PanionAgentSettings: React.FC<PanionAgentSettingsProps> = ({ onClose }) =>
   
   // Local state for the selected mode
   const [selectedMode, setSelectedMode] = useState<ConversationMode>(conversationMode);
+  
+  // Handle multi-agent toggle
+  const handleMultiAgentToggle = (checked: boolean) => {
+    if (onToggleMultiAgentAnalysis) {
+      onToggleMultiAgentAnalysis(checked);
+      log.info(`Multi-agent image analysis ${checked ? 'enabled' : 'disabled'}`);
+    }
+  };
   
   // Save the selected conversation mode
   const handleSave = () => {
@@ -108,6 +126,35 @@ const PanionAgentSettings: React.FC<PanionAgentSettingsProps> = ({ onClose }) =>
               </div>
             </button>
           ))}
+        </div>
+      </section>
+      
+      <section className="space-y-4 border-t border-border pt-4">
+        <h3 className="text-md font-medium flex items-center gap-2">
+          <ImageIcon size={18} />
+          Image Analysis Settings
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Configure how Panion analyzes images you share.
+        </p>
+        
+        <div className="flex items-center justify-between rounded-lg border border-border p-4 shadow-sm">
+          <div className="space-y-0.5">
+            <div className="flex items-center">
+              <Users className="mr-2 h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="multi-agent-toggle" className="text-sm font-medium">
+                Multi-Agent Image Analysis
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Analyze images using multiple specialized AI agents for deeper insights.
+            </p>
+          </div>
+          <Switch
+            id="multi-agent-toggle"
+            checked={useMultiAgentAnalysis}
+            onCheckedChange={handleMultiAgentToggle}
+          />
         </div>
       </section>
       
