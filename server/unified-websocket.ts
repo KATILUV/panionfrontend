@@ -298,20 +298,57 @@ export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
   const TASK_INACTIVE_TIMEOUT = 120000; // 2 minutes
   const CHAT_INACTIVE_TIMEOUT = 180000; // 3 minutes
   
-  setInterval(() => {
+  // Efficient memory management by periodically checking for stale connections
+  const interval = setInterval(() => {
     const now = Date.now();
+    let closedCount = 0;
     
     clients.forEach((client, ws) => {
-      // Set timeout based on client type
-      const timeout = client.type === 'task' ? TASK_INACTIVE_TIMEOUT : CHAT_INACTIVE_TIMEOUT;
-      
-      if (now - client.lastActivity > timeout) {
-        log(`[websocket] Terminating inactive ${client.type} connection`);
-        ws.terminate();
+      try {
+        // Set timeout based on client type
+        const timeout = client.type === 'task' ? TASK_INACTIVE_TIMEOUT : CHAT_INACTIVE_TIMEOUT;
+        
+        if (now - client.lastActivity > timeout) {
+          log(`[websocket] Terminating inactive ${client.type} connection`);
+          ws.terminate();
+          clients.delete(ws);
+          closedCount++;
+        }
+      } catch (error) {
+        // Clean up any connections that throw errors
+        log(`[websocket] Error processing connection: ${error}`, 'error');
+        try {
+          ws.terminate();
+        } catch {
+          // Ignore errors when terminating
+        }
         clients.delete(ws);
+        closedCount++;
       }
     });
+    
+    // Log total connection counts when we've cleaned something up
+    if (closedCount > 0) {
+      log(`[websocket] Connection cleanup: removed ${closedCount} stale connections, remaining: ${clients.size}`);
+    }
+    
+    // Run garbage collector if available (only in development)
+    if (process.env.NODE_ENV === 'development' && global.gc) {
+      try {
+        global.gc();
+        log('[websocket] Manual garbage collection triggered');
+      } catch (error) {
+        // Ignore errors during GC
+      }
+    }
   }, HEARTBEAT_INTERVAL);
+  
+  // Clean up the interval on process exit to prevent memory leaks
+  process.on('exit', () => {
+    if (interval) {
+      clearInterval(interval);
+    }
+  });
   
   // Store reference to task WebSocket server
   webSocketServer = taskWss;
@@ -328,6 +365,9 @@ function broadcastToSession(
   message: any, 
   excludeWs?: WebSocket
 ): void {
+  let clientCount = 0;
+  const messageString = JSON.stringify(message);
+  
   clients.forEach((client, ws) => {
     if (
       client.type === 'chat' &&
@@ -335,9 +375,25 @@ function broadcastToSession(
       ws !== excludeWs && 
       ws.readyState === WebSocket.OPEN
     ) {
-      ws.send(JSON.stringify(message));
+      try {
+        ws.send(messageString);
+        clientCount++;
+      } catch (error) {
+        log(`[websocket] Error broadcasting to session ${sessionId}: ${error}`, 'error');
+        // Close problematic connections
+        try {
+          ws.close();
+        } catch {
+          // Ignore errors when closing already problematic connections
+        }
+        clients.delete(ws);
+      }
     }
   });
+  
+  if (clientCount > 0 && message.type !== 'typing_indicator') {
+    log(`[websocket] Broadcast to session ${sessionId}: ${message.type || 'message'} to ${clientCount} clients`);
+  }
 }
 
 /**
@@ -354,6 +410,12 @@ export function broadcastTaskEvent(
   }
   
   let clientCount = 0;
+  const message = JSON.stringify({
+    taskId,
+    type: eventType,
+    timestamp: Date.now(),
+    ...eventData
+  });
   
   // Send to all task clients with matching subscriptions
   clients.forEach((client, ws) => {
@@ -369,20 +431,25 @@ export function broadcastTaskEvent(
     ) {
       clientCount++;
       
-      // Build the event message
-      const message = {
-        taskId,
-        type: eventType,
-        timestamp: Date.now(),
-        ...eventData
-      };
-      
-      // Send the event to this client
-      ws.send(JSON.stringify(message));
+      // Send the pre-stringified message to this client
+      try {
+        ws.send(message);
+      } catch (error) {
+        log(`[websocket] Error sending message to client: ${error}`, 'error');
+        // Close problematic connections
+        try {
+          ws.close();
+        } catch {
+          // Ignore errors when closing already problematic connections
+        }
+        clients.delete(ws);
+      }
     }
   });
   
-  log(`[websocket] Broadcast task event to ${clientCount} clients: ${taskId} (${eventType})`);
+  if (clientCount > 0) {
+    log(`[websocket] Broadcast task event to ${clientCount} clients: ${taskId} (${eventType})`);
+  }
 }
 
 /**
