@@ -648,7 +648,11 @@ ${result.summary.suggestedFollowups.length > 0 ?
               className="absolute inset-4 sm:inset-10 md:inset-20 bg-card rounded-lg shadow-lg overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <PanionAgentSettings onClose={() => setShowSettings(false)} />
+              <PanionAgentSettings 
+                onClose={() => setShowSettings(false)} 
+                useMultiAgentAnalysis={useMultiAgentAnalysis}
+                onToggleMultiAgentAnalysis={setUseMultiAgentAnalysis}
+              />
             </motion.div>
           </motion.div>
         )}
