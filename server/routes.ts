@@ -38,6 +38,7 @@ import daddyDataRoutes from "./routes/daddyDataRoutes";
 import scheduledTaskRoutes from "./routes/scheduledTaskRoutes";
 import knowledgeRoutes from "./routes/knowledgeRoutes";
 import debateRoutes from "./routes/debateRoutes";
+import visualCollaborationRoutes from "./routes/visualCollaborationRoutes";
 // Import strategic planner functions
 import { 
   createPlan, 
@@ -662,75 +663,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Multi-agent collaborative image analysis
-  app.post('/api/visual-collaboration', upload.single('image'), async (req: Request & { file?: Express.Multer.File }, res) => {
+  app.post('/api/visual-collaboration', visualColabUpload.single('image'), async (req: Request & { file?: Express.Multer.File }, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ message: 'No image file provided' });
-      }
-      
-      // Get session ID from cookies or create a new one
-      const sessionId = req.cookies?.sessionId || Date.now().toString();
-      
-      // Set session cookie if it doesn't exist
-      if (!req.cookies?.sessionId) {
-        res.cookie('sessionId', sessionId, { 
-          maxAge: 24 * 60 * 60 * 1000, // 24 hours 
-          httpOnly: true 
-        });
-      }
-
-      // Generate a unique filename
-      const timestamp = Date.now();
-      const filename = `${timestamp}_${req.file.originalname.replace(/\s+/g, '_')}`;
-      const filepath = path.join(uploadsDir, filename);
-      
-      // Save the file
-      fs.writeFileSync(filepath, req.file.buffer);
-      
-      // Get the URL for the image that can be accessed by external services
-      const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
-      
-      // Get conversation mode from request (default to 'casual')
-      const conversationMode = req.body.conversationMode || 'casual';
-      
-      // Log the incoming request for debugging
-      log(`Starting collaborative analysis for image ${filename} in ${conversationMode} mode`, 'visual-collab');
-      
-      // Begin the collaborative multi-agent analysis
-      const collaborationResult = await analyzeImageCollaboratively(imageUrl, conversationMode);
-      
-      // Save the result to disk for future reference (optional)
-      await saveCollaborationResult(collaborationResult);
-      
-      // Create a simplified summary for memory storage
-      const summaryForMemory = `Multi-agent visual analysis:
-        ${collaborationResult.summary.mainFindings}
-        
-        Key insights:
-        ${collaborationResult.summary.keyInsights.map(insight => `- ${insight}`).join('\n')}`;
-      
-      // Save to memory
-      await saveToMemory({
-        sessionId,
-        content: summaryForMemory,
-        isUser: false,
-        timestamp: new Date().toISOString(),
-        category: 'collaboration',
-        imageUrl: `/uploads/${filename}`,
-        imageAnalysis: collaborationResult.summary.consensusDescription,
-        mediaType: 'image',
-        important: true
+      // Pass the request to the handler function
+      await handleMultiAgentImageAnalysis(req, res);
+    } catch (error: any) {
+      console.error('Error in multi-agent image analysis route:', error);
+      res.status(500).json({ 
+        error: 'Failed to analyze image with multi-agent system',
+        message: error.message || 'Unknown error occurred'
       });
-      
-      // Return the collaboration results
-      res.json({ 
-        success: true,
-        imageUrl: `/uploads/${filename}`,
-        analysisId: collaborationResult.analysisId,
-        result: collaborationResult
-      });
+    }
+  });
+  
+  app.post('/api/panion/enhanced-chat', async (req, res) => {
+    try {
+      // Handle enhanced chat request
+      await handleEnhancedChat(req, res);
     } catch (error) {
-      console.error('Error in collaborative image analysis:', error);
+      console.error('Error in enhanced chat processing:', error);
       
       if (error instanceof Error && error.message.includes('API')) {
         res.status(503).json({
