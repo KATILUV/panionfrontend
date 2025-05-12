@@ -7,15 +7,20 @@ const PanionChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Set up WebSocket connection
+  // Set up WebSocket connection with improved error handling
   const {
     connectionStatus,
     isServerHealthy,
     error,
-    sendMessage
+    sendMessage,
+    connect
   } = useWebSocketService({
     path: '/ws-chat',
     debug: true,
+    // Increase reconnection stability
+    maxReconnectAttempts: 5,
+    reconnectInterval: 2000,
+    connectionTimeout: 15000,
     onMessage: (msg) => {
       if (msg.type === 'message') {
         setChatHistory(prev => [...prev, {
@@ -27,6 +32,9 @@ const PanionChat = () => {
         setIsTyping(false);
       } else if (msg.type === 'typing_indicator') {
         setIsTyping(!!msg.message);
+      } else if (msg.type === 'welcome' || msg.type === 'system') {
+        // Also handle welcome/system messages
+        console.log('System message received:', msg.message);
       }
     },
     onConnect: () => {
@@ -34,6 +42,13 @@ const PanionChat = () => {
     },
     onDisconnect: () => {
       console.log('Disconnected from chat server');
+    },
+    onError: (err) => {
+      console.error('WebSocket error in PanionChat:', err);
+      // Don't try to reconnect more than 5 times at once
+    },
+    onReconnect: (attempt) => {
+      console.log(`Reconnection attempt ${attempt} in PanionChat`);
     }
   });
 

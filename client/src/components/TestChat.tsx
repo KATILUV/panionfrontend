@@ -7,15 +7,18 @@ const TestChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Set up WebSocket connection to our test server
+  // Set up WebSocket connection to our test server with improved error handling
   const {
     connectionStatus,
     isServerHealthy,
     error,
-    sendMessage
+    sendMessage,
+    connect
   } = useWebSocketService({
     path: '/ws-chat', // Use the chat WebSocket endpoint
     debug: true,
+    maxReconnectAttempts: 5, // Increase reconnect attempts
+    reconnectInterval: 2000, // Shorter initial reconnect interval
     onMessage: (msg) => {
       console.log('Received message:', msg);
       
@@ -40,9 +43,33 @@ const TestChat = () => {
     },
     onConnect: () => {
       console.log('Connected to chat server');
+      setChatHistory(prev => [...prev, {
+        id: Date.now(),
+        message: 'Connection established with server',
+        sender: 'system',
+        timestamp: Date.now()
+      }]);
     },
     onDisconnect: () => {
       console.log('Disconnected from chat server');
+    },
+    onError: (err) => {
+      console.error('WebSocket error:', err);
+      setChatHistory(prev => [...prev, {
+        id: Date.now(),
+        message: 'Connection error occurred. Attempting to reconnect...',
+        sender: 'system',
+        timestamp: Date.now()
+      }]);
+    },
+    onReconnect: (attempt) => {
+      console.log(`Reconnection attempt ${attempt}`);
+      setChatHistory(prev => [...prev, {
+        id: Date.now(),
+        message: `Reconnection attempt ${attempt}...`,
+        sender: 'system',
+        timestamp: Date.now()
+      }]);
     }
   });
 

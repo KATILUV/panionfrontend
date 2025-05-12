@@ -153,13 +153,25 @@ export const useWebSocketService = ({
       // Set status before creating socket
       setConnectionStatus(reconnectCount.current > 0 ? 'reconnecting' : 'connecting');
       
-      // Create WebSocket connection
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}${path}`;
-      
-      logDebug(`Connecting to WebSocket: ${wsUrl}`);
-      
-      socket.current = new WebSocket(wsUrl);
+      // Create WebSocket connection with error handling
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}${path}`;
+        
+        logDebug(`Connecting to WebSocket: ${wsUrl}`);
+        
+        // Use try-catch to properly handle connection errors
+        socket.current = new WebSocket(wsUrl);
+        console.log("WebSocket connection established");
+      } catch (connectionError) {
+        console.error("Error creating WebSocket connection:", connectionError);
+        setConnectionStatus('failed');
+        setError('Failed to connect: ' + (connectionError instanceof Error ? connectionError.message : String(connectionError)));
+        onError?.(connectionError);
+        
+        // Return early to avoid setting up event handlers on a failed connection
+        if (!socket.current) return;
+      }
       
       // Set connection timeout
       connectionTimeoutRef.current = setTimeout(() => {
@@ -326,35 +338,53 @@ export const useWebSocketService = ({
     path
   ]);
   
-  // Send a message
+  // Send a message with improved error handling
   const sendMessage = useCallback((message: WebSocketMessage) => {
-    if (!socket.current || socket.current.readyState !== WebSocket.OPEN) {
-      logDebug('Socket not open, adding message to pending queue', message);
-      pendingMessagesRef.current.push(message);
-      
-      // Try to reconnect if not already connecting
-      if (connectionStatus !== 'connecting' && connectionStatus !== 'reconnecting') {
-        connect();
-      }
-      return false;
-    }
-    
     try {
-      // Update timestamp before sending
-      const messageWithTimestamp = {
-        ...message,
-        timestamp: Date.now()
-      };
+      if (!socket.current || socket.current.readyState !== WebSocket.OPEN) {
+        logDebug('Socket not open, adding message to pending queue', message);
+        pendingMessagesRef.current.push(message);
+        
+        // Try to reconnect if not already connecting
+        if (connectionStatus !== 'connecting' && connectionStatus !== 'reconnecting') {
+          connect();
+        }
+        return false;
+      }
       
-      socket.current.send(JSON.stringify(messageWithTimestamp));
-      logDebug('Message sent successfully', messageWithTimestamp);
-      return true;
-    } catch (error) {
-      logDebug('Error sending message', error);
-      pendingMessagesRef.current.push(message);
+      try {
+        // Update timestamp before sending
+        const messageWithTimestamp = {
+          ...message,
+          timestamp: Date.now()
+        };
+        
+        socket.current.send(JSON.stringify(messageWithTimestamp));
+        logDebug('Message sent successfully', messageWithTimestamp);
+        return true;
+      } catch (error) {
+        logDebug('Error sending message', error);
+        pendingMessagesRef.current.push(message);
+        
+        // If there's an error during sending, might indicate a broken connection
+        if (socket.current?.readyState === WebSocket.OPEN) {
+          // Try to close and reconnect on next attempt
+          try {
+            socket.current.close(3000, 'Connection reset due to send error');
+          } catch (closeError) {
+            logDebug('Error closing socket', closeError);
+          }
+        }
+        
+        return false;
+      }
+    } catch (err) {
+      // Catch any unexpected errors to prevent unhandled promise rejections
+      console.error('Unexpected error in sendMessage:', err);
+      onError?.(err);
       return false;
     }
-  }, [connect, connectionStatus, logDebug]);
+  }, [connect, connectionStatus, logDebug, onError]);
   
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {

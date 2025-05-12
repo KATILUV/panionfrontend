@@ -10,13 +10,21 @@ const TestPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">WebSocket Test Chat</h2>
-            <TestChat />
+            <ErrorBoundary 
+              onReset={() => console.log('TestChat component reset')}
+            >
+              <TestChat />
+            </ErrorBoundary>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Panion Chat</h2>
             <div className="h-[600px]">
-              <PanionChat />
+              <ErrorBoundary
+                onReset={() => console.log('PanionChat component reset')}
+              >
+                <PanionChat />
+              </ErrorBoundary>
             </div>
           </div>
         </div>
