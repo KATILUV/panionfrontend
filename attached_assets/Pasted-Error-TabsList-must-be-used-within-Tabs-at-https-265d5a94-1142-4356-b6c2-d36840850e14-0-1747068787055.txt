@@ -1,0 +1,25 @@
+Error: `TabsList` must be used within `Tabs`
+
+
+    at https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=c49c3409:95:13
+    at _c (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/src/components/ui/tabs.tsx:22:11)
+    at div
+    at div
+    at div
+    at PanionChat (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/src/components/agents/PanionChat.tsx:42:23)
+    at div
+    at div
+    at MotionComponent (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=c49c3409:6536:40)
+    at div
+    at MotionComponent (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=c49c3409:6536:40)
+    at div
+    at Resizable2 (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-rnd.js?v=c49c3409:1539:26)
+    at DraggableCore (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-rnd.js?v=c49c3409:590:9)
+    at Draggable2 (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-rnd.js?v=c49c3409:1022:9)
+    at Rnd2 (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-rnd.js?v=c49c3409:2183:26)
+    at MotionConfig (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=c49c3409:7872:25)
+    at Window (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/src/components/common/Window.tsx:55:3)
+    at PresenceChild (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=c49c3409:7742:24)
+    at AnimatePresence (https://265d5a94-1142-4356-b6c2-d36840850e14-00-20bmdp639zjpe.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=c49c3409:7800:26)
+    at div
+    at div

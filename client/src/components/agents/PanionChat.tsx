@@ -573,24 +573,18 @@ ${result.summary.suggestedFollowups.length > 0 ?
           )}
         </div>
         <div className="flex items-center gap-2">
-          <TabsList className="h-8">
-            <TabsTrigger 
-              value="chat" 
-              onClick={() => setActiveTab('chat')}
-              className={activeTab === 'chat' ? 'data-[state=active]:bg-primary data-[state=active]:text-primary-foreground' : ''}
-            >
-              <MessageSquare size={16} className="mr-1" />
-              Chat
-            </TabsTrigger>
-            <TabsTrigger 
-              value="gallery" 
-              onClick={() => setActiveTab('gallery')}
-              className={activeTab === 'gallery' ? 'data-[state=active]:bg-primary data-[state=active]:text-primary-foreground' : ''}
-            >
-              <ImageIcon size={16} className="mr-1" />
-              Gallery
-            </TabsTrigger>
-          </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="h-8">
+              <TabsTrigger value="chat">
+                <MessageSquare size={16} className="mr-1" />
+                Chat
+              </TabsTrigger>
+              <TabsTrigger value="gallery">
+                <ImageIcon size={16} className="mr-1" />
+                Gallery
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           
           <button 
             onClick={() => setShowSettings(true)}
