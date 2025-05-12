@@ -2,7 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
-import { initializeWebSocketServer, setWebSocketServer } from "./websocket";
+// Import our new WebSocket handler instead of the old one
+import { initializeWebSocketServer } from "./websocket-handler";
 import { optimizeStartup, isSystemReady } from "./startup-optimizer";
 import { systemLog } from "./system-logs";
 import userPreferencesRoutes from "./routes/userPreferencesRoutes";
@@ -88,9 +89,8 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  // Initialize WebSocket server
+  // Initialize WebSocket server with our enhanced handler
   const wss = initializeWebSocketServer(server);
-  setWebSocketServer(wss);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

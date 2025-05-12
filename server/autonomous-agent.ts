@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { broadcastTaskEvent } from './websocket';
+import { broadcastMessage } from './websocket-handler';
 import OpenAI from 'openai';
 
 // Initialize OpenAI

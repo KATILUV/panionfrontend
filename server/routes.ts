@@ -4,7 +4,8 @@ import path from "path";
 import fs from "fs";
 import multer from "multer";
 import { handleChatRequest, analyzeImage } from "./openai";
-import { initializeWebSocketServer } from "./unified-websocket";
+// Using new websocket handler
+import { initializeWebSocketServer } from "./websocket-handler";
 // Visual collaboration implemented in routes/visualCollaborationRoutes.ts
 import { 
   searchMemories, 
