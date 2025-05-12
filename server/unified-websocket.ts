@@ -31,6 +31,7 @@ export type MessageType =
   | 'heartbeat'
   | 'task_update'
   | 'step_update'
+  | 'hello'  // Client-initiated hello message
   // Chat types
   | 'message' 
   | 'typing_indicator' 
@@ -48,6 +49,7 @@ export type ConversationMode = 'casual' | 'deep' | 'strategic' | 'logical';
 export interface WebSocketMessage {
   type: MessageType;
   taskId?: string;
+  taskIds?: string[]; // Added support for array of task IDs for batch subscription
   message?: string;
   sender?: 'user' | 'assistant';
   conversationMode?: ConversationMode;
@@ -105,67 +107,225 @@ export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
   
   log('[websocket] Unified WebSocket server initialized');
   
-  // Set up task connections
-  taskWss.on('connection', (ws: WebSocket) => {
-    log('[websocket] Task client connected');
+  // Connection rate limiting for task WebSocket connections
+  const connectionRateLimiter = new Map<string, { lastAttempt: number, attemptCount: number }>();
+  
+  // Function to check if a connection should be rate limited
+  const shouldRateLimit = (ip: string): boolean => {
+    const now = Date.now();
+    const clientData = connectionRateLimiter.get(ip);
     
-    // Initialize client state
-    clients.set(ws, {
-      ws,
-      type: 'task',
-      subscriptions: new Set<string>(),
-      lastActivity: Date.now()
-    });
+    if (!clientData) {
+      // First connection from this IP
+      connectionRateLimiter.set(ip, { lastAttempt: now, attemptCount: 1 });
+      return false;
+    }
     
-    // Handle messages from task clients
-    ws.on('message', (message: string) => {
-      try {
-        const data: WebSocketMessage = JSON.parse(message.toString());
-        const client = clients.get(ws) as TaskConnection | undefined;
-        
-        if (!client || client.type !== 'task') {
-          log('[websocket] Received message from unregistered task client', 'error');
-          return;
-        }
-        
-        // Update last activity time for heartbeat tracking
-        client.lastActivity = Date.now();
-        
-        // Handle subscription requests
-        if (data.type === 'subscribe' && data.taskId) {
-          log(`[websocket] Client subscribed to task: ${data.taskId}`);
-          client.subscriptions.add(data.taskId);
-        }
-        
-        // Handle unsubscribe requests
-        if (data.type === 'unsubscribe' && data.taskId) {
-          log(`[websocket] Client unsubscribed from task: ${data.taskId}`);
-          client.subscriptions.delete(data.taskId);
-        }
-        
-        // Handle heartbeat (just update last activity time, already done above)
-        if (data.type === 'heartbeat') {
-          // Pong back to client to confirm connection is still alive
-          ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
-        }
-      } catch (error) {
-        log('[websocket] Error processing task message:', 'error');
-        console.error(error);
+    // Check if connection attempts are too frequent
+    const timeSinceLastAttempt = now - clientData.lastAttempt;
+    
+    if (timeSinceLastAttempt < 1000) { // Less than 1 second between attempts
+      clientData.attemptCount++;
+      clientData.lastAttempt = now;
+      
+      // Rate limit if too many rapid connections
+      if (clientData.attemptCount > 5) {
+        log(`[websocket] Rate limiting connection from ${ip}: ${clientData.attemptCount} attempts in rapid succession`);
+        return true;
       }
-    });
+    } else if (timeSinceLastAttempt > 10000) { // Reset count after 10 seconds of inactivity
+      clientData.attemptCount = 1;
+    } else {
+      // Update last attempt time
+      clientData.attemptCount++;
+    }
     
-    // Handle client disconnection
-    ws.on('close', () => {
-      log('[websocket] Task client disconnected');
-      clients.delete(ws);
-    });
+    clientData.lastAttempt = now;
+    connectionRateLimiter.set(ip, clientData);
+    return false;
+  };
+  
+  // Set up task connections with improved stability
+  taskWss.on('connection', (ws: WebSocket, req: any) => {
+    // Track connection attempt frequency to prevent rapid reconnection
+    const clientIp = req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
     
-    // Handle errors
-    ws.on('error', (error) => {
-      log('[websocket] Task client connection error:', 'error');
-      console.error(error);
+    // Rate limit connections if necessary
+    if (shouldRateLimit(clientIp)) {
+      log(`[websocket] Rate limited connection from ${clientIp}`);
+      ws.close(1008, 'Connection rate limit exceeded');
+      return;
+    }
+    
+    try {
+      // Send welcome message immediately to establish the connection
+      ws.send(JSON.stringify({
+        type: 'welcome',
+        message: 'Connected to task server',
+        timestamp: Date.now()
+      }));
+    
+      log(`[websocket] Task client connected from ${clientIp}`);
+      
+      // Initialize client state
+      clients.set(ws, {
+        ws,
+        type: 'task',
+        subscriptions: new Set<string>(),
+        lastActivity: Date.now()
+      });
+      
+      // Handle messages from task clients with improved error handling
+      ws.on('message', (message: string) => {
+        try {
+          const data: WebSocketMessage = JSON.parse(message.toString());
+          const client = clients.get(ws) as TaskConnection | undefined;
+          
+          if (!client || client.type !== 'task') {
+            log('[websocket] Received message from unregistered task client', 'error');
+            return;
+          }
+          
+          // Update last activity time for heartbeat tracking
+          client.lastActivity = Date.now();
+          
+          // Handle hello message
+          if (data.type === 'hello') {
+            log(`[websocket] Client hello received`);
+            ws.send(JSON.stringify({
+              type: 'welcome',
+              message: 'Connected to task server',
+              timestamp: Date.now()
+            }));
+          }
+            
+          // Handle subscription requests
+          if (data.type === 'subscribe') {
+            
+            // Handle array of task IDs
+            const taskIds = data.taskIds as string[] | undefined;
+            if (Array.isArray(taskIds)) {
+              taskIds.forEach((taskId: string) => {
+                log(`[websocket] Client subscribed to task: ${taskId}`);
+                client.subscriptions.add(taskId);
+              });
+  
+              // Confirm subscription
+              ws.send(JSON.stringify({
+                type: 'system',
+                message: `Subscribed to ${taskIds.length} tasks`,
+                timestamp: Date.now()
+              }));
+            } 
+            // Handle single task ID
+            else if (data.taskId) {
+              log(`[websocket] Client subscribed to task: ${data.taskId}`);
+              client.subscriptions.add(data.taskId);
+              
+              // Confirm subscription
+              ws.send(JSON.stringify({
+                type: 'system',
+                message: `Subscribed to task ${data.taskId}`,
+                timestamp: Date.now()
+              }));
+            }
+          }
+          
+          // Handle unsubscribe requests
+          if (data.type === 'unsubscribe') {
+            // Handle array of task IDs
+            const taskIds = data.taskIds as string[] | undefined;
+            if (Array.isArray(taskIds)) {
+              taskIds.forEach((taskId: string) => {
+                log(`[websocket] Client unsubscribed from task: ${taskId}`);
+                client.subscriptions.delete(taskId);
+              });
+  
+              // Confirm unsubscription
+              ws.send(JSON.stringify({
+                type: 'system',
+                message: `Unsubscribed from ${taskIds.length} tasks`,
+                timestamp: Date.now()
+              }));
+            }
+            // Handle single task ID 
+            else if (data.taskId) {
+              log(`[websocket] Client unsubscribed from task: ${data.taskId}`);
+              client.subscriptions.delete(data.taskId);
+              
+              // Confirm unsubscription
+              ws.send(JSON.stringify({
+                type: 'system',
+                message: `Unsubscribed from task ${data.taskId}`,
+                timestamp: Date.now()
+              }));
+            }
+          }
+          
+          // Handle heartbeat (just update last activity time, already done above)
+          if (data.type === 'heartbeat') {
+            // Pong back to client to confirm connection is still alive
+            ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+          }
+          
+        } catch (error) {
+          log('[websocket] Error processing task message:', 'error');
+          console.error(error);
+          
+          // If the message parsing fails, send an error message back
+          try {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Failed to process your message',
+              timestamp: Date.now()
+            }));
+          } catch (sendError) {
+            // Ignore send errors
+          }
+        }
+      });
+      
+      // Handle client disconnection
+      ws.on('close', (code, reason) => {
+        log(`[websocket] Task client disconnected. Code: ${code}, Reason: ${reason || 'No reason provided'}`);
+        clients.delete(ws);
+      });
+      
+      // Handle errors
+      ws.on('error', (error) => {
+        log('[websocket] Task client connection error:', 'error');
+        console.error(error);
+        
+        // Don't delete the client here, let the close handler do it
+        // as it will be called automatically after error
+      });
+    } catch (setupError) {
+      log('[websocket] Error during task client setup:', 'error');
+      console.error(setupError);
+      
+      // Attempt to cleanly close with error message
+      try {
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Error establishing connection',
+          timestamp: Date.now()
+        }));
+        
+        // Use close() instead of terminate() for a cleaner shutdown
+        ws.close(1011, 'Internal server error during setup');
+      } catch (closeError) {
+        // If sending fails, force terminate
+        try {
+          ws.terminate();
+        } catch {
+          // Ignore termination errors
+        }
+      }
+      
+      // Ensure client is removed from tracking
       clients.delete(ws);
-    });
+    }
   });
   
   // Set up chat connections

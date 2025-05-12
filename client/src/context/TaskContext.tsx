@@ -269,17 +269,40 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected');
   
-  // Initialize the WebSocket connection with improved error handling and reconnection
+  // Initialize the WebSocket connection with improved error handling and connection throttling
   useEffect(() => {
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     const initialReconnectDelay = 1000;
     
+    // Use session storage to check for multiple reconnect attempts across page refreshes
+    const lastAttemptTime = sessionStorage.getItem('lastTaskWsAttempt');
+    const initialConnection = !lastAttemptTime;
+    const now = Date.now();
+    
+    // Check if we're trying to reconnect too quickly
+    if (lastAttemptTime && (now - parseInt(lastAttemptTime)) < 2000) {
+      // Enforce a minimum time between connection attempts
+      const waitTime = 2000 + Math.random() * 3000; // Add some jitter (2-5 seconds)
+      console.log(`Rate limiting WebSocket connection. Waiting ${Math.round(waitTime/1000)}s before reconnecting`);
+      
+      reconnectTimer = setTimeout(() => {
+        createSocketConnection();
+      }, waitTime);
+      
+      return () => {
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+      };
+    }
+    
     const createSocketConnection = () => {
       try {
         // Only try to connect if we're disconnected or failed previously
         if (connectionStatus !== 'connecting') {
+          // Store this attempt time in session storage to prevent rapid reconnections
+          sessionStorage.setItem('lastTaskWsAttempt', Date.now().toString());
+          
           const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
           const wsUrl = `${protocol}//${window.location.host}/ws`;
           
@@ -296,6 +319,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
             reconnectAttempts = 0;
             
             try {
+              // Send a hello message to confirm the connection
+              newSocket.send(JSON.stringify({
+                type: 'hello', 
+                timestamp: Date.now()
+              }));
+              
               // Subscribe to tasks after connection
               if (state.subscribedTasks.size > 0) {
                 const message = {
