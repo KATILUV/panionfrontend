@@ -1,5 +1,6 @@
 import TestChat from '../components/TestChat';
 import PanionChat from '../components/PanionChat';
+import ErrorBoundary from '../components/ui/error-boundary';
 
 const TestPage = () => {
   return (

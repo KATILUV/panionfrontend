@@ -269,103 +269,172 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected');
   
-  // Initialize the WebSocket connection
+  // Initialize the WebSocket connection with improved error handling and reconnection
   useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const initialReconnectDelay = 1000;
     
-    console.log('Connecting to WebSocket:', wsUrl);
-    setConnectionStatus('connecting');
-    
-    const newSocket = new WebSocket(wsUrl);
-    
-    newSocket.onopen = () => {
-      console.log('WebSocket connection established');
-      setConnectionStatus('connected');
-      
-      // Subscribe to tasks after connection
-      if (state.subscribedTasks.size > 0) {
-        const message = {
-          type: 'subscribe',
-          taskIds: Array.from(state.subscribedTasks)
-        };
-        newSocket.send(JSON.stringify(message));
-      }
-    };
-    
-    newSocket.onmessage = (event) => {
+    const createSocketConnection = () => {
       try {
-        const data = JSON.parse(event.data);
-        console.log('WebSocket message received:', data);
-        
-        if (data.type === 'task_update') {
-          const task = data.task;
-          dispatch({ type: 'UPDATE_TASK', payload: task });
-        }
-        else if (data.type === 'task_created') {
-          const task = data.task;
-          dispatch({ type: 'ADD_TASK', payload: task });
-        }
-        else if (data.type === 'task_progress') {
-          const { taskId, progress, log } = data;
-          // Update task progress
-          dispatch({
-            type: 'UPDATE_TASK_PARTIAL',
-            payload: {
-              id: taskId,
-              updates: { 
-                progress,
-                logs: log ? [...(state.tasks[taskId]?.logs || []), log] : state.tasks[taskId]?.logs
-              }
-            }
-          });
-        }
-        else if (data.type === 'task_step_update') {
-          const { taskId, step } = data;
-          const task = state.tasks[taskId];
+        // Only try to connect if we're disconnected or failed previously
+        if (connectionStatus !== 'connecting') {
+          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const wsUrl = `${protocol}//${window.location.host}/ws`;
           
-          if (task) {
-            // Find and update the step
-            const updatedSteps = task.steps.map(s => 
-              s.id === step.id ? step : s
-            );
+          console.log(`Connecting to task WebSocket: ${wsUrl} (attempt ${reconnectAttempts + 1})`);
+          setConnectionStatus('connecting');
+          
+          // Create socket with error handling
+          const newSocket = new WebSocket(wsUrl);
+          
+          newSocket.onopen = () => {
+            console.log('Task WebSocket connection established');
+            setConnectionStatus('connected');
+            // Reset reconnect counter on successful connection
+            reconnectAttempts = 0;
             
-            // If step wasn't found, add it
-            if (!updatedSteps.find(s => s.id === step.id)) {
-              updatedSteps.push(step);
-            }
-            
-            dispatch({
-              type: 'UPDATE_TASK_PARTIAL',
-              payload: {
-                id: taskId,
-                updates: { steps: updatedSteps }
+            try {
+              // Subscribe to tasks after connection
+              if (state.subscribedTasks.size > 0) {
+                const message = {
+                  type: 'subscribe',
+                  taskIds: Array.from(state.subscribedTasks)
+                };
+                newSocket.send(JSON.stringify(message));
               }
-            });
-          }
+            } catch (sendError) {
+              console.error('Error sending subscription message:', sendError);
+            }
+          };
+          
+          newSocket.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              console.log('Task WebSocket message received:', data);
+              
+              if (data.type === 'task_update') {
+                const task = data.task;
+                dispatch({ type: 'UPDATE_TASK', payload: task });
+              }
+              else if (data.type === 'task_created') {
+                const task = data.task;
+                dispatch({ type: 'ADD_TASK', payload: task });
+              }
+              else if (data.type === 'task_progress') {
+                const { taskId, progress, log } = data;
+                // Update task progress
+                dispatch({
+                  type: 'UPDATE_TASK_PARTIAL',
+                  payload: {
+                    id: taskId,
+                    updates: { 
+                      progress,
+                      logs: log ? [...(state.tasks[taskId]?.logs || []), log] : state.tasks[taskId]?.logs
+                    }
+                  }
+                });
+              }
+              else if (data.type === 'task_step_update') {
+                const { taskId, step } = data;
+                const task = state.tasks[taskId];
+                
+                if (task) {
+                  // Find and update the step
+                  const updatedSteps = task.steps.map(s => 
+                    s.id === step.id ? step : s
+                  );
+                  
+                  // If step wasn't found, add it
+                  if (!updatedSteps.find(s => s.id === step.id)) {
+                    updatedSteps.push(step);
+                  }
+                  
+                  dispatch({
+                    type: 'UPDATE_TASK_PARTIAL',
+                    payload: {
+                      id: taskId,
+                      updates: { steps: updatedSteps }
+                    }
+                  });
+                }
+              }
+            } catch (error) {
+              console.error('Error processing WebSocket message:', error);
+            }
+          };
+          
+          newSocket.onclose = (event) => {
+            console.log(`Task WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`);
+            setConnectionStatus('disconnected');
+            setSocket(null);
+            
+            // Only attempt to reconnect if not a normal closure and we haven't exceeded max attempts
+            if (event.code !== 1000 && event.code !== 1001 && reconnectAttempts < maxReconnectAttempts) {
+              const delay = Math.min(initialReconnectDelay * Math.pow(1.5, reconnectAttempts), 10000);
+              console.log(`Attempting to reconnect task WebSocket in ${delay}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+              
+              // Cleanup any existing timer
+              if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+              }
+              
+              reconnectTimer = setTimeout(() => {
+                reconnectAttempts++;
+                createSocketConnection();
+              }, delay);
+            } else if (reconnectAttempts >= maxReconnectAttempts) {
+              console.error('Maximum task WebSocket reconnection attempts reached.');
+            }
+          };
+          
+          newSocket.onerror = (error) => {
+            console.error('Task WebSocket error:', error);
+            // Don't set disconnected here - the onclose handler will be called after this
+          };
+          
+          setSocket(newSocket);
         }
       } catch (error) {
-        console.error('Error processing WebSocket message:', error);
+        console.error('Error creating task WebSocket connection:', error);
+        setConnectionStatus('disconnected');
+        
+        // Try to reconnect with exponential backoff
+        if (reconnectAttempts < maxReconnectAttempts) {
+          const delay = Math.min(initialReconnectDelay * Math.pow(1.5, reconnectAttempts), 10000);
+          console.log(`Error connecting task WebSocket. Retrying in ${delay}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+          
+          if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+          }
+          
+          reconnectTimer = setTimeout(() => {
+            reconnectAttempts++;
+            createSocketConnection();
+          }, delay);
+        }
       }
     };
     
-    newSocket.onclose = () => {
-      console.log('WebSocket connection closed');
-      setConnectionStatus('disconnected');
-    };
+    // Initial connection attempt
+    createSocketConnection();
     
-    newSocket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setConnectionStatus('disconnected');
-    };
-    
-    setSocket(newSocket);
-    
-    // Clean up the socket connection when the component unmounts
+    // Clean up the socket connection and any timers when the component unmounts
     return () => {
-      newSocket.close();
+      if (socket) {
+        try {
+          socket.close(1000, 'Component unmounting');
+        } catch (err) {
+          console.error('Error closing WebSocket:', err);
+        }
+      }
+      
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
     };
-  }, []);
+  }, [connectionStatus, state.subscribedTasks, state.tasks]);
   
   // Subscribe to a task
   const subscribeToTask = useCallback((taskId: string) => {
