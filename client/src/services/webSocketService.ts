@@ -16,7 +16,8 @@ export type MessageType =
   | 'heartbeat'
   | 'error'
   | 'system'
-  | 'welcome';
+  | 'welcome'
+  | 'conversation_mode';
 
 export interface WebSocketMessage {
   type: MessageType;

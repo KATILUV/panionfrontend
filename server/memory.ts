@@ -22,6 +22,7 @@ export interface Memory {
   imageUrl?: string;  // URL of an image attached to this memory
   imageAnalysis?: string; // Analysis or description of the attached image
   mediaType?: 'text' | 'image' | 'mixed'; // Type of content
+  conversationMode?: string; // Mode of conversation (casual, deep, strategic, logical)
 }
 
 // Valid memory categories
