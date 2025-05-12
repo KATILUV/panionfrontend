@@ -20,6 +20,8 @@ import BrowserPage from "./pages/BrowserPage";
 import TaskMonitorPage from "./pages/TaskMonitorPage";
 // Using Panion Intelligence dashboard
 import PanionIntelligenceDashboard from "./pages/panion-intelligence-dashboard";
+// Test page for WebSocket and Chat
+import TestPage from "./pages/TestPage";
 import NotesAgent from "./components/agents/NotesAgent";
 import SettingsAgent from "./components/agents/SettingsAgent";
 import MarketplaceAgent from "./components/agents/MarketplaceAgent";
@@ -270,7 +272,7 @@ function RegisterAgents() {
       id: 'panion',
       title: 'Panion',
       icon: panionIcon,
-      component: () => <EnhancedPanionChat />,
+      component: () => <PanionChat />,  // Using our newer PanionChat component for testing
       defaultPosition: { x: 650, y: 200 },
       defaultSize: { width: 500, height: 600 },
       capabilities: ['chat', 'reasoning', 'analysis', 'conversation', 'realtime']

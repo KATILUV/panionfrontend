@@ -119,7 +119,8 @@ const EnhancedPanionChat = () => {
     
     // Notify server of mode change
     sendMessage({
-      type: 'conversation_mode',
+      type: 'message',  // Using message type instead of conversation_mode
+      message: `Change conversation mode to ${newMode}`,
       conversationMode: newMode
     });
   };
