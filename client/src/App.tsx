@@ -30,7 +30,7 @@ import FeedbackDemoAgent from "./components/agents/FeedbackDemoAgent";
 import CollaborationAgent from "./components/agents/CollaborationAgent";
 import TaskSchedulerAgent from "./components/agents/TaskSchedulerAgent";
 import DaddyDataAgent from "./components/agents/DaddyDataAgent";
-import WebChatAgent from "./components/agents/WebChatAgent";
+// Remove WebChatAgent import that doesn't exist
 // New Panion component with conversation modes and WebSocket support
 import PanionChat from "./components/agents/PanionChat";
 import EnhancedPanionChat from "./components/agents/EnhancedPanionChat";
@@ -46,6 +46,13 @@ function Router() {
         <Route path="/">
           <PageTransition type="fade" duration={0.4}>
             <LandingPage />
+          </PageTransition>
+        </Route>
+        
+        {/* Test page */}
+        <Route path="/test">
+          <PageTransition type="fade" duration={0.4}>
+            <TestPage />
           </PageTransition>
         </Route>
         
