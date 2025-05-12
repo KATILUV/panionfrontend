@@ -295,10 +295,13 @@ async function processTask(taskId: string, checkpoint?: string): Promise<void> {
   task.logs.push(`[${new Date().toISOString()}] Started processing task`);
   
   // Emit task started event via WebSocket
-  broadcastTaskEvent(taskId, 'task_update', {
+  broadcastMessage({
+    type: 'task_update',
+    taskId,
     status: task.status,
     progress: task.progress,
     message: 'Task processing started',
+    timestamp: Date.now()
   });
   
   try {
@@ -423,11 +426,14 @@ async function processTask(taskId: string, checkpoint?: string): Promise<void> {
       task.logs.push(`[${new Date().toISOString()}] Started step: ${step.description}`);
       
       // Emit step status change via WebSocket
-      broadcastTaskEvent(taskId, 'step_update', {
+      broadcastMessage({
+        type: 'step_update',
+        taskId,
         stepId: step.id,
         status: step.status,
         description: step.description,
         message: `Started step: ${step.description}`,
+        timestamp: Date.now()
       });
 
       try {
@@ -441,11 +447,11 @@ async function processTask(taskId: string, checkpoint?: string): Promise<void> {
         step.status = 'completed';
         step.output = result;
         task.logs.push(`[${new Date().toISOString()}] Completed step: ${step.description}`);
-      } catch (error) {
+      } catch (error: any) {
         // Handle step failure
         step.status = 'failed';
-        step.error = error.message;
-        task.logs.push(`[${new Date().toISOString()}] Step failed: ${step.description} - ${error.message}`);
+        step.error = error?.message || String(error);
+        task.logs.push(`[${new Date().toISOString()}] Step failed: ${step.description} - ${error?.message || String(error)}`);
         
         // Check if we should retry
         if ((task.retryCount || 0) < (task.maxRetries || 0)) {
