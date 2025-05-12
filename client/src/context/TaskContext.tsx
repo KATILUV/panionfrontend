@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect, useState } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useEffect, useState, useRef } from 'react';
 
 // Define the types for task and steps
 export interface TaskStep {
@@ -121,35 +121,34 @@ function taskReducer(state: TaskState, action: TaskAction): TaskState {
     
     case 'UPDATE_TASK': {
       const task = action.payload;
-      const prevTask = state.tasks[task.id];
+      const existingTask = state.tasks[task.id];
       
-      if (!prevTask) {
-        return state; // Task doesn't exist, do nothing
+      // Skip if task doesn't exist
+      if (!existingTask) {
+        return state;
       }
       
-      // Handle task status changes
+      // Update the task in the appropriate lists
       let activeTasks = [...state.activeTasks];
       let completedTasks = [...state.completedTasks];
       let failedTasks = [...state.failedTasks];
       
-      // Remove from previous status list
-      if (prevTask.status !== task.status) {
-        if (prevTask.status === 'completed') {
-          completedTasks = completedTasks.filter(id => id !== task.id);
-        } else if (prevTask.status === 'failed') {
-          failedTasks = failedTasks.filter(id => id !== task.id);
-        } else {
-          activeTasks = activeTasks.filter(id => id !== task.id);
-        }
-        
-        // Add to new status list
-        if (task.status === 'completed') {
-          completedTasks.push(task.id);
-        } else if (task.status === 'failed') {
-          failedTasks.push(task.id);
-        } else {
-          activeTasks.push(task.id);
-        }
+      // Remove from current list
+      if (existingTask.status === 'completed') {
+        completedTasks = completedTasks.filter(id => id !== task.id);
+      } else if (existingTask.status === 'failed') {
+        failedTasks = failedTasks.filter(id => id !== task.id);
+      } else {
+        activeTasks = activeTasks.filter(id => id !== task.id);
+      }
+      
+      // Add to new list
+      if (task.status === 'completed') {
+        completedTasks.push(task.id);
+      } else if (task.status === 'failed') {
+        failedTasks.push(task.id);
+      } else {
+        activeTasks.push(task.id);
       }
       
       return {
@@ -166,30 +165,35 @@ function taskReducer(state: TaskState, action: TaskAction): TaskState {
     
     case 'UPDATE_TASK_PARTIAL': {
       const { id, updates } = action.payload;
-      const prevTask = state.tasks[id];
+      const existingTask = state.tasks[id];
       
-      if (!prevTask) {
-        return state; // Task doesn't exist, do nothing
+      // Skip if task doesn't exist
+      if (!existingTask) {
+        return state;
       }
       
-      const updatedTask = { ...prevTask, ...updates };
+      const updatedTask = {
+        ...existingTask,
+        ...updates
+      };
       
-      // Handle task status changes
+      // Update the task in the appropriate lists if status changed
       let activeTasks = [...state.activeTasks];
       let completedTasks = [...state.completedTasks];
       let failedTasks = [...state.failedTasks];
       
-      // Remove from previous status list and add to new one if status changed
-      if (updates.status && prevTask.status !== updates.status) {
-        if (prevTask.status === 'completed') {
-          completedTasks = completedTasks.filter(taskId => taskId !== id);
-        } else if (prevTask.status === 'failed') {
-          failedTasks = failedTasks.filter(taskId => taskId !== id);
+      // Only update lists if status changed
+      if (updates.status && updates.status !== existingTask.status) {
+        // Remove from current list
+        if (existingTask.status === 'completed') {
+          completedTasks = completedTasks.filter(tid => tid !== id);
+        } else if (existingTask.status === 'failed') {
+          failedTasks = failedTasks.filter(tid => tid !== id);
         } else {
-          activeTasks = activeTasks.filter(taskId => taskId !== id);
+          activeTasks = activeTasks.filter(tid => tid !== id);
         }
         
-        // Add to new status list
+        // Add to new list
         if (updates.status === 'completed') {
           completedTasks.push(id);
         } else if (updates.status === 'failed') {
@@ -212,56 +216,71 @@ function taskReducer(state: TaskState, action: TaskAction): TaskState {
     }
     
     case 'SUBSCRIBE_TO_TASK': {
-      const newSubscribedTasks = new Set(state.subscribedTasks);
-      newSubscribedTasks.add(action.payload);
+      const subscribedTasks = new Set(state.subscribedTasks);
+      subscribedTasks.add(action.payload);
       
       return {
         ...state,
-        subscribedTasks: newSubscribedTasks
+        subscribedTasks
       };
     }
     
     case 'UNSUBSCRIBE_FROM_TASK': {
-      const newSubscribedTasks = new Set(state.subscribedTasks);
-      newSubscribedTasks.delete(action.payload);
+      const subscribedTasks = new Set(state.subscribedTasks);
+      subscribedTasks.delete(action.payload);
       
       return {
         ...state,
-        subscribedTasks: newSubscribedTasks
+        subscribedTasks
       };
     }
     
-    case 'CLEAR_TASKS':
-      return initialState;
+    case 'CLEAR_TASKS': {
+      return {
+        ...state,
+        tasks: {},
+        activeTasks: [],
+        completedTasks: [],
+        failedTasks: []
+      };
+    }
     
-    case 'ACTIVATE_DADDY_DATA':
-      // This is a special action that doesn't directly modify state
-      // It's handled in the TaskProvider component
+    case 'ACTIVATE_DADDY_DATA': {
+      // This action doesn't modify the state directly
+      // but triggers a side effect in the useEffect
       return state;
-      
+    }
+    
     default:
       return state;
   }
 }
 
 // Create the context
-interface TaskContextValue {
+const TaskContext = createContext<{
   state: TaskState;
   dispatch: React.Dispatch<TaskAction>;
-  getTask: (id: string) => Task | null;
-  getTasks: () => Task[];
-  createTask: (taskConfig: Omit<Task, 'id' | 'startTime' | 'logs'>) => Promise<Task>;
-  pauseTask: (id: string) => Promise<Task>;
-  resumeTask: (id: string) => Promise<Task>;
-  cancelTask: (id: string) => Promise<Task>;
-  retryTask: (id: string) => Promise<Task>;
-  subscribeToTask: (id: string) => void;
-  unsubscribeFromTask: (id: string) => void;
+  subscribeToTask: (taskId: string) => void;
+  unsubscribeFromTask: (taskId: string) => void;
+  isConnected: boolean;
   activateDaddyData: (businessType: string, location: string, taskId?: string) => void;
-  connectionStatus: 'connected' | 'connecting' | 'disconnected';
-}
+} | undefined>(undefined);
 
-const TaskContext = createContext<TaskContextValue | null>(null);
+// Helper function to fetch tasks from the server
+async function fetchTasks(): Promise<Task[]> {
+  try {
+    const response = await fetch('/api/tasks');
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching tasks: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch tasks:', error);
+    return [];
+  }
+}
 
 // Create the provider component
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -269,232 +288,205 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected');
   
-  // Initialize the WebSocket connection with improved error handling and connection throttling
-  useEffect(() => {
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 5;
-    const initialReconnectDelay = 1000;
+  // Use refs to manage WebSocket reconnection state
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const maxReconnectAttempts = 5;
+  const initialReconnectDelay = 1000;
+  
+  // Create WebSocket connection
+  const createSocketConnection = useCallback(() => {
+    // Check if we're already connecting
+    if (connectionStatus === 'connecting') return;
     
-    // Use session storage to check for multiple reconnect attempts across page refreshes
+    // Rate limiting check
     const lastAttemptTime = sessionStorage.getItem('lastTaskWsAttempt');
-    const initialConnection = !lastAttemptTime;
     const now = Date.now();
-    
-    // Check if we're trying to reconnect too quickly
     if (lastAttemptTime && (now - parseInt(lastAttemptTime)) < 2000) {
-      // Enforce a minimum time between connection attempts
-      const waitTime = 2000 + Math.random() * 3000; // Add some jitter (2-5 seconds)
+      const waitTime = 2000 + Math.random() * 3000; // 2-5 seconds with jitter
       console.log(`Rate limiting WebSocket connection. Waiting ${Math.round(waitTime/1000)}s before reconnecting`);
       
-      reconnectTimer = setTimeout(() => {
+      // Schedule a reconnection after the rate limit period
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = setTimeout(() => {
         createSocketConnection();
       }, waitTime);
       
-      return () => {
-        if (reconnectTimer) clearTimeout(reconnectTimer);
-      };
+      return;
     }
     
-    const createSocketConnection = () => {
-      try {
-        // Only try to connect if we're disconnected or failed previously
-        if (connectionStatus !== 'connecting') {
-          // Store this attempt time in session storage to prevent rapid reconnections
-          sessionStorage.setItem('lastTaskWsAttempt', Date.now().toString());
-          
-          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-          const wsUrl = `${protocol}//${window.location.host}/ws`;
-          
-          console.log(`Connecting to task WebSocket: ${wsUrl} (attempt ${reconnectAttempts + 1})`);
-          setConnectionStatus('connecting');
-          
-          // Create socket with error handling
-          const newSocket = new WebSocket(wsUrl);
-          
-          newSocket.onopen = () => {
-            console.log('Task WebSocket connection established');
-            setConnectionStatus('connected');
-            // Reset reconnect counter on successful connection
-            reconnectAttempts = 0;
-            
-            try {
-              // Send a hello message to confirm the connection
-              newSocket.send(JSON.stringify({
-                type: 'hello', 
-                timestamp: Date.now()
-              }));
-              
-              // Subscribe to tasks after connection
-              if (state.subscribedTasks.size > 0) {
-                const message = {
-                  type: 'subscribe',
-                  taskIds: Array.from(state.subscribedTasks)
-                };
-                newSocket.send(JSON.stringify(message));
-              }
-            } catch (sendError) {
-              console.error('Error sending subscription message:', sendError);
-            }
-          };
-          
-          newSocket.onmessage = (event) => {
-            try {
-              const data = JSON.parse(event.data);
-              console.log('Task WebSocket message received:', data);
-              
-              if (data.type === 'task_update') {
-                const task = data.task;
-                dispatch({ type: 'UPDATE_TASK', payload: task });
-              }
-              else if (data.type === 'task_created') {
-                const task = data.task;
-                dispatch({ type: 'ADD_TASK', payload: task });
-              }
-              else if (data.type === 'task_progress') {
-                const { taskId, progress, log } = data;
-                // Update task progress
-                dispatch({
-                  type: 'UPDATE_TASK_PARTIAL',
-                  payload: {
-                    id: taskId,
-                    updates: { 
-                      progress,
-                      logs: log ? [...(state.tasks[taskId]?.logs || []), log] : state.tasks[taskId]?.logs
-                    }
-                  }
-                });
-              }
-              else if (data.type === 'task_step_update') {
-                const { taskId, step } = data;
-                const task = state.tasks[taskId];
-                
-                if (task) {
-                  // Find and update the step
-                  const updatedSteps = task.steps.map(s => 
-                    s.id === step.id ? step : s
-                  );
-                  
-                  // If step wasn't found, add it
-                  if (!updatedSteps.find(s => s.id === step.id)) {
-                    updatedSteps.push(step);
-                  }
-                  
-                  dispatch({
-                    type: 'UPDATE_TASK_PARTIAL',
-                    payload: {
-                      id: taskId,
-                      updates: { steps: updatedSteps }
-                    }
-                  });
-                }
-              }
-            } catch (error) {
-              console.error('Error processing WebSocket message:', error);
-            }
-          };
-          
-          newSocket.onclose = (event) => {
-            console.log(`Task WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`);
-            setConnectionStatus('disconnected');
-            setSocket(null);
-            
-            // Only attempt to reconnect if not a normal closure and we haven't exceeded max attempts
-            const isAbnormalClosure = event.code !== 1000 && event.code !== 1001;
-            const isConnectionReset = event.code === 1006;
-            
-            if ((isAbnormalClosure || isConnectionReset) && reconnectAttempts < maxReconnectAttempts) {
-              // For code 1006 (abnormal closure), use a longer delay to avoid rapid reconnection cycles
-              const baseDelay = isConnectionReset ? 3000 : initialReconnectDelay;
-              // Use exponential backoff with some randomness to prevent thundering herd
-              const jitter = Math.random() * 1000;
-              const delay = Math.min(baseDelay * Math.pow(1.5, reconnectAttempts) + jitter, 15000);
-              
-              console.log(`Attempting to reconnect task WebSocket in ${Math.round(delay)}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
-              
-              // Cleanup any existing timer
-              if (reconnectTimer) {
-                clearTimeout(reconnectTimer);
-              }
-              
-              reconnectTimer = setTimeout(() => {
-                reconnectAttempts++;
-                createSocketConnection();
-              }, delay);
-            } else if (event.code === 1008) {
-              // Connection rate limited by server - wait longer before retrying
-              console.log('Connection was rate limited. Waiting longer before reconnecting.');
-              
-              if (reconnectAttempts < maxReconnectAttempts) {
-                const rateLimitDelay = 5000 + (reconnectAttempts * 3000); // 5-20 second delay
-                
-                if (reconnectTimer) {
-                  clearTimeout(reconnectTimer);
-                }
-                
-                reconnectTimer = setTimeout(() => {
-                  reconnectAttempts++;
-                  createSocketConnection();
-                }, rateLimitDelay);
-              }
-            } else if (reconnectAttempts >= maxReconnectAttempts) {
-              console.error('Maximum task WebSocket reconnection attempts reached. Giving up further attempts.');
-              
-              // Reset reconnect counter after a longer timeout to allow future reconnection 
-              // attempts after the component stays mounted for a while
-              reconnectTimer = setTimeout(() => {
-                console.log('Resetting reconnection counter after cool-down period');
-                reconnectAttempts = 0;
-              }, 30000); // 30 second cool-down
-            }
-          };
-          
-          newSocket.onerror = (error) => {
-            console.error('Task WebSocket error:', error);
-            // Don't set disconnected here - the onclose handler will be called after this
-          };
-          
-          setSocket(newSocket);
-        }
-      } catch (error) {
-        console.error('Error creating task WebSocket connection:', error);
-        setConnectionStatus('disconnected');
+    // Update connection status and store attempt time
+    setConnectionStatus('connecting');
+    sessionStorage.setItem('lastTaskWsAttempt', now.toString());
+    
+    try {
+      // Create a new WebSocket connection
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      console.log(`Connecting to task WebSocket: ${wsUrl} (attempt ${reconnectAttemptsRef.current + 1})`);
+      
+      const newSocket = new WebSocket(wsUrl);
+      
+      // Set up event handlers
+      newSocket.onopen = () => {
+        console.log('Task WebSocket connection established');
+        setConnectionStatus('connected');
+        reconnectAttemptsRef.current = 0; // Reset reconnect attempts on success
         
-        // Try to reconnect with exponential backoff
-        if (reconnectAttempts < maxReconnectAttempts) {
-          const delay = Math.min(initialReconnectDelay * Math.pow(1.5, reconnectAttempts), 10000);
-          console.log(`Error connecting task WebSocket. Retrying in ${delay}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+        // Send initial messages
+        try {
+          // Send hello message
+          newSocket.send(JSON.stringify({
+            type: 'hello',
+            timestamp: Date.now()
+          }));
           
-          if (reconnectTimer) {
-            clearTimeout(reconnectTimer);
+          // Subscribe to tasks
+          if (state.subscribedTasks.size > 0) {
+            newSocket.send(JSON.stringify({
+              type: 'subscribe',
+              taskIds: Array.from(state.subscribedTasks)
+            }));
+          }
+        } catch (error) {
+          console.error('Error sending initial messages:', error);
+        }
+      };
+      
+      newSocket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Task WebSocket message received:', data);
+          
+          // Process different message types
+          if (data.type === 'task_update') {
+            dispatch({ type: 'UPDATE_TASK', payload: data.task });
+          }
+          else if (data.type === 'task_created') {
+            dispatch({ type: 'ADD_TASK', payload: data.task });
+          }
+          else if (data.type === 'task_progress') {
+            const { taskId, progress, log } = data;
+            dispatch({
+              type: 'UPDATE_TASK_PARTIAL',
+              payload: {
+                id: taskId,
+                updates: { 
+                  progress,
+                  logs: log ? [...(state.tasks[taskId]?.logs || []), log] : state.tasks[taskId]?.logs
+                }
+              }
+            });
+          }
+          else if (data.type === 'task_step_update') {
+            const { taskId, step } = data;
+            const task = state.tasks[taskId];
+            
+            if (task) {
+              // Update or add the step
+              const updatedSteps = task.steps.map(s => 
+                s.id === step.id ? step : s
+              );
+              
+              if (!updatedSteps.find(s => s.id === step.id)) {
+                updatedSteps.push(step);
+              }
+              
+              dispatch({
+                type: 'UPDATE_TASK_PARTIAL',
+                payload: {
+                  id: taskId,
+                  updates: { steps: updatedSteps }
+                }
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error processing WebSocket message:', error);
+        }
+      };
+      
+      newSocket.onclose = (event) => {
+        console.log(`Task WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`);
+        setConnectionStatus('disconnected');
+        setSocket(null);
+        
+        // Handle reconnection
+        const isAbnormalClosure = event.code !== 1000 && event.code !== 1001;
+        const isConnectionReset = event.code === 1006;
+        
+        if ((isAbnormalClosure || isConnectionReset) && reconnectAttemptsRef.current < maxReconnectAttempts) {
+          // Calculate delay with exponential backoff and jitter
+          const baseDelay = isConnectionReset ? 3000 : initialReconnectDelay;
+          const jitter = Math.random() * 1000;
+          const delay = Math.min(baseDelay * Math.pow(1.5, reconnectAttemptsRef.current) + jitter, 15000);
+          
+          console.log(`Attempting to reconnect task WebSocket in ${Math.round(delay)}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
+          
+          // Clean up any existing timer
+          if (reconnectTimerRef.current) {
+            clearTimeout(reconnectTimerRef.current);
           }
           
-          reconnectTimer = setTimeout(() => {
-            reconnectAttempts++;
+          // Schedule reconnection
+          reconnectTimerRef.current = setTimeout(() => {
+            reconnectAttemptsRef.current++;
             createSocketConnection();
           }, delay);
+        } 
+        else if (event.code === 1008) {
+          // Handle rate limiting from server
+          console.log('Connection was rate limited. Waiting longer before reconnecting.');
+          
+          if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+            const rateLimitDelay = 5000 + (reconnectAttemptsRef.current * 3000);
+            
+            if (reconnectTimerRef.current) {
+              clearTimeout(reconnectTimerRef.current);
+            }
+            
+            reconnectTimerRef.current = setTimeout(() => {
+              reconnectAttemptsRef.current++;
+              createSocketConnection();
+            }, rateLimitDelay);
+          }
+        } 
+        else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+          console.error('Maximum task WebSocket reconnection attempts reached. Giving up further attempts.');
+          
+          // Reset counter after a cool-down period
+          reconnectTimerRef.current = setTimeout(() => {
+            console.log('Resetting reconnection counter after cool-down period');
+            reconnectAttemptsRef.current = 0;
+          }, 30000);
         }
-      }
-    };
-    
-    // Initial connection attempt
-    createSocketConnection();
-    
-    // Clean up the socket connection and any timers when the component unmounts
-    return () => {
-      if (socket) {
-        try {
-          socket.close(1000, 'Component unmounting');
-        } catch (err) {
-          console.error('Error closing WebSocket:', err);
-        }
-      }
+      };
       
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
+      newSocket.onerror = (error) => {
+        console.error('Task WebSocket error:', error);
+        // onclose will be called after this
+      };
+      
+      setSocket(newSocket);
+    } catch (error) {
+      console.error('Error creating WebSocket connection:', error);
+      setConnectionStatus('disconnected');
+      
+      // Handle reconnection after error
+      if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+        const delay = initialReconnectDelay * Math.pow(1.5, reconnectAttemptsRef.current);
+        
+        if (reconnectTimerRef.current) {
+          clearTimeout(reconnectTimerRef.current);
+        }
+        
+        reconnectTimerRef.current = setTimeout(() => {
+          reconnectAttemptsRef.current++;
+          createSocketConnection();
+        }, delay);
       }
-    };
-  }, [connectionStatus, state.subscribedTasks, state.tasks]);
+    }
+  }, [connectionStatus, state.subscribedTasks]);
   
   // Subscribe to a task
   const subscribeToTask = useCallback((taskId: string) => {
@@ -520,199 +512,193 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [socket]);
   
-  // Initialize data from API
+  // Fetch tasks on initial load
   useEffect(() => {
-    // Fetch tasks on initial load
     fetchTasks().then(tasks => {
       dispatch({ type: 'SET_TASKS', payload: tasks });
     });
   }, []);
   
-  // Fetch all tasks
-  const fetchTasks = async (): Promise<Task[]> => {
-    try {
-      const response = await fetch('/api/tasks');
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-      return [];
-    }
-  };
-  
-  // Get a specific task by ID
-  const getTask = useCallback((id: string): Task | null => {
-    return state.tasks[id] || null;
-  }, [state.tasks]);
-  
-  // Get all tasks
-  const getTasks = useCallback((): Task[] => {
-    return Object.values(state.tasks);
-  }, [state.tasks]);
-  
-  // Create a new task
-  const createTask = async (taskConfig: Omit<Task, 'id' | 'startTime' | 'logs'>): Promise<Task> => {
-    try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(taskConfig)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+  // Initialize WebSocket connection
+  useEffect(() => {
+    createSocketConnection();
+    
+    // Cleanup function
+    return () => {
+      if (socket) {
+        socket.close(1000, 'Component unmounting');
       }
       
-      const task = await response.json();
-      dispatch({ type: 'ADD_TASK', payload: task });
-      return task;
-    } catch (error) {
-      console.error('Error creating task:', error);
-      throw error;
-    }
-  };
-  
-  // Pause a task
-  const pauseTask = async (id: string): Promise<Task> => {
-    try {
-      const response = await fetch(`/api/tasks/${id}/pause`, {
-        method: 'POST'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
       }
-      
-      const task = await response.json();
-      dispatch({ type: 'UPDATE_TASK', payload: task });
-      return task;
-    } catch (error) {
-      console.error('Error pausing task:', error);
-      throw error;
-    }
-  };
+    };
+  }, [createSocketConnection, socket]);
   
-  // Resume a task
-  const resumeTask = async (id: string): Promise<Task> => {
-    try {
-      const response = await fetch(`/api/tasks/${id}/resume`, {
-        method: 'POST'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const task = await response.json();
-      dispatch({ type: 'UPDATE_TASK', payload: task });
-      return task;
-    } catch (error) {
-      console.error('Error resuming task:', error);
-      throw error;
-    }
-  };
-  
-  // Cancel a task
-  const cancelTask = async (id: string): Promise<Task> => {
-    try {
-      const response = await fetch(`/api/tasks/${id}/cancel`, {
-        method: 'POST'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const task = await response.json();
-      dispatch({ type: 'UPDATE_TASK', payload: task });
-      return task;
-    } catch (error) {
-      console.error('Error canceling task:', error);
-      throw error;
-    }
-  };
-  
-  // Retry a task
-  const retryTask = async (id: string): Promise<Task> => {
-    try {
-      const response = await fetch(`/api/tasks/${id}/retry`, {
-        method: 'POST'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const task = await response.json();
-      dispatch({ type: 'ADD_TASK', payload: task });
-      return task;
-    } catch (error) {
-      console.error('Error retrying task:', error);
-      throw error;
-    }
-  };
-  
-  // Function to activate Daddy Data Agent
+  // Function to activate Daddy Data agent
   const activateDaddyData = useCallback((businessType: string, location: string, taskId?: string) => {
-    console.log(`Activating Daddy Data for ${businessType} in ${location}`, taskId ? `with task ID: ${taskId}` : '');
+    console.log(`Activating Daddy Data search: ${businessType} in ${location}`);
     
-    // First dispatch the action to notify any listeners
-    dispatch({
-      type: 'ACTIVATE_DADDY_DATA',
-      payload: { businessType, location, taskId }
-    });
-    
-    // Show a notification or open the Daddy Data Agent window
-    // This could trigger a window opening event in the Desktop component
-    
-    try {
-      // Create a custom event that other components can listen for
-      const event = new CustomEvent('daddyDataActivated', {
-        detail: { businessType, location, taskId }
-      });
-      window.dispatchEvent(event);
+    // Create a new task if one wasn't provided
+    if (!taskId) {
+      // This would be handled by the server normally
+      const newTaskId = `daddy-data-${Date.now()}`;
       
-      // If there's a task ID, subscribe to updates
-      if (taskId) {
-        subscribeToTask(taskId);
-      }
-    } catch (error) {
-      console.error('Error dispatching Daddy Data activation event:', error);
+      // Create a dummy task for now
+      const newTask: Task = {
+        id: newTaskId,
+        agentType: 'daddy-data',
+        description: `Search for ${businessType} in ${location}`,
+        status: 'pending',
+        progress: 0,
+        steps: [
+          {
+            id: `${newTaskId}-step-1`,
+            description: 'Preparing business search query',
+            status: 'pending'
+          },
+          {
+            id: `${newTaskId}-step-2`,
+            description: 'Searching for businesses',
+            status: 'pending'
+          },
+          {
+            id: `${newTaskId}-step-3`,
+            description: 'Processing results',
+            status: 'pending'
+          }
+        ],
+        startTime: new Date().toISOString(),
+        logs: [`Task created: Search for ${businessType} in ${location}`]
+      };
+      
+      // Add the task to state
+      dispatch({ type: 'ADD_TASK', payload: newTask });
+      
+      // Subscribe to updates for this task
+      subscribeToTask(newTaskId);
+      
+      // Dispatch the action to trigger actual work on server
+      dispatch({ 
+        type: 'ACTIVATE_DADDY_DATA', 
+        payload: { 
+          businessType, 
+          location,
+          taskId: newTaskId
+        } 
+      });
+      
+      // In a real app, we would now make an API call to create the task on the server
+      // For demo purposes, we'll simulate task progress
+      simulateTaskProgress(newTask);
+    } else {
+      // Use existing task
+      dispatch({ 
+        type: 'ACTIVATE_DADDY_DATA', 
+        payload: { businessType, location, taskId } 
+      });
     }
-  }, [dispatch, subscribeToTask]);
-
-  const value = {
-    state,
-    dispatch,
-    getTask,
-    getTasks,
-    createTask,
-    pauseTask,
-    resumeTask,
-    cancelTask,
-    retryTask,
-    subscribeToTask,
-    unsubscribeFromTask,
-    activateDaddyData,
-    connectionStatus
+  }, [subscribeToTask]);
+  
+  // Helper function to simulate task progress (for demo purposes)
+  const simulateTaskProgress = (task: Task) => {
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+      progress += 10;
+      
+      if (progress <= 100) {
+        // Update task progress
+        dispatch({
+          type: 'UPDATE_TASK_PARTIAL',
+          payload: {
+            id: task.id,
+            updates: { 
+              progress,
+              logs: [...(task.logs || []), `Progress update: ${progress}%`]
+            }
+          }
+        });
+        
+        // Update steps based on progress
+        if (progress === 30) {
+          const updatedSteps = [...task.steps];
+          updatedSteps[0] = { ...updatedSteps[0], status: 'completed' };
+          updatedSteps[1] = { ...updatedSteps[1], status: 'in_progress' };
+          
+          dispatch({
+            type: 'UPDATE_TASK_PARTIAL',
+            payload: {
+              id: task.id,
+              updates: { 
+                steps: updatedSteps,
+                status: 'in_progress'
+              }
+            }
+          });
+        } else if (progress === 70) {
+          const updatedSteps = [...task.steps];
+          updatedSteps[1] = { ...updatedSteps[1], status: 'completed' };
+          updatedSteps[2] = { ...updatedSteps[2], status: 'in_progress' };
+          
+          dispatch({
+            type: 'UPDATE_TASK_PARTIAL',
+            payload: {
+              id: task.id,
+              updates: { steps: updatedSteps }
+            }
+          });
+        } else if (progress === 100) {
+          const updatedSteps = [...task.steps];
+          updatedSteps[2] = { ...updatedSteps[2], status: 'completed' };
+          
+          dispatch({
+            type: 'UPDATE_TASK_PARTIAL',
+            payload: {
+              id: task.id,
+              updates: { 
+                steps: updatedSteps,
+                status: 'completed',
+                completionTime: new Date().toISOString(),
+                result: {
+                  businesses: [
+                    { name: 'Example Business 1', address: '123 Main St', phone: '(555) 123-4567', rating: 4.5 },
+                    { name: 'Example Business 2', address: '456 Oak Ave', phone: '(555) 987-6543', rating: 4.0 },
+                    { name: 'Example Business 3', address: '789 Pine Blvd', phone: '(555) 567-8901', rating: 4.8 }
+                  ]
+                }
+              }
+            }
+          });
+          
+          clearInterval(progressInterval);
+        }
+      } else {
+        clearInterval(progressInterval);
+      }
+    }, 1000);
   };
   
   return (
-    <TaskContext.Provider value={value}>
+    <TaskContext.Provider value={{ 
+      state, 
+      dispatch, 
+      subscribeToTask, 
+      unsubscribeFromTask,
+      isConnected: connectionStatus === 'connected',
+      activateDaddyData
+    }}>
       {children}
     </TaskContext.Provider>
   );
 };
 
-// Create a custom hook to use the context
-export const useTaskContext = (): TaskContextValue => {
+// Custom hook to use the tasks context
+export const useTaskContext = () => {
   const context = useContext(TaskContext);
-  if (!context) {
+  
+  if (context === undefined) {
     throw new Error('useTaskContext must be used within a TaskProvider');
   }
+  
   return context;
 };
