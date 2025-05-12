@@ -400,9 +400,17 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSocket(null);
             
             // Only attempt to reconnect if not a normal closure and we haven't exceeded max attempts
-            if (event.code !== 1000 && event.code !== 1001 && reconnectAttempts < maxReconnectAttempts) {
-              const delay = Math.min(initialReconnectDelay * Math.pow(1.5, reconnectAttempts), 10000);
-              console.log(`Attempting to reconnect task WebSocket in ${delay}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+            const isAbnormalClosure = event.code !== 1000 && event.code !== 1001;
+            const isConnectionReset = event.code === 1006;
+            
+            if ((isAbnormalClosure || isConnectionReset) && reconnectAttempts < maxReconnectAttempts) {
+              // For code 1006 (abnormal closure), use a longer delay to avoid rapid reconnection cycles
+              const baseDelay = isConnectionReset ? 3000 : initialReconnectDelay;
+              // Use exponential backoff with some randomness to prevent thundering herd
+              const jitter = Math.random() * 1000;
+              const delay = Math.min(baseDelay * Math.pow(1.5, reconnectAttempts) + jitter, 15000);
+              
+              console.log(`Attempting to reconnect task WebSocket in ${Math.round(delay)}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
               
               // Cleanup any existing timer
               if (reconnectTimer) {
@@ -413,8 +421,31 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 reconnectAttempts++;
                 createSocketConnection();
               }, delay);
+            } else if (event.code === 1008) {
+              // Connection rate limited by server - wait longer before retrying
+              console.log('Connection was rate limited. Waiting longer before reconnecting.');
+              
+              if (reconnectAttempts < maxReconnectAttempts) {
+                const rateLimitDelay = 5000 + (reconnectAttempts * 3000); // 5-20 second delay
+                
+                if (reconnectTimer) {
+                  clearTimeout(reconnectTimer);
+                }
+                
+                reconnectTimer = setTimeout(() => {
+                  reconnectAttempts++;
+                  createSocketConnection();
+                }, rateLimitDelay);
+              }
             } else if (reconnectAttempts >= maxReconnectAttempts) {
-              console.error('Maximum task WebSocket reconnection attempts reached.');
+              console.error('Maximum task WebSocket reconnection attempts reached. Giving up further attempts.');
+              
+              // Reset reconnect counter after a longer timeout to allow future reconnection 
+              // attempts after the component stays mounted for a while
+              reconnectTimer = setTimeout(() => {
+                console.log('Resetting reconnection counter after cool-down period');
+                reconnectAttempts = 0;
+              }, 30000); // 30 second cool-down
             }
           };
           

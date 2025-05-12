@@ -482,8 +482,27 @@ export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
   const TASK_INACTIVE_TIMEOUT = 120000; // 2 minutes
   const CHAT_INACTIVE_TIMEOUT = 180000; // 3 minutes
   
+  // Send periodic ping to keep connections alive
+  const pingInterval = setInterval(() => {
+    clients.forEach((client, ws) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        try {
+          // Send a ping message to verify connection
+          ws.send(JSON.stringify({
+            type: 'heartbeat',
+            timestamp: Date.now()
+          }));
+        } catch (error) {
+          // If ping fails, close the connection
+          log(`[websocket] Error sending heartbeat: ${error}`, 'error');
+          cleanupConnection(ws, 1011, 'Heartbeat failed');
+        }
+      }
+    });
+  }, 25000); // Send ping every 25 seconds to prevent timeout
+  
   // Efficient memory management by periodically checking for stale connections
-  const interval = setInterval(() => {
+  const cleanupInterval = setInterval(() => {
     const now = Date.now();
     let closedCount = 0;
     
@@ -492,21 +511,22 @@ export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
         // Set timeout based on client type
         const timeout = client.type === 'task' ? TASK_INACTIVE_TIMEOUT : CHAT_INACTIVE_TIMEOUT;
         
+        // Check if connection is stale (no activity for too long)
         if (now - client.lastActivity > timeout) {
-          log(`[websocket] Terminating inactive ${client.type} connection`);
-          ws.terminate();
-          clients.delete(ws);
+          log(`[websocket] Closing inactive ${client.type} connection (${Math.round((now - client.lastActivity)/1000)}s idle)`);
+          cleanupConnection(ws, 1000, 'Connection timeout due to inactivity');
+          closedCount++;
+        }
+        // Also check for sockets in weird states
+        else if (ws.readyState !== WebSocket.OPEN && ws.readyState !== WebSocket.CONNECTING) {
+          log(`[websocket] Cleaning up ${client.type} connection in ${ws.readyState === WebSocket.CLOSING ? 'CLOSING' : 'CLOSED'} state`);
+          cleanupConnection(ws);
           closedCount++;
         }
       } catch (error) {
         // Clean up any connections that throw errors
         log(`[websocket] Error processing connection: ${error}`, 'error');
-        try {
-          ws.terminate();
-        } catch {
-          // Ignore errors when terminating
-        }
-        clients.delete(ws);
+        cleanupConnection(ws, 1011, 'Error during connection processing');
         closedCount++;
       }
     });
@@ -527,11 +547,10 @@ export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
     }
   }, HEARTBEAT_INTERVAL);
   
-  // Clean up the interval on process exit to prevent memory leaks
+  // Clean up all intervals on process exit to prevent memory leaks
   process.on('exit', () => {
-    if (interval) {
-      clearInterval(interval);
-    }
+    if (pingInterval) clearInterval(pingInterval);
+    if (cleanupInterval) clearInterval(cleanupInterval);
   });
   
   // Store reference to task WebSocket server
@@ -604,7 +623,13 @@ export function broadcastTaskEvent(
   // Send to all task clients with matching subscriptions
   clients.forEach((client, ws) => {
     // Check if client is still connected
+    // Only OPEN readyState (1) is valid for sending messages
     if (ws.readyState !== WebSocket.OPEN) {
+      // If the socket is in CLOSING or CLOSED state, remove it from clients
+      if (ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED) {
+        log('[websocket] Removing stale client connection');
+        clients.delete(ws);
+      }
       return;
     }
     
@@ -620,11 +645,17 @@ export function broadcastTaskEvent(
         ws.send(message);
       } catch (error) {
         log(`[websocket] Error sending message to client: ${error}`, 'error');
-        // Close problematic connections
+        // Close problematic connections with appropriate close code
         try {
-          ws.close();
-        } catch {
-          // Ignore errors when closing already problematic connections
+          // Use code 1011 (Internal Error) for send failures
+          ws.close(1011, 'Failed to send message');
+        } catch (closeError) {
+          // For connections that can't even be closed normally, force terminate
+          try {
+            ws.terminate();
+          } catch {
+            // Last resort - just remove from clients
+          }
         }
         clients.delete(ws);
       }
@@ -633,6 +664,27 @@ export function broadcastTaskEvent(
   
   if (clientCount > 0) {
     log(`[websocket] Broadcast task event to ${clientCount} clients: ${taskId} (${eventType})`);
+  }
+}
+
+/**
+ * Helper function to safely terminate connections and clean up resources
+ * Used by shutdown and cleanup functions
+ */
+function cleanupConnection(ws: WebSocket, code = 1000, reason = 'Normal closure'): void {
+  try {
+    // First try to close normally
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.close(code, reason);
+    } else {
+      // If already closing/closed, force terminate
+      ws.terminate();
+    }
+  } catch (error) {
+    log(`[websocket] Error during connection cleanup: ${error}`, 'error');
+  } finally {
+    // Always remove from clients map
+    clients.delete(ws);
   }
 }
 
