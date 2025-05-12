@@ -70,13 +70,37 @@ export function initializeWebSocketServer(httpServer: Server): WebSocketServer {
   // Create WebSocket server for task connections
   const taskWss = new WebSocketServer({ 
     server: httpServer, 
-    path: '/ws'
+    path: '/ws',
+    // Fix for missing headers
+    verifyClient: (info, cb) => {
+      const headers = info.req.headers;
+      // Force connection upgrade header to be present
+      if (!headers['connection']) {
+        info.req.headers['connection'] = 'Upgrade';
+      }
+      if (!headers['upgrade']) {
+        info.req.headers['upgrade'] = 'websocket';
+      }
+      cb(true);
+    }
   });
   
   // Create WebSocket server for chat connections
   const chatWss = new WebSocketServer({ 
     server: httpServer, 
-    path: '/ws-chat'
+    path: '/ws-chat',
+    // Fix for missing headers
+    verifyClient: (info, cb) => {
+      const headers = info.req.headers;
+      // Force connection upgrade header to be present
+      if (!headers['connection']) {
+        info.req.headers['connection'] = 'Upgrade';
+      }
+      if (!headers['upgrade']) {
+        info.req.headers['upgrade'] = 'websocket';
+      }
+      cb(true);
+    }
   });
   
   log('[websocket] Unified WebSocket server initialized');
