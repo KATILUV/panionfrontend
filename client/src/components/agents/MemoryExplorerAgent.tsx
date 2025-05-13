@@ -140,18 +140,18 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
       setIsLoading(true);
       
       // Fetch memory stats first
-      const statsResponse = await fetch('/api/memory/stats');
+      const statsResponse = await fetch('/api/memory-stats');
       if (statsResponse.ok) {
         const stats = await statsResponse.json();
         setMemoryStats(stats);
       }
       
       // Fetch all memories
-      const memoriesResponse = await fetch('/api/memory/category/all');
+      const memoriesResponse = await fetch('/api/memories/all');
       if (memoriesResponse.ok) {
         const data = await memoriesResponse.json();
-        setMemories(data);
-        setFilteredMemories(data);
+        setMemories(data.memories || []);
+        setFilteredMemories(data.memories || []);
       } else {
         throw new Error('Failed to fetch memories');
       }
@@ -178,10 +178,10 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
     setIsLoading(true);
     
     try {
-      const response = await fetch(`/api/memory/category/${category}`);
+      const response = await fetch(`/api/memories/${category}`);
       if (response.ok) {
         const data = await response.json();
-        setFilteredMemories(data);
+        setFilteredMemories(data.memories || []);
       } else {
         throw new Error(`Failed to fetch ${category} memories`);
       }
@@ -208,18 +208,27 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
     setIsLoading(true);
     
     try {
-      // First try the basic keyword search
-      const searchResponse = await fetch(`/api/memory/search?query=${encodeURIComponent(searchQuery)}`);
-      if (searchResponse.ok) {
-        const data = await searchResponse.json();
-        setFilteredMemories(data);
-      }
+      // First try to filter existing memories (client-side search)
+      const filteredResults = memories.filter(memory => 
+        memory.content.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredMemories(filteredResults);
       
-      // Then get smart search results (AI-based)
-      const smartSearchResponse = await fetch(`/api/memory/smart-search?query=${encodeURIComponent(searchQuery)}&category=${activeCategory}`);
+      // Then get smart search results (AI-based) using POST endpoint
+      const smartSearchResponse = await fetch('/api/smart-memory-search-by-category', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: searchQuery,
+          category: activeCategory !== 'all' ? activeCategory : undefined
+        })
+      });
+      
       if (smartSearchResponse.ok) {
-        const data = await smartSearchResponse.text();
-        setSmartSearchResult(data);
+        const data = await smartSearchResponse.json();
+        setSmartSearchResult(data.result);
       }
     } catch (error) {
       log.error('Error searching memories:', error);

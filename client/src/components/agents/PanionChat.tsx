@@ -97,6 +97,9 @@ const PanionChat: React.FC<PanionChatProps> = ({ onClose }) => {
     return match ? match[2] : null;
   };
   
+  // Get session ID from cookie or use default
+  const sessionId = getCookieValue('sessionId') || 'default';
+  
   // Add welcome message based on conversation mode
   useEffect(() => {
     let welcomeMessage = '';
@@ -605,6 +608,10 @@ ${result.summary.suggestedFollowups.length > 0 ?
             <TabsTrigger value="gallery">
               <ImageIcon size={16} className="mr-1" />
               Gallery
+            </TabsTrigger>
+            <TabsTrigger value="memory">
+              <Database size={16} className="mr-1" />
+              Memory
             </TabsTrigger>
           </TabsList>
         </div>
