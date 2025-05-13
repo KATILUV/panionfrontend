@@ -119,10 +119,7 @@ function Router() {
           </PageTransition>
         </Route>
         
-        {/* Legacy Route (for backward compatibility) */}
-        <Route path="/manus">
-          <Redirect to="/intelligence" />
-        </Route>
+        {/* Removed legacy /manus route */}
         
         {/* Redirect old root path to landing page */}
         <Route path="/desktop/old">
