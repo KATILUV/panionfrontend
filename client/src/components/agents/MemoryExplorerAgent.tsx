@@ -48,6 +48,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import log from '@/utils/logger';
+import { debounce } from '@/utils/debounceUtils';
 
 // Memory type definitions
 interface Memory {
@@ -689,7 +690,6 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
                       placeholder="Search memories..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     />
                   </div>
                   <Button onClick={handleSearch} disabled={isLoading}>
