@@ -59,7 +59,7 @@ const UserPreferences: React.FC = () => {
           Panion Preferences
         </CardTitle>
         <CardDescription>
-          Customize how Manus appears and responds to you
+          Customize how Panion appears and responds to you
         </CardDescription>
       </CardHeader>
       
@@ -115,7 +115,7 @@ const UserPreferences: React.FC = () => {
               <div>
                 <h3 className="text-sm font-medium mb-2">Personality Traits</h3>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Select up to 5 traits that you'd like Manus to exhibit in conversations.
+                  Select up to 5 traits that you'd like Panion to exhibit in conversations.
                 </p>
                 
                 <div className="flex flex-wrap gap-2">
@@ -153,7 +153,7 @@ const UserPreferences: React.FC = () => {
               <div>
                 <h3 className="text-sm font-medium mb-2">Agent Reactiveness</h3>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Adjust how reactive or measured Manus should be in responses.
+                  Adjust how reactive or measured Panion should be in responses.
                 </p>
                 
                 <div className="space-y-4">
@@ -224,7 +224,7 @@ const UserPreferences: React.FC = () => {
                     Show Thinking Process
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Display Manus's reasoning behind responses
+                    Display Panion's reasoning behind responses
                   </p>
                 </div>
                 <Switch 
@@ -258,7 +258,7 @@ const UserPreferences: React.FC = () => {
               <div>
                 <h3 className="text-sm font-medium mb-2">Response Length</h3>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Choose how concise or detailed you'd like Manus's responses to be.
+                  Choose how concise or detailed you'd like Panion's responses to be.
                 </p>
                 
                 <Select 
@@ -279,7 +279,7 @@ const UserPreferences: React.FC = () => {
               <div>
                 <h3 className="text-sm font-medium mb-2">Detail Level</h3>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Set the level of detail Manus should include in responses.
+                  Set the level of detail Panion should include in responses.
                 </p>
                 
                 <Select 
@@ -321,7 +321,7 @@ const UserPreferences: React.FC = () => {
               <div>
                 <h3 className="text-sm font-medium mb-2">Memory Utilization</h3>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Control how extensively Manus uses conversation history memory.
+                  Control how extensively Panion uses conversation history memory.
                 </p>
                 
                 <Select 

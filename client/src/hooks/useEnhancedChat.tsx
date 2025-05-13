@@ -22,7 +22,7 @@ interface UseEnhancedChatOptions {
 }
 
 /**
- * Enhanced chat hook with Manus-like features
+ * Enhanced chat hook with Panion-like features
  */
 export const useEnhancedChat = (options: UseEnhancedChatOptions = {}) => {
   const { userId, initialMessages = [], sessionId = 'default', onError } = options;
