@@ -242,6 +242,27 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
       setIsLoading(false);
     }
   };
+  
+  // Create debounced search function
+  const debouncedSearch = useCallback(
+    debounce(() => {
+      if (searchQuery.trim()) {
+        handleSearch();
+      }
+    }, 500),
+    [searchQuery, handleSearch]
+  );
+  
+  // Effect to trigger debounced search when query changes
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      debouncedSearch();
+    } else if (memories.length > 0) {
+      // Reset to all memories if search is cleared
+      setFilteredMemories(memories);
+      setSmartSearchResult(null);
+    }
+  }, [searchQuery, debouncedSearch, memories]);
 
   // Function to handle sorting
   const handleSort = (option: SortOption) => {
@@ -323,6 +344,66 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create memory',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Function to delete a memory
+  const deleteMemory = async (memory: Memory) => {
+    if (!memory || !memory.timestamp || !memory.sessionId) {
+      toast({
+        title: 'Invalid Memory',
+        description: 'Cannot delete this memory due to missing identifier',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Ask for confirmation
+    if (!window.confirm('Are you sure you want to delete this memory?')) {
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Call the API to delete the memory
+      const response = await fetch('/api/memory/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sessionId: memory.sessionId,
+          timestamp: memory.timestamp,
+          content: memory.content
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete memory');
+      }
+      
+      // Refresh memories after deleting
+      await initializeAgent();
+      
+      // Clear selected memory if it was deleted
+      if (selectedMemory && selectedMemory.timestamp === memory.timestamp) {
+        setSelectedMemory(null);
+      }
+      
+      toast({
+        title: 'Memory Deleted',
+        description: 'The memory has been successfully removed',
+      });
+    } catch (error) {
+      log.error('Error deleting memory:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete memory',
         variant: 'destructive'
       });
     } finally {

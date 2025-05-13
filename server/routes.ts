@@ -14,8 +14,10 @@ import {
   getMemoriesByCategory, 
   getMemoryStats,
   saveToMemory,
-  MEMORY_CATEGORIES 
+  MEMORY_CATEGORIES
 } from "./memory";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 // Import Memory interface type from memory.ts
 import type { Memory } from "./memory";
@@ -892,6 +894,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error saving memory:', error);
       res.status(500).json({ 
         message: 'Error saving memory' 
+      });
+    }
+  });
+  
+  // Delete a memory
+  app.delete('/api/memory/delete', async (req, res) => {
+    try {
+      const { sessionId, timestamp, content } = req.body;
+      
+      // Validate required parameters
+      if (!sessionId || !timestamp) {
+        return res.status(400).json({ 
+          message: 'Invalid request: sessionId and timestamp are required' 
+        });
+      }
+      
+      // Try to get the memory to verify it exists
+      try {
+        // Get all memories regardless of category
+        const memories = await getMemoriesByCategory('all');
+        
+        // Filter to the session and check if the memory exists
+        const memoryExists = memories
+          .filter(mem => mem.sessionId === sessionId)
+          .some(mem => 
+            mem.timestamp === timestamp && 
+            (!content || mem.content === content)
+          );
+        
+        if (!memoryExists) {
+          return res.status(404).json({ 
+            message: 'Memory not found' 
+          });
+        }
+      } catch (err) {
+        console.warn('Error checking memory existence:', err);
+      }
+      
+      // Delete from database
+      try {
+        // Delete from database using schema
+        // Use sql template literals for safety  
+        await db.execute(sql`
+          DELETE FROM memory 
+          WHERE session_id = ${sessionId} 
+          AND timestamp = ${timestamp}
+          ${content ? sql`AND content = ${content}` : sql``}
+        `);
+      } catch (dbError) {
+        console.error('Database deletion failed:', dbError);
+        throw new Error('Failed to delete memory from database');
+      }
+      
+      res.json({ 
+        success: true,
+        message: 'Memory deleted successfully'
+      });
+    } catch (error) {
+      console.error('Error deleting memory:', error);
+      res.status(500).json({ 
+        message: 'Error deleting memory' 
       });
     }
   });
