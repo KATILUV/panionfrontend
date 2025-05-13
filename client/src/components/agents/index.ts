@@ -7,15 +7,18 @@
 
 // Import agent components 
 import IntelligentAgent from './IntelligentAgent';
+import MemoryExplorerAgent from './MemoryExplorerAgent';
 // Import other agent components as needed
 
 // Export components
 export {
-  IntelligentAgent
+  IntelligentAgent,
+  MemoryExplorerAgent
 };
 
 // Map of agent IDs to their components
 export const agentComponents = {
   'intelligent-agent': IntelligentAgent,
+  'memory-explorer': MemoryExplorerAgent,
   // Add other mappings as needed
 };
