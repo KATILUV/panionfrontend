@@ -342,7 +342,7 @@ User Preferences:
       messages: [
         {
           role: "system",
-          content: `You are Manus, an advanced AI assistant with a distinct personality and memory system.
+          content: `You are Panion, an advanced AI assistant with a distinct personality and memory system.
           
 Your memory system has provided the following context from past conversations:
 

@@ -1,6 +1,6 @@
 /**
  * User Preferences Panel
- * Allows users to customize their Manus experience
+ * Allows users to customize their Panion experience
  */
 
 import React from 'react';
@@ -56,7 +56,7 @@ const UserPreferences: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings size={20} />
-          Manus Preferences
+          Panion Preferences
         </CardTitle>
         <CardDescription>
           Customize how Manus appears and responds to you

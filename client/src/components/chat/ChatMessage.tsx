@@ -125,7 +125,7 @@ export const ChatMessageComponent: React.FC<ChatMessageProps> = ({
         <div className="flex flex-col">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center space-x-2">
-              <span className="text-xs opacity-70">{isUser ? 'You' : 'Manus'}</span>
+              <span className="text-xs opacity-70">{isUser ? 'You' : 'Panion'}</span>
               
               {!isUser && thinkingState && (
                 <ThinkingStateIndicator state={thinkingState} />
