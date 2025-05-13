@@ -959,6 +959,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Edit a memory
+  app.put('/api/memory/edit', async (req, res) => {
+    try {
+      const { 
+        sessionId, 
+        timestamp, 
+        originalContent,
+        updatedMemory
+      } = req.body;
+      
+      // Validate required parameters
+      if (!sessionId || !timestamp || !updatedMemory) {
+        return res.status(400).json({ 
+          message: 'Invalid request: sessionId, timestamp, and updatedMemory are required' 
+        });
+      }
+      
+      // Try to get the memory to verify it exists
+      try {
+        // Get all memories regardless of category
+        const memories = await getMemoriesByCategory('all');
+        
+        // Filter to the session and check if the memory exists
+        const memoryExists = memories
+          .filter(mem => mem.sessionId === sessionId)
+          .some(mem => 
+            mem.timestamp === timestamp && 
+            (!originalContent || mem.content === originalContent)
+          );
+        
+        if (!memoryExists) {
+          return res.status(404).json({ 
+            message: 'Memory not found' 
+          });
+        }
+      } catch (err) {
+        console.warn('Error checking memory existence:', err);
+      }
+      
+      // Update the memory in the database
+      try {
+        // Use sql template literals for safety
+        await db.execute(sql`
+          UPDATE memory 
+          SET 
+            content = ${updatedMemory.content},
+            category = ${updatedMemory.category || null},
+            important = ${updatedMemory.important || false}
+          WHERE 
+            session_id = ${sessionId} 
+            AND timestamp = ${timestamp}
+            ${originalContent ? sql`AND content = ${originalContent}` : sql``}
+        `);
+      } catch (dbError) {
+        console.error('Database update failed:', dbError);
+        throw new Error('Failed to update memory in database');
+      }
+      
+      res.json({ 
+        success: true,
+        message: 'Memory updated successfully'
+      });
+    } catch (error) {
+      console.error('Error updating memory:', error);
+      res.status(500).json({ 
+        message: 'Error updating memory' 
+      });
+    }
+  });
+  
   // Get image gallery from memory
   app.get('/api/image-gallery', async (req, res) => {
     try {

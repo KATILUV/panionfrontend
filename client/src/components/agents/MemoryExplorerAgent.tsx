@@ -17,7 +17,10 @@ import {
   Clock,
   ArrowUpDown,
   ChevronsUpDown,
-  Sparkles
+  Sparkles,
+  Edit,
+  Save,
+  XCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import BaseAgent from './BaseAgent';
@@ -49,6 +52,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import log from '@/utils/logger';
 import { debounce } from '@/utils/debounceUtils';
+import { Textarea } from '@/components/ui/textarea';
 
 // Memory type definitions
 interface Memory {
@@ -116,6 +120,11 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
   const [smartSearchResult, setSmartSearchResult] = useState<string | null>(null);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
   const [activeTab, setActiveTab] = useState('browse');
+  
+  // Edit memory state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedMemory, setEditedMemory] = useState<Partial<Memory>>({});
+  const [originalMemory, setOriginalMemory] = useState<Memory | null>(null);
   
   const { toast } = useToast();
 
@@ -290,7 +299,97 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
 
   // Handle memory selection
   const handleMemorySelect = (memory: Memory) => {
-    setSelectedMemory(memory);
+    // If already editing, confirm before changing selection
+    if (isEditing) {
+      if (window.confirm('You have unsaved changes. Discard changes and select a different memory?')) {
+        setIsEditing(false);
+        setEditedMemory({});
+        setSelectedMemory(memory);
+        setOriginalMemory(null);
+      }
+    } else {
+      setSelectedMemory(memory);
+    }
+  };
+  
+  // Start editing a memory
+  const startEditing = (memory: Memory) => {
+    setIsEditing(true);
+    setEditedMemory({ ...memory });
+    setOriginalMemory(memory);
+  };
+  
+  // Cancel editing
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditedMemory({});
+    setOriginalMemory(null);
+  };
+  
+  // Update memory field during editing
+  const updateEditedMemory = (field: string, value: any) => {
+    setEditedMemory(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Save edited memory
+  const saveEditedMemory = async () => {
+    if (!originalMemory || !editedMemory.content) {
+      toast({
+        title: 'Invalid Edit',
+        description: 'Memory content cannot be empty',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('/api/memory/edit', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sessionId: originalMemory.sessionId,
+          timestamp: originalMemory.timestamp,
+          originalContent: originalMemory.content,
+          updatedMemory: editedMemory
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update memory');
+      }
+      
+      // Refresh memories after updating
+      await initializeAgent();
+      
+      // Update selected memory with edited version
+      setSelectedMemory({ ...originalMemory, ...editedMemory });
+      
+      // Clear editing state
+      setIsEditing(false);
+      setEditedMemory({});
+      setOriginalMemory(null);
+      
+      toast({
+        title: 'Memory Updated',
+        description: 'Your memory has been successfully updated',
+      });
+    } catch (error) {
+      log.error('Error updating memory:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update memory',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Function to create a new memory
@@ -684,41 +783,153 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
                   <div className="w-1/2 overflow-hidden">
                     {selectedMemory ? (
                       <ScrollArea className="h-full p-4">
-                        <h3 className="text-lg font-semibold mb-3">Memory Details</h3>
-                        
-                        <div className="grid grid-cols-2 gap-2 mb-4">
-                          <div>
-                            <p className="text-sm text-muted-foreground">Created</p>
-                            <p className="font-medium">
-                              {new Date(selectedMemory.timestamp).toLocaleString()}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Category</p>
-                            <p className="font-medium">
-                              {selectedMemory.category || 'Uncategorized'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Source</p>
-                            <p className="font-medium">
-                              {selectedMemory.isUser ? 'User message' : 'Panion response'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Importance</p>
-                            <p className="font-medium">
-                              {selectedMemory.important ? 'Important' : 'Standard'}
-                            </p>
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="text-lg font-semibold">Memory Details</h3>
+                          <div className="flex gap-2">
+                            {isEditing ? (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={cancelEditing}
+                                  disabled={isLoading}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Cancel
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  onClick={saveEditedMemory}
+                                  disabled={isLoading}
+                                >
+                                  <Save className="h-4 w-4 mr-1" />
+                                  Save
+                                </Button>
+                              </>
+                            ) : (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => startEditing(selectedMemory)}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                            )}
                           </div>
                         </div>
                         
-                        <div className="mb-4">
-                          <p className="text-sm text-muted-foreground mb-1">Content</p>
-                          <div className="p-3 bg-muted rounded-md">
-                            <p>{selectedMemory.content}</p>
-                          </div>
-                        </div>
+                        {isEditing ? (
+                          // Edit mode
+                          <>
+                            <div className="grid grid-cols-2 gap-2 mb-4">
+                              <div>
+                                <p className="text-sm text-muted-foreground">Created</p>
+                                <p className="font-medium">
+                                  {new Date(selectedMemory.timestamp).toLocaleString()}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Category</p>
+                                <Select
+                                  value={editedMemory.category || 'other'}
+                                  onValueChange={(value) => updateEditedMemory('category', value)}
+                                  disabled={isLoading}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {memoryCategories
+                                      .filter(category => category.id !== 'all')
+                                      .map(category => (
+                                        <SelectItem key={category.id} value={category.id}>
+                                          <div className="flex items-center gap-1">
+                                            {category.icon}
+                                            <span>{category.name}</span>
+                                          </div>
+                                        </SelectItem>
+                                      ))
+                                    }
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Source</p>
+                                <p className="font-medium">
+                                  {selectedMemory.isUser ? 'User message' : 'Panion response'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Importance</p>
+                                <div className="flex items-center mt-1">
+                                  <Checkbox 
+                                    id="important-checkbox"
+                                    checked={!!editedMemory.important}
+                                    onCheckedChange={(checked) => 
+                                      updateEditedMemory('important', checked === true)
+                                    }
+                                    disabled={isLoading}
+                                  />
+                                  <label 
+                                    htmlFor="important-checkbox"
+                                    className="ml-2 text-sm font-medium"
+                                  >
+                                    Mark as important
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="mb-4">
+                              <p className="text-sm text-muted-foreground mb-1">Content</p>
+                              <Textarea
+                                value={editedMemory.content || ''}
+                                onChange={(e) => updateEditedMemory('content', e.target.value)}
+                                placeholder="Enter memory content"
+                                className="min-h-24"
+                                disabled={isLoading}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          // View mode
+                          <>
+                            <div className="grid grid-cols-2 gap-2 mb-4">
+                              <div>
+                                <p className="text-sm text-muted-foreground">Created</p>
+                                <p className="font-medium">
+                                  {new Date(selectedMemory.timestamp).toLocaleString()}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Category</p>
+                                <p className="font-medium">
+                                  {selectedMemory.category || 'Uncategorized'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Source</p>
+                                <p className="font-medium">
+                                  {selectedMemory.isUser ? 'User message' : 'Panion response'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Importance</p>
+                                <p className="font-medium">
+                                  {selectedMemory.important ? 'Important' : 'Standard'}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="mb-4">
+                              <p className="text-sm text-muted-foreground mb-1">Content</p>
+                              <div className="p-3 bg-muted rounded-md">
+                                <p>{selectedMemory.content}</p>
+                              </div>
+                            </div>
+                          </>
+                        )}
                         
                         {selectedMemory.imageUrl && (
                           <div className="mb-4">
