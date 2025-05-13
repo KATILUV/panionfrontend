@@ -16,8 +16,10 @@ import {
   Image as ImageIcon,
   Palette,
   Code,
-  GraduationCap
+  GraduationCap,
+  Brain
 } from 'lucide-react';
+import { MemoryExplorerAgent } from './index';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { CONVERSATION_MODES, DEFAULT_CONVERSATION_MODE, ConversationMode } from '@/types/conversationModes';
@@ -641,6 +643,10 @@ ${result.summary.suggestedFollowups.length > 0 ?
             onSelectImage={handleUseImageFromGallery}
             height="calc(100vh - 180px)"
           />
+        </TabsContent>
+
+        <TabsContent value="memory" className="mt-0 h-full overflow-hidden">
+          <MemoryExplorerAgent />
         </TabsContent>
       </Tabs>
       
