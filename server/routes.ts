@@ -854,6 +854,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Save a memory
+  app.post('/api/memory/save', async (req, res) => {
+    try {
+      const memory = req.body;
+      
+      // Validate memory structure
+      if (!memory || !memory.content || typeof memory.content !== 'string') {
+        return res.status(400).json({ 
+          message: 'Invalid memory format: content is required and must be a string' 
+        });
+      }
+      
+      // Add session ID if not provided
+      const sessionId = memory.sessionId || req.cookies?.sessionId || 'default';
+      memory.sessionId = sessionId;
+      
+      // Add timestamp if not provided
+      if (!memory.timestamp) {
+        memory.timestamp = new Date().toISOString();
+      }
+      
+      // Set important flag if not provided
+      if (memory.important === undefined) {
+        memory.important = false;
+      }
+      
+      // Save to memory system
+      await saveToMemory(memory);
+      
+      res.json({ 
+        success: true,
+        message: 'Memory saved successfully',
+        memory 
+      });
+    } catch (error) {
+      console.error('Error saving memory:', error);
+      res.status(500).json({ 
+        message: 'Error saving memory' 
+      });
+    }
+  });
+  
   // Get image gallery from memory
   app.get('/api/image-gallery', async (req, res) => {
     try {

@@ -271,6 +271,67 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
     setSelectedMemory(memory);
   };
 
+  // Function to create a new memory
+  const createNewMemory = async () => {
+    if (!inputValue.trim()) {
+      toast({
+        title: 'Empty Memory',
+        description: 'Please enter content for the new memory',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Create a new memory object
+      const newMemory: Partial<Memory> = {
+        content: inputValue,
+        isUser: true,
+        timestamp: new Date().toISOString(),
+        category: activeCategory !== 'all' ? activeCategory : 'personal',
+        important: false
+      };
+      
+      // Call the API to save the memory
+      const response = await fetch('/api/memory/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newMemory)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save memory');
+      }
+      
+      // Refresh memories after saving
+      await initializeAgent();
+      
+      // Clear input
+      setInputValue('');
+      
+      toast({
+        title: 'Memory Created',
+        description: 'Your new memory has been saved successfully',
+      });
+    } catch (error) {
+      log.error('Error creating memory:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to create memory',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // State for memory input
+  const [inputValue, setInputValue] = useState('');
+
   // Memory card component
   const MemoryCard = ({ memory }: { memory: Memory }) => {
     const isSelected = selectedMemory?.timestamp === memory.timestamp && 
@@ -434,50 +495,81 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
           
           <div className="flex-1 overflow-hidden">
             <TabsContent value="browse" className="m-0 h-full flex flex-col">
-              <div className="border-b p-3 flex justify-between items-center gap-2">
-                <Select value={activeCategory} onValueChange={handleCategoryChange}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Categories</SelectLabel>
-                      {memoryCategories.map(category => (
-                        <SelectItem key={category.id} value={category.id} className="flex items-center gap-2">
-                          {category.icon}
-                          <span>{category.name}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+              <div className="border-b p-3">
+                <div className="flex justify-between items-center gap-2 mb-3">
+                  <Select value={activeCategory} onValueChange={handleCategoryChange}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Categories</SelectLabel>
+                        {memoryCategories.map(category => (
+                          <SelectItem key={category.id} value={category.id} className="flex items-center gap-2">
+                            {category.icon}
+                            <span>{category.name}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="flex items-center gap-1">
+                        <ArrowUpDown size={14} />
+                        <span>Sort</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem onClick={() => handleSort('newest')}>
+                          Newest first
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSort('oldest')}>
+                          Oldest first
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSort('importance')}>
+                          Importance
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSort('category')}>
+                          Category
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex items-center gap-1">
-                      <ArrowUpDown size={14} />
-                      <span>Sort</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => handleSort('newest')}>
-                        Newest first
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleSort('oldest')}>
-                        Oldest first
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleSort('importance')}>
-                        Importance
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleSort('category')}>
-                        Category
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Add memory form */}
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    type="text"
+                    placeholder="Create a new memory..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && createNewMemory()}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={createNewMemory} 
+                    disabled={isLoading || !inputValue.trim()}
+                    className="shrink-0"
+                  >
+                    {isLoading ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Brain className="h-4 w-4 mr-2" />
+                      </motion.div>
+                    ) : (
+                      <Brain className="h-4 w-4 mr-2" />
+                    )}
+                    Save
+                  </Button>
+                </div>
               </div>
               
               <div className="flex-1 overflow-hidden">
