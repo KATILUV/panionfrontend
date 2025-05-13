@@ -581,18 +581,9 @@ ${result.summary.suggestedFollowups.length > 0 ?
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="h-8">
-              <TabsTrigger value="chat">
-                <MessageSquare size={16} className="mr-1" />
-                Chat
-              </TabsTrigger>
-              <TabsTrigger value="gallery">
-                <ImageIcon size={16} className="mr-1" />
-                Gallery
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex-1">
+            {/* Tabs navigation is now part of the single Tabs component below */}
+          </div>
           
           <button 
             onClick={() => setShowSettings(true)}
@@ -604,7 +595,20 @@ ${result.summary.suggestedFollowups.length > 0 ?
         </div>
       </div>
       
-      <Tabs value={activeTab} className="flex-1 overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
+        <div className="flex items-center mb-2">
+          <TabsList className="h-8">
+            <TabsTrigger value="chat">
+              <MessageSquare size={16} className="mr-1" />
+              Chat
+            </TabsTrigger>
+            <TabsTrigger value="gallery">
+              <ImageIcon size={16} className="mr-1" />
+              Gallery
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        
         <TabsContent value="chat" className="flex-1 flex flex-col h-full mt-0 overflow-hidden">
           {/* Input Area with ChatInterface component */}
           <div className="flex-1 overflow-hidden">
