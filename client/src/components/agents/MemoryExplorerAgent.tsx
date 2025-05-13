@@ -51,7 +51,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import log from '@/utils/logger';
-import { debounce } from '@/utils/debounceUtils';
 import { Textarea } from '@/components/ui/textarea';
 
 // Memory type definitions
@@ -252,26 +251,24 @@ const MemoryExplorerAgent: React.FC<MemoryExplorerAgentProps> = ({ onClose }) =>
     }
   };
   
-  // Create debounced search function
-  const debouncedSearch = useCallback(
-    debounce(() => {
+  // Effect to trigger search when query changes
+  useEffect(() => {
+    // Set up a timeout for debouncing
+    const searchTimeout = setTimeout(() => {
       if (searchQuery.trim()) {
         handleSearch();
       }
-    }, 500),
-    [searchQuery, handleSearch]
-  );
-  
-  // Effect to trigger debounced search when query changes
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      debouncedSearch();
-    } else if (memories.length > 0) {
-      // Reset to all memories if search is cleared
+    }, 500);
+    
+    // If search is cleared, reset to all memories
+    if (!searchQuery.trim() && memories.length > 0) {
       setFilteredMemories(memories);
       setSmartSearchResult(null);
     }
-  }, [searchQuery, debouncedSearch, memories]);
+    
+    // Clean up the timeout
+    return () => clearTimeout(searchTimeout);
+  }, [searchQuery, handleSearch, memories]);
 
   // Function to handle sorting
   const handleSort = (option: SortOption) => {
