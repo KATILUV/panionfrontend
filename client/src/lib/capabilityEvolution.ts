@@ -5,7 +5,7 @@
  * based on usage patterns and performance.
  */
 
-import { debounce } from './utils';
+import { debounce } from '../utils/debounceUtils';
 import { getLocalStorage, setLocalStorage } from './storage';
 
 // Storage key for capability data
