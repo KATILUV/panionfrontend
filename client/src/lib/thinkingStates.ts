@@ -11,7 +11,7 @@ interface ThinkingStateSequence {
 }
 
 /**
- * Generate a sequence of thinking states for simulating Manus's thought process
+ * Generate a sequence of thinking states for simulating Panion's thought process
  * @param complexity How complex the response needs to be (1-10)
  * @param needsMemory Whether the response requires accessing memory
  * @param messageLength Approximate expected response length

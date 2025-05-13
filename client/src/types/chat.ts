@@ -15,7 +15,7 @@ export interface ChatMessage {
   personalityTraits?: string[];
 }
 
-// Thinking state to show Manus's thought process in real-time
+// Thinking state to show Panion's thought process in real-time
 export type ThinkingState = 
   | 'listening'     // Actively listening to user input
   | 'processing'    // Processing the user's message

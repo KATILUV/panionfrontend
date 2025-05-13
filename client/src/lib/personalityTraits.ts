@@ -1,6 +1,6 @@
 /**
- * Manus Personality Traits
- * Defines the core personality traits that make up Manus's character
+ * Panion Personality Traits
+ * Defines the core personality traits that make up Panion's character
  */
 
 export interface PersonalityTrait {
@@ -11,7 +11,7 @@ export interface PersonalityTrait {
   strength: number;
 }
 
-// Core personality traits that define Manus
+// Core personality traits that define Panion
 export const CORE_TRAITS: PersonalityTrait[] = [
   {
     id: 'analytical',
